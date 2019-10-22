@@ -1,0 +1,76 @@
+name: Trivy DB
+on:
+  schedule:
+    - cron:  '0 */12 * * *'
+
+jobs:
+  build:
+    name: Build DB
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Go 1.13
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13
+      id: go
+
+    - name: Install bbolt
+      run: go get -v github.com/etcd-io/bbolt/cmd/bbolt
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1
+
+    - name: Get dependencies
+      run: |
+        go get -v -t -d ./...
+        if [ -f Gopkg.toml ]; then
+            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+            dep ensure
+        fi
+
+    - name: Prepare dirs
+      run: mkdir cache assets
+
+    - name: Download vuln-list
+      run: |
+        wget --quiet https://github.com/aquasecurity/vuln-list/archive/master.zip
+        unzip -q master.zip
+        mv vuln-list-master cache/vuln-list
+
+
+    - name: Build the binary
+      run: go build -o trivy-db cmd/trivy-db/main.go
+
+    #
+    # Full DB
+    #
+    - name: Build full database
+      run: ./trivy-db build --cache-dir ./cache
+
+    - name: Compact DB
+      run: |
+        export PATH=$PATH:$(go env GOPATH)/bin
+        bbolt compact -o assets/trivy.db cache/db/trivy.db
+
+    #
+    # Light DB
+    #
+    - name: Build light database
+      run: ./trivy-db build --light --cache-dir ./cache
+
+    - name: Compact DB
+      run: |
+        export PATH=$PATH:$(go env GOPATH)/bin
+        bbolt compact -o assets/trivy-light.db cache/db/trivy.db
+
+    #
+    # Upload
+    #
+    - name: Compress assets
+      run: gzip assets/*
+
+    - name: Upload assets
+      run: ./trivy-db upload --dir assets
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
