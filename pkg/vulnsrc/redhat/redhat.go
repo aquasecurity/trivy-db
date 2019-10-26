@@ -102,15 +102,6 @@ func (vs VulnSrc) Update(dir string) error {
 	return nil
 }
 
-// platformName: pkgStatus
-type platform map[string]pkg
-
-// pkgName: advisoryStatus
-type pkg map[string]advisory
-
-// cveID: version
-type advisory map[string]interface{}
-
 func (vs VulnSrc) save(cves []RedhatCVE) error {
 	log.Println("Saving RedHat DB")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {

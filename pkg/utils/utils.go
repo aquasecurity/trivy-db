@@ -11,8 +11,6 @@ import (
 	"golang.org/x/xerrors"
 )
 
-var cacheDir string
-
 func CacheDir() string {
 	tmpDir, err := os.UserCacheDir()
 	if err != nil {
