@@ -121,7 +121,7 @@ func (vs VulnSrc) commitFunc(tx *bolt.Tx) error {
 					Title:       "",
 				}
 				if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Amazon, vuln); err != nil {
-					return xerrors.Errorf("failed to save amazon vulnerability: %w", err)
+					return xerrors.Errorf("failed to save amazon vulnerability detail: %w", err)
 				}
 
 				// for light DB
