@@ -17,4 +17,5 @@ require (
 	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/yaml.v2 v2.2.2
+	k8s.io/utils v0.0.0-20191010214722-8d271d903fe4
 )

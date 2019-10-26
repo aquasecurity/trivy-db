@@ -8,25 +8,16 @@ import (
 	"testing"
 
 	bolt "github.com/etcd-io/bbolt"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/aquasecurity/trivy/pkg/db"
-
+	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/vuln-list-update/amazon"
-
-	"github.com/aquasecurity/trivy/pkg/utils"
-
-	"github.com/aquasecurity/trivy/pkg/vulnsrc/vulnerability"
-
-	"github.com/aquasecurity/trivy/pkg/log"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
-	err := log.InitLogger(false, true)
-	if err != nil {
-		log.Fatal(err)
-	}
 	utils.Quiet = true
 	os.Exit(m.Run())
 }
@@ -37,7 +28,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		cacheDir       string
 		batchUpdateErr error
 		expectedError  error
-		expectedVulns  []vulnerability.Advisory
+		expectedVulns  []types.Advisory
 	}{
 		{
 			name:          "happy path",
@@ -63,7 +54,7 @@ func TestVulnSrc_Update(t *testing.T) {
 			mockDBConfig.On("BatchUpdate", mock.Anything).Return(tc.batchUpdateErr)
 			ac := VulnSrc{dbc: mockDBConfig}
 
-			err := ac.Update(tc.cacheDir, map[string]struct{}{"amazon": {}})
+			err := ac.Update(tc.cacheDir)
 			switch {
 			case tc.expectedError != nil:
 				assert.EqualError(t, err, tc.expectedError.Error(), tc.name)
@@ -83,7 +74,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		name          string
 		forEachFunc   forEachReturn
 		expectedError error
-		expectedVulns []vulnerability.Advisory
+		expectedVulns []types.Advisory
 	}{
 		{
 			name: "happy path",
@@ -94,13 +85,13 @@ func TestVulnSrc_Get(t *testing.T) {
 				err: nil,
 			},
 			expectedError: nil,
-			expectedVulns: []vulnerability.Advisory{{VulnerabilityID: "123", FixedVersion: "2.0.0"}},
+			expectedVulns: []types.Advisory{{VulnerabilityID: "123", FixedVersion: "2.0.0"}},
 		},
 		{
 			name:          "no advisories are returned",
 			forEachFunc:   forEachReturn{b: nil, err: nil},
 			expectedError: nil,
-			expectedVulns: []vulnerability.Advisory(nil),
+			expectedVulns: []types.Advisory(nil),
 		},
 		{
 			name:          "amazon forEach return an error",
@@ -119,9 +110,11 @@ func TestVulnSrc_Get(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockDBConfig := new(db.MockDBConfig)
-			mockDBConfig.On("ForEach", mock.Anything, mock.Anything).Return(
+			mockDBConfig.On("ForEachAdvisory", mock.Anything, mock.Anything).Return(
 				tc.forEachFunc.b, tc.forEachFunc.err,
 			)
+			mockDBConfig.On("PutAdvisory",
+				mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			ac := VulnSrc{dbc: mockDBConfig}
 
 			vuls, err := ac.Get("1.1.0", "testpkg")
@@ -138,12 +131,12 @@ func TestVulnSrc_Get(t *testing.T) {
 }
 
 func TestSeverityFromPriority(t *testing.T) {
-	testCases := map[string]vulnerability.Severity{
-		"low":       vulnerability.SeverityLow,
-		"medium":    vulnerability.SeverityMedium,
-		"important": vulnerability.SeverityHigh,
-		"critical":  vulnerability.SeverityCritical,
-		"unknown":   vulnerability.SeverityUnknown,
+	testCases := map[string]types.Severity{
+		"low":       types.SeverityLow,
+		"medium":    types.SeverityMedium,
+		"important": types.SeverityHigh,
+		"critical":  types.SeverityCritical,
+		"unknown":   types.SeverityUnknown,
 	}
 	for k, v := range testCases {
 		assert.Equal(t, v, severityFromPriority(k))
@@ -255,9 +248,7 @@ func TestVulnSrc_WalkFunc(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ac := VulnSrc{
-				bar: utils.PbStartNew(1),
-			}
+			ac := VulnSrc{}
 
 			err := ac.walkFunc(tc.ioReader, tc.inputPath)
 			switch {
@@ -274,11 +265,11 @@ func TestVulnSrc_WalkFunc(t *testing.T) {
 
 func TestVulnSrc_CommitFunc(t *testing.T) {
 	testCases := []struct {
-		name               string
-		alasList           []alas
-		putNestedBucketErr error
-		putErr             error
-		expectedError      error
+		name                      string
+		alasList                  []alas
+		putAdvisoryErr            error
+		putVulnerabilityDetailErr error
+		expectedError             error
 	}{
 		{
 			name: "happy path",
@@ -335,8 +326,8 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 					},
 				},
 			},
-			putNestedBucketErr: errors.New("putnestedbucket failed to save"),
-			expectedError:      errors.New("failed to save amazon advisory: putnestedbucket failed to save"),
+			putAdvisoryErr: errors.New("putnestedbucket failed to save"),
+			expectedError:  errors.New("failed to save amazon advisory: putnestedbucket failed to save"),
 		},
 		{
 			name: "failed to save Amazon advisory, Put() return an error",
@@ -365,25 +356,24 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 					},
 				},
 			},
-			putErr:        errors.New("failed to commit to db"),
-			expectedError: errors.New("failed to save amazon vulnerability: failed to commit to db"),
+			putVulnerabilityDetailErr: errors.New("failed to commit to db"),
+			expectedError:             errors.New("failed to save amazon vulnerability detail: failed to commit to db"),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockDBConfig := new(db.MockDBConfig)
-			mockDBConfig.On("PutNestedBucket",
+			mockDBConfig.On("PutAdvisory",
 				mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
-				tc.putNestedBucketErr,
-			)
-			mockVulnDB := new(vulnerability.MockVulnDB)
-			mockVulnDB.On(
-				"Put", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
-				tc.putErr,
-			)
+				tc.putAdvisoryErr)
+			mockDBConfig.On("PutVulnerabilityDetail",
+				mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+				tc.putVulnerabilityDetailErr)
+			mockDBConfig.On("PutSeverity",
+				mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-			vs := VulnSrc{dbc: mockDBConfig, vdb: mockVulnDB, alasList: tc.alasList}
+			vs := VulnSrc{dbc: mockDBConfig, alasList: tc.alasList}
 
 			err := vs.commitFunc(&bolt.Tx{WriteFlag: 0})
 			switch {

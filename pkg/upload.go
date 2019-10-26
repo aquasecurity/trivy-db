@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"context"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -26,7 +27,9 @@ func upload(c *cli.Context) error {
 		filePaths = append(filePaths, path)
 	}
 
-	if err := github.UploadReleaseAsset(filePaths); err != nil {
+	ctx := context.Background()
+	client := github.NewClient(ctx)
+	if err := client.UploadReleaseAsset(ctx, filePaths); err != nil {
 		return err
 	}
 	return nil
