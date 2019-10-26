@@ -20,7 +20,6 @@ import (
 const (
 	ubuntuDir      = "ubuntu"
 	platformFormat = "ubuntu %s"
-	t
 )
 
 var (
