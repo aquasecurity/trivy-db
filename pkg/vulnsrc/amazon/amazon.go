@@ -39,7 +39,7 @@ type alas struct {
 	amazon.ALAS
 }
 
-func NewVulnSrc() types.VulnSrc {
+func NewVulnSrc() VulnSrc {
 	return VulnSrc{
 		dbc: db.Config{},
 	}
@@ -138,23 +138,11 @@ func (vs VulnSrc) commitFunc(tx *bolt.Tx) error {
 // Get returns a security advisory
 func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) {
 	bucket := fmt.Sprintf(platformFormat, version)
-	advisories, err := vs.dbc.ForEachAdvisory(bucket, pkgName)
+	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("error in amazon foreach: %w", err)
+		return nil, xerrors.Errorf("failed to get Amazon advisories: %w", err)
 	}
-	if len(advisories) == 0 {
-		return nil, nil
-	}
-
-	var results []types.Advisory
-	for _, v := range advisories {
-		var advisory types.Advisory
-		if err = json.Unmarshal(v, &advisory); err != nil {
-			return nil, xerrors.Errorf("failed to unmarshal amazon JSON: %w", err)
-		}
-		results = append(results, advisory)
-	}
-	return results, nil
+	return advisories, nil
 }
 
 func severityFromPriority(priority string) types.Severity {

@@ -90,4 +90,5 @@ type Vulnerability struct {
 
 type VulnSrc interface {
 	Update(string) error
+	Get(string, string) ([]Advisory, error)
 }

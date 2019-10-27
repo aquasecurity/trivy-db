@@ -39,7 +39,7 @@ type VulnSrc struct {
 	dbc db.Operations
 }
 
-func NewVulnSrc() types.VulnSrc {
+func NewVulnSrc() VulnSrc {
 	return VulnSrc{
 		dbc: db.Config{},
 	}
@@ -119,23 +119,11 @@ func (vs VulnSrc) save(cves []DebianCVE) error {
 
 func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
 	bucket := fmt.Sprintf(platformFormat, release)
-	advisories, err := vs.dbc.ForEachAdvisory(bucket, pkgName)
+	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("error in Debian foreach: %w", err)
+		return nil, xerrors.Errorf("failed to get Debian advisories: %w", err)
 	}
-	if len(advisories) == 0 {
-		return nil, nil
-	}
-
-	var results []types.Advisory
-	for _, v := range advisories {
-		var advisory types.Advisory
-		if err = json.Unmarshal(v, &advisory); err != nil {
-			return nil, xerrors.Errorf("failed to unmarshal Debian JSON: %w", err)
-		}
-		results = append(results, advisory)
-	}
-	return results, nil
+	return advisories, nil
 }
 
 func severityFromUrgency(urgency string) types.Severity {

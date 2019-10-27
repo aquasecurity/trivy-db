@@ -25,19 +25,17 @@ const (
 	repoURL = "https://github.com/aquasecurity/vuln-list.git"
 )
 
-type newFunc func() types.VulnSrc
-
 var (
 	// UpdateList has list of update distributions
 	UpdateList []string
-	updateMap  = map[string]newFunc{
-		vulnerability.Nvd:        nvd.NewVulnSrc,
-		vulnerability.Alpine:     alpine.NewVulnSrc,
-		vulnerability.RedHat:     redhat.NewVulnSrc,
-		vulnerability.Debian:     debian.NewVulnSrc,
-		vulnerability.DebianOVAL: debianoval.NewVulnSrc,
-		vulnerability.Ubuntu:     ubuntu.NewVulnSrc,
-		vulnerability.Amazon:     amazon.NewVulnSrc,
+	updateMap  = map[string]types.VulnSrc{
+		vulnerability.Nvd:        nvd.NewVulnSrc(),
+		vulnerability.Alpine:     alpine.NewVulnSrc(),
+		vulnerability.RedHat:     redhat.NewVulnSrc(),
+		vulnerability.Debian:     debian.NewVulnSrc(),
+		vulnerability.DebianOVAL: debianoval.NewVulnSrc(),
+		vulnerability.Ubuntu:     ubuntu.NewVulnSrc(),
+		vulnerability.Amazon:     amazon.NewVulnSrc(),
 	}
 )
 
@@ -53,13 +51,12 @@ func Update(targets []string, cacheDir string, light bool) error {
 	dir := filepath.Join(cacheDir, "vuln-list")
 
 	for _, distribution := range targets {
-		newFunc, ok := updateMap[distribution]
+		vulnSrc, ok := updateMap[distribution]
 		if !ok {
 			return xerrors.Errorf("%s does not supported yet", distribution)
 		}
 		log.Printf("Updating %s data...\n", distribution)
 
-		vulnSrc := newFunc()
 		if err := vulnSrc.Update(dir); err != nil {
 			return xerrors.Errorf("error in %s update: %w", distribution, err)
 		}

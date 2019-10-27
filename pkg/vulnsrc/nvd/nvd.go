@@ -25,7 +25,7 @@ type VulnSrc struct {
 	dbc db.Operations
 }
 
-func NewVulnSrc() types.VulnSrc {
+func NewVulnSrc() VulnSrc {
 	return VulnSrc{
 		dbc: db.Config{},
 	}
@@ -100,4 +100,8 @@ func (vs VulnSrc) save(items []Item) error {
 		return xerrors.Errorf("error in batch update: %w", err)
 	}
 	return nil
+}
+
+func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) {
+	panic("NVD has no advisory")
 }

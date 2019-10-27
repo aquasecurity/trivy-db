@@ -29,7 +29,7 @@ type VulnSrc struct {
 	dbc db.Operations
 }
 
-func NewVulnSrc() types.VulnSrc {
+func NewVulnSrc() VulnSrc {
 	return VulnSrc{
 		dbc: db.Config{},
 	}
@@ -64,10 +64,9 @@ func (vs VulnSrc) save(cves []AlpineCVE) error {
 		for _, cve := range cves {
 			platformName := fmt.Sprintf(platformFormat, cve.Release)
 			pkgName := cve.Package
-			advisory := Advisory{
+			advisory := types.Advisory{
 				VulnerabilityID: cve.VulnerabilityID,
 				FixedVersion:    cve.FixedVersion,
-				Repository:      cve.Repository,
 			}
 			if err := vs.dbc.PutAdvisory(tx, platformName, pkgName, cve.VulnerabilityID, advisory); err != nil {
 				return xerrors.Errorf("failed to save alpine advisory: %w", err)
@@ -94,20 +93,11 @@ func (vs VulnSrc) save(cves []AlpineCVE) error {
 	return nil
 }
 
-func (vs VulnSrc) Get(release string, pkgName string) ([]Advisory, error) {
-	source := fmt.Sprintf(platformFormat, release)
-	advisories, err := vs.dbc.ForEachAdvisory(source, pkgName)
+func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
+	bucket := fmt.Sprintf(platformFormat, release)
+	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("error in Alpine foreach: %w", err)
+		return nil, xerrors.Errorf("failed to get Alpine advisories: %w", err)
 	}
-
-	var results []Advisory
-	for _, v := range advisories {
-		var advisory Advisory
-		if err = json.Unmarshal(v, &advisory); err != nil {
-			return nil, xerrors.Errorf("failed to unmarshal Alpine JSON: %w", err)
-		}
-		results = append(results, advisory)
-	}
-	return results, nil
+	return advisories, nil
 }

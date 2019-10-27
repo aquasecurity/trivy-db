@@ -9,9 +9,3 @@ type AlpineCVE struct {
 	Subject         string
 	Description     string
 }
-
-type Advisory struct {
-	VulnerabilityID string
-	FixedVersion    string
-	Repository      string
-}

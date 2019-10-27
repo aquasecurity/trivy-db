@@ -35,8 +35,10 @@ type Operations interface {
 	//PutNestedBucket(*bolt.Tx, string, string, string, interface{}) error
 	//ForEach(string, string) (map[string][]byte, error)
 	PutVulnerabilityDetail(*bolt.Tx, string, string, types.VulnerabilityDetail) error
+
 	PutAdvisory(*bolt.Tx, string, string, string, interface{}) error
 	ForEachAdvisory(string, string) (map[string][]byte, error)
+	GetAdvisories(string, string) ([]types.Advisory, error)
 
 	PutSeverity(*bolt.Tx, string, types.Severity) error
 	GetSeverity(*bolt.Tx, string) (types.Severity, error)
