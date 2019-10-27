@@ -37,6 +37,13 @@ jobs:
         unzip -q master.zip
         mv vuln-list-master cache/vuln-list
 
+    - name: Clone advisories
+      run: |
+        git clone --depth 1 https://github.com/rubysec/ruby-advisory-db.git cache/ruby-advisory-db
+        git clone --depth 1 https://github.com/RustSec/advisory-db.git cache/rust-advisory-db
+        git clone --depth 1 https://github.com/FriendsOfPHP/security-advisories cache/php-security-advisories
+        git clone --depth 1 https://github.com/nodejs/security-wg.git cache/nodejs-security-wg
+        git clone --depth 1 https://github.com/pyupio/safety-db.git cache/python-safety-db
 
     - name: Build the binary
       run: go build -o trivy-db cmd/trivy-db/main.go
