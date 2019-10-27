@@ -15,12 +15,12 @@ func NewApp(version string) *cli.App {
 	app.Version = version
 	app.ArgsUsage = "image_name"
 
-	app.Usage = "Trivy DB updater"
+	app.Usage = "Trivy DB builder"
 
 	app.Commands = []cli.Command{
 		{
 			Name:   "build",
-			Usage:  "build database",
+			Usage:  "build a database file",
 			Action: build,
 			Flags: []cli.Flag{
 				cli.BoolFlag{
@@ -41,7 +41,7 @@ func NewApp(version string) *cli.App {
 		},
 		{
 			Name:   "upload",
-			Usage:  "upload database files",
+			Usage:  "upload database files to GitHub Release",
 			Action: upload,
 			Flags: []cli.Flag{
 				cli.StringFlag{
