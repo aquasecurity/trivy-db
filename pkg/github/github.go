@@ -19,7 +19,7 @@ import (
 const (
 	owner      = "aquasecurity"
 	repo       = "trivy-db"
-	expiration = 1 * 24 * time.Hour
+	expiration = 3 * time.Hour
 )
 
 func UploadReleaseAsset(filePaths []string) error {
