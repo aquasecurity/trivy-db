@@ -2,8 +2,12 @@ package vulnsrc
 
 import (
 	"log"
-	"path/filepath"
 	"time"
+
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/cargo"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/python"
+
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	bolt "github.com/etcd-io/bbolt"
@@ -12,6 +16,8 @@ import (
 
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/amazon"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bundler"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/composer"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
 	debianoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
@@ -25,17 +31,26 @@ const (
 	repoURL = "https://github.com/aquasecurity/vuln-list.git"
 )
 
+type Updater interface {
+	Update(string) error
+}
+
 var (
 	// UpdateList has list of update distributions
 	UpdateList []string
-	updateMap  = map[string]types.VulnSrc{
-		vulnerability.Nvd:        nvd.NewVulnSrc(),
-		vulnerability.Alpine:     alpine.NewVulnSrc(),
-		vulnerability.RedHat:     redhat.NewVulnSrc(),
-		vulnerability.Debian:     debian.NewVulnSrc(),
-		vulnerability.DebianOVAL: debianoval.NewVulnSrc(),
-		vulnerability.Ubuntu:     ubuntu.NewVulnSrc(),
-		vulnerability.Amazon:     amazon.NewVulnSrc(),
+	updateMap  = map[string]Updater{
+		vulnerability.Nvd:                   nvd.NewVulnSrc(),
+		vulnerability.Alpine:                alpine.NewVulnSrc(),
+		vulnerability.RedHat:                redhat.NewVulnSrc(),
+		vulnerability.Debian:                debian.NewVulnSrc(),
+		vulnerability.DebianOVAL:            debianoval.NewVulnSrc(),
+		vulnerability.Ubuntu:                ubuntu.NewVulnSrc(),
+		vulnerability.Amazon:                amazon.NewVulnSrc(),
+		vulnerability.RubySec:               bundler.NewVulnSrc(),
+		vulnerability.PhpSecurityAdvisories: composer.NewVulnSrc(),
+		vulnerability.NodejsSecurityWg:      node.NewVulnSrc(),
+		vulnerability.PythonSafetyDB:        python.NewVulnSrc(),
+		vulnerability.RustSec:               cargo.NewVulnSrc(),
 	}
 )
 
@@ -48,7 +63,6 @@ func init() {
 
 func Update(targets []string, cacheDir string, light bool) error {
 	log.Println("Updating vulnerability database...")
-	dir := filepath.Join(cacheDir, "vuln-list")
 
 	for _, distribution := range targets {
 		vulnSrc, ok := updateMap[distribution]
@@ -57,7 +71,7 @@ func Update(targets []string, cacheDir string, light bool) error {
 		}
 		log.Printf("Updating %s data...\n", distribution)
 
-		if err := vulnSrc.Update(dir); err != nil {
+		if err := vulnSrc.Update(cacheDir); err != nil {
 			return xerrors.Errorf("error in %s update: %w", distribution, err)
 		}
 	}
