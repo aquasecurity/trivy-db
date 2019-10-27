@@ -88,15 +88,6 @@ type Vulnerability struct {
 	References  []string `json:",omitempty"`
 }
 
-type DetectedVulnerability struct {
-	VulnerabilityID  string `json:",omitempty"`
-	PkgName          string `json:",omitempty"`
-	InstalledVersion string `json:",omitempty"`
-	FixedVersion     string `json:",omitempty"`
-
-	Vulnerability
-}
-
 type VulnSrc interface {
 	Update(string) error
 }
