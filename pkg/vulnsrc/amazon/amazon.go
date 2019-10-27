@@ -46,7 +46,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	rootDir := filepath.Join(dir, amazonDir)
+	rootDir := filepath.Join(dir, "vuln-list", amazonDir)
 
 	err := fileWalker(rootDir, vs.walkFunc)
 	if err != nil {
@@ -103,8 +103,7 @@ func (vs VulnSrc) commitFunc(tx *bolt.Tx) error {
 			for _, pkg := range alas.Packages {
 				platformName := fmt.Sprintf(platformFormat, alas.Version)
 				advisory := types.Advisory{
-					VulnerabilityID: cveID,
-					FixedVersion:    constructVersion(pkg.Epoch, pkg.Version, pkg.Release),
+					FixedVersion: constructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 				}
 				if err := vs.dbc.PutAdvisory(tx, platformName, pkg.Name, cveID, advisory); err != nil {
 					return xerrors.Errorf("failed to save amazon advisory: %w", err)

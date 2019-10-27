@@ -32,7 +32,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	rootDir := filepath.Join(dir, nvdDir)
+	rootDir := filepath.Join(dir, "vuln-list", nvdDir)
 
 	var items []Item
 	buffer := &bytes.Buffer{}
@@ -100,8 +100,4 @@ func (vs VulnSrc) save(items []Item) error {
 		return xerrors.Errorf("error in batch update: %w", err)
 	}
 	return nil
-}
-
-func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) {
-	panic("NVD has no advisory")
 }

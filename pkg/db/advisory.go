@@ -30,11 +30,12 @@ func (dbc Config) GetAdvisories(source, pkgName string) ([]types.Advisory, error
 	}
 
 	var results []types.Advisory
-	for _, v := range advisories {
+	for vulnID, v := range advisories {
 		var advisory types.Advisory
 		if err = json.Unmarshal(v, &advisory); err != nil {
 			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
 		}
+		advisory.VulnerabilityID = vulnID
 		results = append(results, advisory)
 	}
 	return results, nil

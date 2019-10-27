@@ -37,7 +37,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	rootDir := filepath.Join(dir, debianDir)
+	rootDir := filepath.Join(dir, "vuln-list", debianDir)
 
 	var cves []DebianOVAL
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
@@ -108,8 +108,7 @@ func (vs VulnSrc) save(cves []DebianOVAL) error {
 				platformName := fmt.Sprintf(platformFormat, majorVersion)
 				cveID := cve.Metadata.Title
 				advisory := types.Advisory{
-					VulnerabilityID: cveID,
-					FixedVersion:    affectedPkg.FixedVersion,
+					FixedVersion: affectedPkg.FixedVersion,
 				}
 				if err := vs.dbc.PutAdvisory(tx, platformName, affectedPkg.Name, cveID, advisory); err != nil {
 					return xerrors.Errorf("failed to save Debian OVAL advisory: %w", err)

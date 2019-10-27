@@ -36,7 +36,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	rootDir := filepath.Join(dir, alpineDir)
+	rootDir := filepath.Join(dir, "vuln-list", alpineDir)
 	var cves []AlpineCVE
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		var cve AlpineCVE
@@ -65,8 +65,7 @@ func (vs VulnSrc) save(cves []AlpineCVE) error {
 			platformName := fmt.Sprintf(platformFormat, cve.Release)
 			pkgName := cve.Package
 			advisory := types.Advisory{
-				VulnerabilityID: cve.VulnerabilityID,
-				FixedVersion:    cve.FixedVersion,
+				FixedVersion: cve.FixedVersion,
 			}
 			if err := vs.dbc.PutAdvisory(tx, platformName, pkgName, cve.VulnerabilityID, advisory); err != nil {
 				return xerrors.Errorf("failed to save alpine advisory: %w", err)

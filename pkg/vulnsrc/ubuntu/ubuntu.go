@@ -54,7 +54,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	rootDir := filepath.Join(dir, ubuntuDir)
+	rootDir := filepath.Join(dir, "vuln-list", ubuntuDir)
 	var cves []UbuntuCVE
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		var cve UbuntuCVE
@@ -90,9 +90,7 @@ func (vs VulnSrc) save(cves []UbuntuCVE) error {
 						continue
 					}
 					platformName := fmt.Sprintf(platformFormat, osVersion)
-					advisory := types.Advisory{
-						VulnerabilityID: cve.Candidate,
-					}
+					advisory := types.Advisory{}
 					if status.Status == "released" {
 						advisory.FixedVersion = status.Note
 					}

@@ -41,7 +41,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	rootDir := filepath.Join(dir, redhatDir)
+	rootDir := filepath.Join(dir, "vuln-list", redhatDir)
 
 	var cves []RedhatCVE
 	err := utils.FileWalk(rootDir, func(r io.Reader, _ string) error {
@@ -127,8 +127,7 @@ func (vs VulnSrc) save(cves []RedhatCVE) error {
 
 				pkgName, version := splitPkgName(affected.Package)
 				advisory := types.Advisory{
-					VulnerabilityID: cve.Name,
-					FixedVersion:    version,
+					FixedVersion: version,
 				}
 				if err := vs.dbc.PutAdvisory(tx, platformName, pkgName, cve.Name, advisory); err != nil {
 					return xerrors.Errorf("failed to save Red Hat advisory: %w", err)
@@ -152,8 +151,7 @@ func (vs VulnSrc) save(cves []RedhatCVE) error {
 
 				advisory := types.Advisory{
 					// this means all versions
-					FixedVersion:    "",
-					VulnerabilityID: cve.Name,
+					FixedVersion: "",
 				}
 				if err := vs.dbc.PutAdvisory(tx, platformName, pkgName, cve.Name, advisory); err != nil {
 					return xerrors.Errorf("failed to save Red Hat advisory: %w", err)
