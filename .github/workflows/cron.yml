@@ -51,6 +51,7 @@ jobs:
       run: |
         export PATH=$PATH:$(go env GOPATH)/bin
         bbolt compact -o assets/trivy.db cache/db/trivy.db
+        rm cache/db/trivy.db
 
     #
     # Light DB
