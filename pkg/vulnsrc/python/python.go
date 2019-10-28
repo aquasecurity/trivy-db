@@ -36,7 +36,8 @@ type RawAdvisory struct {
 }
 
 type Advisory struct {
-	Specs []string
+	VulnerabilityID string   `json:",omitempty"`
+	Specs           []string `json:",omitempty"`
 }
 
 type VulnSrc struct {
@@ -109,4 +110,22 @@ func (vs VulnSrc) commit(tx *bolt.Tx, advisoryDB AdvisoryDB) error {
 		}
 	}
 	return nil
+}
+
+func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
+	advisories, err := vs.dbc.ForEachAdvisory(vulnerability.PythonSafetyDB, pkgName)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to iterate python vulnerabilities: %w", err)
+	}
+
+	var results []Advisory
+	for vulnID, a := range advisories {
+		var advisory Advisory
+		if err = json.Unmarshal(a, &advisory); err != nil {
+			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
+		}
+		advisory.VulnerabilityID = vulnID
+		results = append(results, advisory)
+	}
+	return results, nil
 }

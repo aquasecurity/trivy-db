@@ -1,6 +1,7 @@
 package composer
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -35,7 +36,8 @@ type Branch struct {
 }
 
 type Advisory struct {
-	Branches map[string]Branch `json:",omitempty"`
+	VulnerabilityID string            `json:",omitempty"`
+	Branches        map[string]Branch `json:",omitempty"`
 }
 
 type VulnSrc struct {
@@ -113,4 +115,22 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 
 		return nil
 	})
+}
+
+func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
+	advisories, err := vs.dbc.ForEachAdvisory(vulnerability.PhpSecurityAdvisories, pkgName)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to iterate php vulnerabilities: %w", err)
+	}
+
+	var results []Advisory
+	for vulnID, a := range advisories {
+		var advisory Advisory
+		if err = json.Unmarshal(a, &advisory); err != nil {
+			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
+		}
+		advisory.VulnerabilityID = vulnID
+		results = append(results, advisory)
+	}
+	return results, nil
 }

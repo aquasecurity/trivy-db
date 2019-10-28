@@ -1,6 +1,7 @@
 package cargo
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -38,6 +39,7 @@ type RawAdvisory struct {
 }
 
 type Advisory struct {
+	VulnerabilityID string   `json:",omitempty"`
 	PatchedVersions []string `json:",omitempty"`
 }
 
@@ -114,4 +116,22 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 
 		return nil
 	})
+}
+
+func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
+	advisories, err := vs.dbc.ForEachAdvisory(vulnerability.RustSec, pkgName)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to iterate rust vulnerabilities: %w", err)
+	}
+
+	var results []Advisory
+	for vulnID, a := range advisories {
+		var advisory Advisory
+		if err = json.Unmarshal(a, &advisory); err != nil {
+			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
+		}
+		advisory.VulnerabilityID = vulnID
+		results = append(results, advisory)
+	}
+	return results, nil
 }
