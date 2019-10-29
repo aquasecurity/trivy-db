@@ -45,9 +45,9 @@ type Operations interface {
 }
 
 type Metadata struct {
-	Version   int
-	Type      Type
-	UpdatedAt time.Time
+	Version    int
+	Type       Type
+	NextUpdate time.Time
 }
 
 type Config struct {

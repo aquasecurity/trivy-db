@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"strings"
+	"time"
 
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 
@@ -36,6 +37,12 @@ func NewApp(version string) *cli.App {
 					Name:  "cache-dir",
 					Usage: "cache directory path",
 					Value: utils.CacheDir(),
+				},
+				cli.DurationFlag{
+					Name:   "update-interval",
+					Usage:  "update interval",
+					Value:  24 * time.Hour,
+					EnvVar: "UPDATE_INTERVAL",
 				},
 			},
 		},
