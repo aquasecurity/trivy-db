@@ -27,10 +27,6 @@ import (
 	"golang.org/x/xerrors"
 )
 
-const (
-	repoURL = "https://github.com/aquasecurity/vuln-list.git"
-)
-
 type Updater interface {
 	Update(string) error
 }
