@@ -2,7 +2,6 @@ package db
 
 import (
 	"encoding/json"
-	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -56,7 +55,6 @@ func Init(cacheDir string) (err error) {
 		return xerrors.Errorf("failed to mkdir: %w", err)
 	}
 
-	log.Printf("db path: %s\n", dbPath)
 	db, err = bolt.Open(dbPath, 0600, nil)
 	if err != nil {
 		return xerrors.Errorf("failed to open db: %w", err)
