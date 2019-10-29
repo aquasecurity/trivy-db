@@ -18,15 +18,18 @@ func (dbc Config) PutSeverity(tx *bolt.Tx, cveID string, severity types.Severity
 	return bucket.Put([]byte(cveID), []byte(severity.String()))
 }
 
-func (dbc Config) GetSeverity(tx *bolt.Tx, cveID string) (types.Severity, error) {
-	bucket, err := tx.CreateBucketIfNotExists([]byte(severityBucket))
+func (dbc Config) GetSeverity(cveID string) (severity types.Severity, err error) {
+	err = db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(severityBucket))
+		value := bucket.Get([]byte(cveID))
+		severity, err = types.NewSeverity(string(value))
+		if err != nil {
+			return xerrors.Errorf("invalid severity: %w", err)
+		}
+		return nil
+	})
 	if err != nil {
-		return types.SeverityUnknown, xerrors.Errorf("failed to create a bucket: %w", err)
-	}
-	value := bucket.Get([]byte(cveID))
-	severity, err := types.NewSeverity(string(value))
-	if err != nil {
-		return types.SeverityUnknown, xerrors.Errorf("invalid severity: %w", err)
+		return types.SeverityUnknown, xerrors.Errorf("failed to get the severity: %w", err)
 	}
 	return severity, nil
 }

@@ -28,12 +28,8 @@ var (
 )
 
 type Operations interface {
-	//SetVersion(int) error
-	//Update(string, string, string, interface{}) error
-	//Put(*bolt.Bucket, string, string, interface{}) error
 	BatchUpdate(func(*bolt.Tx) error) error
-	//PutNestedBucket(*bolt.Tx, string, string, string, interface{}) error
-	//ForEach(string, string) (map[string][]byte, error)
+
 	PutVulnerabilityDetail(*bolt.Tx, string, string, types.VulnerabilityDetail) error
 
 	PutAdvisory(*bolt.Tx, string, string, string, interface{}) error
@@ -41,7 +37,7 @@ type Operations interface {
 	GetAdvisories(string, string) ([]types.Advisory, error)
 
 	PutSeverity(*bolt.Tx, string, types.Severity) error
-	GetSeverity(*bolt.Tx, string) (types.Severity, error)
+	GetSeverity(string) (types.Severity, error)
 }
 
 type Metadata struct {
