@@ -53,6 +53,19 @@ func (_m *MockDBConfig) PutAdvisory(a *bolt.Tx, b, c, d string, e interface{}) e
 	return ret.Error(0)
 }
 
+func (_m *MockDBConfig) GetAdvisories(a, b string) ([]types.Advisory, error) {
+	ret := _m.Called(a, b)
+	ret0 := ret.Get(0)
+	if ret0 == nil {
+		return nil, ret.Error(1)
+	}
+	advisories, ok := ret0.([]types.Advisory)
+	if !ok {
+		return nil, ret.Error(1)
+	}
+	return advisories, ret.Error(1)
+}
+
 func (_m *MockDBConfig) ForEachAdvisory(a, b string) (map[string][]byte, error) {
 	ret := _m.Called(a, b)
 	ret0 := ret.Get(0)

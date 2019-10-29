@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"golang.org/x/xerrors"
+
 	bolt "github.com/etcd-io/bbolt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -38,7 +40,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:          "cache dir doesnt exist",
 			cacheDir:      "badpathdoesnotexist",
-			expectedError: errors.New("error in amazon walk: error in file walk: lstat badpathdoesnotexist/amazon: no such file or directory"),
+			expectedError: errors.New("error in amazon walk: error in file walk: lstat badpathdoesnotexist/vuln-list/amazon: no such file or directory"),
 		},
 		{
 			name:           "unable to save amazon defintions",
@@ -66,43 +68,73 @@ func TestVulnSrc_Update(t *testing.T) {
 }
 
 func TestVulnSrc_Get(t *testing.T) {
-	type forEachReturn struct {
-		b   map[string][]byte
-		err error
+	type getAdvisoriesInput struct {
+		version string
+		pkgName string
 	}
+	type getAdvisoriesOutput struct {
+		advisories []types.Advisory
+		err        error
+	}
+	type getAdvisories struct {
+		input  getAdvisoriesInput
+		output getAdvisoriesOutput
+	}
+
 	testCases := []struct {
 		name          string
-		forEachFunc   forEachReturn
+		version       string
+		pkgName       string
+		getAdvisories getAdvisories
 		expectedError error
 		expectedVulns []types.Advisory
 	}{
 		{
-			name: "happy path",
-			forEachFunc: forEachReturn{
-				b: map[string][]byte{
-					"advisory1": []byte(`{"VulnerabilityID":"123","FixedVersion":"2.0.0"}`),
+			name:    "happy path",
+			version: "1",
+			pkgName: "curl",
+			getAdvisories: getAdvisories{
+				input: getAdvisoriesInput{
+					version: "amazon linux 1",
+					pkgName: "curl",
 				},
-				err: nil,
+				output: getAdvisoriesOutput{
+					advisories: []types.Advisory{
+						{VulnerabilityID: "CVE-2019-0001", FixedVersion: "0.1.2"},
+					},
+					err: nil,
+				},
 			},
 			expectedError: nil,
-			expectedVulns: []types.Advisory{{VulnerabilityID: "123", FixedVersion: "2.0.0"}},
+			expectedVulns: []types.Advisory{{VulnerabilityID: "CVE-2019-0001", FixedVersion: "0.1.2"}},
 		},
 		{
-			name:          "no advisories are returned",
-			forEachFunc:   forEachReturn{b: nil, err: nil},
+			name:    "no advisories are returned",
+			version: "2",
+			pkgName: "bash",
+			getAdvisories: getAdvisories{
+				input: getAdvisoriesInput{
+					version: "amazon linux 2",
+					pkgName: "bash",
+				},
+				output: getAdvisoriesOutput{advisories: []types.Advisory{}, err: nil},
+			},
 			expectedError: nil,
-			expectedVulns: []types.Advisory(nil),
+			expectedVulns: []types.Advisory{},
 		},
 		{
-			name:          "amazon forEach return an error",
-			forEachFunc:   forEachReturn{b: nil, err: errors.New("foreach func returned an error")},
-			expectedError: errors.New("error in amazon foreach: foreach func returned an error"),
-			expectedVulns: nil,
-		},
-		{
-			name:          "failed to unmarshal amazon json",
-			forEachFunc:   forEachReturn{b: map[string][]byte{"foo": []byte(`badbar`)}, err: nil},
-			expectedError: errors.New("failed to unmarshal amazon JSON: invalid character 'b' looking for beginning of value"),
+			name: "amazon GetAdvisories return an error",
+			getAdvisories: getAdvisories{
+				input: getAdvisoriesInput{
+					version: mock.Anything,
+					pkgName: mock.Anything,
+				},
+				output: getAdvisoriesOutput{
+					advisories: []types.Advisory{},
+					err:        xerrors.New("unable to get advisories"),
+				},
+			},
+			expectedError: errors.New("failed to get Amazon advisories: unable to get advisories"),
 			expectedVulns: nil,
 		},
 	}
@@ -110,21 +142,20 @@ func TestVulnSrc_Get(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockDBConfig := new(db.MockDBConfig)
-			mockDBConfig.On("ForEachAdvisory", mock.Anything, mock.Anything).Return(
-				tc.forEachFunc.b, tc.forEachFunc.err,
+			mockDBConfig.On("GetAdvisories",
+				tc.getAdvisories.input.version, tc.getAdvisories.input.pkgName).Return(
+				tc.getAdvisories.output.advisories, tc.getAdvisories.output.err,
 			)
-			mockDBConfig.On("PutAdvisory",
-				mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-			ac := VulnSrc{dbc: mockDBConfig}
 
-			vuls, err := ac.Get("1.1.0", "testpkg")
+			ac := VulnSrc{dbc: mockDBConfig}
+			vuls, err := ac.Get(tc.version, tc.pkgName)
+
 			switch {
 			case tc.expectedError != nil:
 				assert.EqualError(t, err, tc.expectedError.Error(), tc.name)
 			default:
 				assert.NoError(t, err, tc.name)
 			}
-
 			assert.Equal(t, tc.expectedVulns, vuls, tc.name)
 		})
 	}
