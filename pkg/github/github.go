@@ -121,8 +121,6 @@ func (c Client) updateReleaseAsset(ctx context.Context, tag string, filePaths []
 		if err != nil {
 			return err
 		}
-	} else if err != nil {
-		return err
 	}
 
 	for _, filePath := range filePaths {
