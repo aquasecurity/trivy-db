@@ -75,14 +75,14 @@ func Close() error {
 	return nil
 }
 
-func GetVersion() int {
-	metadata, err := GetMetadata()
+func (dbc Config) GetVersion() int {
+	metadata, err := dbc.GetMetadata()
 	if err != nil {
 		return 0
 	}
 	return metadata.Version
 }
-func GetMetadata() (Metadata, error) {
+func (dbc Config) GetMetadata() (Metadata, error) {
 	var metadata Metadata
 	value, err := Config{}.get("trivy", "metadata", "data")
 	if err != nil {
