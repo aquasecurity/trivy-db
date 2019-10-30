@@ -84,8 +84,8 @@ func (_m *MockDBConfig) PutSeverity(a *bolt.Tx, b string, c types.Severity) erro
 	return ret.Error(0)
 }
 
-func (_m *MockDBConfig) GetSeverity(a *bolt.Tx, b string) (types.Severity, error) {
-	ret := _m.Called(a, b)
+func (_m *MockDBConfig) GetSeverity(a string) (types.Severity, error) {
+	ret := _m.Called(a)
 	ret0 := ret.Get(0)
 	if ret0 == nil {
 		return types.SeverityUnknown, ret.Error(1)
