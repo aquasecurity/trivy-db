@@ -390,7 +390,7 @@ func TestClient_UploadReleaseAsset(t *testing.T) {
 			},
 		},
 		{
-			name:  "sad path: updateReleaseAsset failed",
+			name:  "sad path: updateReleaseAsset failed because GetReleaseByTag fails",
 			clock: ct.NewFakeClock(time.Date(2020, 12, 31, 23, 59, 59, 0, time.UTC)),
 			getReleaseByTag: []getReleaseByTag{
 				{
@@ -401,6 +401,41 @@ func TestClient_UploadReleaseAsset(t *testing.T) {
 				},
 			},
 			expectedError: errors.New("failed to update release asset: GetReleaseByTag failed"),
+		},
+		{
+			name:  "sad path: updateReleaseAsset failed because CreateRelease fails",
+			clock: ct.NewFakeClock(time.Date(2020, 12, 31, 23, 59, 59, 0, time.UTC)),
+			getReleaseByTag: []getReleaseByTag{
+				{
+					input: "v1-2020123123",
+					output: getReleaseByTagOutput{
+						release: &github.RepositoryRelease{
+							ID:      github.Int64(1),
+							TagName: github.String("v1-2020123123"),
+						},
+						response: &github.Response{
+							Response: &http.Response{
+								StatusCode: 404,
+							},
+						},
+						err: nil,
+					},
+				},
+			},
+			createRelease: []createRelease{
+				{
+					input: &github.RepositoryRelease{
+						TagName:    github.String("v1-2020123123"),
+						Name:       github.String("v1-2020123123"),
+						Draft:      github.Bool(false),
+						Prerelease: github.Bool(false),
+					},
+					output: createReleaseOutput{
+						err: errors.New("CreateRelease failed"),
+					},
+				},
+			},
+			expectedError: errors.New("failed to update release asset: CreateRelease failed"),
 		},
 	}
 
