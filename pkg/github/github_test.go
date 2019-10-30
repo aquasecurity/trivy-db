@@ -2,6 +2,7 @@ package github_test
 
 import (
 	"context"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -387,6 +388,19 @@ func TestClient_UploadReleaseAsset(t *testing.T) {
 					output: deleteRefOutput{},
 				},
 			},
+		},
+		{
+			name:  "sad path: updateReleaseAsset failed",
+			clock: ct.NewFakeClock(time.Date(2020, 12, 31, 23, 59, 59, 0, time.UTC)),
+			getReleaseByTag: []getReleaseByTag{
+				{
+					input: "v1-2020123123",
+					output: getReleaseByTagOutput{
+						err: errors.New("GetReleaseByTag failed"),
+					},
+				},
+			},
+			expectedError: errors.New("failed to update release asset: GetReleaseByTag failed"),
 		},
 	}
 

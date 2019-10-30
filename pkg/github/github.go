@@ -106,6 +106,9 @@ func (c Client) UploadReleaseAsset(ctx context.Context, filePaths []string) erro
 func (c Client) updateReleaseAsset(ctx context.Context, tag string, filePaths []string) error {
 	log.Printf("Update release assets, release: %s\n", tag)
 	release, res, err := c.Repository.GetReleaseByTag(ctx, tag)
+	if err != nil {
+		return err
+	}
 
 	if res.StatusCode == 404 {
 		release = &github.RepositoryRelease{
