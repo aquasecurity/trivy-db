@@ -437,6 +437,44 @@ func TestClient_UploadReleaseAsset(t *testing.T) {
 			},
 			expectedError: errors.New("failed to update release asset: CreateRelease failed"),
 		},
+		{
+			name:  "sad path: updateReleaseAsset failed because UploadReleaseAsset fails",
+			clock: ct.NewFakeClock(time.Date(2020, 12, 31, 23, 59, 59, 0, time.UTC)),
+			files: map[string][]byte{
+				"trivy.db.gz":       []byte("full"),
+				"trivy-light.db.gz": []byte("light"),
+			},
+			filePaths: []string{
+				"trivy.db.gz",
+				"trivy-light.db.gz",
+			},
+			getReleaseByTag: []getReleaseByTag{
+				{
+					input: "v1-2020123123",
+					output: getReleaseByTagOutput{
+						release: &github.RepositoryRelease{
+							ID:      github.Int64(1),
+							TagName: github.String("v1-2020123123"),
+						},
+						response: &github.Response{
+							Response: &http.Response{
+								StatusCode: 200,
+							},
+						},
+						err: nil,
+					},
+				},
+			},
+			uploadReleaseAsset: []uploadReleaseAsset{
+				{
+					input: 1,
+					output: uploadReleaseAssetOutput{
+						err: errors.New("UploadReleaseAsset failed"),
+					},
+				},
+			},
+			expectedError: errors.New("failed to update release asset: UploadReleaseAsset failed"),
+		},
 	}
 
 	for _, tc := range testCases {
