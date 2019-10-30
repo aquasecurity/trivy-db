@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -110,7 +111,7 @@ func (c Client) updateReleaseAsset(ctx context.Context, tag string, filePaths []
 		return err
 	}
 
-	if res.StatusCode == 404 {
+	if res.StatusCode == http.StatusNotFound {
 		release = &github.RepositoryRelease{
 			TagName:    github.String(tag),
 			Name:       github.String(tag),
