@@ -61,7 +61,7 @@ func init() {
 	}
 }
 
-func Update(targets []string, cacheDir string, light bool) error {
+func Update(targets []string, cacheDir string, light bool, updateInterval time.Duration) error {
 	log.Println("Updating vulnerability database...")
 
 	for _, distribution := range targets {
@@ -83,9 +83,9 @@ func Update(targets []string, cacheDir string, light bool) error {
 	}
 
 	err := dbc.SetMetadata(db.Metadata{
-		Version:   db.SchemaVersion,
-		Type:      dbType,
-		UpdatedAt: time.Now().UTC(),
+		Version:    db.SchemaVersion,
+		Type:       dbType,
+		NextUpdate: time.Now().UTC().Add(updateInterval),
 	})
 	if err != nil {
 		return xerrors.Errorf("failed to save metadata: %w", err)
