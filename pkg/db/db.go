@@ -43,6 +43,7 @@ type Metadata struct {
 	Version    int
 	Type       Type
 	NextUpdate time.Time
+	UpdatedAt  time.Time
 }
 
 type Config struct {
