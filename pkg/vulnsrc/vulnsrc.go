@@ -86,6 +86,7 @@ func Update(targets []string, cacheDir string, light bool, updateInterval time.D
 		Version:    db.SchemaVersion,
 		Type:       dbType,
 		NextUpdate: time.Now().UTC().Add(updateInterval),
+		UpdatedAt:  time.Now().UTC(),
 	})
 	if err != nil {
 		return xerrors.Errorf("failed to save metadata: %w", err)
