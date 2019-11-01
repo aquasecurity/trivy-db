@@ -2,7 +2,6 @@ package composer
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -73,7 +72,6 @@ func (vs VulnSrc) update(repoPath string) error {
 func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			fmt.Println(path)
 			return err
 		}
 		if info.IsDir() || !strings.HasPrefix(info.Name(), "CVE-") {

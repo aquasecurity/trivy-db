@@ -63,6 +63,10 @@ func (r Repository) DeleteRef(ctx context.Context, ref string) (*github.Response
 	return r.git.DeleteRef(ctx, r.owner, r.repoName, ref)
 }
 
+type VCSClientInterface interface {
+	UploadReleaseAsset(ctx context.Context, filePaths []string) error
+}
+
 type Client struct {
 	Clock      clock.Clock
 	Repository RepositoryInterface

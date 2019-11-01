@@ -6,11 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/aquasecurity/trivy-db/pkg/github"
 	"github.com/urfave/cli"
 )
 
-func upload(c *cli.Context) error {
+func (ac AppConfig) upload(c *cli.Context) error {
 	dir := c.String("dir")
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
@@ -28,8 +27,7 @@ func upload(c *cli.Context) error {
 	}
 
 	ctx := context.Background()
-	client := github.NewClient(ctx)
-	if err := client.UploadReleaseAsset(ctx, filePaths); err != nil {
+	if err := ac.Client.UploadReleaseAsset(ctx, filePaths); err != nil {
 		return err
 	}
 	return nil
