@@ -4,18 +4,23 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aquasecurity/trivy-db/pkg/github"
+
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc"
 	"github.com/urfave/cli"
 )
 
-func NewApp(version string) *cli.App {
+type AppConfig struct {
+	Client github.VCSClientInterface
+}
+
+func (ac *AppConfig) NewApp(version string) *cli.App {
 	app := cli.NewApp()
 	app.Name = "trivy-db"
 	app.Version = version
 	app.ArgsUsage = "image_name"
-
 	app.Usage = "Trivy DB builder"
 
 	app.Commands = []cli.Command{
@@ -49,7 +54,7 @@ func NewApp(version string) *cli.App {
 		{
 			Name:   "upload",
 			Usage:  "upload database files to GitHub Release",
-			Action: upload,
+			Action: ac.upload,
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "dir",
