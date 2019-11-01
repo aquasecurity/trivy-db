@@ -37,6 +37,9 @@ type Operations interface {
 
 	PutSeverity(*bolt.Tx, string, types.Severity) error
 	GetSeverity(string) (types.Severity, error)
+
+	PutVulnerability(*bolt.Tx, string, types.Vulnerability) error
+	GetVulnerability(string) (types.Vulnerability, error)
 }
 
 type Metadata struct {
