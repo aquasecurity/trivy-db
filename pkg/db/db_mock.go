@@ -96,3 +96,21 @@ func (_m *MockDBConfig) GetSeverity(a string) (types.Severity, error) {
 	}
 	return s, ret.Error(1)
 }
+
+func (_m *MockDBConfig) PutVulnerability(a *bolt.Tx, b string, c types.Vulnerability) error {
+	ret := _m.Called(a, b, c)
+	return ret.Error(0)
+}
+
+func (_m *MockDBConfig) GetVulnerability(a string) (types.Vulnerability, error) {
+	ret := _m.Called(a)
+	ret0 := ret.Get(0)
+	if ret0 == nil {
+		return types.Vulnerability{}, ret.Error(1)
+	}
+	v, ok := ret0.(types.Vulnerability)
+	if !ok {
+		return types.Vulnerability{}, ret.Error(1)
+	}
+	return v, ret.Error(1)
+}
