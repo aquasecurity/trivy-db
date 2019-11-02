@@ -112,7 +112,9 @@ func (c Client) updateReleaseAsset(ctx context.Context, tag string, filePaths []
 	log.Printf("Update release assets, release: %s\n", tag)
 	release, res, err := c.Repository.GetReleaseByTag(ctx, tag)
 	if err != nil {
-		return err
+		if res == nil || res.StatusCode != http.StatusNotFound {
+			return xerrors.Errorf("unable to get a release by tag: %w", err)
+		}
 	}
 
 	if res.StatusCode == http.StatusNotFound {

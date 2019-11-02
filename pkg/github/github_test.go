@@ -400,7 +400,7 @@ func TestClient_UploadReleaseAsset(t *testing.T) {
 					},
 				},
 			},
-			expectedError: errors.New("failed to update release asset: GetReleaseByTag failed"),
+			expectedError: errors.New("failed to update release asset: unable to get a release by tag: GetReleaseByTag failed"),
 		},
 		{
 			name:  "sad path: updateReleaseAsset failed because CreateRelease fails",
