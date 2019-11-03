@@ -26,7 +26,7 @@ const (
 )
 
 var (
-	targetPlatforms = []string{"Red Hat Enterprise Linux 5", "Red Hat Enterprise Linux 6", "Red Hat Enterprise Linux 7"}
+	targetPlatforms = []string{"Red Hat Enterprise Linux 5", "Red Hat Enterprise Linux 6", "Red Hat Enterprise Linux 7", "Red Hat Enterprise Linux 8"}
 	targetStatus    = []string{"Affected", "Fix deferred", "Will not fix"}
 )
 
