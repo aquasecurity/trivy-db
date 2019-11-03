@@ -126,7 +126,7 @@ func (c Client) updateReleaseAsset(ctx context.Context, tag string, filePaths []
 		}
 		release, _, err = c.Repository.CreateRelease(ctx, release)
 		if err != nil {
-			return err
+			return xerrors.Errorf("failed to create new release: %w", err)
 		}
 	}
 
@@ -139,12 +139,12 @@ func (c Client) updateReleaseAsset(ctx context.Context, tag string, filePaths []
 		}
 		f, err := os.Open(filePath)
 		if err != nil {
-			return err
+			return xerrors.Errorf("unable to open a file: %w", err)
 		}
 
 		_, _, err = c.Repository.UploadReleaseAsset(ctx, *release.ID, &uploadOptions, f)
 		if err != nil {
-			return err
+			return xerrors.Errorf("unable to upload a release asset: %w", err)
 		}
 	}
 	return nil

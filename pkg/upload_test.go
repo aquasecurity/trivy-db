@@ -36,7 +36,7 @@ func TestAppConfig_Upload(t *testing.T) {
 		},
 		{
 			name:          "sad path: bad input dir",
-			expectedError: errors.New("open /path/to/nowhere: no such file or directory"),
+			expectedError: errors.New("unable to list files: open /path/to/nowhere: no such file or directory"),
 			inputDir:      "/path/to/nowhere",
 		},
 		{
@@ -44,7 +44,7 @@ func TestAppConfig_Upload(t *testing.T) {
 			uploadReleaseAssertFunc: func(ctx context.Context, filePaths []string) error {
 				return errors.New("upload release assert failed")
 			},
-			expectedError: errors.New("upload release assert failed"),
+			expectedError: errors.New("failed to upload a release asset: upload release assert failed"),
 		},
 	}
 

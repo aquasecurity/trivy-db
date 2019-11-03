@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"golang.org/x/xerrors"
+
 	"github.com/urfave/cli"
 )
 
@@ -13,7 +15,7 @@ func (ac AppConfig) upload(c *cli.Context) error {
 	dir := c.String("dir")
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		return err
+		return xerrors.Errorf("unable to list files: %w", err)
 	}
 
 	// only gz file
@@ -28,7 +30,7 @@ func (ac AppConfig) upload(c *cli.Context) error {
 
 	ctx := context.Background()
 	if err := ac.Client.UploadReleaseAsset(ctx, filePaths); err != nil {
-		return err
+		return xerrors.Errorf("failed to upload a release asset: %w", err)
 	}
 	return nil
 }

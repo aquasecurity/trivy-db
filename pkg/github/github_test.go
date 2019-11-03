@@ -435,7 +435,7 @@ func TestClient_UploadReleaseAsset(t *testing.T) {
 					},
 				},
 			},
-			expectedError: errors.New("failed to update release asset: CreateRelease failed"),
+			expectedError: errors.New("failed to update release asset: failed to create new release: CreateRelease failed"),
 		},
 		{
 			name:  "sad path: updateReleaseAsset failed because UploadReleaseAsset fails",
@@ -473,7 +473,7 @@ func TestClient_UploadReleaseAsset(t *testing.T) {
 					},
 				},
 			},
-			expectedError: errors.New("failed to update release asset: UploadReleaseAsset failed"),
+			expectedError: errors.New("failed to update release asset: unable to upload a release asset: UploadReleaseAsset failed"),
 		},
 	}
 
