@@ -278,10 +278,10 @@ func TestClient_UploadReleaseAsset(t *testing.T) {
 						},
 						response: &github.Response{
 							Response: &http.Response{
-								StatusCode: 404,
+								StatusCode: http.StatusNotFound,
 							},
 						},
-						err: nil,
+						err: errors.New("not found"),
 					},
 				},
 			},
