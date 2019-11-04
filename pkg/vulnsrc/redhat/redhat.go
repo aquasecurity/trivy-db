@@ -120,6 +120,9 @@ func (vs VulnSrc) save(cves []RedhatCVE) error {
 				advisory := types.Advisory{
 					FixedVersion: version,
 				}
+				if pkgName == "" {
+					continue
+				}
 				if err := vs.dbc.PutAdvisory(tx, platformName, pkgName, cve.Name, advisory); err != nil {
 					return xerrors.Errorf("failed to save Red Hat advisory: %w", err)
 				}
