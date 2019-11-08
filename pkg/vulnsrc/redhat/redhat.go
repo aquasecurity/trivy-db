@@ -173,29 +173,6 @@ func (vs VulnSrc) Get(majorVersion string, pkgName string) ([]types.Advisory, er
 	return advisories, nil
 }
 
-// ref. https://github.com/rpm-software-management/yum/blob/043e869b08126c1b24e392f809c9f6871344c60d/rpmUtils/miscutils.py#L301
-func splitPkgName(pkgName string) (string, string) {
-	var version string
-
-	// Trim release
-	index := strings.LastIndex(pkgName, "-")
-	if index == -1 {
-		return "", ""
-	}
-	version = pkgName[index:]
-	pkgName = pkgName[:index]
-
-	// Trim version
-	index = strings.LastIndex(pkgName, "-")
-	if index == -1 {
-		return "", ""
-	}
-	version = pkgName[index+1:] + version
-	pkgName = pkgName[:index]
-
-	return pkgName, version
-}
-
 func severityFromThreat(sev string) types.Severity {
 	switch strings.Title(sev) {
 	case "Low":
