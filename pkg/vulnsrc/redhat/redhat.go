@@ -136,7 +136,6 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []RedhatCVE) error {
 			if err := vs.dbc.PutAdvisory(tx, platformName, pkgName, cve.Name, advisory); err != nil {
 				return xerrors.Errorf("failed to save Red Hat advisory: %w", err)
 			}
-
 		}
 
 		cvssScore, _ := strconv.ParseFloat(cve.Cvss.CvssBaseScore, 64)
@@ -158,7 +157,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []RedhatCVE) error {
 
 		// for light DB
 		if err := vs.dbc.PutSeverity(tx, cve.Name, types.SeverityUnknown); err != nil {
-			return xerrors.Errorf("failed to save alpine vulnerability severity: %w", err)
+			return xerrors.Errorf("failed to save Red Hat vulnerability severity: %w", err)
 		}
 	}
 
@@ -169,7 +168,7 @@ func (vs VulnSrc) Get(majorVersion string, pkgName string) ([]types.Advisory, er
 	bucket := fmt.Sprintf(platformFormat, majorVersion)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get Alpine advisories: %w", err)
+		return nil, xerrors.Errorf("failed to get Red Hat advisories: %w", err)
 	}
 	return advisories, nil
 }
