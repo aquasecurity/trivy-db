@@ -108,7 +108,7 @@ func (vs VulnSrc) save(cves []RedhatCVE) error {
 		return vs.commit(tx, cves)
 	})
 	if err != nil {
-		return xerrors.Errorf("failed batch update")
+		return xerrors.Errorf("failed batch update: %w", err)
 	}
 	return nil
 }
