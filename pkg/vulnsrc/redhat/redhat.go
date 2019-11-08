@@ -92,11 +92,11 @@ func (vs VulnSrc) Update(dir string) error {
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in RedHat walk: %w", err)
+		return xerrors.Errorf("error in Red Hat walk: %w", err)
 	}
 
 	if err = vs.save(cves); err != nil {
-		return xerrors.Errorf("error in RedHat save: %w", err)
+		return xerrors.Errorf("error in Red Hat save: %w", err)
 	}
 
 	return nil
@@ -105,80 +105,84 @@ func (vs VulnSrc) Update(dir string) error {
 func (vs VulnSrc) save(cves []RedhatCVE) error {
 	log.Println("Saving RedHat DB")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		for _, cve := range cves {
-			for _, affected := range cve.AffectedRelease {
-				if affected.Package == "" {
-					continue
-				}
-				// e.g. Red Hat Enterprise Linux 7
-				platformName := affected.ProductName
-				if !utils.StringInSlice(affected.ProductName, targetPlatforms) {
-					continue
-				}
-
-				pkgName, version := splitPkgName(affected.Package)
-				advisory := types.Advisory{
-					FixedVersion: version,
-				}
-				if pkgName == "" {
-					continue
-				}
-				if err := vs.dbc.PutAdvisory(tx, platformName, pkgName, cve.Name, advisory); err != nil {
-					return xerrors.Errorf("failed to save Red Hat advisory: %w", err)
-				}
-
-			}
-
-			for _, pkgState := range cve.PackageState {
-				pkgName := pkgState.PackageName
-				if pkgName == "" {
-					continue
-				}
-				// e.g. Red Hat Enterprise Linux 7
-				platformName := pkgState.ProductName
-				if !utils.StringInSlice(platformName, targetPlatforms) {
-					continue
-				}
-				if !utils.StringInSlice(pkgState.FixState, targetStatus) {
-					continue
-				}
-
-				advisory := types.Advisory{
-					// this means all versions
-					FixedVersion: "",
-				}
-				if err := vs.dbc.PutAdvisory(tx, platformName, pkgName, cve.Name, advisory); err != nil {
-					return xerrors.Errorf("failed to save Red Hat advisory: %w", err)
-				}
-
-			}
-
-			cvssScore, _ := strconv.ParseFloat(cve.Cvss.CvssBaseScore, 64)
-			cvss3Score, _ := strconv.ParseFloat(cve.Cvss3.Cvss3BaseScore, 64)
-
-			title := strings.TrimPrefix(strings.TrimSpace(cve.Bugzilla.Description), cve.Name)
-
-			vuln := types.VulnerabilityDetail{
-				CvssScore:   cvssScore,
-				CvssScoreV3: cvss3Score,
-				Severity:    severityFromThreat(cve.ThreatSeverity),
-				References:  cve.References,
-				Title:       strings.TrimSpace(title),
-				Description: strings.TrimSpace(strings.Join(cve.Details, "")),
-			}
-			if err := vs.dbc.PutVulnerabilityDetail(tx, cve.Name, vulnerability.RedHat, vuln); err != nil {
-				return xerrors.Errorf("failed to save Red Hat vulnerability: %w", err)
-			}
-
-			// for light DB
-			if err := vs.dbc.PutSeverity(tx, cve.Name, types.SeverityUnknown); err != nil {
-				return xerrors.Errorf("failed to save alpine vulnerability severity: %w", err)
-			}
-		}
-		return nil
+		return vs.commit(tx, cves)
 	})
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (vs VulnSrc) commit(tx *bolt.Tx, cves []RedhatCVE) error {
+	for _, cve := range cves {
+		for _, affected := range cve.AffectedRelease {
+			if affected.Package == "" {
+				continue
+			}
+			// e.g. Red Hat Enterprise Linux 7
+			platformName := affected.ProductName
+			if !utils.StringInSlice(affected.ProductName, targetPlatforms) {
+				continue
+			}
+
+			pkgName, version := splitPkgName(affected.Package)
+			advisory := types.Advisory{
+				FixedVersion: version,
+			}
+			if pkgName == "" {
+				continue
+			}
+			if err := vs.dbc.PutAdvisory(tx, platformName, pkgName, cve.Name, advisory); err != nil {
+				return xerrors.Errorf("failed to save Red Hat advisory: %w", err)
+			}
+
+		}
+
+		for _, pkgState := range cve.PackageState {
+			pkgName := pkgState.PackageName
+			if pkgName == "" {
+				continue
+			}
+			// e.g. Red Hat Enterprise Linux 7
+			platformName := pkgState.ProductName
+			if !utils.StringInSlice(platformName, targetPlatforms) {
+				continue
+			}
+			if !utils.StringInSlice(pkgState.FixState, targetStatus) {
+				continue
+			}
+
+			advisory := types.Advisory{
+				// this means all versions
+				FixedVersion: "",
+			}
+			if err := vs.dbc.PutAdvisory(tx, platformName, pkgName, cve.Name, advisory); err != nil {
+				return xerrors.Errorf("failed to save Red Hat advisory: %w", err)
+			}
+
+		}
+
+		cvssScore, _ := strconv.ParseFloat(cve.Cvss.CvssBaseScore, 64)
+		cvss3Score, _ := strconv.ParseFloat(cve.Cvss3.Cvss3BaseScore, 64)
+
+		title := strings.TrimPrefix(strings.TrimSpace(cve.Bugzilla.Description), cve.Name)
+
+		vuln := types.VulnerabilityDetail{
+			CvssScore:   cvssScore,
+			CvssScoreV3: cvss3Score,
+			Severity:    severityFromThreat(cve.ThreatSeverity),
+			References:  cve.References,
+			Title:       strings.TrimSpace(title),
+			Description: strings.TrimSpace(strings.Join(cve.Details, "")),
+		}
+		if err := vs.dbc.PutVulnerabilityDetail(tx, cve.Name, vulnerability.RedHat, vuln); err != nil {
+			return xerrors.Errorf("failed to save Red Hat vulnerability: %w", err)
+		}
+
+		// for light DB
+		if err := vs.dbc.PutSeverity(tx, cve.Name, types.SeverityUnknown); err != nil {
+			return xerrors.Errorf("failed to save alpine vulnerability severity: %w", err)
+		}
 	}
 
 	return nil
