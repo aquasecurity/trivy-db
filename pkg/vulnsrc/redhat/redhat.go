@@ -115,29 +115,6 @@ func (vs VulnSrc) save(cves []RedhatCVE) error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx, cves []RedhatCVE) error {
 	for _, cve := range cves {
-		for _, affected := range cve.AffectedRelease {
-			if affected.Package == "" {
-				continue
-			}
-			// e.g. Red Hat Enterprise Linux 7
-			platformName := affected.ProductName
-			if !utils.StringInSlice(affected.ProductName, targetPlatforms) {
-				continue
-			}
-
-			pkgName, version := splitPkgName(affected.Package)
-			advisory := types.Advisory{
-				FixedVersion: version,
-			}
-			if pkgName == "" {
-				continue
-			}
-			if err := vs.dbc.PutAdvisory(tx, platformName, pkgName, cve.Name, advisory); err != nil {
-				return xerrors.Errorf("failed to save Red Hat advisory: %w", err)
-			}
-
-		}
-
 		for _, pkgState := range cve.PackageState {
 			pkgName := pkgState.PackageName
 			if pkgName == "" {
