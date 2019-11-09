@@ -21,8 +21,8 @@ import (
 var (
 	redhatDir = filepath.Join("oval", "redhat")
 
-	// e.g. redhat oval 8
-	platformFormat = "redhat oval %s"
+	// the same bucket name as Red Hat Security Data API
+	platformFormat = "Red Hat Enterprise Linux %s"
 
 	supportedPlatform = []string{"5", "6", "7", "8"}
 	platformRegexp    = regexp.MustCompile(`Red Hat Enterprise Linux (\d)`)
@@ -62,7 +62,7 @@ func (vs VulnSrc) Update(dir string) error {
 }
 
 // fromhttps://github.com/kotakanbe/goval-dictionary/blob/eff7f862637c3536b5ffef5a255bd1dd2779f582/models/redhat.go
-func walkRedhat(cri Criteria, pkgs []Package) []Package {
+func (vs VulnSrc) walkRedhat(cri Criteria, pkgs []Package) []Package {
 	for _, c := range cri.Criterions {
 		// e.g. firefox is earlier than 0:60.6.1-1.el8
 		ss := strings.Split(c.Comment, " is earlier than ")
@@ -80,7 +80,7 @@ func walkRedhat(cri Criteria, pkgs []Package) []Package {
 		return pkgs
 	}
 	for _, c := range cri.Criterias {
-		pkgs = walkRedhat(c, pkgs)
+		pkgs = vs.walkRedhat(c, pkgs)
 	}
 	return pkgs
 }
@@ -91,7 +91,7 @@ func (vs VulnSrc) save(advisories []RedhatOVAL) error {
 		return vs.commit(tx, advisories)
 	})
 	if err != nil {
-		return err
+		return xerrors.Errorf("failed batch update: %w", err)
 	}
 	return nil
 }
@@ -104,7 +104,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, advisories []RedhatOVAL) error {
 			continue
 		}
 		platformName := fmt.Sprintf(platformFormat, platforms[0])
-		affectedPkgs := walkRedhat(advisory.Criteria, []Package{})
+		affectedPkgs := vs.walkRedhat(advisory.Criteria, []Package{})
 		for _, affectedPkg := range affectedPkgs {
 			for _, cve := range advisory.Advisory.Cves {
 				advisory := types.Advisory{
