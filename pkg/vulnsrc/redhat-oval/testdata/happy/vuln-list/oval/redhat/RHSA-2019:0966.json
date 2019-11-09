@@ -1,0 +1,458 @@
+{
+  "XMLName": {
+    "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+    "Local": "definition"
+  },
+  "ID": "oval:com.redhat.rhsa:def:20190966",
+  "Class": "patch",
+  "Title": "RHSA-2019:0966: firefox security update (Critical)",
+  "Affecteds": [
+    {
+      "XMLName": {
+        "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+        "Local": "affected"
+      },
+      "Family": "unix",
+      "Platforms": [
+        "Red Hat Enterprise Linux 8"
+      ]
+    }
+  ],
+  "References": [
+    {
+      "XMLName": {
+        "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+        "Local": "reference"
+      },
+      "Source": "RHSA",
+      "RefID": "RHSA-2019:0966",
+      "RefURL": "https://access.redhat.com/errata/RHSA-2019:0966"
+    },
+    {
+      "XMLName": {
+        "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+        "Local": "reference"
+      },
+      "Source": "CVE",
+      "RefID": "CVE-2018-18506",
+      "RefURL": "https://access.redhat.com/security/cve/CVE-2018-18506"
+    },
+    {
+      "XMLName": {
+        "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+        "Local": "reference"
+      },
+      "Source": "CVE",
+      "RefID": "CVE-2019-9788",
+      "RefURL": "https://access.redhat.com/security/cve/CVE-2019-9788"
+    },
+    {
+      "XMLName": {
+        "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+        "Local": "reference"
+      },
+      "Source": "CVE",
+      "RefID": "CVE-2019-9790",
+      "RefURL": "https://access.redhat.com/security/cve/CVE-2019-9790"
+    },
+    {
+      "XMLName": {
+        "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+        "Local": "reference"
+      },
+      "Source": "CVE",
+      "RefID": "CVE-2019-9791",
+      "RefURL": "https://access.redhat.com/security/cve/CVE-2019-9791"
+    },
+    {
+      "XMLName": {
+        "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+        "Local": "reference"
+      },
+      "Source": "CVE",
+      "RefID": "CVE-2019-9792",
+      "RefURL": "https://access.redhat.com/security/cve/CVE-2019-9792"
+    },
+    {
+      "XMLName": {
+        "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+        "Local": "reference"
+      },
+      "Source": "CVE",
+      "RefID": "CVE-2019-9793",
+      "RefURL": "https://access.redhat.com/security/cve/CVE-2019-9793"
+    },
+    {
+      "XMLName": {
+        "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+        "Local": "reference"
+      },
+      "Source": "CVE",
+      "RefID": "CVE-2019-9795",
+      "RefURL": "https://access.redhat.com/security/cve/CVE-2019-9795"
+    },
+    {
+      "XMLName": {
+        "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+        "Local": "reference"
+      },
+      "Source": "CVE",
+      "RefID": "CVE-2019-9796",
+      "RefURL": "https://access.redhat.com/security/cve/CVE-2019-9796"
+    },
+    {
+      "XMLName": {
+        "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+        "Local": "reference"
+      },
+      "Source": "CVE",
+      "RefID": "CVE-2019-9810",
+      "RefURL": "https://access.redhat.com/security/cve/CVE-2019-9810"
+    },
+    {
+      "XMLName": {
+        "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+        "Local": "reference"
+      },
+      "Source": "CVE",
+      "RefID": "CVE-2019-9813",
+      "RefURL": "https://access.redhat.com/security/cve/CVE-2019-9813"
+    }
+  ],
+  "Description": "Mozilla Firefox is an open-source web browser, designed for standards compliance, performance, and portability.\n\nThis update upgrades Firefox to version 60.6.1 ESR. (BZ#1690308)\n\nSecurity Fix(es):\n\n* Mozilla: Memory safety bugs fixed in Firefox 66 and Firefox ESR 60.6 (CVE-2019-9788)\n\n* Mozilla: Use-after-free when removing in-use DOM elements (CVE-2019-9790)\n\n* Mozilla: Type inference is incorrect for constructors entered through on-stack replacement with IonMonkey (CVE-2019-9791)\n\n* Mozilla: IonMonkey leaks JS_OPTIMIZED_OUT magic value to script (CVE-2019-9792)\n\n* Mozilla: IonMonkey MArraySlice has incorrect alias information (CVE-2019-9810)\n\n* Mozilla: Ionmonkey type confusion with __proto__ mutations (CVE-2019-9813)\n\n* Mozilla: Improper bounds checks when Spectre mitigations are disabled (CVE-2019-9793)\n\n* Mozilla: Type-confusion in IonMonkey JIT compiler (CVE-2019-9795)\n\n* Mozilla: Use-after-free with SMIL animation controller (CVE-2019-9796)\n\n* Mozilla: Proxy Auto-Configuration file can define localhost access to be proxied (CVE-2018-18506)\n\nFor more details about the security issue(s), including the impact, a CVSS score, acknowledgments, and other related information, refer to the CVE page(s) listed in the References section.",
+  "Advisory": {
+    "XMLName": {
+      "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+      "Local": "advisory"
+    },
+    "Severity": "Critical",
+    "Cves": [
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "cve"
+        },
+        "CveID": "CVE-2018-18506",
+        "Cvss2": "",
+        "Cvss3": "6.1/CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+        "Cwe": "CWE-200",
+        "Impact": "moderate",
+        "Href": "https://access.redhat.com/security/cve/CVE-2018-18506",
+        "Public": "20190320"
+      },
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "cve"
+        },
+        "CveID": "CVE-2019-9788",
+        "Cvss2": "",
+        "Cvss3": "8.8/CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+        "Cwe": "CWE-120",
+        "Impact": "",
+        "Href": "https://access.redhat.com/security/cve/CVE-2019-9788",
+        "Public": "20190320"
+      },
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "cve"
+        },
+        "CveID": "CVE-2019-9790",
+        "Cvss2": "",
+        "Cvss3": "8.8/CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+        "Cwe": "CWE-416",
+        "Impact": "",
+        "Href": "https://access.redhat.com/security/cve/CVE-2019-9790",
+        "Public": "20190320"
+      },
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "cve"
+        },
+        "CveID": "CVE-2019-9791",
+        "Cvss2": "",
+        "Cvss3": "8.8/CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+        "Cwe": "CWE-843",
+        "Impact": "",
+        "Href": "https://access.redhat.com/security/cve/CVE-2019-9791",
+        "Public": "20190320"
+      },
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "cve"
+        },
+        "CveID": "CVE-2019-9792",
+        "Cvss2": "",
+        "Cvss3": "8.8/CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+        "Cwe": "CWE-203 CWE-787",
+        "Impact": "",
+        "Href": "https://access.redhat.com/security/cve/CVE-2019-9792",
+        "Public": "20190320"
+      },
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "cve"
+        },
+        "CveID": "CVE-2019-9793",
+        "Cvss2": "",
+        "Cvss3": "7.5/CVSS:3.0/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H",
+        "Cwe": "CWE-119",
+        "Impact": "important",
+        "Href": "https://access.redhat.com/security/cve/CVE-2019-9793",
+        "Public": "20190320"
+      },
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "cve"
+        },
+        "CveID": "CVE-2019-9795",
+        "Cvss2": "",
+        "Cvss3": "7.5/CVSS:3.0/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H",
+        "Cwe": "CWE-843 CWE-787",
+        "Impact": "important",
+        "Href": "https://access.redhat.com/security/cve/CVE-2019-9795",
+        "Public": "20190320"
+      },
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "cve"
+        },
+        "CveID": "CVE-2019-9796",
+        "Cvss2": "",
+        "Cvss3": "7.5/CVSS:3.0/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H",
+        "Cwe": "CWE-416",
+        "Impact": "important",
+        "Href": "https://access.redhat.com/security/cve/CVE-2019-9796",
+        "Public": "20190320"
+      },
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "cve"
+        },
+        "CveID": "CVE-2019-9810",
+        "Cvss2": "",
+        "Cvss3": "8.8/CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+        "Cwe": "CWE-119",
+        "Impact": "",
+        "Href": "https://access.redhat.com/security/cve/CVE-2019-9810",
+        "Public": "20190322"
+      },
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "cve"
+        },
+        "CveID": "CVE-2019-9813",
+        "Cvss2": "",
+        "Cvss3": "8.8/CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+        "Cwe": "CWE-843",
+        "Impact": "",
+        "Href": "https://access.redhat.com/security/cve/CVE-2019-9813",
+        "Public": "20190322"
+      }
+    ],
+    "Bugzillas": [
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "bugzilla"
+        },
+        "ID": "1690308",
+        "URL": "https://bugzilla.redhat.com/1690308",
+        "Title": "update ff to ESR 60.6[ZStream Clone]"
+      },
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "bugzilla"
+        },
+        "ID": "1690673",
+        "URL": "https://bugzilla.redhat.com/1690673",
+        "Title": "CVE-2018-18506 Mozilla: Proxy Auto-Configuration file can define localhost access to be proxied"
+      },
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "bugzilla"
+        },
+        "ID": "1690674",
+        "URL": "https://bugzilla.redhat.com/1690674",
+        "Title": "CVE-2019-9788 Mozilla: Memory safety bugs fixed in Firefox 66 and Firefox ESR 60.6"
+      },
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "bugzilla"
+        },
+        "ID": "1690675",
+        "URL": "https://bugzilla.redhat.com/1690675",
+        "Title": "CVE-2019-9790 Mozilla: Use-after-free when removing in-use DOM elements"
+      },
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "bugzilla"
+        },
+        "ID": "1690676",
+        "URL": "https://bugzilla.redhat.com/1690676",
+        "Title": "CVE-2019-9791 Mozilla: Type inference is incorrect for constructors entered through on-stack replacement with IonMonkey"
+      },
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "bugzilla"
+        },
+        "ID": "1690677",
+        "URL": "https://bugzilla.redhat.com/1690677",
+        "Title": "CVE-2019-9792 Mozilla: IonMonkey leaks JS_OPTIMIZED_OUT magic value to script"
+      },
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "bugzilla"
+        },
+        "ID": "1690678",
+        "URL": "https://bugzilla.redhat.com/1690678",
+        "Title": "CVE-2019-9793 Mozilla: Improper bounds checks when Spectre mitigations are disabled"
+      },
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "bugzilla"
+        },
+        "ID": "1690680",
+        "URL": "https://bugzilla.redhat.com/1690680",
+        "Title": "CVE-2019-9795 Mozilla: Type-confusion in IonMonkey JIT compiler"
+      },
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "bugzilla"
+        },
+        "ID": "1690681",
+        "URL": "https://bugzilla.redhat.com/1690681",
+        "Title": "CVE-2019-9796 Mozilla: Use-after-free with SMIL animation controller"
+      },
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "bugzilla"
+        },
+        "ID": "1692181",
+        "URL": "https://bugzilla.redhat.com/1692181",
+        "Title": "CVE-2019-9810 Mozilla: IonMonkey MArraySlice has incorrect alias information"
+      },
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "bugzilla"
+        },
+        "ID": "1692182",
+        "URL": "https://bugzilla.redhat.com/1692182",
+        "Title": "CVE-2019-9813 Mozilla: Ionmonkey type confusion with __proto__ mutations"
+      }
+    ],
+    "AffectedCPEList": [
+      "cpe:/a:redhat:enterprise_linux:8"
+    ],
+    "Issued": {
+      "Date": "2019-05-07"
+    },
+    "Updated": {
+      "Date": "2019-05-07"
+    }
+  },
+  "Criteria": {
+    "XMLName": {
+      "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+      "Local": "criteria"
+    },
+    "Operator": "AND",
+    "Criterias": [
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "criteria"
+        },
+        "Operator": "OR",
+        "Criterias": [
+          {
+            "XMLName": {
+              "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+              "Local": "criteria"
+            },
+            "Operator": "AND",
+            "Criterias": null,
+            "Criterions": [
+              {
+                "XMLName": {
+                  "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+                  "Local": "criterion"
+                },
+                "Negate": false,
+                "TestRef": "oval:com.redhat.rhsa:tst:20190966001",
+                "Comment": "firefox-debugsource is earlier than 0:60.6.1-1.el8"
+              },
+              {
+                "XMLName": {
+                  "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+                  "Local": "criterion"
+                },
+                "Negate": false,
+                "TestRef": "oval:com.redhat.rhsa:tst:20190966002",
+                "Comment": "firefox-debugsource is signed with Red Hat redhatrelease2 key"
+              }
+            ]
+          },
+          {
+            "XMLName": {
+              "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+              "Local": "criteria"
+            },
+            "Operator": "AND",
+            "Criterias": null,
+            "Criterions": [
+              {
+                "XMLName": {
+                  "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+                  "Local": "criterion"
+                },
+                "Negate": false,
+                "TestRef": "oval:com.redhat.rhsa:tst:20190966003",
+                "Comment": "firefox is earlier than 0:60.6.1-1.el8"
+              },
+              {
+                "XMLName": {
+                  "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+                  "Local": "criterion"
+                },
+                "Negate": false,
+                "TestRef": "oval:com.redhat.rhsa:tst:20190966004",
+                "Comment": "firefox is signed with Red Hat redhatrelease2 key"
+              }
+            ]
+          }
+        ],
+        "Criterions": null
+      }
+    ],
+    "Criterions": [
+      {
+        "XMLName": {
+          "Space": "http://oval.mitre.org/XMLSchema/oval-definitions-5",
+          "Local": "criterion"
+        },
+        "Negate": false,
+        "TestRef": "oval:com.redhat.rhsa:tst:20190966005",
+        "Comment": "Red Hat Enterprise Linux 8 is installed"
+      }
+    ]
+  }
+}
