@@ -45,12 +45,12 @@ var (
 		vulnerability.DebianOVAL:            debianoval.NewVulnSrc(),
 		vulnerability.Ubuntu:                ubuntu.NewVulnSrc(),
 		vulnerability.Amazon:                amazon.NewVulnSrc(),
+		vulnerability.OracleOVAL:            oracleoval.NewVulnSrc(),
 		vulnerability.RubySec:               bundler.NewVulnSrc(),
 		vulnerability.PhpSecurityAdvisories: composer.NewVulnSrc(),
 		vulnerability.NodejsSecurityWg:      node.NewVulnSrc(),
 		vulnerability.PythonSafetyDB:        python.NewVulnSrc(),
 		vulnerability.RustSec:               cargo.NewVulnSrc(),
-		vulnerability.OracleOVAL:            oracleoval.NewVulnSrc(),
 	}
 )
 

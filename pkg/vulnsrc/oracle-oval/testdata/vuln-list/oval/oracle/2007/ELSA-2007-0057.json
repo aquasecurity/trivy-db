@@ -50,7 +50,7 @@
     ]
   },
   "Severity": "MODERATE",
-  "CVEs": [
+  "Cves": [
     {
       "Impact": "",
       "Href": "http://linux.oracle.com/cve/CVE-2007-0493.html",

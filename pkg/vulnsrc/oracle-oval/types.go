@@ -7,7 +7,7 @@ type OracleOVAL struct {
 	References  []Reference
 	Criteria    Criteria
 	Severity    string
-	CVEs        []Cve
+	Cves        []Cve
 }
 
 type Reference struct {

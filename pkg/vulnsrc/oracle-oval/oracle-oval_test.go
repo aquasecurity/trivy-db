@@ -154,7 +154,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 						},
 					},
 					Severity: "MODERATE",
-					CVEs: []Cve{
+					Cves: []Cve{
 						Cve{
 							Impact: "",
 							Href:   "http://linux.oracle.com/cve/CVE-2007-0493.html",
@@ -258,7 +258,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 						},
 					},
 					Severity: "MODERATE",
-					CVEs: []Cve{
+					Cves: []Cve{
 						Cve{
 							Impact: "",
 							Href:   "http://linux.oracle.com/cve/CVE-2007-0493.html",
@@ -362,7 +362,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 						},
 					},
 					Severity: "MODERATE",
-					CVEs: []Cve{
+					Cves: []Cve{
 						Cve{
 							Impact: "",
 							Href:   "http://linux.oracle.com/cve/CVE-2007-0493.html",
@@ -451,7 +451,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 						},
 					},
 					Severity: "N/A",
-					CVEs: []Cve{
+					Cves: []Cve{
 						Cve{
 							Impact: "",
 							Href:   "http://linux.oracle.com/cve/CVE-0001-0001.html",
@@ -534,7 +534,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 						},
 					},
 					Severity: "N/A",
-					CVEs: []Cve{
+					Cves: []Cve{
 						Cve{
 							Impact: "",
 							Href:   "http://linux.oracle.com/cve/CVE-0001-0001.html",
