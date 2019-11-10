@@ -173,7 +173,15 @@ func TestVulnSrc_Commit(t *testing.T) {
 					input: putAdvisoryInput{
 						source:   "Oracle Linux 5",
 						pkgName:  "bind-devel",
-						cveID:    "ELSA-2007-0057",
+						cveID:    "CVE-2007-0493",
+						advisory: types.Advisory{VulnerabilityID: "", FixedVersion: "30:9.3.3-8.el5"},
+					},
+				},
+				{
+					input: putAdvisoryInput{
+						source:   "Oracle Linux 5",
+						pkgName:  "bind-devel",
+						cveID:    "CVE-2007-0494",
 						advisory: types.Advisory{VulnerabilityID: "", FixedVersion: "30:9.3.3-8.el5"},
 					},
 				},
@@ -181,13 +189,27 @@ func TestVulnSrc_Commit(t *testing.T) {
 			putVulnerabilityDetailList: []putVulnerabilityDetail{
 				{
 					input: putVulnerabilityDetailInput{
-						cveID:  "ELSA-2007-0057",
+						cveID:  "CVE-2007-0493",
 						source: vulnerability.OracleOVAL,
 						vuln: types.VulnerabilityDetail{
 							Description: "\n [30:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229 \n",
 							References: []string{
 								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 								"http://linux.oracle.com/cve/CVE-2007-0493.html",
+							},
+							Title:    "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)\n",
+							Severity: types.SeverityMedium,
+						},
+					},
+				},
+				{
+					input: putVulnerabilityDetailInput{
+						cveID:  "CVE-2007-0494",
+						source: vulnerability.OracleOVAL,
+						vuln: types.VulnerabilityDetail{
+							Description: "\n [30:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229 \n",
+							References: []string{
+								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 								"http://linux.oracle.com/cve/CVE-2007-0494.html",
 							},
 							Title:    "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)\n",
@@ -199,7 +221,13 @@ func TestVulnSrc_Commit(t *testing.T) {
 			putSeverityList: []putSeverity{
 				{
 					input: putSeverityInput{
-						cveID:    "ELSA-2007-0057",
+						cveID:    "CVE-2007-0493",
+						severity: types.SeverityUnknown,
+					},
+				},
+				{
+					input: putSeverityInput{
+						cveID:    "CVE-2007-0494",
 						severity: types.SeverityUnknown,
 					},
 				},
@@ -277,7 +305,15 @@ func TestVulnSrc_Commit(t *testing.T) {
 					input: putAdvisoryInput{
 						source:   "Oracle Linux 5",
 						pkgName:  "bind-devel",
-						cveID:    "ELSA-2007-0057",
+						cveID:    "CVE-2007-0493",
+						advisory: types.Advisory{VulnerabilityID: "", FixedVersion: "9.3.3-8.el5"},
+					},
+				},
+				{
+					input: putAdvisoryInput{
+						source:   "Oracle Linux 5",
+						pkgName:  "bind-devel",
+						cveID:    "CVE-2007-0494",
 						advisory: types.Advisory{VulnerabilityID: "", FixedVersion: "9.3.3-8.el5"},
 					},
 				},
@@ -285,13 +321,27 @@ func TestVulnSrc_Commit(t *testing.T) {
 			putVulnerabilityDetailList: []putVulnerabilityDetail{
 				{
 					input: putVulnerabilityDetailInput{
-						cveID:  "ELSA-2007-0057",
+						cveID:  "CVE-2007-0493",
 						source: vulnerability.OracleOVAL,
 						vuln: types.VulnerabilityDetail{
 							Description: "\n [0:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229 \n",
 							References: []string{
 								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 								"http://linux.oracle.com/cve/CVE-2007-0493.html",
+							},
+							Title:    "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)\n",
+							Severity: types.SeverityMedium,
+						},
+					},
+				},
+				{
+					input: putVulnerabilityDetailInput{
+						cveID:  "CVE-2007-0494",
+						source: vulnerability.OracleOVAL,
+						vuln: types.VulnerabilityDetail{
+							Description: "\n [0:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229 \n",
+							References: []string{
+								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 								"http://linux.oracle.com/cve/CVE-2007-0494.html",
 							},
 							Title:    "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)\n",
@@ -303,7 +353,13 @@ func TestVulnSrc_Commit(t *testing.T) {
 			putSeverityList: []putSeverity{
 				{
 					input: putSeverityInput{
-						cveID:    "ELSA-2007-0057",
+						cveID:    "CVE-2007-0493",
+						severity: types.SeverityUnknown,
+					},
+				},
+				{
+					input: putSeverityInput{
+						cveID:    "CVE-2007-0494",
 						severity: types.SeverityUnknown,
 					},
 				},
@@ -379,13 +435,27 @@ func TestVulnSrc_Commit(t *testing.T) {
 			putVulnerabilityDetailList: []putVulnerabilityDetail{
 				{
 					input: putVulnerabilityDetailInput{
-						cveID:  "ELSA-2007-0057",
+						cveID:  "CVE-2007-0493",
 						source: vulnerability.OracleOVAL,
 						vuln: types.VulnerabilityDetail{
 							Description: "\n [0:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229 \n",
 							References: []string{
 								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 								"http://linux.oracle.com/cve/CVE-2007-0493.html",
+							},
+							Title:    "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)\n",
+							Severity: types.SeverityMedium,
+						},
+					},
+				},
+				{
+					input: putVulnerabilityDetailInput{
+						cveID:  "CVE-2007-0494",
+						source: vulnerability.OracleOVAL,
+						vuln: types.VulnerabilityDetail{
+							Description: "\n [0:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229 \n",
+							References: []string{
+								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 								"http://linux.oracle.com/cve/CVE-2007-0494.html",
 							},
 							Title:    "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)\n",
@@ -397,7 +467,13 @@ func TestVulnSrc_Commit(t *testing.T) {
 			putSeverityList: []putSeverity{
 				{
 					input: putSeverityInput{
-						cveID:    "ELSA-2007-0057",
+						cveID:    "CVE-2007-0493",
+						severity: types.SeverityUnknown,
+					},
+				},
+				{
+					input: putSeverityInput{
+						cveID:    "CVE-2007-0494",
 						severity: types.SeverityUnknown,
 					},
 				},
@@ -463,7 +539,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 			putVulnerabilityDetailList: []putVulnerabilityDetail{
 				{
 					input: putVulnerabilityDetailInput{
-						cveID:  "ELSA-0001-0001",
+						cveID:  "CVE-0001-0001",
 						source: vulnerability.OracleOVAL,
 						vuln: types.VulnerabilityDetail{
 							Description: "\n empty description \n",
@@ -480,7 +556,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 			putSeverityList: []putSeverity{
 				{
 					input: putSeverityInput{
-						cveID:    "ELSA-0001-0001",
+						cveID:    "CVE-0001-0001",
 						severity: types.SeverityUnknown,
 					},
 				},
@@ -546,7 +622,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 			putVulnerabilityDetailList: []putVulnerabilityDetail{
 				{
 					input: putVulnerabilityDetailInput{
-						cveID:  "ELSA-0001-0001",
+						cveID:  "CVE-0001-0001",
 						source: vulnerability.OracleOVAL,
 						vuln: types.VulnerabilityDetail{
 							Description: "\n unknown description \n",
@@ -563,7 +639,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 			putSeverityList: []putSeverity{
 				{
 					input: putSeverityInput{
-						cveID:    "ELSA-0001-0001",
+						cveID:    "CVE-0001-0001",
 						severity: types.SeverityUnknown,
 					},
 				},
