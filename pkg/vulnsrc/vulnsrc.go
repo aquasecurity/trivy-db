@@ -6,6 +6,7 @@ import (
 
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/cargo"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/python"
+	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
 
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
 
@@ -38,6 +39,7 @@ var (
 		vulnerability.Nvd:                   nvd.NewVulnSrc(),
 		vulnerability.Alpine:                alpine.NewVulnSrc(),
 		vulnerability.RedHat:                redhat.NewVulnSrc(),
+		vulnerability.RedHatOVAL:            redhatoval.NewVulnSrc(),
 		vulnerability.Debian:                debian.NewVulnSrc(),
 		vulnerability.DebianOVAL:            debianoval.NewVulnSrc(),
 		vulnerability.Ubuntu:                ubuntu.NewVulnSrc(),
