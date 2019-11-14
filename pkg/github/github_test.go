@@ -341,6 +341,22 @@ func TestClient_UploadReleaseAsset(t *testing.T) {
 									Time: time.Date(2019, 1, 25, 9, 0, 59, 0, time.UTC),
 								},
 							},
+							{
+								ID:      github.Int64(333),
+								Name:    github.String("v1-2019013059"),
+								TagName: github.String("v1-2019013059"),
+								PublishedAt: &github.Timestamp{
+									Time: time.Date(2019, 1, 30, 10, 59, 59, 0, time.UTC),
+								},
+							},
+							{
+								ID:      github.Int64(444),
+								Name:    github.String("v1-2019013059"),
+								TagName: github.String("v1-2019013059"),
+								PublishedAt: &github.Timestamp{
+									Time: time.Date(2019, 1, 30, 9, 59, 59, 0, time.UTC),
+								},
+							},
 						},
 					},
 				},
@@ -373,19 +389,64 @@ func TestClient_UploadReleaseAsset(t *testing.T) {
 					input:  111,
 					output: deleteReleaseOutput{},
 				},
-				{
-					input:  222,
-					output: deleteReleaseOutput{},
-				},
 			},
 			deleteRef: []deleteRef{
 				{
 					input:  "tags/v1-2019012023",
 					output: deleteRefOutput{},
 				},
+			},
+		},
+		{
+			name:  "happy path with few old releases",
+			clock: ct.NewFakeClock(time.Date(2019, 1, 30, 11, 59, 59, 0, time.UTC)),
+			files: map[string][]byte{
+				"trivy.db.gz":       []byte("full"),
+				"trivy-light.db.gz": []byte("light"),
+				"trivy-dummy":       []byte("dummy"),
+			},
+			filePaths: []string{
+				"trivy.db.gz",
+				"trivy-light.db.gz",
+			},
+			listReleases: []listReleases{
 				{
-					input:  "tags/v1-2019012509",
-					output: deleteRefOutput{},
+					input: mock.Anything,
+					output: listReleasesOutput{
+						releases: []*github.RepositoryRelease{
+							{
+								ID:      github.Int64(111),
+								Name:    github.String("v1-2019012023"),
+								TagName: github.String("v1-2019012023"),
+								PublishedAt: &github.Timestamp{
+									Time: time.Date(2019, 1, 20, 23, 59, 59, 0, time.UTC),
+								},
+							},
+						},
+					},
+				},
+			},
+			getReleaseByTag: []getReleaseByTag{
+				{
+					input: "v1-2019013011",
+					output: getReleaseByTagOutput{
+						release: &github.RepositoryRelease{
+							ID:      github.Int64(2),
+							TagName: github.String("v1-2019013011"),
+						},
+						response: &github.Response{
+							Response: &http.Response{
+								StatusCode: 200,
+							},
+						},
+						err: nil,
+					},
+				},
+			},
+			uploadReleaseAsset: []uploadReleaseAsset{
+				{
+					input:  2,
+					output: uploadReleaseAssetOutput{},
 				},
 			},
 		},
