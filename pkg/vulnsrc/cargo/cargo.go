@@ -114,6 +114,10 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 			return xerrors.Errorf("failed to save rust vulnerability detail: %w", err)
 		}
 
+		if err := vs.dbc.PutSeverity(tx, advisory.Id, types.SeverityUnknown); err != nil {
+			return xerrors.Errorf("failed to save rust vulnerability severity: %w", err)
+		}
+
 		return nil
 	})
 }

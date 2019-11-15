@@ -111,6 +111,9 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 			return xerrors.Errorf("failed to save php vulnerability detail: %w", err)
 		}
 
+		if err := vs.dbc.PutSeverity(tx, vulnerabilityID, types.SeverityUnknown); err != nil {
+			return xerrors.Errorf("failed to save php vulnerability severity: %w", err)
+		}
 		return nil
 	})
 }

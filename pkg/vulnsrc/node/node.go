@@ -137,6 +137,10 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 			if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, vulnerability.NodejsSecurityWg, vuln); err != nil {
 				return xerrors.Errorf("failed to save node vulnerability detail: %w", err)
 			}
+
+			if err := vs.dbc.PutSeverity(tx, vulnID, types.SeverityUnknown); err != nil {
+				return xerrors.Errorf("failed to save node vulnerability severity: %w", err)
+			}
 		}
 
 		return nil
