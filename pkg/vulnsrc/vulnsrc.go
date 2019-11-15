@@ -94,7 +94,6 @@ func Update(targets []string, cacheDir string, light bool, updateInterval time.D
 		return optimizeLightDB(dbc)
 	}
 	return optimizeFullDB(dbc)
-
 }
 
 func optimizeFullDB(dbc db.Config) error {

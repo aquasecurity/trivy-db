@@ -133,6 +133,10 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnerabilityID, vulnerability.RubySec, vuln); err != nil {
 			return xerrors.Errorf("failed to save ruby vulnerability detail: %w", err)
 		}
+
+		if err := vs.dbc.PutSeverity(tx, vulnerabilityID, types.SeverityUnknown); err != nil {
+			return xerrors.Errorf("failed to save ruby vulnerability severity: %w", err)
+		}
 		return nil
 	})
 }
