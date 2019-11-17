@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/google/go-github/v28/github"
@@ -18,9 +19,8 @@ import (
 )
 
 const (
-	owner      = "aquasecurity"
-	repo       = "trivy-db"
-	expiration = 3 * time.Hour
+	owner = "aquasecurity"
+	repo  = "trivy-db"
 )
 
 type RepositoryInterface interface {
@@ -156,19 +156,26 @@ func (c Client) deleteOldReleases(ctx context.Context, now time.Time) error {
 	if err != nil {
 		return xerrors.Errorf("failed to list releases: %w", err)
 	}
-	for _, release := range releases {
-		if now.Sub(release.PublishedAt.Time) > expiration {
-			log.Printf("Delete the old release, name: %s, published_at: %s",
-				release.GetName(), release.GetPublishedAt())
-			_, err = c.Repository.DeleteRelease(ctx, *release.ID)
-			if err != nil {
-				return xerrors.Errorf("failed to delete a release: %w", err)
-			}
-			log.Printf("Delete the tag: %s", release.GetTagName())
-			_, err = c.Repository.DeleteRef(ctx, fmt.Sprintf("tags/%s", release.GetTagName()))
-			if err != nil {
-				return xerrors.Errorf("failed to delete a tag: %w", err)
-			}
+
+	if len(releases) <= 3 {
+		return nil
+	}
+
+	sort.Slice(releases, func(i, j int) bool {
+		return releases[i].GetPublishedAt().Time.After(releases[j].GetPublishedAt().Time)
+	})
+
+	for _, release := range releases[3:] {
+		log.Printf("Delete the old release, name: %s, published_at: %s",
+			release.GetName(), release.GetPublishedAt())
+		_, err = c.Repository.DeleteRelease(ctx, *release.ID)
+		if err != nil {
+			return xerrors.Errorf("failed to delete a release: %w", err)
+		}
+		log.Printf("Delete the tag: %s", release.GetTagName())
+		_, err = c.Repository.DeleteRef(ctx, fmt.Sprintf("tags/%s", release.GetTagName()))
+		if err != nil {
+			return xerrors.Errorf("failed to delete a tag: %w", err)
 		}
 	}
 	return nil
