@@ -76,9 +76,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 	for _, oval := range ovals {
 		elsaID := strings.Split(oval.Title, ":")[0]
 
-		nonCvesFlag := false
-		if len(oval.Cves) == 0 {
-			nonCvesFlag = true
+		var vulnIDs []string
+		for _, cve := range oval.Cves {
+			vulnIDs = append(vulnIDs, cve.ID)
+		}
+		if len(vulnIDs) == 0 {
+			vulnIDs = append(vulnIDs, elsaID)
 		}
 
 		affectedPkgs := walkOracle(oval.Criteria, "", []AffectedPackage{})
@@ -96,15 +99,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 				FixedVersion: affectedPkg.Package.FixedVersion,
 			}
 
-			if nonCvesFlag {
-				if err := vs.dbc.PutAdvisory(tx, platformName, affectedPkg.Package.Name, elsaID, advisory); err != nil {
-					return xerrors.Errorf("failed to save Oracle Linux OVAL ELSA-ID: %w", err)
-				}
-				continue
-			}
-
-			for _, cve := range oval.Cves {
-				if err := vs.dbc.PutAdvisory(tx, platformName, affectedPkg.Package.Name, cve.ID, advisory); err != nil {
+			for _, vulnID := range vulnIDs {
+				if err := vs.dbc.PutAdvisory(tx, platformName, affectedPkg.Package.Name, vulnID, advisory); err != nil {
 					return xerrors.Errorf("failed to save Oracle Linux OVAL CVE-ID: %w", err)
 				}
 			}
@@ -115,39 +111,20 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			references = append(references, ref.URI)
 		}
 
-		if nonCvesFlag {
+		for _, vulnID := range vulnIDs {
 			vuln := types.VulnerabilityDetail{
 				Description: oval.Description,
-				References:  references,
+				References:  referencesFromContains(references, []string{elsaID, vulnID}),
 				Title:       oval.Title,
 				Severity:    severityFromThreat(oval.Severity),
 			}
 
-			if err := vs.dbc.PutVulnerabilityDetail(tx, elsaID, vulnerability.OracleOVAL, vuln); err != nil {
+			if err := vs.dbc.PutVulnerabilityDetail(tx, vulnID, vulnerability.OracleOVAL, vuln); err != nil {
 				return xerrors.Errorf("failed to save Oracle Linux OVAL vulnerability: %w", err)
 			}
 
 			// for light DB
-			if err := vs.dbc.PutSeverity(tx, elsaID, types.SeverityUnknown); err != nil {
-				return xerrors.Errorf("failed to save Oracle Linux vulnerability severity: %w", err)
-			}
-			continue
-		}
-
-		for _, cve := range oval.Cves {
-			vuln := types.VulnerabilityDetail{
-				Description: oval.Description,
-				References:  referencesFromContains(references, []string{elsaID, cve.ID}),
-				Title:       oval.Title,
-				Severity:    severityFromThreat(oval.Severity),
-			}
-
-			if err := vs.dbc.PutVulnerabilityDetail(tx, cve.ID, vulnerability.OracleOVAL, vuln); err != nil {
-				return xerrors.Errorf("failed to save Oracle Linux OVAL vulnerability: %w", err)
-			}
-
-			// for light DB
-			if err := vs.dbc.PutSeverity(tx, cve.ID, types.SeverityUnknown); err != nil {
+			if err := vs.dbc.PutSeverity(tx, vulnID, types.SeverityUnknown); err != nil {
 				return xerrors.Errorf("failed to save Oracle Linux vulnerability severity: %w", err)
 			}
 		}
@@ -175,22 +152,16 @@ func walkOracle(cri Criteria, osVer string, pkgs []AffectedPackage) []AffectedPa
 		if len(ss) != 2 {
 			continue
 		}
-		if ss[1] == "0" {
-			continue
-		}
 
 		pkgs = append(pkgs, AffectedPackage{
 			OSVer: osVer,
 			Package: Package{
 				Name:         ss[0],
-				FixedVersion: version.NewVersion(strings.Split(ss[1], " ")[0]).String(),
+				FixedVersion: version.NewVersion(ss[1]).String(),
 			},
 		})
 	}
 
-	if len(cri.Criterias) == 0 {
-		return pkgs
-	}
 	for _, c := range cri.Criterias {
 		pkgs = walkOracle(c, osVer, pkgs)
 	}
@@ -198,8 +169,13 @@ func walkOracle(cri Criteria, osVer string, pkgs []AffectedPackage) []AffectedPa
 }
 
 func referencesFromContains(sources []string, matches []string) (references []string) {
+	uniqMap := make(map[string]struct{})
+	for _, m := range matches {
+		uniqMap[m] = struct{}{}
+	}
+
 	for _, s := range sources {
-		for _, m := range matches {
+		for m := range uniqMap {
 			if strings.Contains(s, m) {
 				references = append(references, s)
 			}
