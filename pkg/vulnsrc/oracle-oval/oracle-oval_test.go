@@ -194,8 +194,8 @@ func TestVulnSrc_Commit(t *testing.T) {
 						vuln: types.VulnerabilityDetail{
 							Description: "[30:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229",
 							References: []string{
-								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 								"http://linux.oracle.com/cve/CVE-2007-0493.html",
+								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 							},
 							Title:    "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)",
 							Severity: types.SeverityMedium,
@@ -209,8 +209,8 @@ func TestVulnSrc_Commit(t *testing.T) {
 						vuln: types.VulnerabilityDetail{
 							Description: "[30:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229",
 							References: []string{
-								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 								"http://linux.oracle.com/cve/CVE-2007-0494.html",
+								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 							},
 							Title:    "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)",
 							Severity: types.SeverityMedium,
@@ -331,8 +331,8 @@ func TestVulnSrc_Commit(t *testing.T) {
 						vuln: types.VulnerabilityDetail{
 							Description: "[30:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229",
 							References: []string{
-								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 								"http://linux.oracle.com/cve/CVE-2007-0493.html",
+								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 							},
 							Title:    "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)",
 							Severity: types.SeverityMedium,
@@ -346,8 +346,8 @@ func TestVulnSrc_Commit(t *testing.T) {
 						vuln: types.VulnerabilityDetail{
 							Description: "[30:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229",
 							References: []string{
-								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 								"http://linux.oracle.com/cve/CVE-2007-0494.html",
+								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 							},
 							Title:    "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)",
 							Severity: types.SeverityMedium,
@@ -568,8 +568,8 @@ func TestVulnSrc_Commit(t *testing.T) {
 						vuln: types.VulnerabilityDetail{
 							Description: "[4.1.12-124.24.3]\n- ext4: update i_disksize when new eof exceeds it (Shan Hai)  [Orabug: 28940828] \n- ext4: update i_disksize if direct write past ondisk size (Eryu Guan)  [Orabug: 28940828] \n- ext4: protect i_disksize update by i_data_sem in direct write path (Eryu Guan)  [Orabug: 28940828] \n- ALSA: usb-audio: Fix UAF decrement if card has no live interfaces in card.c (Hui Peng)  [Orabug: 29042981]  {CVE-2018-19824}\n- ALSA: usb-audio: Replace probing flag with active refcount (Takashi Iwai)  [Orabug: 29042981]  {CVE-2018-19824}\n- ALSA: usb-audio: Avoid nested autoresume calls (Takashi Iwai)  [Orabug: 29042981]  {CVE-2018-19824}\n- ext4: validate that metadata blocks do not overlap superblock (Theodore Ts'o)  [Orabug: 29114440]  {CVE-2018-1094}\n- ext4: update inline int ext4_has_metadata_csum(struct super_block *sb) (John Donnelly)  [Orabug: 29114440]  {CVE-2018-1094}\n- ext4: always initialize the crc32c checksum driver (Theodore Ts'o)  [Orabug: 29114440]  {CVE-2018-1094} {CVE-2018-1094}\n- Revert 'bnxt_en: Reduce default rings on multi-port cards.' (Brian Maly)  [Orabug: 28687746] \n- mlx4_core: Disable P_Key Violation Traps (Hakon Bugge)  [Orabug: 27693633] \n- rds: RDS connection does not reconnect after CQ access violation error (Venkat Venkatsubra)  [Orabug: 28733324]\n\n[4.1.12-124.24.2]\n- KVM/SVM: Allow direct access to MSR_IA32_SPEC_CTRL (KarimAllah Ahmed)  [Orabug: 28069548] \n- KVM/VMX: Allow direct access to MSR_IA32_SPEC_CTRL - reloaded (Mihai Carabas)  [Orabug: 28069548] \n- KVM/x86: Add IBPB support (Ashok Raj)  [Orabug: 28069548] \n- KVM: x86: pass host_initiated to functions that read MSRs (Paolo Bonzini)  [Orabug: 28069548] \n- KVM: VMX: make MSR bitmaps per-VCPU (Paolo Bonzini)  [Orabug: 28069548] \n- KVM: VMX: introduce alloc_loaded_vmcs (Paolo Bonzini)  [Orabug: 28069548] \n- KVM: nVMX: Eliminate vmcs02 pool (Jim Mattson)  [Orabug: 28069548] \n- KVM: nVMX: fix msr bitmaps to prevent L2 from accessing L0 x2APIC (Radim Krcmar)  [Orabug: 28069548] \n- ocfs2: dont clear bh uptodate for block read (Junxiao Bi)  [Orabug: 28762940] \n- ocfs2: clear journal dirty flag after shutdown journal (Junxiao Bi)  [Orabug: 28924775] \n- ocfs2: fix panic due to unrecovered local alloc (Junxiao Bi)  [Orabug: 28924775] \n- net: rds: fix rds_ib_sysctl_max_recv_allocation error (Zhu Yanjun)  [Orabug: 28947481] \n- x86/speculation: Always disable IBRS in disable_ibrs_and_friends() (Alejandro Jimenez)  [Orabug: 29139710]",
 							References: []string{
-								"http://linux.oracle.com/errata/ELSA-2019-4510.html",
 								"http://linux.oracle.com/cve/CVE-2018-1094.html",
+								"http://linux.oracle.com/errata/ELSA-2019-4510.html",
 							},
 							Title:    "ELSA-2019-4510: Unbreakable Enterprise kernel security update (IMPORTANT)",
 							Severity: types.SeverityHigh,
@@ -583,8 +583,8 @@ func TestVulnSrc_Commit(t *testing.T) {
 						vuln: types.VulnerabilityDetail{
 							Description: "[4.1.12-124.24.3]\n- ext4: update i_disksize when new eof exceeds it (Shan Hai)  [Orabug: 28940828] \n- ext4: update i_disksize if direct write past ondisk size (Eryu Guan)  [Orabug: 28940828] \n- ext4: protect i_disksize update by i_data_sem in direct write path (Eryu Guan)  [Orabug: 28940828] \n- ALSA: usb-audio: Fix UAF decrement if card has no live interfaces in card.c (Hui Peng)  [Orabug: 29042981]  {CVE-2018-19824}\n- ALSA: usb-audio: Replace probing flag with active refcount (Takashi Iwai)  [Orabug: 29042981]  {CVE-2018-19824}\n- ALSA: usb-audio: Avoid nested autoresume calls (Takashi Iwai)  [Orabug: 29042981]  {CVE-2018-19824}\n- ext4: validate that metadata blocks do not overlap superblock (Theodore Ts'o)  [Orabug: 29114440]  {CVE-2018-1094}\n- ext4: update inline int ext4_has_metadata_csum(struct super_block *sb) (John Donnelly)  [Orabug: 29114440]  {CVE-2018-1094}\n- ext4: always initialize the crc32c checksum driver (Theodore Ts'o)  [Orabug: 29114440]  {CVE-2018-1094} {CVE-2018-1094}\n- Revert 'bnxt_en: Reduce default rings on multi-port cards.' (Brian Maly)  [Orabug: 28687746] \n- mlx4_core: Disable P_Key Violation Traps (Hakon Bugge)  [Orabug: 27693633] \n- rds: RDS connection does not reconnect after CQ access violation error (Venkat Venkatsubra)  [Orabug: 28733324]\n\n[4.1.12-124.24.2]\n- KVM/SVM: Allow direct access to MSR_IA32_SPEC_CTRL (KarimAllah Ahmed)  [Orabug: 28069548] \n- KVM/VMX: Allow direct access to MSR_IA32_SPEC_CTRL - reloaded (Mihai Carabas)  [Orabug: 28069548] \n- KVM/x86: Add IBPB support (Ashok Raj)  [Orabug: 28069548] \n- KVM: x86: pass host_initiated to functions that read MSRs (Paolo Bonzini)  [Orabug: 28069548] \n- KVM: VMX: make MSR bitmaps per-VCPU (Paolo Bonzini)  [Orabug: 28069548] \n- KVM: VMX: introduce alloc_loaded_vmcs (Paolo Bonzini)  [Orabug: 28069548] \n- KVM: nVMX: Eliminate vmcs02 pool (Jim Mattson)  [Orabug: 28069548] \n- KVM: nVMX: fix msr bitmaps to prevent L2 from accessing L0 x2APIC (Radim Krcmar)  [Orabug: 28069548] \n- ocfs2: dont clear bh uptodate for block read (Junxiao Bi)  [Orabug: 28762940] \n- ocfs2: clear journal dirty flag after shutdown journal (Junxiao Bi)  [Orabug: 28924775] \n- ocfs2: fix panic due to unrecovered local alloc (Junxiao Bi)  [Orabug: 28924775] \n- net: rds: fix rds_ib_sysctl_max_recv_allocation error (Zhu Yanjun)  [Orabug: 28947481] \n- x86/speculation: Always disable IBRS in disable_ibrs_and_friends() (Alejandro Jimenez)  [Orabug: 29139710]",
 							References: []string{
-								"http://linux.oracle.com/errata/ELSA-2019-4510.html",
 								"http://linux.oracle.com/cve/CVE-2018-19824.html",
+								"http://linux.oracle.com/errata/ELSA-2019-4510.html",
 							},
 							Title:    "ELSA-2019-4510: Unbreakable Enterprise kernel security update (IMPORTANT)",
 							Severity: types.SeverityHigh,
@@ -728,8 +728,8 @@ func TestVulnSrc_Commit(t *testing.T) {
 						vuln: types.VulnerabilityDetail{
 							Description: "[30:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229",
 							References: []string{
-								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 								"http://linux.oracle.com/cve/CVE-2007-0493.html",
+								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 							},
 							Title:    "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)",
 							Severity: types.SeverityMedium,
@@ -743,8 +743,8 @@ func TestVulnSrc_Commit(t *testing.T) {
 						vuln: types.VulnerabilityDetail{
 							Description: "[30:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229",
 							References: []string{
-								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 								"http://linux.oracle.com/cve/CVE-2007-0494.html",
+								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 							},
 							Title:    "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)",
 							Severity: types.SeverityMedium,
@@ -860,8 +860,8 @@ func TestVulnSrc_Commit(t *testing.T) {
 						vuln: types.VulnerabilityDetail{
 							Description: "[0:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229",
 							References: []string{
-								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 								"http://linux.oracle.com/cve/CVE-2007-0493.html",
+								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 							},
 							Title:    "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)",
 							Severity: types.SeverityMedium,
@@ -875,8 +875,8 @@ func TestVulnSrc_Commit(t *testing.T) {
 						vuln: types.VulnerabilityDetail{
 							Description: "[0:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229",
 							References: []string{
-								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 								"http://linux.oracle.com/cve/CVE-2007-0494.html",
+								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
 							},
 							Title:    "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)",
 							Severity: types.SeverityMedium,
@@ -1049,8 +1049,8 @@ func TestVulnSrc_Commit(t *testing.T) {
 						vuln: types.VulnerabilityDetail{
 							Description: "empty description",
 							References: []string{
-								"http://linux.oracle.com/errata/ELSA-0001-0001.html",
 								"http://linux.oracle.com/cve/CVE-0001-0001.html",
+								"http://linux.oracle.com/errata/ELSA-0001-0001.html",
 							},
 							Title:    "ELSA-0001-0001:  Moderate: empty security update  (N/A)",
 							Severity: types.SeverityUnknown,
@@ -1132,8 +1132,8 @@ func TestVulnSrc_Commit(t *testing.T) {
 						vuln: types.VulnerabilityDetail{
 							Description: "unknown description",
 							References: []string{
-								"http://linux.oracle.com/errata/ELSA-0001-0001.html",
 								"http://linux.oracle.com/cve/CVE-0001-0001.html",
+								"http://linux.oracle.com/errata/ELSA-0001-0001.html",
 							},
 							Title:    "ELSA-0001-0001:  Moderate: unknown security update  (N/A)",
 							Severity: types.SeverityUnknown,

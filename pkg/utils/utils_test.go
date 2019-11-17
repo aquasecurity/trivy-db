@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -81,4 +82,55 @@ func TestFileWalk(t *testing.T) {
 	if string(contentFoo3) != "foo3" {
 		t.Error("The file content is wrong")
 	}
+}
+
+func TestUniq(t *testing.T) {
+	testCases := []struct {
+		name       string
+		inputData  []string
+		expectData []string
+	}{
+		{
+
+			name: "positive test",
+			inputData: []string{
+				"test string 1",
+				"test string 3",
+				"test string 2",
+				"test string 1",
+				"test string 2",
+				"test string 3",
+			},
+			expectData: []string{
+				"test string 1",
+				"test string 2",
+				"test string 3",
+			},
+		},
+		{
+			name:       "positive test input empty",
+			inputData:  []string{},
+			expectData: []string{},
+		},
+		{
+			name: "positive test input uniq",
+			inputData: []string{
+				"test string 1",
+				"test string 3",
+				"test string 2",
+			},
+			expectData: []string{
+				"test string 1",
+				"test string 2",
+				"test string 3",
+			},
+		},
+	}
+	for i, testCase := range testCases {
+		actualData := Uniq(testCase.inputData)
+		if !reflect.DeepEqual(actualData, testCase.expectData) {
+			t.Errorf("No: %d, name: %s, actual: %+v, expect: %+v", i+1, testCase.name, actualData, testCase.expectData)
+		}
+	}
+
 }

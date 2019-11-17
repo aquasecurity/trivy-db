@@ -92,16 +92,18 @@ func Exec(command string, args []string) (string, error) {
 }
 
 func Uniq(strings []string) []string {
-	uniqMap := make(map[string]struct{})
-	for _, s := range strings {
-		uniqMap[s] = struct{}{}
-	}
-	keys := []string{}
-	for key := range uniqMap {
-		keys = append(keys, key)
-	}
-	sort.Slice(keys, func(i, j int) bool {
-		return keys[i] > keys[j]
+	sort.Slice(strings, func(i, j int) bool {
+		return strings[i] < strings[j]
 	})
-	return keys
+
+	ret := []string{}
+	preStr := ""
+	for _, s := range strings {
+		if preStr != s {
+			ret = append(ret, s)
+		}
+		preStr = s
+	}
+
+	return ret
 }
