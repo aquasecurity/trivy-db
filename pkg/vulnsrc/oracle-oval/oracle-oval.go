@@ -168,20 +168,16 @@ func walkOracle(cri Criteria, osVer string, pkgs []AffectedPackage) []AffectedPa
 	return pkgs
 }
 
-func referencesFromContains(sources []string, matches []string) (references []string) {
-	uniqMap := make(map[string]struct{})
-	for _, m := range matches {
-		uniqMap[m] = struct{}{}
-	}
-
+func referencesFromContains(sources []string, matches []string) []string {
+	references := []string{}
 	for _, s := range sources {
-		for m := range uniqMap {
+		for _, m := range matches {
 			if strings.Contains(s, m) {
 				references = append(references, s)
 			}
 		}
 	}
-	return
+	return utils.Uniq(references)
 }
 
 func severityFromThreat(sev string) types.Severity {

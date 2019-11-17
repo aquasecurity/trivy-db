@@ -234,6 +234,143 @@ func TestVulnSrc_Commit(t *testing.T) {
 			},
 		},
 		{
+			name: "happy path duplicate reference",
+			cves: []OracleOVAL{
+				{
+					Title:       "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)",
+					Description: "[30:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229",
+					Platform:    []string{"Oracle Linux 5"},
+					References: []Reference{
+						{
+							Source: "elsa",
+							URI:    "http://linux.oracle.com/errata/ELSA-2007-0057.html",
+							ID:     "ELSA-2007-0057",
+						},
+						{
+							Source: "elsa",
+							URI:    "http://linux.oracle.com/errata/ELSA-2007-0057.html",
+							ID:     "ELSA-2007-0057",
+						},
+						{
+							Source: "CVE",
+							URI:    "http://linux.oracle.com/cve/CVE-2007-0493.html",
+							ID:     "CVE-2007-0493",
+						},
+						{
+							Source: "CVE",
+							URI:    "http://linux.oracle.com/cve/CVE-2007-0494.html",
+							ID:     "CVE-2007-0494",
+						},
+					},
+					Criteria: Criteria{
+						Operator: "AND",
+						Criterias: []Criteria{
+							{
+								Operator: "OR",
+								Criterias: []Criteria{
+									{
+										Operator:  "AND",
+										Criterias: nil,
+										Criterions: []Criterion{
+											{
+												Comment: "bind-devel is earlier than 30:9.3.3-8.el5",
+											},
+											{
+												Comment: "bind-devel is signed with the Oracle Linux 5 key",
+											},
+										},
+									},
+								},
+								Criterions: nil,
+							},
+						},
+						Criterions: []Criterion{
+							{
+								Comment: "Oracle Linux 5 is installed",
+							},
+						},
+					},
+					Severity: "MODERATE",
+					Cves: []Cve{
+						{
+							Impact: "",
+							Href:   "http://linux.oracle.com/cve/CVE-2007-0493.html",
+							ID:     "CVE-2007-0493",
+						},
+						{
+							Impact: "",
+							Href:   "http://linux.oracle.com/cve/CVE-2007-0494.html",
+							ID:     "CVE-2007-0494",
+						},
+					},
+				},
+			},
+			putAdvisoryList: []putAdvisory{
+				{
+					input: putAdvisoryInput{
+						source:   "Oracle Linux 5",
+						pkgName:  "bind-devel",
+						cveID:    "CVE-2007-0493",
+						advisory: types.Advisory{VulnerabilityID: "", FixedVersion: "30:9.3.3-8.el5"},
+					},
+				},
+				{
+					input: putAdvisoryInput{
+						source:   "Oracle Linux 5",
+						pkgName:  "bind-devel",
+						cveID:    "CVE-2007-0494",
+						advisory: types.Advisory{VulnerabilityID: "", FixedVersion: "30:9.3.3-8.el5"},
+					},
+				},
+			},
+			putVulnerabilityDetailList: []putVulnerabilityDetail{
+				{
+					input: putVulnerabilityDetailInput{
+						cveID:  "CVE-2007-0493",
+						source: vulnerability.OracleOVAL,
+						vuln: types.VulnerabilityDetail{
+							Description: "[30:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229",
+							References: []string{
+								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
+								"http://linux.oracle.com/cve/CVE-2007-0493.html",
+							},
+							Title:    "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)",
+							Severity: types.SeverityMedium,
+						},
+					},
+				},
+				{
+					input: putVulnerabilityDetailInput{
+						cveID:  "CVE-2007-0494",
+						source: vulnerability.OracleOVAL,
+						vuln: types.VulnerabilityDetail{
+							Description: "[30:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229",
+							References: []string{
+								"http://linux.oracle.com/errata/ELSA-2007-0057.html",
+								"http://linux.oracle.com/cve/CVE-2007-0494.html",
+							},
+							Title:    "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)",
+							Severity: types.SeverityMedium,
+						},
+					},
+				},
+			},
+			putSeverityList: []putSeverity{
+				{
+					input: putSeverityInput{
+						cveID:    "CVE-2007-0493",
+						severity: types.SeverityUnknown,
+					},
+				},
+				{
+					input: putSeverityInput{
+						cveID:    "CVE-2007-0494",
+						severity: types.SeverityUnknown,
+					},
+				},
+			},
+		},
+		{
 			name: "happy path multi platform",
 			cves: []OracleOVAL{
 				{

@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 
 	"golang.org/x/xerrors"
 )
@@ -88,4 +89,19 @@ func Exec(command string, args []string) (string, error) {
 		return "", xerrors.Errorf("failed to exec: %w", err)
 	}
 	return stdoutBuf.String(), nil
+}
+
+func Uniq(strings []string) []string {
+	uniqMap := make(map[string]struct{})
+	for _, s := range strings {
+		uniqMap[s] = struct{}{}
+	}
+	keys := []string{}
+	for key := range uniqMap {
+		keys = append(keys, key)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i] > keys[j]
+	})
+	return keys
 }
