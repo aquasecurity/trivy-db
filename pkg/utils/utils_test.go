@@ -5,11 +5,11 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/aquasecurity/trivy/pkg/log"
+	"github.com/stretchr/testify/assert"
 )
 
 func touch(t *testing.T, name string) {
@@ -126,11 +126,9 @@ func TestUniq(t *testing.T) {
 			},
 		},
 	}
-	for i, testCase := range testCases {
+	for _, testCase := range testCases {
 		actualData := Uniq(testCase.inputData)
-		if !reflect.DeepEqual(actualData, testCase.expectData) {
-			t.Errorf("No: %d, name: %s, actual: %+v, expect: %+v", i+1, testCase.name, actualData, testCase.expectData)
-		}
+		assert.Equal(t, actualData, testCase.expectData, testCase.name)
 	}
 
 }

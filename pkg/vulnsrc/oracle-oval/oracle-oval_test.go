@@ -1287,6 +1287,8 @@ func TestVulnSrc_Get(t *testing.T) {
 				assert.NoError(t, err, tc.name)
 			}
 			assert.Equal(t, tc.expectedVulns, vuls, tc.name)
+
+			mockDBConfig.AssertExpectations(t)
 		})
 	}
 }
