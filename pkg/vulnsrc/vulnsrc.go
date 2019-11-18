@@ -4,27 +4,28 @@ import (
 	"log"
 	"time"
 
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/cargo"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/python"
-	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
-
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
-
-	"github.com/aquasecurity/trivy-db/pkg/db"
-	bolt "github.com/etcd-io/bbolt"
-
-	"github.com/aquasecurity/trivy-db/pkg/types"
-
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/amazon"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bundler"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/composer"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
 	debianoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat"
+	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
+	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
+
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bundler"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/cargo"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/composer"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/python"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat"
+
+	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
+
+	bolt "github.com/etcd-io/bbolt"
+
 	"golang.org/x/xerrors"
 )
 
@@ -44,6 +45,7 @@ var (
 		vulnerability.DebianOVAL:            debianoval.NewVulnSrc(),
 		vulnerability.Ubuntu:                ubuntu.NewVulnSrc(),
 		vulnerability.Amazon:                amazon.NewVulnSrc(),
+		vulnerability.OracleOVAL:            oracleoval.NewVulnSrc(),
 		vulnerability.RubySec:               bundler.NewVulnSrc(),
 		vulnerability.PhpSecurityAdvisories: composer.NewVulnSrc(),
 		vulnerability.NodejsSecurityWg:      node.NewVulnSrc(),

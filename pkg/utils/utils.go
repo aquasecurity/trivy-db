@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 
 	"golang.org/x/xerrors"
 )
@@ -88,4 +89,21 @@ func Exec(command string, args []string) (string, error) {
 		return "", xerrors.Errorf("failed to exec: %w", err)
 	}
 	return stdoutBuf.String(), nil
+}
+
+func Uniq(strings []string) []string {
+	sort.Slice(strings, func(i, j int) bool {
+		return strings[i] < strings[j]
+	})
+
+	ret := []string{}
+	preStr := ""
+	for _, s := range strings {
+		if preStr != s {
+			ret = append(ret, s)
+		}
+		preStr = s
+	}
+
+	return ret
 }
