@@ -1,7 +1,7 @@
 name: Trivy DB
 on:
   schedule:
-    - cron:  '0 */1 * * *'
+    - cron:  '0 */12 * * *'
 
 jobs:
   build:
@@ -52,7 +52,7 @@ jobs:
     # Full DB
     #
     - name: Build full database
-      run: ./trivy-db build --cache-dir ./cache
+      run: ./trivy-db build --cache-dir ./cache --update-interval 12h
 
     - name: Compact DB
       run: |
@@ -64,7 +64,7 @@ jobs:
     # Light DB
     #
     - name: Build light database
-      run: ./trivy-db build --light --cache-dir ./cache
+      run: ./trivy-db build --light --cache-dir ./cache --update-interval 12h
 
     - name: Compact DB
       run: |
