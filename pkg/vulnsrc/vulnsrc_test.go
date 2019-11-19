@@ -184,3 +184,40 @@ func TestUpdater_Update(t *testing.T) {
 		})
 	}
 }
+
+func TestNewUpdater(t *testing.T) {
+	testCases := []struct {
+		name              string
+		light             bool
+		expectedDBType    db.Type
+		expectedOptimizer Optimizer
+	}{
+		{
+			name:              "full",
+			light:             false,
+			expectedDBType:    db.TypeFull,
+			expectedOptimizer: fullOptimizer{db.Config{}},
+		},
+		{
+			name:              "light",
+			light:             true,
+			expectedDBType:    db.TypeLight,
+			expectedOptimizer: lightOptimizer{db.Config{}},
+		},
+	}
+
+	for _, tc := range testCases {
+		expectedUpdater := Updater{
+			dbc:            db.Config{},
+			updateMap:      updateMap,
+			cacheDir:       "foocachedir",
+			dbType:         tc.expectedDBType,
+			updateInterval: time.Second * 1,
+			clock:          clock.RealClock{},
+			optimizer:      tc.expectedOptimizer,
+		}
+		actualUpdater := NewUpdater("foocachedir", tc.light, time.Second*1)
+		assert.Equal(t, expectedUpdater, actualUpdater, tc.name)
+	}
+
+}
