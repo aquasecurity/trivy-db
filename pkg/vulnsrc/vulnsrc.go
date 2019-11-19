@@ -1,8 +1,11 @@
 package vulnsrc
 
 import (
+	"fmt"
 	"log"
 	"time"
+
+	"k8s.io/utils/clock"
 
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/amazon"
@@ -29,14 +32,14 @@ import (
 	"golang.org/x/xerrors"
 )
 
-type Updater interface {
+type VulnSrc interface {
 	Update(string) error
 }
 
 var (
 	// UpdateList has list of update distributions
 	UpdateList []string
-	updateMap  = map[string]Updater{
+	updateMap  = map[string]VulnSrc{
 		vulnerability.Nvd:                   nvd.NewVulnSrc(),
 		vulnerability.Alpine:                alpine.NewVulnSrc(),
 		vulnerability.RedHat:                redhat.NewVulnSrc(),
@@ -61,45 +64,81 @@ func init() {
 	}
 }
 
-func Update(targets []string, cacheDir string, light bool, updateInterval time.Duration) error {
+type Operation interface {
+	SetMetadata(db.Metadata) error
+}
+
+type Updater struct {
+	dbc            Operation
+	updateMap      map[string]VulnSrc
+	cacheDir       string
+	dbType         db.Type
+	updateInterval time.Duration
+	clock          clock.Clock
+	optimizer      Optimizer
+}
+
+func NewUpdater(cacheDir string, light bool, interval time.Duration) Updater {
+	var optimizer Optimizer
+	dbConfig := db.Config{}
+	dbType := db.TypeFull
+	optimizer = fullOptimizer{dbc: dbConfig}
+
+	if light {
+		dbType = db.TypeLight
+		optimizer = lightOptimizer{dbc: dbConfig}
+	}
+
+	return Updater{
+		dbc:            db.Config{},
+		updateMap:      updateMap,
+		cacheDir:       cacheDir,
+		dbType:         dbType,
+		updateInterval: interval,
+		clock:          clock.RealClock{},
+		optimizer:      optimizer,
+	}
+}
+
+func (u Updater) Update(targets []string) error {
 	log.Println("Updating vulnerability database...")
 
 	for _, distribution := range targets {
-		vulnSrc, ok := updateMap[distribution]
+		vulnSrc, ok := u.updateMap[distribution]
 		if !ok {
 			return xerrors.Errorf("%s does not supported yet", distribution)
 		}
 		log.Printf("Updating %s data...\n", distribution)
 
-		if err := vulnSrc.Update(cacheDir); err != nil {
+		if err := vulnSrc.Update(u.cacheDir); err != nil {
 			return xerrors.Errorf("error in %s update: %w", distribution, err)
 		}
 	}
 
-	dbc := db.Config{}
-	dbType := db.TypeFull
-	if light {
-		dbType = db.TypeLight
-	}
-
-	err := dbc.SetMetadata(db.Metadata{
+	fmt.Println(u.dbType)
+	err := u.dbc.SetMetadata(db.Metadata{
 		Version:    db.SchemaVersion,
-		Type:       dbType,
-		NextUpdate: time.Now().UTC().Add(updateInterval),
-		UpdatedAt:  time.Now().UTC(),
+		Type:       u.dbType,
+		NextUpdate: u.clock.Now().UTC().Add(u.updateInterval),
+		UpdatedAt:  u.clock.Now().UTC(),
 	})
 	if err != nil {
 		return xerrors.Errorf("failed to save metadata: %w", err)
 	}
 
-	if light {
-		return optimizeLightDB(dbc)
-	}
-	return optimizeFullDB(dbc)
+	return u.optimizer.Optimize()
 }
 
-func optimizeFullDB(dbc db.Config) error {
-	err := dbc.ForEachSeverity(func(tx *bolt.Tx, cveID string, _ types.Severity) error {
+type Optimizer interface {
+	Optimize() error
+}
+
+type fullOptimizer struct {
+	dbc db.Operations
+}
+
+func (o fullOptimizer) Optimize() error {
+	err := o.dbc.ForEachSeverity(func(tx *bolt.Tx, cveID string, _ types.Severity) error {
 		severity, title, description, references := vulnerability.GetDetail(cveID)
 		vuln := types.Vulnerability{
 			Title:       title,
@@ -107,7 +146,7 @@ func optimizeFullDB(dbc db.Config) error {
 			Severity:    severity.String(),
 			References:  references,
 		}
-		if err := dbc.PutVulnerability(tx, cveID, vuln); err != nil {
+		if err := o.dbc.PutVulnerability(tx, cveID, vuln); err != nil {
 			return xerrors.Errorf("failed to put vulnerability: %w", err)
 		}
 		return nil
@@ -116,11 +155,11 @@ func optimizeFullDB(dbc db.Config) error {
 		return xerrors.Errorf("failed to iterate vulnerability: %w", err)
 	}
 
-	if err := dbc.DeleteSeverityBucket(); err != nil {
+	if err := o.dbc.DeleteSeverityBucket(); err != nil {
 		return xerrors.Errorf("failed to delete severity bucket: %w", err)
 	}
 
-	if err := dbc.DeleteVulnerabilityDetailBucket(); err != nil {
+	if err := o.dbc.DeleteVulnerabilityDetailBucket(); err != nil {
 		return xerrors.Errorf("failed to delete vulnerability detail bucket: %w", err)
 	}
 
@@ -128,13 +167,17 @@ func optimizeFullDB(dbc db.Config) error {
 
 }
 
-func optimizeLightDB(dbc db.Config) error {
-	err := dbc.ForEachSeverity(func(tx *bolt.Tx, cveID string, _ types.Severity) error {
+type lightOptimizer struct {
+	dbc db.Operations
+}
+
+func (o lightOptimizer) Optimize() error {
+	err := o.dbc.ForEachSeverity(func(tx *bolt.Tx, cveID string, _ types.Severity) error {
 		// get correct severity
 		sev, _, _, _ := vulnerability.GetDetail(cveID)
 
 		// overwrite unknown severity with correct severity
-		if err := dbc.PutSeverity(tx, cveID, sev); err != nil {
+		if err := o.dbc.PutSeverity(tx, cveID, sev); err != nil {
 			return xerrors.Errorf("failed to put severity: %w", err)
 		}
 		return nil
@@ -143,7 +186,7 @@ func optimizeLightDB(dbc db.Config) error {
 		return xerrors.Errorf("failed to iterate severity: %w", err)
 	}
 
-	if err = dbc.DeleteVulnerabilityDetailBucket(); err != nil {
+	if err = o.dbc.DeleteVulnerabilityDetailBucket(); err != nil {
 		return xerrors.Errorf("failed to delete vulnerability detail bucket: %w", err)
 	}
 	return nil

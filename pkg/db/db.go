@@ -30,6 +30,7 @@ type Operations interface {
 	BatchUpdate(func(*bolt.Tx) error) error
 
 	PutVulnerabilityDetail(*bolt.Tx, string, string, types.VulnerabilityDetail) error
+	DeleteVulnerabilityDetailBucket() error
 
 	PutAdvisory(*bolt.Tx, string, string, string, interface{}) error
 	ForEachAdvisory(string, string) (map[string][]byte, error)
@@ -37,6 +38,9 @@ type Operations interface {
 
 	PutSeverity(*bolt.Tx, string, types.Severity) error
 	GetSeverity(string) (types.Severity, error)
+	ForEachSeverity(f func(tx *bolt.Tx, cveID string, severity types.Severity) error) error
+
+	DeleteSeverityBucket() error
 
 	PutVulnerability(*bolt.Tx, string, types.Vulnerability) error
 	GetVulnerability(string) (types.Vulnerability, error)
