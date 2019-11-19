@@ -248,3 +248,110 @@ func TestUpdater_Update(t *testing.T) {
 		})
 	}
 }
+
+func Test_fullOptimizer_Optimize(t *testing.T) {
+	type mocks struct {
+		forEachSeverity                 error
+		deleteSeverityBucket            error
+		deleteVulnerabilityDetailBucket error
+	}
+	tests := []struct {
+		name    string
+		mocks   mocks
+		wantErr string
+	}{
+		{
+			name: "happy path",
+		},
+		{
+			name: "ForEachSeverity returns an error",
+			mocks: mocks{
+				forEachSeverity: errors.New("error"),
+			},
+			wantErr: "failed to iterate severity",
+		},
+		{
+			name: "DeleteSeverityBucket returns an error",
+			mocks: mocks{
+				deleteSeverityBucket: errors.New("error"),
+			},
+			wantErr: "failed to delete severity bucket",
+		},
+		{
+			name: "DeleteVulnerabilityDetailBucket returns an error",
+			mocks: mocks{
+				deleteVulnerabilityDetailBucket: errors.New("error"),
+			},
+			wantErr: "failed to delete vulnerability detail bucket",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockDBConfig := new(db.MockDBConfig)
+			mockDBConfig.On("ForEachSeverity", mock.Anything).Return(tt.mocks.forEachSeverity)
+			mockDBConfig.On("DeleteSeverityBucket").Return(tt.mocks.deleteSeverityBucket)
+			mockDBConfig.On("DeleteVulnerabilityDetailBucket").Return(
+				tt.mocks.deleteVulnerabilityDetailBucket)
+
+			o := fullOptimizer{
+				dbc: mockDBConfig,
+			}
+			err := o.Optimize()
+			switch {
+			case tt.wantErr != "":
+				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
+			default:
+				assert.NoError(t, err, tt.name)
+			}
+		})
+	}
+}
+
+func Test_lightOptimizer_Optimize(t *testing.T) {
+	type mocks struct {
+		forEachSeverity                 error
+		deleteVulnerabilityDetailBucket error
+	}
+	tests := []struct {
+		name    string
+		mocks   mocks
+		wantErr string
+	}{
+		{
+			name: "happy path",
+		},
+		{
+			name: "ForEachSeverity returns an error",
+			mocks: mocks{
+				forEachSeverity: errors.New("error"),
+			},
+			wantErr: "failed to iterate severity",
+		},
+		{
+			name: "DeleteVulnerabilityDetailBucket returns an error",
+			mocks: mocks{
+				deleteVulnerabilityDetailBucket: errors.New("error"),
+			},
+			wantErr: "failed to delete vulnerability detail bucket",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockDBConfig := new(db.MockDBConfig)
+			mockDBConfig.On("ForEachSeverity", mock.Anything).Return(tt.mocks.forEachSeverity)
+			mockDBConfig.On("DeleteVulnerabilityDetailBucket").Return(
+				tt.mocks.deleteVulnerabilityDetailBucket)
+
+			o := lightOptimizer{
+				dbc: mockDBConfig,
+			}
+			err := o.Optimize()
+			switch {
+			case tt.wantErr != "":
+				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
+			default:
+				assert.NoError(t, err, tt.name)
+			}
+		})
+	}
+}
