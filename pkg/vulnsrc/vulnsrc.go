@@ -90,7 +90,7 @@ func NewUpdater(cacheDir string, light bool, interval time.Duration) Updater {
 	}
 
 	return Updater{
-		dbc:            db.Config{},
+		dbc:            dbConfig,
 		updateMap:      updateMap,
 		cacheDir:       cacheDir,
 		dbType:         dbType,
