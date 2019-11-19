@@ -1,7 +1,6 @@
 package vulnsrc
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -115,7 +114,6 @@ func (u Updater) Update(targets []string) error {
 		}
 	}
 
-	fmt.Println(u.dbType)
 	err := u.dbc.SetMetadata(db.Metadata{
 		Version:    db.SchemaVersion,
 		Type:       u.dbType,
