@@ -20,7 +20,7 @@ type MockOptimizer struct {
 	mock.Mock
 }
 
-func (_m MockOptimizer) Optimize() error {
+func (_m *MockOptimizer) Optimize() error {
 	ret := _m.Called()
 	return ret.Error(0)
 }
