@@ -15,6 +15,24 @@ func (_m *MockDBConfig) SetVersion(version int) error {
 	return ret.Error(0)
 }
 
+func (_m *MockDBConfig) GetMetadata() (Metadata, error) {
+	ret := _m.Called()
+	ret0 := ret.Get(0)
+	if ret0 == nil {
+		return Metadata{}, ret.Error(1)
+	}
+	metadata, ok := ret0.(Metadata)
+	if !ok {
+		return Metadata{}, ret.Error(1)
+	}
+	return metadata, nil
+}
+
+func (_m *MockDBConfig) SetMetadata(a Metadata) error {
+	ret := _m.Called(a)
+	return ret.Error(0)
+}
+
 func (_m *MockDBConfig) Update(a, b, c string, d interface{}) error {
 	ret := _m.Called(a, b, c, d)
 	return ret.Error(0)
@@ -41,11 +59,6 @@ func (_m *MockDBConfig) ForEach(a string, b string) (map[string][]byte, error) {
 		return nil, ret.Error(1)
 	}
 	return r, ret.Error(1)
-}
-
-func (_m *MockDBConfig) PutVulnerabilityDetail(a *bolt.Tx, b, c string, d types.VulnerabilityDetail) error {
-	ret := _m.Called(a, b, c, d)
-	return ret.Error(0)
 }
 
 func (_m *MockDBConfig) PutAdvisory(a *bolt.Tx, b, c, d string, e interface{}) error {
@@ -77,24 +90,6 @@ func (_m *MockDBConfig) ForEachAdvisory(a, b string) (map[string][]byte, error) 
 		return nil, ret.Error(1)
 	}
 	return r, ret.Error(1)
-}
-
-func (_m *MockDBConfig) PutSeverity(a *bolt.Tx, b string, c types.Severity) error {
-	ret := _m.Called(a, b, c)
-	return ret.Error(0)
-}
-
-func (_m *MockDBConfig) GetSeverity(a string) (types.Severity, error) {
-	ret := _m.Called(a)
-	ret0 := ret.Get(0)
-	if ret0 == nil {
-		return types.SeverityUnknown, ret.Error(1)
-	}
-	s, ok := ret0.(types.Severity)
-	if !ok {
-		return types.SeverityUnknown, ret.Error(1)
-	}
-	return s, ret.Error(1)
 }
 
 func (_m *MockDBConfig) PutVulnerability(a *bolt.Tx, b string, c types.Vulnerability) error {
