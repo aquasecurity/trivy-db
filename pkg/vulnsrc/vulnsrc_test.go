@@ -25,6 +25,70 @@ func (_m *MockOptimizer) Optimize() error {
 	return ret.Error(0)
 }
 
+func TestNewUpdater(t *testing.T) {
+	type args struct {
+		cacheDir string
+		light    bool
+		interval time.Duration
+	}
+	type want struct {
+		cacheDir  string
+		dbType    db.Type
+		interval  time.Duration
+		clock     clock.Clock
+		optimizer Optimizer
+	}
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "full",
+			args: args{
+				cacheDir: "/full",
+				light:    false,
+				interval: 60 * time.Hour,
+			},
+			want: want{
+				cacheDir:  "/full",
+				dbType:    db.TypeFull,
+				clock:     clock.RealClock{},
+				interval:  60 * time.Hour,
+				optimizer: fullOptimizer{},
+			},
+		},
+		{
+			name: "light",
+			args: args{
+				cacheDir: "/light",
+				light:    true,
+				interval: 60 * time.Minute,
+			},
+			want: want{
+				cacheDir:  "/light",
+				dbType:    db.TypeLight,
+				clock:     clock.RealClock{},
+				interval:  60 * time.Minute,
+				optimizer: lightOptimizer{},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := NewUpdater(tt.args.cacheDir, tt.args.light, tt.args.interval)
+
+			assert.NotNil(t, got.dbc, tt.name)
+			assert.Equal(t, updateMap, got.updateMap, tt.name)
+			assert.Equal(t, tt.want.cacheDir, got.cacheDir, tt.name)
+			assert.Equal(t, tt.want.dbType, got.dbType, tt.name)
+			assert.Equal(t, tt.want.interval, got.updateInterval, tt.name)
+			assert.IsType(t, tt.want.clock, got.clock, tt.name)
+			assert.IsType(t, tt.want.optimizer, got.optimizer, tt.name)
+		})
+	}
+}
+
 func TestUpdater_Update(t *testing.T) {
 	type fields struct {
 		UpdateMap      map[string]VulnSrc
@@ -181,6 +245,113 @@ func TestUpdater_Update(t *testing.T) {
 			mockVulnSrc.AssertExpectations(t)
 			mockDBConfig.AssertExpectations(t)
 			mockOptimizer.AssertExpectations(t)
+		})
+	}
+}
+
+func Test_fullOptimizer_Optimize(t *testing.T) {
+	type mocks struct {
+		forEachSeverity                 error
+		deleteSeverityBucket            error
+		deleteVulnerabilityDetailBucket error
+	}
+	tests := []struct {
+		name    string
+		mocks   mocks
+		wantErr string
+	}{
+		{
+			name: "happy path",
+		},
+		{
+			name: "ForEachSeverity returns an error",
+			mocks: mocks{
+				forEachSeverity: errors.New("error"),
+			},
+			wantErr: "failed to iterate severity",
+		},
+		{
+			name: "DeleteSeverityBucket returns an error",
+			mocks: mocks{
+				deleteSeverityBucket: errors.New("error"),
+			},
+			wantErr: "failed to delete severity bucket",
+		},
+		{
+			name: "DeleteVulnerabilityDetailBucket returns an error",
+			mocks: mocks{
+				deleteVulnerabilityDetailBucket: errors.New("error"),
+			},
+			wantErr: "failed to delete vulnerability detail bucket",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockDBConfig := new(db.MockDBConfig)
+			mockDBConfig.On("ForEachSeverity", mock.Anything).Return(tt.mocks.forEachSeverity)
+			mockDBConfig.On("DeleteSeverityBucket").Return(tt.mocks.deleteSeverityBucket)
+			mockDBConfig.On("DeleteVulnerabilityDetailBucket").Return(
+				tt.mocks.deleteVulnerabilityDetailBucket)
+
+			o := fullOptimizer{
+				dbc: mockDBConfig,
+			}
+			err := o.Optimize()
+			switch {
+			case tt.wantErr != "":
+				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
+			default:
+				assert.NoError(t, err, tt.name)
+			}
+		})
+	}
+}
+
+func Test_lightOptimizer_Optimize(t *testing.T) {
+	type mocks struct {
+		forEachSeverity                 error
+		deleteVulnerabilityDetailBucket error
+	}
+	tests := []struct {
+		name    string
+		mocks   mocks
+		wantErr string
+	}{
+		{
+			name: "happy path",
+		},
+		{
+			name: "ForEachSeverity returns an error",
+			mocks: mocks{
+				forEachSeverity: errors.New("error"),
+			},
+			wantErr: "failed to iterate severity",
+		},
+		{
+			name: "DeleteVulnerabilityDetailBucket returns an error",
+			mocks: mocks{
+				deleteVulnerabilityDetailBucket: errors.New("error"),
+			},
+			wantErr: "failed to delete vulnerability detail bucket",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockDBConfig := new(db.MockDBConfig)
+			mockDBConfig.On("ForEachSeverity", mock.Anything).Return(tt.mocks.forEachSeverity)
+			mockDBConfig.On("DeleteVulnerabilityDetailBucket").Return(
+				tt.mocks.deleteVulnerabilityDetailBucket)
+
+			o := lightOptimizer{
+				dbc: mockDBConfig,
+			}
+			err := o.Optimize()
+			switch {
+			case tt.wantErr != "":
+				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
+			default:
+				assert.NoError(t, err, tt.name)
+			}
 		})
 	}
 }

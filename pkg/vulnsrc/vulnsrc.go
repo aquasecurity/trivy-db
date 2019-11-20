@@ -89,7 +89,7 @@ func NewUpdater(cacheDir string, light bool, interval time.Duration) Updater {
 	}
 
 	return Updater{
-		dbc:            db.Config{},
+		dbc:            dbConfig,
 		updateMap:      updateMap,
 		cacheDir:       cacheDir,
 		dbType:         dbType,
@@ -150,7 +150,7 @@ func (o fullOptimizer) Optimize() error {
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("failed to iterate vulnerability: %w", err)
+		return xerrors.Errorf("failed to iterate severity: %w", err)
 	}
 
 	if err := o.dbc.DeleteSeverityBucket(); err != nil {
