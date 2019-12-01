@@ -79,8 +79,6 @@ func (vs VulnSrc) Update(dir string) error {
 			return xerrors.Errorf("error in SUSE OVAL walk: %w", err)
 		}
 
-		debug = rootDir
-
 		platformName := fmt.Sprintf(platformFormat, suseDir[strings.LastIndex(suseDir, "/")+1:])
 		if err = vs.save(ovals, platformName); err != nil {
 			return xerrors.Errorf("error in SUSE OVAL save: %w", err)
@@ -102,9 +100,6 @@ func (vs VulnSrc) save(ovals []SuseOVAL, platformName string) error {
 	return nil
 
 }
-
-var debug string
-var debugCVE string
 
 func (vs VulnSrc) commit(tx *bolt.Tx, ovals []SuseOVAL, platformName string) error {
 	osVer := platformName[strings.LastIndex(platformName, " "):]
@@ -177,14 +172,14 @@ func walkSUSE(cri Criteria, osVer string, pkgs []AffectedPackage) []AffectedPack
 		}
 
 		if packVer == "" {
-			fmt.Println(c.Comment)
+			fmt.Printf("%s can't parse", c.Comment)
 		}
 
 		ss := strings.Split(packVer, "-")
 		if len(ss) < 2 {
 			continue
 		}
-		name := fmt.Sprintf("%s", strings.Join(ss[0:len(ss)-2], "-"))
+		name := strings.Join(ss[0:len(ss)-2], "-")
 		version := fmt.Sprintf("%s-%s", ss[len(ss)-2], ss[len(ss)-1])
 
 		pkgs = append(pkgs, AffectedPackage{
@@ -203,8 +198,7 @@ func walkSUSE(cri Criteria, osVer string, pkgs []AffectedPackage) []AffectedPack
 }
 
 func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
-	bucket := release
-	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
+	advisories, err := vs.dbc.GetAdvisories(release, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get SUSE advisories: %w", err)
 	}
