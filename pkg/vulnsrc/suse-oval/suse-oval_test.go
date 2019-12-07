@@ -39,7 +39,7 @@ func TestVulnSrc_Update(t *testing.T) {
 			expectedError: nil,
 		},
 		{
-			name:           "unable to save oracle linux oval defintions",
+			name:           "unable to save suse linux oval defintions",
 			cacheDir:       "testdata",
 			batchUpdateErr: errors.New("unable to batch update"),
 			expectedError:  errors.New("error in SUSE OVAL save: error in batch update: unable to batch update"),
@@ -428,7 +428,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			expectedVulns: []types.Advisory{},
 		},
 		{
-			name: "oracle GetAdvisories return an error",
+			name: "suse GetAdvisories return an error",
 			getAdvisories: getAdvisories{
 				input: getAdvisoriesInput{
 					version: mock.Anything,
