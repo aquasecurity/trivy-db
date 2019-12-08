@@ -98,7 +98,6 @@ func (vs VulnSrc) save(ovals []SuseOVAL, platformName string) error {
 	}
 
 	return nil
-
 }
 
 func (vs VulnSrc) commit(tx *bolt.Tx, ovals []SuseOVAL, platformName string) error {
@@ -172,7 +171,7 @@ func walkSUSE(cri Criteria, osVer string, pkgs []AffectedPackage) []AffectedPack
 		}
 
 		if packVer == "" {
-			fmt.Printf("%s can't parse", c.Comment)
+			log.Printf("%s can't parse", c.Comment)
 		}
 
 		ss := strings.Split(packVer, "-")
