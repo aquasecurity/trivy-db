@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	bolt "github.com/etcd-io/bbolt"
@@ -24,22 +25,10 @@ const (
 )
 
 var (
-	platformFormat = ""
-	suseDirs       = []string{
-		filepath.Join("oval", "suse", "opensuse.leap", "15.0"),
-		filepath.Join("oval", "suse", "opensuse.leap", "15.1"),
-		filepath.Join("oval", "suse", "opensuse.leap", "42.3"),
-		filepath.Join("oval", "suse", "suse.linux.enterprise", "12"),
-		filepath.Join("oval", "suse", "suse.linux.enterprise", "15"),
-		filepath.Join("oval", "suse", "suse.linux.enterprise.desktop", "10"),
-		filepath.Join("oval", "suse", "suse.linux.enterprise.desktop", "11"),
-		filepath.Join("oval", "suse", "suse.linux.enterprise.desktop", "12"),
-		filepath.Join("oval", "suse", "suse.linux.enterprise.desktop", "15"),
-		filepath.Join("oval", "suse", "suse.linux.enterprise.server", "10"),
-		filepath.Join("oval", "suse", "suse.linux.enterprise.server", "11"),
-		filepath.Join("oval", "suse", "suse.linux.enterprise.server", "12"),
-		filepath.Join("oval", "suse", "suse.linux.enterprise.server", "15"),
-	}
+	openSuseInstalledCommentRegexp = regexp.MustCompile(`openSUSE Leap ([\d+.]*)[A-Za-z\ ]* is installed`)
+	suseInstalledCommentRegexp     = regexp.MustCompile(`SUSE Linux Enterprise[A-Za-z0-9\s]*? (\d+)\s?(SP(\d+)[-A-Za-z\s]*)?.* is installed`)
+	slesInstalledCommentRegexp     = regexp.MustCompile(`sles10-sp(\d+)[A-Za-z-]* is installed`)
+	suseDir                        = filepath.Join("oval", "suse")
 )
 
 type VulnSrc struct {
@@ -55,55 +44,40 @@ func NewVulnSrc() VulnSrc {
 func (vs VulnSrc) Update(dir string) error {
 	log.Println("Saving SUSE OVAL")
 
-	for _, suseDir := range suseDirs {
-		rootDir := filepath.Join(dir, "vuln-list", suseDir)
-		platformFormat = platformSUSELinuxFormat
-		if strings.Contains(suseDir, "opensuse.leap") {
-			platformFormat = platformOpenSUSEFormat
+	rootDir := filepath.Join(dir, "vuln-list", suseDir)
+	var ovals []SuseOVAL
+	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
+		var oval SuseOVAL
+		if err := json.NewDecoder(r).Decode(&oval); err != nil {
+			return xerrors.Errorf("failed to decode SUSE OVAL JSON: %w %+v", err, oval)
 		}
-
-		var ovals []SuseOVAL
-		err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-			var oval SuseOVAL
-			if err := json.NewDecoder(r).Decode(&oval); err != nil {
-				return xerrors.Errorf("failed to decode SUSE OVAL JSON: %w %+v", err, oval)
-			}
-			ovals = append(ovals, oval)
-			return nil
-		})
-		if err != nil {
-			if strings.HasSuffix(err.Error(), ErrNoSuchFileOrDirectory) {
-				log.Printf("%s is not exist", rootDir)
-				continue
-			}
-			return xerrors.Errorf("error in SUSE OVAL walk: %w", err)
-		}
-
-		platformName := fmt.Sprintf(platformFormat, suseDir[strings.LastIndex(suseDir, "/")+1:])
-		if err = vs.save(ovals, platformName); err != nil {
-			return xerrors.Errorf("error in SUSE OVAL save: %w", err)
-		}
-
+		ovals = append(ovals, oval)
+		return nil
+	})
+	if err != nil {
+		return xerrors.Errorf("error in SUSE OVAL walk: %w", err)
 	}
-	return nil
 
+	if err = vs.save(ovals); err != nil {
+		return xerrors.Errorf("error in SUSE OVAL save: %w", err)
+	}
+
+	return nil
 }
 
-func (vs VulnSrc) save(ovals []SuseOVAL, platformName string) error {
+func (vs VulnSrc) save(ovals []SuseOVAL) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		return vs.commit(tx, ovals, platformName)
+		return vs.commit(tx, ovals)
 	})
 	if err != nil {
 		return xerrors.Errorf("error in batch update: %w", err)
 	}
-
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, ovals []SuseOVAL, platformName string) error {
-	osVer := platformName[strings.LastIndex(platformName, " "):]
+func (vs VulnSrc) commit(tx *bolt.Tx, ovals []SuseOVAL) error {
 	for _, oval := range ovals {
-		affectedPkgs := walkSUSE(oval.Criteria, osVer, []AffectedPackage{})
+		affectedPkgs := walkSUSE(oval.Criteria, "", []AffectedPackage{})
 		if len(affectedPkgs) == 0 {
 			continue
 		}
@@ -117,8 +91,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []SuseOVAL, platformName string) err
 				FixedVersion: affectedPkg.Package.FixedVersion,
 			}
 
-			if err := vs.dbc.PutAdvisory(tx, platformName, affectedPkg.Package.Name, oval.Title, advisory); err != nil {
-				return xerrors.Errorf("failed to save %s OVAL: %w", platformName, err)
+			if err := vs.dbc.PutAdvisory(tx, affectedPkg.OSVer, affectedPkg.Package.Name, oval.Title, advisory); err != nil {
+				return xerrors.Errorf("failed to save %q OVAL: %w", affectedPkg.OSVer, err)
 			}
 		}
 
@@ -134,12 +108,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []SuseOVAL, platformName string) err
 			Severity:    severityFromThreat(oval.Severity),
 		}
 		if err := vs.dbc.PutVulnerabilityDetail(tx, oval.Title, vulnerability.SuseOVAL, vuln); err != nil {
-			return xerrors.Errorf("failed to save %s OVAL vulnerability: %w", platformName, err)
+			return xerrors.Errorf("failed to save SUSE OVAL vulnerability: %w", err)
 		}
 
 		// for light DB
 		if err := vs.dbc.PutSeverity(tx, oval.Title, types.SeverityUnknown); err != nil {
-			return xerrors.Errorf("failed to save %s vulnerability severity: %w", platformName, err)
+			return xerrors.Errorf("failed to save SUSE vulnerability severity: %w", err)
 		}
 	}
 	return nil
@@ -147,19 +121,25 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []SuseOVAL, platformName string) err
 
 func walkSUSE(cri Criteria, osVer string, pkgs []AffectedPackage) []AffectedPackage {
 	for _, c := range cri.Criterions {
-		if strings.HasPrefix(c.Comment, "openSUSE ") {
+		if strings.Contains(c.Comment, "is signed with openSUSE key") {
 			continue
+		}
+		if strings.HasPrefix(c.Comment, "openSUSE ") {
+			osVer = fmt.Sprintf(platformOpenSUSEFormat, openSuseInstalledCommentRegexp.FindStringSubmatch(c.Comment)[1])
 		}
 		if strings.HasPrefix(c.Comment, "SUSE Linux Enterprise ") {
-			continue
+			match := suseInstalledCommentRegexp.FindStringSubmatch(c.Comment)
+			if match[3] == "" {
+				osVer = match[1]
+			} else {
+				osVer = fmt.Sprintf("%s.%s", match[1], match[3])
+			}
+			osVer = fmt.Sprintf(platformSUSELinuxFormat, osVer)
 		}
 		if strings.HasPrefix(c.Comment, "sles10-sp") {
-			continue
+			osVer = fmt.Sprintf(platformSUSELinuxFormat, "10."+slesInstalledCommentRegexp.FindStringSubmatch(c.Comment)[1])
 		}
-		if strings.HasPrefix(c.Comment, "SUSE") {
-			return pkgs
-		}
-		if strings.Contains(c.Comment, "is signed with openSUSE key") {
+		if osVer == "" {
 			continue
 		}
 
