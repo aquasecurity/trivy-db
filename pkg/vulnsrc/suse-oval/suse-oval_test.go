@@ -273,6 +273,116 @@ func TestVulnSrc_Commit(t *testing.T) {
 			},
 		},
 		{
+			name: "SUSE Linux Enterprise 15 happy path 'AND {OR, OR} operator' json",
+			cves: []SuseOVAL{
+				{
+					Title:       "CVE-2019-9518",
+					Description: "Some HTTP/2 implementations are vulnerable to a flood of empty frames, potentially leading to a denial of service. The attacker sends a stream of frames with an empty payload and without the end-of-stream flag. These frames can be DATA, HEADERS, CONTINUATION and/or PUSH_PROMISE. The peer spends time processing each frame disproportionate to attack bandwidth. This can consume excess CPU.",
+					Platform: []string{
+						"SUSE Linux Enterprise Module for Web Scripting 15",
+						"SUSE Linux Enterprise Module for Web Scripting 15 SP1",
+					},
+					References: []Reference{
+						{
+							Source: "CVE",
+							URI:    "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-9518",
+							ID:     "CVE-2019-9518",
+						},
+					},
+					Criteria: Criteria{
+						Operator: "AND",
+						Criterias: []Criteria{
+							{
+								Operator:  "OR",
+								Criterias: nil,
+								Criterions: []Criterion{
+									{
+										Comment: "SUSE Linux Enterprise Module for Web Scripting 15 is installed",
+									},
+									{
+										Comment: "SUSE Linux Enterprise Module for Web Scripting 15 SP1 is installed",
+									},
+								},
+							},
+							{
+								Operator:  "OR",
+								Criterias: nil,
+								Criterions: []Criterion{
+									{
+										Comment: "nodejs10-10.16.3-1.12 is installed",
+									},
+									{
+										Comment: "nodejs8-devel-8.16.1-3.20 is installed",
+									},
+								},
+							},
+						},
+						Criterions: nil,
+					},
+					Severity: "Important",
+					Cve:      "CVE-2019-9518",
+				},
+			},
+			putAdvisoryList: []putAdvisory{
+				{
+					input: putAdvisoryInput{
+						source:   "SUSE Linux Enterprise 15",
+						pkgName:  "nodejs10",
+						cveID:    "CVE-2019-9518",
+						advisory: types.Advisory{VulnerabilityID: "", FixedVersion: "10.16.3-1.12"},
+					},
+				},
+				{
+					input: putAdvisoryInput{
+						source:   "SUSE Linux Enterprise 15.1",
+						pkgName:  "nodejs10",
+						cveID:    "CVE-2019-9518",
+						advisory: types.Advisory{VulnerabilityID: "", FixedVersion: "10.16.3-1.12"},
+					},
+				},
+				{
+					input: putAdvisoryInput{
+						source:   "SUSE Linux Enterprise 15",
+						pkgName:  "nodejs8-devel",
+						cveID:    "CVE-2019-9518",
+						advisory: types.Advisory{VulnerabilityID: "", FixedVersion: "8.16.1-3.20"},
+					},
+				},
+				{
+					input: putAdvisoryInput{
+						source:   "SUSE Linux Enterprise 15.1",
+						pkgName:  "nodejs8-devel",
+						cveID:    "CVE-2019-9518",
+						advisory: types.Advisory{VulnerabilityID: "", FixedVersion: "8.16.1-3.20"},
+					},
+				},
+			},
+			putVulnerabilityDetailList: []putVulnerabilityDetail{
+				{
+					input: putVulnerabilityDetailInput{
+						cveID:  "CVE-2019-9518",
+						source: vulnerability.SuseOVAL,
+						vuln: types.VulnerabilityDetail{
+							Description: "Some HTTP/2 implementations are vulnerable to a flood of empty frames, potentially leading to a denial of service. The attacker sends a stream of frames with an empty payload and without the end-of-stream flag. These frames can be DATA, HEADERS, CONTINUATION and/or PUSH_PROMISE. The peer spends time processing each frame disproportionate to attack bandwidth. This can consume excess CPU.",
+							References: []string{
+								"http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-9518",
+							},
+							Title:    "CVE-2019-9518",
+							Severity: types.SeverityHigh,
+						},
+					},
+				},
+			},
+			putSeverityList: []putSeverity{
+				{
+					input: putSeverityInput{
+						cveID:    "CVE-2019-9518",
+						severity: types.SeverityUnknown,
+					},
+				},
+			},
+		},
+		{
 			name: "openSUSE Leap 42.3 happy path 'Operator AND OR AND' json",
 			cves: []SuseOVAL{
 				{
