@@ -20,7 +20,7 @@ import (
 
 const (
 	platformOpenSUSEFormat   = "OpenSUSE Leap %s"
-	platformSUSELinuxFormat  = "SUSE Enterprise Linux %s"
+	platformSUSELinuxFormat  = "SUSE Linux Enterprise %s"
 	ErrNoSuchFileOrDirectory = " no such file or directory"
 )
 
@@ -28,6 +28,7 @@ var (
 	openSuseInstalledCommentRegexp = regexp.MustCompile(`openSUSE Leap ([\d+.]*)[A-Za-z\ ]* is installed`)
 	suseInstalledCommentRegexp     = regexp.MustCompile(`SUSE Linux Enterprise[A-Za-z0-9\s]*? (\d+)\s?(SP(\d+)[-A-Za-z\s]*)?.* is installed`)
 	slesInstalledCommentRegexp     = regexp.MustCompile(`sles10-sp(\d+)[A-Za-z-]* is installed`)
+	sledInstalledCommentRegexp     = regexp.MustCompile(`sled10-sp(\d+)[A-Za-z-]* is installed`)
 	suseDir                        = filepath.Join("oval", "suse")
 )
 
@@ -61,7 +62,6 @@ func (vs VulnSrc) Update(dir string) error {
 	if err = vs.save(ovals); err != nil {
 		return xerrors.Errorf("error in SUSE OVAL save: %w", err)
 	}
-
 	return nil
 }
 
@@ -77,10 +77,14 @@ func (vs VulnSrc) save(ovals []SuseOVAL) error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx, ovals []SuseOVAL) error {
 	for _, oval := range ovals {
-		affectedPkgs := walkSUSE(oval.Criteria, "", []AffectedPackage{})
+		if oval.Criteria.Operator == "" {
+			continue
+		}
+		affectedPkgs := walkSUSE(oval.Criteria, "", Package{}, []AffectedPackage{})
 		if len(affectedPkgs) == 0 {
 			continue
 		}
+		count += len(affectedPkgs)
 
 		for _, affectedPkg := range affectedPkgs {
 			if affectedPkg.Package.Name == "" {
@@ -119,28 +123,37 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []SuseOVAL) error {
 	return nil
 }
 
-func walkSUSE(cri Criteria, osVer string, pkgs []AffectedPackage) []AffectedPackage {
+func getAffectedPackages(cri Criteria) []AffectedPackage {
+	var osVers []string
+	var pkgs []Package
 	for _, c := range cri.Criterions {
 		if strings.Contains(c.Comment, "is signed with openSUSE key") {
 			continue
 		}
 		if strings.HasPrefix(c.Comment, "openSUSE ") {
-			osVer = fmt.Sprintf(platformOpenSUSEFormat, openSuseInstalledCommentRegexp.FindStringSubmatch(c.Comment)[1])
+			osVers = append(osVers, fmt.Sprintf(platformOpenSUSEFormat, openSuseInstalledCommentRegexp.FindStringSubmatch(c.Comment)[1]))
 		}
-		if strings.HasPrefix(c.Comment, "SUSE Linux Enterprise ") {
+		if strings.Contains(c.Comment, "SUSE Linux Enterprise ") {
 			match := suseInstalledCommentRegexp.FindStringSubmatch(c.Comment)
+			var osVer string
 			if match[3] == "" {
 				osVer = match[1]
 			} else {
 				osVer = fmt.Sprintf("%s.%s", match[1], match[3])
 			}
-			osVer = fmt.Sprintf(platformSUSELinuxFormat, osVer)
+			osVers = append(osVers, fmt.Sprintf(platformSUSELinuxFormat, osVer))
 		}
 		if strings.HasPrefix(c.Comment, "sles10-sp") {
-			osVer = fmt.Sprintf(platformSUSELinuxFormat, "10."+slesInstalledCommentRegexp.FindStringSubmatch(c.Comment)[1])
+			osVers = append(osVers, fmt.Sprintf(platformSUSELinuxFormat, "10."+slesInstalledCommentRegexp.FindStringSubmatch(c.Comment)[1]))
 		}
-		if osVer == "" {
-			continue
+		if strings.HasPrefix(c.Comment, "sled10-sp") {
+			osVers = append(osVers, fmt.Sprintf(platformSUSELinuxFormat, "10."+sledInstalledCommentRegexp.FindStringSubmatch(c.Comment)[1]))
+		}
+		if strings.HasPrefix(c.Comment, "sles10-ltss") {
+			osVers = append(osVers, fmt.Sprintf(platformSUSELinuxFormat, "10"))
+		}
+		if strings.HasPrefix(c.Comment, "sles10-slepos") {
+			osVers = append(osVers, fmt.Sprintf(platformSUSELinuxFormat, "10"))
 		}
 
 		packVer := ""
@@ -149,29 +162,176 @@ func walkSUSE(cri Criteria, osVer string, pkgs []AffectedPackage) []AffectedPack
 		} else if strings.Contains(c.Comment, " less than ") {
 			packVer = strings.Join(strings.Split(c.Comment, " less than "), "-")
 		}
-
-		if packVer == "" {
-			log.Printf("%s can't parse", c.Comment)
-		}
-
-		ss := strings.Split(packVer, "-")
-		if len(ss) < 2 {
-			continue
-		}
-		name := strings.Join(ss[0:len(ss)-2], "-")
-		version := fmt.Sprintf("%s-%s", ss[len(ss)-2], ss[len(ss)-1])
-
-		pkgs = append(pkgs, AffectedPackage{
-			OSVer: osVer,
-			Package: Package{
+		if packVer != "" {
+			ss := strings.Split(packVer, "-")
+			if len(ss) < 2 {
+				continue
+			}
+			name := strings.Join(ss[0:len(ss)-2], "-")
+			version := fmt.Sprintf("%s-%s", ss[len(ss)-2], ss[len(ss)-1])
+			pkgs = append(pkgs, Package{
 				Name:         name,
 				FixedVersion: version,
-			},
+			})
+		} else {
+			log.Printf("%s can't parse", c.Comment)
+		}
+	}
+	for _, ca := range cri.Criterias {
+		for _, c := range ca.Criterions {
+			if strings.Contains(c.Comment, "is signed with openSUSE key") {
+				continue
+			}
+			if strings.HasPrefix(c.Comment, "openSUSE ") {
+				osVers = append(osVers, fmt.Sprintf(platformOpenSUSEFormat, openSuseInstalledCommentRegexp.FindStringSubmatch(c.Comment)[1]))
+			}
+			if strings.Contains(c.Comment, "SUSE Linux Enterprise ") {
+				match := suseInstalledCommentRegexp.FindStringSubmatch(c.Comment)
+				var osVer string
+				if match[3] == "" {
+					osVer = match[1]
+				} else {
+					osVer = fmt.Sprintf("%s.%s", match[1], match[3])
+				}
+				osVers = append(osVers, fmt.Sprintf(platformSUSELinuxFormat, osVer))
+			}
+			if strings.HasPrefix(c.Comment, "sles10-sp") {
+				osVers = append(osVers, fmt.Sprintf(platformSUSELinuxFormat, "10."+slesInstalledCommentRegexp.FindStringSubmatch(c.Comment)[1]))
+			}
+			if strings.HasPrefix(c.Comment, "sled10-sp") {
+				osVers = append(osVers, fmt.Sprintf(platformSUSELinuxFormat, "10."+sledInstalledCommentRegexp.FindStringSubmatch(c.Comment)[1]))
+			}
+			if strings.HasPrefix(c.Comment, "sles10-ltss") {
+				osVers = append(osVers, fmt.Sprintf(platformSUSELinuxFormat, "10"))
+			}
+			if strings.HasPrefix(c.Comment, "sles10-slepos") {
+				osVers = append(osVers, fmt.Sprintf(platformSUSELinuxFormat, "10"))
+			}
+
+			packVer := ""
+			if strings.HasSuffix(c.Comment, " is installed") {
+				packVer = strings.TrimSuffix(c.Comment, " is installed")
+			} else if strings.Contains(c.Comment, " less than ") {
+				packVer = strings.Join(strings.Split(c.Comment, " less than "), "-")
+			}
+			if packVer != "" {
+				ss := strings.Split(packVer, "-")
+				if len(ss) < 2 {
+					continue
+				}
+				name := strings.Join(ss[0:len(ss)-2], "-")
+				version := fmt.Sprintf("%s-%s", ss[len(ss)-2], ss[len(ss)-1])
+				pkgs = append(pkgs, Package{
+					Name:         name,
+					FixedVersion: version,
+				})
+			} else {
+				log.Printf("%s can't parse", c.Comment)
+			}
+
+		}
+	}
+
+	var affectedPackages []AffectedPackage
+	for _, osVer := range osVers {
+		for _, pkg := range pkgs {
+			affectedPackages = append(affectedPackages, AffectedPackage{
+				OSVer:   osVer,
+				Package: pkg,
+			})
+		}
+	}
+
+	return affectedPackages
+}
+
+func walkSUSE(cri Criteria, osVer string, pkg Package, pkgs []AffectedPackage) []AffectedPackage {
+	var affectedPackages []AffectedPackage
+	if cri.Operator == "OR" {
+		for _, c := range cri.Criterias {
+			if len(cri.Criterions) == 0 {
+				affectedPackages = append(affectedPackages, getAffectedPackages(c)...)
+			}
+			affectedPackages = recursiveGetAffectedPackages(c, "", Package{}, affectedPackages)
+		}
+	} else if cri.Operator == "AND" {
+		if len(cri.Criterions) == 0 {
+			affectedPackages = append(affectedPackages, getAffectedPackages(cri)...)
+		}
+		affectedPackages = recursiveGetAffectedPackages(cri, "", Package{}, affectedPackages)
+	}
+	return affectedPackages
+}
+
+func recursiveGetAffectedPackages(cri Criteria, osVer string, pkg Package, pkgs []AffectedPackage) []AffectedPackage {
+	for _, c := range cri.Criterions {
+		osIsFind := false
+		if strings.Contains(c.Comment, "is signed with openSUSE key") {
+			continue
+		}
+		if strings.HasPrefix(c.Comment, "openSUSE ") {
+			osVer = fmt.Sprintf(platformOpenSUSEFormat, openSuseInstalledCommentRegexp.FindStringSubmatch(c.Comment)[1])
+			osIsFind = true
+		}
+		if strings.Contains(c.Comment, "SUSE Linux Enterprise ") {
+			match := suseInstalledCommentRegexp.FindStringSubmatch(c.Comment)
+			if match[3] == "" {
+				osVer = match[1]
+			} else {
+				osVer = fmt.Sprintf("%s.%s", match[1], match[3])
+			}
+			osVer = fmt.Sprintf(platformSUSELinuxFormat, osVer)
+			osIsFind = true
+		}
+		if strings.HasPrefix(c.Comment, "sles10-sp") {
+			osVer = fmt.Sprintf(platformSUSELinuxFormat, "10."+slesInstalledCommentRegexp.FindStringSubmatch(c.Comment)[1])
+			osIsFind = true
+		}
+
+		if strings.HasPrefix(c.Comment, "sled10-sp") {
+			osVer = fmt.Sprintf(platformSUSELinuxFormat, "10."+sledInstalledCommentRegexp.FindStringSubmatch(c.Comment)[1])
+			osIsFind = true
+		}
+		if strings.HasPrefix(c.Comment, "sles10-ltss") {
+			osVer = fmt.Sprintf(platformSUSELinuxFormat, "10")
+			osIsFind = true
+		}
+		if strings.HasPrefix(c.Comment, "sles10-slepos") {
+			osVer = fmt.Sprintf(platformSUSELinuxFormat, "10")
+			osIsFind = true
+		}
+
+		packVer := ""
+		if strings.HasSuffix(c.Comment, " is installed") {
+			packVer = strings.TrimSuffix(c.Comment, " is installed")
+		} else if strings.Contains(c.Comment, " less than ") {
+			packVer = strings.Join(strings.Split(c.Comment, " less than "), "-")
+		}
+		if !osIsFind {
+			ss := strings.Split(packVer, "-")
+			if len(ss) < 2 {
+				continue
+			}
+			name := strings.Join(ss[0:len(ss)-2], "-")
+			version := fmt.Sprintf("%s-%s", ss[len(ss)-2], ss[len(ss)-1])
+			pkg = Package{
+				Name:         name,
+				FixedVersion: version,
+			}
+		}
+
+		if (osVer == "") || (pkg == Package{}) {
+			continue
+		}
+
+		pkgs = append(pkgs, AffectedPackage{
+			OSVer:   osVer,
+			Package: pkg,
 		})
 	}
 
 	for _, c := range cri.Criterias {
-		pkgs = walkSUSE(c, osVer, pkgs)
+		pkgs = recursiveGetAffectedPackages(c, osVer, pkg, pkgs)
 	}
 	return pkgs
 }
