@@ -174,9 +174,7 @@ func getAffectedPackages(cri Criteria) []AffectedPackage {
 
 	criterions := cri.Criterions
 	for _, c := range cri.Criterias {
-		for _, criterion := range c.Criterions {
-			criterions = append(criterions, criterion)
-		}
+		criterions = append(criterions, c.Criterions...)
 	}
 
 	for _, c := range criterions {
