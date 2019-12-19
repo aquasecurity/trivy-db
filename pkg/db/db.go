@@ -27,23 +27,25 @@ var (
 )
 
 type Operations interface {
-	BatchUpdate(func(*bolt.Tx) error) error
+	BatchUpdate(fn func(*bolt.Tx) error) (err error)
 
-	PutVulnerabilityDetail(*bolt.Tx, string, string, types.VulnerabilityDetail) error
-	DeleteVulnerabilityDetailBucket() error
+	PutVulnerabilityDetail(tx *bolt.Tx, vulnerabilityID string, source string,
+		vulnerability types.VulnerabilityDetail) (err error)
+	DeleteVulnerabilityDetailBucket() (err error)
 
-	PutAdvisory(*bolt.Tx, string, string, string, interface{}) error
-	ForEachAdvisory(string, string) (map[string][]byte, error)
-	GetAdvisories(string, string) ([]types.Advisory, error)
+	PutAdvisory(tx *bolt.Tx, source string, pkgName string, vulnerabilityID string,
+		advisory interface{}) (err error)
+	ForEachAdvisory(source string, pkgName string) (value map[string][]byte, err error)
+	GetAdvisories(source string, pkgName string) (advisories []types.Advisory, err error)
 
-	PutSeverity(*bolt.Tx, string, types.Severity) error
-	GetSeverity(string) (types.Severity, error)
-	ForEachSeverity(f func(tx *bolt.Tx, cveID string, severity types.Severity) error) error
+	PutSeverity(tx *bolt.Tx, vulnerabilityID string, severity types.Severity) (err error)
+	GetSeverity(vulnerabilityID string) (severity types.Severity, err error)
+	ForEachSeverity(f func(tx *bolt.Tx, cveID string, severity types.Severity) error) (err error)
 
-	DeleteSeverityBucket() error
+	DeleteSeverityBucket() (err error)
 
-	PutVulnerability(*bolt.Tx, string, types.Vulnerability) error
-	GetVulnerability(string) (types.Vulnerability, error)
+	PutVulnerability(tx *bolt.Tx, vulnerabilityID string, vulnerability types.Vulnerability) (err error)
+	GetVulnerability(vulnerabilityID string) (vulnerability types.Vulnerability, err error)
 }
 
 type Metadata struct {
