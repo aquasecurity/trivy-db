@@ -132,7 +132,7 @@ type Optimizer interface {
 }
 
 type fullOptimizer struct {
-	dbc db.Operations
+	dbc db.Operation
 }
 
 func (o fullOptimizer) Optimize() error {
@@ -166,7 +166,7 @@ func (o fullOptimizer) Optimize() error {
 }
 
 type lightOptimizer struct {
-	dbc db.Operations
+	dbc db.Operation
 }
 
 func (o lightOptimizer) Optimize() error {

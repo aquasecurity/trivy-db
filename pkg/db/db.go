@@ -26,7 +26,7 @@ var (
 	dbDir string
 )
 
-type Operations interface {
+type Operation interface {
 	BatchUpdate(fn func(*bolt.Tx) error) (err error)
 
 	PutVulnerabilityDetail(tx *bolt.Tx, vulnerabilityID string, source string,
