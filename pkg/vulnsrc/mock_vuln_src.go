@@ -10,12 +10,12 @@ type MockVulnSrc struct {
 }
 
 type UpdateArgs struct {
-	_a0         string
-	_a0Anything bool
+	Dir         string
+	DirAnything bool
 }
 
 type UpdateReturns struct {
-	_a0 error
+	Err error
 }
 
 type UpdateExpectation struct {
@@ -25,12 +25,12 @@ type UpdateExpectation struct {
 
 func (_m *MockVulnSrc) ApplyUpdateExpectation(e UpdateExpectation) {
 	var args []interface{}
-	if e.Args._a0Anything {
+	if e.Args.DirAnything {
 		args = append(args, mock.Anything)
 	} else {
-		args = append(args, e.Args._a0)
+		args = append(args, e.Args.Dir)
 	}
-	_m.On("Update", args...).Return(e.Returns._a0)
+	_m.On("Update", args...).Return(e.Returns.Err)
 }
 
 func (_m *MockVulnSrc) ApplyUpdateExpectations(expectations []UpdateExpectation) {
@@ -39,13 +39,13 @@ func (_m *MockVulnSrc) ApplyUpdateExpectations(expectations []UpdateExpectation)
 	}
 }
 
-// Update provides a mock function with given fields: _a0
-func (_m *MockVulnSrc) Update(_a0 string) error {
-	ret := _m.Called(_a0)
+// Update provides a mock function with given fields: dir
+func (_m *MockVulnSrc) Update(dir string) error {
+	ret := _m.Called(dir)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string) error); ok {
-		r0 = rf(_a0)
+		r0 = rf(dir)
 	} else {
 		r0 = ret.Error(0)
 	}

@@ -10,10 +10,10 @@ type MockVulnSrc struct {
 }
 
 type GetArgs struct {
-	MajorVersion         string
-	MajorVersionAnything bool
-	PkgName              string
-	PkgNameAnything      bool
+	Release         string
+	ReleaseAnything bool
+	PkgName         string
+	PkgNameAnything bool
 }
 
 type GetReturns struct {
@@ -28,10 +28,10 @@ type GetExpectation struct {
 
 func (_m *MockVulnSrc) ApplyGetExpectation(e GetExpectation) {
 	var args []interface{}
-	if e.Args.MajorVersionAnything {
+	if e.Args.ReleaseAnything {
 		args = append(args, mock.Anything)
 	} else {
-		args = append(args, e.Args.MajorVersion)
+		args = append(args, e.Args.Release)
 	}
 	if e.Args.PkgNameAnything {
 		args = append(args, mock.Anything)
@@ -47,13 +47,13 @@ func (_m *MockVulnSrc) ApplyGetExpectations(expectations []GetExpectation) {
 	}
 }
 
-// Get provides a mock function with given fields: majorVersion, pkgName
-func (_m *MockVulnSrc) Get(majorVersion string, pkgName string) ([]Advisory, error) {
-	ret := _m.Called(majorVersion, pkgName)
+// Get provides a mock function with given fields: release, pkgName
+func (_m *MockVulnSrc) Get(release string, pkgName string) ([]Advisory, error) {
+	ret := _m.Called(release, pkgName)
 
 	var r0 []Advisory
 	if rf, ok := ret.Get(0).(func(string, string) []Advisory); ok {
-		r0 = rf(majorVersion, pkgName)
+		r0 = rf(release, pkgName)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]Advisory)
@@ -62,7 +62,7 @@ func (_m *MockVulnSrc) Get(majorVersion string, pkgName string) ([]Advisory, err
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string, string) error); ok {
-		r1 = rf(majorVersion, pkgName)
+		r1 = rf(release, pkgName)
 	} else {
 		r1 = ret.Error(1)
 	}

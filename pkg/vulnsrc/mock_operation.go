@@ -11,12 +11,12 @@ type MockOperation struct {
 }
 
 type SetMetadataArgs struct {
-	_a0         db.Metadata
-	_a0Anything bool
+	Metadata         db.Metadata
+	MetadataAnything bool
 }
 
 type SetMetadataReturns struct {
-	_a0 error
+	Err error
 }
 
 type SetMetadataExpectation struct {
@@ -26,12 +26,12 @@ type SetMetadataExpectation struct {
 
 func (_m *MockOperation) ApplySetMetadataExpectation(e SetMetadataExpectation) {
 	var args []interface{}
-	if e.Args._a0Anything {
+	if e.Args.MetadataAnything {
 		args = append(args, mock.Anything)
 	} else {
-		args = append(args, e.Args._a0)
+		args = append(args, e.Args.Metadata)
 	}
-	_m.On("SetMetadata", args...).Return(e.Returns._a0)
+	_m.On("SetMetadata", args...).Return(e.Returns.Err)
 }
 
 func (_m *MockOperation) ApplySetMetadataExpectations(expectations []SetMetadataExpectation) {
@@ -40,13 +40,13 @@ func (_m *MockOperation) ApplySetMetadataExpectations(expectations []SetMetadata
 	}
 }
 
-// SetMetadata provides a mock function with given fields: _a0
-func (_m *MockOperation) SetMetadata(_a0 db.Metadata) error {
-	ret := _m.Called(_a0)
+// SetMetadata provides a mock function with given fields: metadata
+func (_m *MockOperation) SetMetadata(metadata db.Metadata) error {
+	ret := _m.Called(metadata)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(db.Metadata) error); ok {
-		r0 = rf(_a0)
+		r0 = rf(metadata)
 	} else {
 		r0 = ret.Error(0)
 	}
