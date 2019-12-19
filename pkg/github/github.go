@@ -64,7 +64,7 @@ func (r Repository) DeleteRef(ctx context.Context, ref string) (*github.Response
 }
 
 type VCSClientInterface interface {
-	UploadReleaseAsset(ctx context.Context, filePaths []string) error
+	UploadReleaseAssets(ctx context.Context, filePaths []string) (err error)
 }
 
 type Client struct {
@@ -92,7 +92,7 @@ func NewClient(ctx context.Context) Client {
 	}
 }
 
-func (c Client) UploadReleaseAsset(ctx context.Context, filePaths []string) error {
+func (c Client) UploadReleaseAssets(ctx context.Context, filePaths []string) error {
 	now := c.Clock.Now().UTC()
 	date := now.Format("2006010215")
 

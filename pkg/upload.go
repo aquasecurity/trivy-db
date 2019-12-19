@@ -29,7 +29,7 @@ func (ac AppConfig) upload(c *cli.Context) error {
 	}
 
 	ctx := context.Background()
-	if err := ac.Client.UploadReleaseAsset(ctx, filePaths); err != nil {
+	if err := ac.Client.UploadReleaseAssets(ctx, filePaths); err != nil {
 		return xerrors.Errorf("failed to upload a release asset: %w", err)
 	}
 	return nil
