@@ -183,8 +183,8 @@ func (_m *MockOperation) ForEachAdvisory(source string, pkgName string) (map[str
 }
 
 type ForEachSeverityArgs struct {
-	F         func(*bbolt.Tx, string, types.Severity) error
-	FAnything bool
+	Fn         func(*bbolt.Tx, string, types.Severity) error
+	FnAnything bool
 }
 
 type ForEachSeverityReturns struct {
@@ -198,10 +198,10 @@ type ForEachSeverityExpectation struct {
 
 func (_m *MockOperation) ApplyForEachSeverityExpectation(e ForEachSeverityExpectation) {
 	var args []interface{}
-	if e.Args.FAnything {
+	if e.Args.FnAnything {
 		args = append(args, mock.Anything)
 	} else {
-		args = append(args, e.Args.F)
+		args = append(args, e.Args.Fn)
 	}
 	_m.On("ForEachSeverity", args...).Return(e.Returns.Err)
 }
@@ -212,13 +212,13 @@ func (_m *MockOperation) ApplyForEachSeverityExpectations(expectations []ForEach
 	}
 }
 
-// ForEachSeverity provides a mock function with given fields: f
-func (_m *MockOperation) ForEachSeverity(f func(*bbolt.Tx, string, types.Severity) error) error {
-	ret := _m.Called(f)
+// ForEachSeverity provides a mock function with given fields: fn
+func (_m *MockOperation) ForEachSeverity(fn func(*bbolt.Tx, string, types.Severity) error) error {
+	ret := _m.Called(fn)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(func(*bbolt.Tx, string, types.Severity) error) error); ok {
-		r0 = rf(f)
+		r0 = rf(fn)
 	} else {
 		r0 = ret.Error(0)
 	}

@@ -40,7 +40,7 @@ type Operation interface {
 
 	PutSeverity(tx *bolt.Tx, vulnerabilityID string, severity types.Severity) (err error)
 	GetSeverity(vulnerabilityID string) (severity types.Severity, err error)
-	ForEachSeverity(f func(tx *bolt.Tx, cveID string, severity types.Severity) error) (err error)
+	ForEachSeverity(fn func(tx *bolt.Tx, cveID string, severity types.Severity) error) (err error)
 
 	DeleteSeverityBucket() (err error)
 
