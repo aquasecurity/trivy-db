@@ -128,7 +128,7 @@ func (u Updater) Update(targets []string) error {
 }
 
 type Optimizer interface {
-	Optimize() error
+	Optimize() (err error)
 }
 
 type fullOptimizer struct {

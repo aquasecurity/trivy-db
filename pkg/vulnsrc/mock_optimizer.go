@@ -10,7 +10,7 @@ type MockOptimizer struct {
 }
 
 type OptimizeReturns struct {
-	_a0 error
+	Err error
 }
 
 type OptimizeExpectation struct {
@@ -19,7 +19,7 @@ type OptimizeExpectation struct {
 
 func (_m *MockOptimizer) ApplyOptimizeExpectation(e OptimizeExpectation) {
 	var args []interface{}
-	_m.On("Optimize", args...).Return(e.Returns._a0)
+	_m.On("Optimize", args...).Return(e.Returns.Err)
 }
 
 func (_m *MockOptimizer) ApplyOptimizeExpectations(expectations []OptimizeExpectation) {
