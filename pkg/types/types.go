@@ -89,6 +89,6 @@ type Vulnerability struct {
 }
 
 type VulnSrc interface {
-	Update(string) error
-	Get(string, string) ([]Advisory, error)
+	Update(dir string) (err error)
+	Get(release string, pkgName string) (advisories []Advisory, err error)
 }
