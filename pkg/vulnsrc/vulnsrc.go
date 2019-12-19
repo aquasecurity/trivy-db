@@ -32,7 +32,7 @@ import (
 )
 
 type VulnSrc interface {
-	Update(string) error
+	Update(dir string) (err error)
 }
 
 var (
@@ -64,7 +64,7 @@ func init() {
 }
 
 type Operation interface {
-	SetMetadata(db.Metadata) error
+	SetMetadata(metadata db.Metadata) (err error)
 }
 
 type Updater struct {
