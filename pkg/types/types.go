@@ -32,6 +32,13 @@ var (
 		color.New(color.FgHiRed).SprintFunc(),
 		color.New(color.FgRed).SprintFunc(),
 	}
+	VulnerabilityTypes = []string{
+		"CVE",
+		"CWE",
+		"ELSA",
+		"OSVDB",
+		"USN",
+	}
 )
 
 func NewSeverity(severity string) (Severity, error) {
@@ -67,6 +74,7 @@ type LastUpdated struct {
 }
 type VulnerabilityDetail struct {
 	ID          string   `json:",omitempty"` // e.g. CVE-2019-8331, OSVDB-104365
+	IdType      string   `json:",omitempty"`
 	CvssScore   float64  `json:",omitempty"`
 	CvssScoreV3 float64  `json:",omitempty"`
 	Severity    Severity `json:",omitempty"`
