@@ -21,7 +21,7 @@ const (
 )
 
 type VulnSrc struct {
-	dbc db.Operations
+	dbc db.Operation
 }
 
 func NewVulnSrc() VulnSrc {
@@ -60,14 +60,15 @@ func (vs VulnSrc) save(cves []PhotonCVE) error {
 		for _, cve := range cves {
 			platformName := fmt.Sprintf(platformFormat, cve.OSVersion)
 			advisory := types.Advisory{
-				VulnerabilityID: cve.CveID,
-				FixedVersion:    cve.ResVer,
+				FixedVersion: cve.ResVer,
 			}
 			if err := vs.dbc.PutAdvisory(tx, platformName, cve.Pkg, cve.CveID, advisory); err != nil {
 				return xerrors.Errorf("failed to save Debian advisory: %w", err)
 			}
+
 			severity := vulnerability.ScoreToSeverity(cve.CveScore)
 			vuln := types.VulnerabilityDetail{
+				Title:       cve.CveID,
 				Severity:    severity,
 				Description: cve.AffVer,
 			}
