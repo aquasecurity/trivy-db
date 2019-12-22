@@ -477,7 +477,6 @@ func TestGetOSVersion(t *testing.T) {
 		},
 		// Below tests exclude platformNames
 		{
-			// invalid versions
 			inputPlatformName:    "openSUSE Leap NonFree 15.1",
 			expectedPlatformName: "",
 		},
