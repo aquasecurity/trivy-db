@@ -187,6 +187,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 
 			switch {
 			case tc.expectedErrorMsg != "":
+				require.NotNil(t, err, tc.name)
 				assert.Contains(t, err.Error(), tc.expectedErrorMsg, tc.name)
 			default:
 				assert.NoError(t, err, tc.name)
