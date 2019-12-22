@@ -255,6 +255,7 @@ func TestSeverityFromThreat(t *testing.T) {
 		"important": types.SeverityHigh,
 		"critical":  types.SeverityCritical,
 		"":          types.SeverityUnknown,
+		"invalid":   types.SeverityUnknown,
 	}
 	for k, v := range testCases {
 		assert.Equal(t, v, severityFromThreat(k))
