@@ -567,7 +567,9 @@ func TestGetOSVersion(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		actual := getOSVersion(tc.inputPlatformName)
-		assert.Equal(t, tc.expectedPlatformName, actual, fmt.Sprintf("input data: %s", tc.inputPlatformName))
+		t.Run(tc.inputPlatformName, func(t *testing.T) {
+			actual := getOSVersion(tc.inputPlatformName)
+			assert.Equal(t, tc.expectedPlatformName, actual, fmt.Sprintf("input data: %s", tc.inputPlatformName))
+		})
 	}
 }
