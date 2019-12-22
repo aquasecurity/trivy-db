@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	bolt "github.com/etcd-io/bbolt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
@@ -62,76 +63,139 @@ func TestVulnSrc_Update(t *testing.T) {
 
 }
 
-// func TestVulnSrc_Commit(t *testing.T) {
-// 	type putAdvisoryInput struct {
-// 		source   string
-// 		pkgName  string
-// 		cveID    string
-// 		advisory types.Advisory
-// 	}
-// 	type putAdvisory struct {
-// 		input  putAdvisoryInput
-// 		output error
-// 	}
-//
-// 	type putVulnerabilityDetailInput struct {
-// 		cveID  string
-// 		source string
-// 		vuln   types.VulnerabilityDetail
-// 	}
-// 	type putVulnerabilityDetail struct {
-// 		input  putVulnerabilityDetailInput
-// 		output error
-// 	}
-//
-// 	type putSeverityInput struct {
-// 		cveID    string
-// 		severity types.Severity
-// 	}
-// 	type putSeverity struct {
-// 		input  putSeverityInput
-// 		output error
-// 	}
-// 	testCases := []struct {
-// 		name                       string
-// 		cves                       []SuseOVAL
-// 		putAdvisoryList            []putAdvisory
-// 		putVulnerabilityDetailList []putVulnerabilityDetail
-// 		putSeverityList            []putSeverity
-// 		expectedErrorMsg           string
-// 	}{}
-//
-// 	for _, tc := range testCases {
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			tx := &bolt.Tx{}
-// 			mockDBConfig := new(db.MockDBConfig)
-//
-// 			for _, pa := range tc.putAdvisoryList {
-// 				mockDBConfig.On("PutAdvisory", tx, pa.input.source, pa.input.pkgName,
-// 					pa.input.cveID, pa.input.advisory).Return(pa.output)
-// 			}
-// 			for _, pvd := range tc.putVulnerabilityDetailList {
-// 				mockDBConfig.On("PutVulnerabilityDetail", tx, pvd.input.cveID,
-// 					pvd.input.source, pvd.input.vuln).Return(pvd.output)
-// 			}
-// 			for _, ps := range tc.putSeverityList {
-// 				mockDBConfig.On("PutSeverity", tx, ps.input.cveID,
-// 					ps.input.severity).Return(ps.output)
-// 			}
-//
-// 			ac := VulnSrc{dbc: mockDBConfig}
-// 			err := ac.commit(tx, tc.cves)
-//
-// 			switch {
-// 			case tc.expectedErrorMsg != "":
-// 				assert.Contains(t, err.Error(), tc.expectedErrorMsg, tc.name)
-// 			default:
-// 				assert.NoError(t, err, tc.name)
-// 			}
-// 			mockDBConfig.AssertExpectations(t)
-// 		})
-// 	}
-// }
+func TestVulnSrc_Commit(t *testing.T) {
+	testCases := []struct {
+		name                   string
+		cvrfs                  []SuseCvrf
+		putAdvisory            []db.PutAdvisoryExpectation
+		putVulnerabilityDetail []db.PutVulnerabilityDetailExpectation
+		putSeverity            []db.PutSeverityExpectation
+		expectedErrorMsg       string
+	}{
+		{
+			name: "happy path",
+			cvrfs: []SuseCvrf{
+				{
+					Title: "Security update for helm-mirror",
+					Tracking: DocumentTracking{
+						ID: "SUSE-SU-2019:0048-2",
+					},
+					ProductTree: ProductTree{
+						Relationships: []Relationship{
+							{
+								ProductReference:          "helm-mirror-0.2.1-1.7.1",
+								RelatesToProductReference: "SUSE Linux Enterprise Module for Containers 15 SP1",
+								RelationType:              "Default Component Of",
+							},
+						},
+					},
+					References: []Reference{
+						{
+							URL:         "https://www.suse.com/support/update/announcement/2019/suse-su-20190048-2/",
+							Description: "Link for SUSE-SU-2019:0048-2",
+						},
+						{
+							URL:         "http://lists.suse.com/pipermail/sle-security-updates/2019-July/005660.html",
+							Description: "E-Mail link for SUSE-SU-2019:0048-2",
+						},
+					},
+					Vulnerabilities: []Vulnerability{
+						{
+							CVE: "CVE-2018-16873",
+							Threats: []Threat{
+								{
+									Type:     "Impact",
+									Severity: "important",
+								},
+							},
+						},
+						{
+							CVE: "CVE-2018-16874",
+							Threats: []Threat{
+								{
+									Type:     "Impact",
+									Severity: "moderate",
+								},
+							},
+						},
+						{
+							CVE: "CVE-2018-16875",
+							Threats: []Threat{
+								{
+									Type:     "Impact",
+									Severity: "moderate",
+								},
+							},
+						},
+					},
+				},
+			},
+			putAdvisory: []db.PutAdvisoryExpectation{
+				{
+					Args: db.PutAdvisoryArgs{
+						TxAnything:      true,
+						Source:          "SUSE Linux Enterprise 15.1",
+						PkgName:         "helm-mirror",
+						VulnerabilityID: "SUSE-SU-2019:0048-2",
+						Advisory: types.Advisory{
+							FixedVersion: "0.2.1-1.7.1",
+						},
+					},
+					Returns: db.PutAdvisoryReturns{},
+				},
+			},
+			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+				{
+					Args: db.PutVulnerabilityDetailArgs{
+						TxAnything:      true,
+						VulnerabilityID: "SUSE-SU-2019:0048-2",
+						Source:          "suse-cvrf",
+						Vulnerability: types.VulnerabilityDetail{
+							Title: "Security update for helm-mirror",
+							References: []string{
+								"https://www.suse.com/support/update/announcement/2019/suse-su-20190048-2/",
+								"http://lists.suse.com/pipermail/sle-security-updates/2019-July/005660.html",
+							},
+							Severity: types.SeverityHigh,
+						},
+					},
+					Returns: db.PutVulnerabilityDetailReturns{},
+				},
+			},
+			putSeverity: []db.PutSeverityExpectation{
+				{
+					Args: db.PutSeverityArgs{
+						TxAnything:      true,
+						VulnerabilityID: "SUSE-SU-2019:0048-2",
+						Severity:        types.SeverityUnknown,
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tx := &bolt.Tx{}
+			mockDBConfig := new(db.MockDBConfig)
+			mockDBConfig.ApplyPutAdvisoryExpectations(tc.putAdvisory)
+			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tc.putVulnerabilityDetail)
+			mockDBConfig.ApplyPutSeverityExpectations(tc.putSeverity)
+
+			ac := VulnSrc{dbc: mockDBConfig}
+			err := ac.commit(tx, tc.cvrfs)
+
+			switch {
+			case tc.expectedErrorMsg != "":
+				assert.Contains(t, err.Error(), tc.expectedErrorMsg, tc.name)
+			default:
+				assert.NoError(t, err, tc.name)
+			}
+			mockDBConfig.AssertExpectations(t)
+		})
+	}
+}
+
 //
 func TestVulnSrc_Get(t *testing.T) {
 	type getAdvisoriesInput struct {
