@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	platformOpenSUSEFormat  = "OpenSUSE Leap %s"
+	platformOpenSUSEFormat  = "openSUSE Leap %s"
 	platformSUSELinuxFormat = "SUSE Linux Enterprise %s"
 )
 

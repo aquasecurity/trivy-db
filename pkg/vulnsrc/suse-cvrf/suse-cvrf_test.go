@@ -477,19 +477,19 @@ func TestGetOSVersion(t *testing.T) {
 		},
 		{
 			inputPlatformName:    "openSUSE Leap 42.3",
-			expectedPlatformName: "OpenSUSE Leap 42.3",
+			expectedPlatformName: "openSUSE Leap 42.3",
 		},
 		{
 			inputPlatformName:    "openSUSE Leap 42.3 NonFree",
-			expectedPlatformName: "OpenSUSE Leap 42.3",
+			expectedPlatformName: "openSUSE Leap 42.3",
 		},
 		{
 			inputPlatformName:    "openSUSE Leap 15.1",
-			expectedPlatformName: "OpenSUSE Leap 15.1",
+			expectedPlatformName: "openSUSE Leap 15.1",
 		},
 		{
 			inputPlatformName:    "openSUSE Leap 15.1 NonFree",
-			expectedPlatformName: "OpenSUSE Leap 15.1",
+			expectedPlatformName: "openSUSE Leap 15.1",
 		},
 		// Below tests exclude platformNames
 		{
