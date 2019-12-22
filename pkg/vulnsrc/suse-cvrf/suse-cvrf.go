@@ -96,27 +96,20 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 			references = append(references, ref.URL)
 		}
 
-		var severity = -1
+		severity := types.SeverityUnknown
 		for _, cvuln := range cvrf.Vulnerabilities {
 			for _, threat := range cvuln.Threats {
-				sev := int(severityFromThreat(threat.Severity))
+				sev := severityFromThreat(threat.Severity)
 				if severity < sev {
 					severity = sev
 				}
 			}
 		}
 
-		var vuln types.VulnerabilityDetail
-		vuln = types.VulnerabilityDetail{
+		vuln := types.VulnerabilityDetail{
 			References: references,
 			Title:      cvrf.Title,
-		}
-		if severity > 0 {
-			vuln = types.VulnerabilityDetail{
-				References: references,
-				Title:      cvrf.Title,
-				Severity:   types.Severity(severity),
-			}
+			Severity:   severity,
 		}
 
 		if err := vs.dbc.PutVulnerabilityDetail(tx, cvrf.Tracking.ID, vulnerability.SuseCVRF, vuln); err != nil {
