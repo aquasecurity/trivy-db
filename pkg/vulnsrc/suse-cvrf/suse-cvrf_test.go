@@ -22,21 +22,30 @@ func TestMain(m *testing.M) {
 func TestVulnSrc_Update(t *testing.T) {
 	testCases := []struct {
 		name           string
+		dist           Distribution
 		cacheDir       string
 		batchUpdateErr error
 		expectedError  error
 	}{
 		{
-			name:     "happy path",
+			name:     "happy path with SUSE Enterprise Linux",
+			dist:     SUSEEnterpriseLinux,
+			cacheDir: "testdata",
+		},
+		{
+			name:     "happy path with openSUSE",
+			dist:     OpenSUSE,
 			cacheDir: "testdata",
 		},
 		{
 			name:          "cache dir doesnt exist",
+			dist:          SUSEEnterpriseLinux,
 			cacheDir:      "badpathdoesnotexist",
-			expectedError: errors.New("error in SUSE CVRF walk: error in file walk: lstat badpathdoesnotexist/vuln-list/cvrf/suse: no such file or directory"),
+			expectedError: errors.New("error in SUSE CVRF walk: error in file walk: lstat badpathdoesnotexist/vuln-list/cvrf/suse/suse: no such file or directory"),
 		},
 		{
 			name:           "unable to save suse linux oval defintions",
+			dist:           SUSEEnterpriseLinux,
 			cacheDir:       "testdata",
 			batchUpdateErr: errors.New("unable to batch update"),
 			expectedError:  errors.New("error in SUSE CVRF save: error in batch update: unable to batch update"),
@@ -574,17 +583,19 @@ func TestVulnSrc_Get(t *testing.T) {
 		name          string
 		version       string
 		pkgName       string
+		dist          Distribution
 		getAdvisories db.GetAdvisoriesExpectation
-		expectedError error
+		expectedError string
 		expectedVulns []types.Advisory
 	}{
 		{
-			name:    "happy path",
-			version: "8",
+			name:    "happy path with openSUSE",
+			version: "13.1",
 			pkgName: "bind",
+			dist:    OpenSUSE,
 			getAdvisories: db.GetAdvisoriesExpectation{
 				Args: db.GetAdvisoriesArgs{
-					Source:  "8",
+					Source:  "openSUSE Leap 13.1",
 					PkgName: "bind",
 				},
 				Returns: db.GetAdvisoriesReturns{
@@ -596,7 +607,28 @@ func TestVulnSrc_Get(t *testing.T) {
 					},
 				},
 			},
-			expectedVulns: []types.Advisory{{VulnerabilityID: "openSUSE-SU-2019:0003-1", FixedVersion: "1.3.29-bp150.2.12.1"}},
+			expectedVulns: []types.Advisory{
+				{
+					VulnerabilityID: "openSUSE-SU-2019:0003-1",
+					FixedVersion:    "1.3.29-bp150.2.12.1",
+				},
+			},
+		},
+		{
+			name:    "GetAdvisories returns an error",
+			version: "15.1",
+			pkgName: "bind",
+			dist:    SUSEEnterpriseLinux,
+			getAdvisories: db.GetAdvisoriesExpectation{
+				Args: db.GetAdvisoriesArgs{
+					SourceAnything:  true,
+					PkgNameAnything: true,
+				},
+				Returns: db.GetAdvisoriesReturns{
+					Err: errors.New("error"),
+				},
+			},
+			expectedError: "failed to get SUSE advisories",
 		},
 	}
 
@@ -605,12 +637,13 @@ func TestVulnSrc_Get(t *testing.T) {
 			mockDBConfig := new(db.MockDBConfig)
 			mockDBConfig.ApplyGetAdvisoriesExpectation(tc.getAdvisories)
 
-			ac := VulnSrc{dbc: mockDBConfig}
+			ac := VulnSrc{dist: tc.dist, dbc: mockDBConfig}
 			vuls, err := ac.Get(tc.version, tc.pkgName)
 
 			switch {
-			case tc.expectedError != nil:
-				assert.EqualError(t, err, tc.expectedError.Error(), tc.name)
+			case tc.expectedError != "":
+				require.NotNil(t, err, tc.name)
+				assert.Contains(t, err.Error(), tc.expectedError, tc.name)
 			default:
 				assert.NoError(t, err, tc.name)
 			}

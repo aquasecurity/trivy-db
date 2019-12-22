@@ -19,7 +19,12 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
+type Distribution int
+
 const (
+	SUSEEnterpriseLinux Distribution = iota
+	OpenSUSE
+
 	platformOpenSUSEFormat  = "openSUSE Leap %s"
 	platformSUSELinuxFormat = "SUSE Linux Enterprise %s"
 )
@@ -31,12 +36,14 @@ var (
 )
 
 type VulnSrc struct {
-	dbc db.Operations
+	dist Distribution
+	dbc  db.Operations
 }
 
-func NewVulnSrc() VulnSrc {
+func NewVulnSrc(dist Distribution) VulnSrc {
 	return VulnSrc{
-		dbc: db.Config{},
+		dist: dist,
+		dbc:  db.Config{},
 	}
 }
 
@@ -44,6 +51,15 @@ func (vs VulnSrc) Update(dir string) error {
 	log.Println("Saving SUSE CVRF")
 
 	rootDir := filepath.Join(dir, "vuln-list", suseDir)
+	switch vs.dist {
+	case SUSEEnterpriseLinux:
+		rootDir = filepath.Join(rootDir, "suse")
+	case OpenSUSE:
+		rootDir = filepath.Join(rootDir, "opensuse")
+	default:
+		return xerrors.New("unknown distribution")
+	}
+
 	var cvrfs []SuseCvrf
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		var cvrf SuseCvrf
@@ -226,8 +242,18 @@ func splitPkgName(pkgName string) (string, string) {
 	return pkgName, version
 }
 
-func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
-	advisories, err := vs.dbc.GetAdvisories(release, pkgName)
+func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) {
+	var bucket string
+	switch vs.dist {
+	case SUSEEnterpriseLinux:
+		bucket = fmt.Sprintf(platformSUSELinuxFormat, version)
+	case OpenSUSE:
+		bucket = fmt.Sprintf(platformOpenSUSEFormat, version)
+	default:
+		return nil, xerrors.New("unknown distribution")
+	}
+
+	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get SUSE advisories: %w", err)
 	}
