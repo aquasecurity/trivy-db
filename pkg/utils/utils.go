@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strconv"
 
 	"golang.org/x/xerrors"
 )
@@ -106,4 +107,9 @@ func Uniq(strings []string) []string {
 	}
 
 	return ret
+}
+
+func IsInt(s string) bool {
+	_, err := strconv.Atoi(s)
+	return err == nil
 }

@@ -867,6 +867,10 @@ func TestGetOSVersion(t *testing.T) {
 			expectedPlatformName: "SUSE Linux Enterprise 12",
 		},
 		{
+			inputPlatformName:    "SUSE Cloud Compute Node for SUSE Linux Enterprise 12 5",
+			expectedPlatformName: "SUSE Linux Enterprise 12.5",
+		},
+		{
 			inputPlatformName:    "openSUSE Leap 42.3",
 			expectedPlatformName: "openSUSE Leap 42.3",
 		},

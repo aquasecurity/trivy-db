@@ -184,7 +184,7 @@ func getOSVersion(platformName string) string {
 	if strings.Contains(platformName, "SUSE Linux Enterprise") {
 		// e.g. SUSE Linux Enterprise Server 12 SP1-LTSS
 		ss := strings.Fields(platformName)
-		if strings.HasPrefix(ss[len(ss)-1], "SP") {
+		if strings.HasPrefix(ss[len(ss)-1], "SP") || utils.IsInt(ss[len(ss)-2]) {
 			// Remove suffix such as -TERADATA, -LTSS
 			sps := strings.Split(ss[len(ss)-1], "-")
 			// Remove "SP" prefix
