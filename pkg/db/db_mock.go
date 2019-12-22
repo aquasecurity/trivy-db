@@ -10,6 +10,64 @@ type MockDBConfig struct {
 	mock.Mock
 }
 
+type PutAdvisoryArgs struct {
+	Tx                      *bolt.Tx
+	TxAnything              bool
+	Source                  string
+	SourceAnything          bool
+	PkgName                 string
+	PkgNameAnything         bool
+	VulnerabilityID         string
+	VulnerabilityIDAnything bool
+	Advisory                interface{}
+	AdvisoryAnything        bool
+}
+
+type PutAdvisoryReturns struct {
+	Err error
+}
+
+type PutAdvisoryExpectation struct {
+	Args    PutAdvisoryArgs
+	Returns PutAdvisoryReturns
+}
+
+func (_m *MockDBConfig) ApplyPutAdvisoryExpectation(e PutAdvisoryExpectation) {
+	var args []interface{}
+	if e.Args.TxAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.Tx)
+	}
+	if e.Args.SourceAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.Source)
+	}
+	if e.Args.PkgNameAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.PkgName)
+	}
+	if e.Args.VulnerabilityIDAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.VulnerabilityID)
+	}
+	if e.Args.AdvisoryAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.Advisory)
+	}
+	_m.On("PutAdvisory", args...).Return(e.Returns.Err)
+}
+
+func (_m *MockDBConfig) ApplyPutAdvisoryExpectations(expectations []PutAdvisoryExpectation) {
+	for _, e := range expectations {
+		_m.ApplyPutAdvisoryExpectation(e)
+	}
+}
+
 func (_m *MockDBConfig) SetVersion(version int) error {
 	ret := _m.Called(version)
 	return ret.Error(0)
