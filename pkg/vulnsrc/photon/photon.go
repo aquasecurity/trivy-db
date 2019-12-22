@@ -88,3 +88,12 @@ func (vs VulnSrc) save(cves []PhotonCVE) error {
 
 	return nil
 }
+
+func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
+	bucket := fmt.Sprintf(platformFormat, release)
+	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to get Debian advisories: %w", err)
+	}
+	return advisories, nil
+}
