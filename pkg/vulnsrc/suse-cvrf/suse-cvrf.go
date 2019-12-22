@@ -87,7 +87,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 			}
 
 			if err := vs.dbc.PutAdvisory(tx, affectedPkg.OSVer, affectedPkg.Package.Name, cvrf.Tracking.ID, advisory); err != nil {
-				return xerrors.Errorf("failed to save %q CVE: %w", affectedPkg.OSVer, err)
+				return xerrors.Errorf("unable to save %s CVRF: %w", affectedPkg.OSVer, err)
 			}
 		}
 
@@ -134,7 +134,7 @@ func getAffectedPackages(relationships []Relationship) []AffectedPackage {
 
 		pkg := getPackage(relationship.ProductReference)
 		if pkg == nil {
-			log.Printf("%s", relationship.ProductReference)
+			log.Printf("invalid package name: %s", relationship.ProductReference)
 			continue
 		}
 
