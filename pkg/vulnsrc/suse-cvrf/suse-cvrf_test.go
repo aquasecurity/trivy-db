@@ -196,26 +196,12 @@ func TestVulnSrc_Commit(t *testing.T) {
 	}
 }
 
-//
 func TestVulnSrc_Get(t *testing.T) {
-	type getAdvisoriesInput struct {
-		version string
-		pkgName string
-	}
-	type getAdvisoriesOutput struct {
-		advisories []types.Advisory
-		err        error
-	}
-	type getAdvisories struct {
-		input  getAdvisoriesInput
-		output getAdvisoriesOutput
-	}
-
 	testCases := []struct {
 		name          string
 		version       string
 		pkgName       string
-		getAdvisories getAdvisories
+		getAdvisories db.GetAdvisoriesExpectation
 		expectedError error
 		expectedVulns []types.Advisory
 	}{
@@ -223,19 +209,20 @@ func TestVulnSrc_Get(t *testing.T) {
 			name:    "happy path",
 			version: "8",
 			pkgName: "bind",
-			getAdvisories: getAdvisories{
-				input: getAdvisoriesInput{
-					version: "8",
-					pkgName: "bind",
+			getAdvisories: db.GetAdvisoriesExpectation{
+				Args: db.GetAdvisoriesArgs{
+					Source:  "8",
+					PkgName: "bind",
 				},
-				output: getAdvisoriesOutput{
-					advisories: []types.Advisory{
-						{VulnerabilityID: "openSUSE-SU-2019:0003-1", FixedVersion: "1.3.29-bp150.2.12.1"},
+				Returns: db.GetAdvisoriesReturns{
+					Advisories: []types.Advisory{
+						{
+							VulnerabilityID: "openSUSE-SU-2019:0003-1",
+							FixedVersion:    "1.3.29-bp150.2.12.1",
+						},
 					},
-					err: nil,
 				},
 			},
-			expectedError: nil,
 			expectedVulns: []types.Advisory{{VulnerabilityID: "openSUSE-SU-2019:0003-1", FixedVersion: "1.3.29-bp150.2.12.1"}},
 		},
 	}
@@ -243,10 +230,7 @@ func TestVulnSrc_Get(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockDBConfig := new(db.MockDBConfig)
-			mockDBConfig.On("GetAdvisories",
-				tc.getAdvisories.input.version, tc.getAdvisories.input.pkgName).Return(
-				tc.getAdvisories.output.advisories, tc.getAdvisories.output.err,
-			)
+			mockDBConfig.ApplyGetAdvisoriesExpectation(tc.getAdvisories)
 
 			ac := VulnSrc{dbc: mockDBConfig}
 			vuls, err := ac.Get(tc.version, tc.pkgName)

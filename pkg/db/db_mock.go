@@ -10,6 +10,44 @@ type MockDBConfig struct {
 	mock.Mock
 }
 
+type GetAdvisoriesArgs struct {
+	Source          string
+	SourceAnything  bool
+	PkgName         string
+	PkgNameAnything bool
+}
+
+type GetAdvisoriesReturns struct {
+	Advisories []types.Advisory
+	Err        error
+}
+
+type GetAdvisoriesExpectation struct {
+	Args    GetAdvisoriesArgs
+	Returns GetAdvisoriesReturns
+}
+
+func (_m *MockDBConfig) ApplyGetAdvisoriesExpectation(e GetAdvisoriesExpectation) {
+	var args []interface{}
+	if e.Args.SourceAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.Source)
+	}
+	if e.Args.PkgNameAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.PkgName)
+	}
+	_m.On("GetAdvisories", args...).Return(e.Returns.Advisories, e.Returns.Err)
+}
+
+func (_m *MockDBConfig) ApplyGetAdvisoriesExpectations(expectations []GetAdvisoriesExpectation) {
+	for _, e := range expectations {
+		_m.ApplyGetAdvisoriesExpectation(e)
+	}
+}
+
 type PutAdvisoryArgs struct {
 	Tx                      *bolt.Tx
 	TxAnything              bool
