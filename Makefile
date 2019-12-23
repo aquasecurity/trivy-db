@@ -17,7 +17,7 @@ $(GOBIN)/mockery:
 
 .PHONY: mock
 mock: $(GOBIN)/mockery
-	mockery -all -inpkg -case=snake
+	$(GOBIN)/mockery -all -inpkg -case=snake
 
 .PHONY: deps
 deps:
