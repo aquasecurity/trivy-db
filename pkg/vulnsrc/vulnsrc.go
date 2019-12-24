@@ -13,6 +13,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
 	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
+	susecvrf "github.com/aquasecurity/trivy-db/pkg/vulnsrc/suse-cvrf"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
 
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bundler"
@@ -48,6 +49,8 @@ var (
 		vulnerability.Ubuntu:                ubuntu.NewVulnSrc(),
 		vulnerability.Amazon:                amazon.NewVulnSrc(),
 		vulnerability.OracleOVAL:            oracleoval.NewVulnSrc(),
+		vulnerability.SuseCVRF:              susecvrf.NewVulnSrc(susecvrf.SUSEEnterpriseLinux),
+		vulnerability.OpenSuseCVRF:          susecvrf.NewVulnSrc(susecvrf.OpenSUSE),
 		vulnerability.RubySec:               bundler.NewVulnSrc(),
 		vulnerability.PhpSecurityAdvisories: composer.NewVulnSrc(),
 		vulnerability.NodejsSecurityWg:      node.NewVulnSrc(),
