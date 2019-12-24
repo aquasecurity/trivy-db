@@ -13,7 +13,7 @@ wire: $(GOBIN)/wire
 	wire gen ./...
 
 $(GOBIN)/mockery:
-	GO111MODULE=off go get github.com/knqyf263/mockery
+	GO111MODULE=off go get -u github.com/knqyf263/mockery/...
 
 .PHONY: mock
 mock: $(GOBIN)/mockery
