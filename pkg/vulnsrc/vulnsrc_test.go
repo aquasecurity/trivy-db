@@ -6,24 +6,12 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/aquasecurity/trivy-db/pkg/types"
-	"github.com/stretchr/testify/mock"
-
 	"k8s.io/utils/clock"
 	ct "k8s.io/utils/clock/testing"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/types"
 )
-
-type MockOptimizer struct {
-	mock.Mock
-}
-
-func (_m *MockOptimizer) Optimize() error {
-	ret := _m.Called()
-	return ret.Error(0)
-}
 
 func TestNewUpdater(t *testing.T) {
 	type args struct {
@@ -100,28 +88,14 @@ func TestUpdater_Update(t *testing.T) {
 	type args struct {
 		targets []string
 	}
-	type setMetadata struct {
-		input  db.Metadata
-		output error
-	}
-	type update struct {
-		input  string
-		output error
-	}
-	type optimize struct {
-		output error
-	}
-	type mocks struct {
-		update      []update
-		setMetadata []setMetadata
-		optimize    []optimize
-	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		mocks   mocks
-		wantErr string
+		name        string
+		fields      fields
+		args        args
+		update      []types.UpdateExpectation
+		setMetadata []SetMetadataExpectation
+		optimize    []OptimizeExpectation
+		wantErr     string
 	}{
 		{
 			name: "happy test",
@@ -134,19 +108,29 @@ func TestUpdater_Update(t *testing.T) {
 			args: args{
 				targets: []string{"test"},
 			},
-			mocks: mocks{
-				update: []update{{input: "cache"}},
-				setMetadata: []setMetadata{
-					{
-						input: db.Metadata{
+			update: []types.UpdateExpectation{
+				{
+					Args: types.UpdateArgs{
+						Dir: "cache",
+					},
+					Returns: types.UpdateReturns{},
+				},
+			},
+			setMetadata: []SetMetadataExpectation{
+				{
+					Args: SetMetadataArgs{
+						Metadata: db.Metadata{
 							Version:    1,
 							Type:       db.TypeFull,
 							NextUpdate: time.Date(2019, 1, 1, 12, 0, 0, 0, time.UTC),
 							UpdatedAt:  time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC),
 						},
 					},
+					Returns: SetMetadataReturns{},
 				},
-				optimize: []optimize{{output: nil}},
+			},
+			optimize: []OptimizeExpectation{
+				{Returns: OptimizeReturns{}},
 			},
 		},
 		{
@@ -173,8 +157,15 @@ func TestUpdater_Update(t *testing.T) {
 			args: args{
 				targets: []string{"test"},
 			},
-			mocks: mocks{
-				update: []update{{input: "cache", output: errors.New("error")}},
+			update: []types.UpdateExpectation{
+				{
+					Args: types.UpdateArgs{
+						Dir: "cache",
+					},
+					Returns: types.UpdateReturns{
+						Err: errors.New("error"),
+					},
+				},
 			},
 			wantErr: "error in test update",
 		},
@@ -189,17 +180,26 @@ func TestUpdater_Update(t *testing.T) {
 			args: args{
 				targets: []string{"test"},
 			},
-			mocks: mocks{
-				update: []update{{input: "cache"}},
-				setMetadata: []setMetadata{
-					{
-						input: db.Metadata{
+			update: []types.UpdateExpectation{
+				{
+					Args: types.UpdateArgs{
+						Dir: "cache",
+					},
+					Returns: types.UpdateReturns{},
+				},
+			},
+			setMetadata: []SetMetadataExpectation{
+				{
+					Args: SetMetadataArgs{
+						Metadata: db.Metadata{
 							Version:    1,
 							Type:       db.TypeFull,
 							NextUpdate: time.Date(2019, 1, 1, 12, 0, 0, 0, time.UTC),
 							UpdatedAt:  time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC),
 						},
-						output: errors.New("error"),
+					},
+					Returns: SetMetadataReturns{
+						Err: errors.New("error"),
 					},
 				},
 			},
@@ -209,19 +209,13 @@ func TestUpdater_Update(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockVulnSrc := new(types.MockVulnSrc)
-			for _, u := range tt.mocks.update {
-				mockVulnSrc.On("Update", u.input).Return(u.output)
-			}
+			mockVulnSrc.ApplyUpdateExpectations(tt.update)
 
-			mockDBConfig := new(db.MockDBConfig)
-			for _, sm := range tt.mocks.setMetadata {
-				mockDBConfig.On("SetMetadata", sm.input).Return(sm.output)
-			}
+			mockDBConfig := new(MockOperation)
+			mockDBConfig.ApplySetMetadataExpectations(tt.setMetadata)
 
 			mockOptimizer := new(MockOptimizer)
-			for _, o := range tt.mocks.optimize {
-				mockOptimizer.On("Optimize").Return(o.output)
-			}
+			mockOptimizer.ApplyOptimizeExpectations(tt.optimize)
 
 			u := Updater{
 				dbc: mockDBConfig,
@@ -250,48 +244,63 @@ func TestUpdater_Update(t *testing.T) {
 }
 
 func Test_fullOptimizer_Optimize(t *testing.T) {
-	type mocks struct {
-		forEachSeverity                 error
-		deleteSeverityBucket            error
-		deleteVulnerabilityDetailBucket error
-	}
 	tests := []struct {
-		name    string
-		mocks   mocks
-		wantErr string
+		name                            string
+		forEachSeverity                 db.ForEachSeverityExpectation
+		deleteSeverityBucket            db.DeleteSeverityBucketExpectation
+		deleteVulnerabilityDetailBucket db.DeleteVulnerabilityDetailBucketExpectation
+		wantErr                         string
 	}{
 		{
 			name: "happy path",
+			forEachSeverity: db.ForEachSeverityExpectation{
+				Args:    db.ForEachSeverityArgs{FnAnything: true},
+				Returns: db.ForEachSeverityReturns{},
+			},
 		},
 		{
 			name: "ForEachSeverity returns an error",
-			mocks: mocks{
-				forEachSeverity: errors.New("error"),
+			forEachSeverity: db.ForEachSeverityExpectation{
+				Args: db.ForEachSeverityArgs{FnAnything: true},
+				Returns: db.ForEachSeverityReturns{
+					Err: errors.New("error"),
+				},
 			},
 			wantErr: "failed to iterate severity",
 		},
 		{
 			name: "DeleteSeverityBucket returns an error",
-			mocks: mocks{
-				deleteSeverityBucket: errors.New("error"),
+			forEachSeverity: db.ForEachSeverityExpectation{
+				Args:    db.ForEachSeverityArgs{FnAnything: true},
+				Returns: db.ForEachSeverityReturns{},
+			},
+			deleteSeverityBucket: db.DeleteSeverityBucketExpectation{
+				Returns: db.DeleteSeverityBucketReturns{
+					Err: errors.New("error"),
+				},
 			},
 			wantErr: "failed to delete severity bucket",
 		},
 		{
 			name: "DeleteVulnerabilityDetailBucket returns an error",
-			mocks: mocks{
-				deleteVulnerabilityDetailBucket: errors.New("error"),
+			forEachSeverity: db.ForEachSeverityExpectation{
+				Args:    db.ForEachSeverityArgs{FnAnything: true},
+				Returns: db.ForEachSeverityReturns{},
+			},
+			deleteVulnerabilityDetailBucket: db.DeleteVulnerabilityDetailBucketExpectation{
+				Returns: db.DeleteVulnerabilityDetailBucketReturns{
+					Err: errors.New("error"),
+				},
 			},
 			wantErr: "failed to delete vulnerability detail bucket",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockDBConfig)
-			mockDBConfig.On("ForEachSeverity", mock.Anything).Return(tt.mocks.forEachSeverity)
-			mockDBConfig.On("DeleteSeverityBucket").Return(tt.mocks.deleteSeverityBucket)
-			mockDBConfig.On("DeleteVulnerabilityDetailBucket").Return(
-				tt.mocks.deleteVulnerabilityDetailBucket)
+			mockDBConfig := new(db.MockOperation)
+			mockDBConfig.ApplyForEachSeverityExpectation(tt.forEachSeverity)
+			mockDBConfig.ApplyDeleteSeverityBucketExpectation(tt.deleteSeverityBucket)
+			mockDBConfig.ApplyDeleteVulnerabilityDetailBucketExpectation(tt.deleteVulnerabilityDetailBucket)
 
 			o := fullOptimizer{
 				dbc: mockDBConfig,
@@ -308,39 +317,55 @@ func Test_fullOptimizer_Optimize(t *testing.T) {
 }
 
 func Test_lightOptimizer_Optimize(t *testing.T) {
-	type mocks struct {
-		forEachSeverity                 error
-		deleteVulnerabilityDetailBucket error
-	}
 	tests := []struct {
-		name    string
-		mocks   mocks
-		wantErr string
+		name                            string
+		forEachSeverity                 db.ForEachSeverityExpectation
+		deleteVulnerabilityDetailBucket db.DeleteVulnerabilityDetailBucketExpectation
+		wantErr                         string
 	}{
 		{
 			name: "happy path",
+			forEachSeverity: db.ForEachSeverityExpectation{
+				Args:    db.ForEachSeverityArgs{FnAnything: true},
+				Returns: db.ForEachSeverityReturns{},
+			},
+			deleteVulnerabilityDetailBucket: db.DeleteVulnerabilityDetailBucketExpectation{
+				Returns: db.DeleteVulnerabilityDetailBucketReturns{},
+			},
 		},
 		{
 			name: "ForEachSeverity returns an error",
-			mocks: mocks{
-				forEachSeverity: errors.New("error"),
+			forEachSeverity: db.ForEachSeverityExpectation{
+				Args: db.ForEachSeverityArgs{
+					FnAnything: true,
+				},
+				Returns: db.ForEachSeverityReturns{
+					Err: errors.New("error"),
+				},
 			},
 			wantErr: "failed to iterate severity",
 		},
 		{
 			name: "DeleteVulnerabilityDetailBucket returns an error",
-			mocks: mocks{
-				deleteVulnerabilityDetailBucket: errors.New("error"),
+			forEachSeverity: db.ForEachSeverityExpectation{
+				Args: db.ForEachSeverityArgs{
+					FnAnything: true,
+				},
+				Returns: db.ForEachSeverityReturns{},
+			},
+			deleteVulnerabilityDetailBucket: db.DeleteVulnerabilityDetailBucketExpectation{
+				Returns: db.DeleteVulnerabilityDetailBucketReturns{
+					Err: errors.New("error"),
+				},
 			},
 			wantErr: "failed to delete vulnerability detail bucket",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockDBConfig)
-			mockDBConfig.On("ForEachSeverity", mock.Anything).Return(tt.mocks.forEachSeverity)
-			mockDBConfig.On("DeleteVulnerabilityDetailBucket").Return(
-				tt.mocks.deleteVulnerabilityDetailBucket)
+			mockDBConfig := new(db.MockOperation)
+			mockDBConfig.ApplyForEachSeverityExpectation(tt.forEachSeverity)
+			mockDBConfig.ApplyDeleteVulnerabilityDetailBucketExpectation(tt.deleteVulnerabilityDetailBucket)
 
 			o := lightOptimizer{
 				dbc: mockDBConfig,

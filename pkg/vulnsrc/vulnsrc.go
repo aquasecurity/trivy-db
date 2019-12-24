@@ -33,7 +33,7 @@ import (
 )
 
 type VulnSrc interface {
-	Update(string) error
+	Update(dir string) (err error)
 }
 
 var (
@@ -67,7 +67,7 @@ func init() {
 }
 
 type Operation interface {
-	SetMetadata(db.Metadata) error
+	SetMetadata(metadata db.Metadata) (err error)
 }
 
 type Updater struct {
@@ -131,11 +131,11 @@ func (u Updater) Update(targets []string) error {
 }
 
 type Optimizer interface {
-	Optimize() error
+	Optimize() (err error)
 }
 
 type fullOptimizer struct {
-	dbc db.Operations
+	dbc db.Operation
 }
 
 func (o fullOptimizer) Optimize() error {
@@ -169,7 +169,7 @@ func (o fullOptimizer) Optimize() error {
 }
 
 type lightOptimizer struct {
-	dbc db.Operations
+	dbc db.Operation
 }
 
 func (o lightOptimizer) Optimize() error {

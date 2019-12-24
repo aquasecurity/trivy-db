@@ -54,7 +54,7 @@ func TestVulnSrc_Update(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockDBConfig)
+			mockDBConfig := new(db.MockOperation)
 			mockDBConfig.On("BatchUpdate", mock.Anything).Return(tc.batchUpdateErr)
 			ac := VulnSrc{dbc: mockDBConfig}
 
@@ -558,7 +558,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tx := &bolt.Tx{}
-			mockDBConfig := new(db.MockDBConfig)
+			mockDBConfig := new(db.MockOperation)
 			mockDBConfig.ApplyPutAdvisoryExpectations(tc.putAdvisory)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tc.putVulnerabilityDetail)
 			mockDBConfig.ApplyPutSeverityExpectations(tc.putSeverity)
@@ -634,7 +634,7 @@ func TestVulnSrc_Get(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockDBConfig)
+			mockDBConfig := new(db.MockOperation)
 			mockDBConfig.ApplyGetAdvisoriesExpectation(tc.getAdvisories)
 
 			ac := VulnSrc{dist: tc.dist, dbc: mockDBConfig}

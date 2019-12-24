@@ -1,48 +1,48 @@
 package pkg
 
 import (
-	"context"
 	"errors"
 	"io/ioutil"
 	"os"
 	"testing"
 
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc"
-
 	"github.com/stretchr/testify/assert"
+
+	"github.com/aquasecurity/trivy-db/pkg/github"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc"
 )
-
-type mockVCSClient struct {
-	uploadReleaseAsset func(ctx context.Context, filePaths []string) error
-}
-
-func (mc mockVCSClient) UploadReleaseAsset(ctx context.Context, filePaths []string) error {
-	if mc.uploadReleaseAsset != nil {
-		return mc.uploadReleaseAsset(ctx, filePaths)
-	}
-	return nil
-}
 
 func TestAppConfig_Upload(t *testing.T) {
 	testCases := []struct {
-		name                    string
-		uploadReleaseAssertFunc func(ctx context.Context, filePaths []string) error
-		expectedError           error
-		inputDir                string
+		name                string
+		uploadReleaseAssert github.UploadReleaseAssetsExpectation
+		expectedError       error
+		inputDir            string
 	}{
 		{
-			name:          "happy path",
+			name: "happy path",
+			uploadReleaseAssert: github.UploadReleaseAssetsExpectation{
+				Args:    github.UploadReleaseAssetsArgs{CtxAnything: true, FilePathsAnything: true},
+				Returns: github.UploadReleaseAssetsReturns{},
+			},
 			expectedError: nil,
 		},
 		{
 			name:          "sad path: bad input dir",
 			expectedError: errors.New("unable to list files: open /path/to/nowhere: no such file or directory"),
-			inputDir:      "/path/to/nowhere",
+			uploadReleaseAssert: github.UploadReleaseAssetsExpectation{
+				Args:    github.UploadReleaseAssetsArgs{CtxAnything: true, FilePathsAnything: true},
+				Returns: github.UploadReleaseAssetsReturns{},
+			},
+			inputDir: "/path/to/nowhere",
 		},
 		{
 			name: "sad path: UploadReleaseAsset returns an error",
-			uploadReleaseAssertFunc: func(ctx context.Context, filePaths []string) error {
-				return errors.New("upload release assert failed")
+			uploadReleaseAssert: github.UploadReleaseAssetsExpectation{
+				Args: github.UploadReleaseAssetsArgs{CtxAnything: true, FilePathsAnything: true},
+				Returns: github.UploadReleaseAssetsReturns{
+					Err: errors.New("upload release assert failed"),
+				},
 			},
 			expectedError: errors.New("failed to upload a release asset: upload release assert failed"),
 		},
@@ -68,9 +68,10 @@ func TestAppConfig_Upload(t *testing.T) {
 			vulnsrc.UpdateList = []string{d}
 		}
 
-		ac := AppConfig{Client: mockVCSClient{
-			uploadReleaseAsset: tc.uploadReleaseAssertFunc,
-		}}
+		mockVCSClient := new(github.MockVCSClientInterface)
+		mockVCSClient.ApplyUploadReleaseAssetsExpectation(tc.uploadReleaseAssert)
+
+		ac := AppConfig{Client: mockVCSClient}
 		cliApp := ac.NewApp("1.2.3")
 
 		err := cliApp.Run([]string{"trivy-db", "upload"})
@@ -81,6 +82,5 @@ func TestAppConfig_Upload(t *testing.T) {
 		default:
 			assert.NoError(t, err, tc.name)
 		}
-
 	}
 }

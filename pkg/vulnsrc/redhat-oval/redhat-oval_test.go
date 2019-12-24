@@ -12,7 +12,6 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestMain(m *testing.M) {
@@ -24,32 +23,45 @@ func TestVulnSrc_Update(t *testing.T) {
 	testCases := []struct {
 		name             string
 		cacheDir         string
-		batchUpdateErr   error
+		batchUpdate      db.BatchUpdateExpectation
 		expectedErrorMsg string
 	}{
 		{
 			name:     "happy path",
 			cacheDir: filepath.Join("testdata", "happy"),
+			batchUpdate: db.BatchUpdateExpectation{
+				Args:    db.BatchUpdateArgs{FnAnything: true},
+				Returns: db.BatchUpdateReturns{},
+			},
 		},
 		{
-			name:             "broken JSON",
-			cacheDir:         filepath.Join("testdata", "sad"),
+			name:     "broken JSON",
+			cacheDir: filepath.Join("testdata", "sad"),
+			batchUpdate: db.BatchUpdateExpectation{
+				Args:    db.BatchUpdateArgs{FnAnything: true},
+				Returns: db.BatchUpdateReturns{},
+			},
 			expectedErrorMsg: "failed to decode Red Hat OVAL JSON",
 		},
 		{
-			name:             "BatchUpdate returns an error",
-			cacheDir:         filepath.Join("testdata", "happy"),
-			batchUpdateErr:   errors.New("batch update failed"),
+			name:     "BatchUpdate returns an error",
+			cacheDir: filepath.Join("testdata", "happy"),
+			batchUpdate: db.BatchUpdateExpectation{
+				Args: db.BatchUpdateArgs{FnAnything: true},
+				Returns: db.BatchUpdateReturns{
+					Err: errors.New("batch update failed"),
+				},
+			},
 			expectedErrorMsg: "batch update failed",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockDBConfig)
-			mockDBConfig.On("BatchUpdate", mock.Anything).Return(tc.batchUpdateErr)
-			ac := VulnSrc{dbc: mockDBConfig}
+			mockDBConfig := new(db.MockOperation)
+			mockDBConfig.ApplyBatchUpdateExpectation(tc.batchUpdate)
 
+			ac := VulnSrc{dbc: mockDBConfig}
 			err := ac.Update(tc.cacheDir)
 			switch {
 			case tc.expectedErrorMsg != "":
@@ -62,21 +74,10 @@ func TestVulnSrc_Update(t *testing.T) {
 }
 
 func TestVulnSrc_Commit(t *testing.T) {
-	type putAdvisoryInput struct {
-		source   string
-		pkgName  string
-		cveID    string
-		advisory types.Advisory
-	}
-	type putAdvisory struct {
-		input  putAdvisoryInput
-		output error
-	}
-
 	testCases := []struct {
 		name             string
 		advisories       []RedhatOVAL
-		putAdvisoryList  []putAdvisory
+		putAdvisory      []db.PutAdvisoryExpectation
 		expectedErrorMsg string
 	}{
 		{
@@ -129,37 +130,41 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putAdvisoryList: []putAdvisory{
+			putAdvisory: []db.PutAdvisoryExpectation{
 				{
-					input: putAdvisoryInput{
-						source:   "Red Hat Enterprise Linux 8",
-						pkgName:  "rest",
-						cveID:    "CVE-2015-2675",
-						advisory: types.Advisory{FixedVersion: "0:0.7.92-3.el7"},
+					Args: db.PutAdvisoryArgs{
+						TxAnything:      true,
+						Source:          "Red Hat Enterprise Linux 8",
+						PkgName:         "rest",
+						VulnerabilityID: "CVE-2015-2675",
+						Advisory:        types.Advisory{FixedVersion: "0:0.7.92-3.el7"},
 					},
 				},
 				{
-					input: putAdvisoryInput{
-						source:   "Red Hat Enterprise Linux 8",
-						pkgName:  "rest",
-						cveID:    "CVE-2015-2676",
-						advisory: types.Advisory{FixedVersion: "0:0.7.92-3.el7"},
+					Args: db.PutAdvisoryArgs{
+						TxAnything:      true,
+						Source:          "Red Hat Enterprise Linux 8",
+						PkgName:         "rest",
+						VulnerabilityID: "CVE-2015-2676",
+						Advisory:        types.Advisory{FixedVersion: "0:0.7.92-3.el7"},
 					},
 				},
 				{
-					input: putAdvisoryInput{
-						source:   "Red Hat Enterprise Linux 8",
-						pkgName:  "rest-devel",
-						cveID:    "CVE-2015-2675",
-						advisory: types.Advisory{FixedVersion: "0:0.7.92-3.el7"},
+					Args: db.PutAdvisoryArgs{
+						TxAnything:      true,
+						Source:          "Red Hat Enterprise Linux 8",
+						PkgName:         "rest-devel",
+						VulnerabilityID: "CVE-2015-2675",
+						Advisory:        types.Advisory{FixedVersion: "0:0.7.92-3.el7"},
 					},
 				},
 				{
-					input: putAdvisoryInput{
-						source:   "Red Hat Enterprise Linux 8",
-						pkgName:  "rest-devel",
-						cveID:    "CVE-2015-2676",
-						advisory: types.Advisory{FixedVersion: "0:0.7.92-3.el7"},
+					Args: db.PutAdvisoryArgs{
+						TxAnything:      true,
+						Source:          "Red Hat Enterprise Linux 8",
+						PkgName:         "rest-devel",
+						VulnerabilityID: "CVE-2015-2676",
+						Advisory:        types.Advisory{FixedVersion: "0:0.7.92-3.el7"},
 					},
 				},
 			},
@@ -215,15 +220,18 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putAdvisoryList: []putAdvisory{
+			putAdvisory: []db.PutAdvisoryExpectation{
 				{
-					input: putAdvisoryInput{
-						source:   "Red Hat Enterprise Linux 8",
-						pkgName:  "rest",
-						cveID:    "CVE-2015-2675",
-						advisory: types.Advisory{FixedVersion: "0:0.7.92-3.el7"},
+					Args: db.PutAdvisoryArgs{
+						TxAnything:      true,
+						Source:          "Red Hat Enterprise Linux 8",
+						PkgName:         "rest",
+						VulnerabilityID: "CVE-2015-2675",
+						Advisory:        types.Advisory{FixedVersion: "0:0.7.92-3.el7"},
 					},
-					output: errors.New("unable to put advisory"),
+					Returns: db.PutAdvisoryReturns{
+						Err: errors.New("unable to put advisory"),
+					},
 				},
 			},
 			expectedErrorMsg: "unable to put advisory",
@@ -233,11 +241,8 @@ func TestVulnSrc_Commit(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tx := &bolt.Tx{}
-			mockDBConfig := new(db.MockDBConfig)
-			for _, pa := range tc.putAdvisoryList {
-				mockDBConfig.On("PutAdvisory", tx, pa.input.source, pa.input.pkgName,
-					pa.input.cveID, pa.input.advisory).Return(pa.output)
-			}
+			mockDBConfig := new(db.MockOperation)
+			mockDBConfig.ApplyPutAdvisoryExpectations(tc.putAdvisory)
 
 			ac := VulnSrc{dbc: mockDBConfig}
 			err := ac.commit(tx, tc.advisories)
@@ -254,23 +259,11 @@ func TestVulnSrc_Commit(t *testing.T) {
 }
 
 func TestVulnSrc_Get(t *testing.T) {
-	type getAdvisoriesInput struct {
-		bucket  string
-		pkgName string
-	}
-	type getAdvisoriesOutput struct {
-		advisories []types.Advisory
-		err        error
-	}
-	type getAdvisories struct {
-		input  getAdvisoriesInput
-		output getAdvisoriesOutput
-	}
 	testCases := []struct {
 		name               string
 		release            string
 		pkgName            string
-		getAdvisories      getAdvisories
+		getAdvisories      db.GetAdvisoriesExpectation
 		expectedErrorMsg   string
 		expectedAdvisories []types.Advisory
 	}{
@@ -278,13 +271,13 @@ func TestVulnSrc_Get(t *testing.T) {
 			name:    "happy path",
 			release: "6",
 			pkgName: "package",
-			getAdvisories: getAdvisories{
-				input: getAdvisoriesInput{
-					bucket:  "Red Hat Enterprise Linux 6",
-					pkgName: "package",
+			getAdvisories: db.GetAdvisoriesExpectation{
+				Args: db.GetAdvisoriesArgs{
+					Source:  "Red Hat Enterprise Linux 6",
+					PkgName: "package",
 				},
-				output: getAdvisoriesOutput{
-					advisories: []types.Advisory{
+				Returns: db.GetAdvisoriesReturns{
+					Advisories: []types.Advisory{
 						{
 							VulnerabilityID: "CVE-2019-0123",
 							FixedVersion:    "1.2.3",
@@ -303,13 +296,13 @@ func TestVulnSrc_Get(t *testing.T) {
 			name:    "GetAdvisories returns an error",
 			release: "6",
 			pkgName: "package",
-			getAdvisories: getAdvisories{
-				input: getAdvisoriesInput{
-					bucket:  "Red Hat Enterprise Linux 6",
-					pkgName: "package",
+			getAdvisories: db.GetAdvisoriesExpectation{
+				Args: db.GetAdvisoriesArgs{
+					Source:  "Red Hat Enterprise Linux 6",
+					PkgName: "package",
 				},
-				output: getAdvisoriesOutput{
-					err: errors.New("failed to get advisories"),
+				Returns: db.GetAdvisoriesReturns{
+					Err: errors.New("failed to get advisories"),
 				},
 			},
 			expectedErrorMsg:   "failed to get advisories",
@@ -319,10 +312,8 @@ func TestVulnSrc_Get(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockDBConfig)
-			mockDBConfig.On("GetAdvisories", tc.getAdvisories.input.bucket,
-				tc.getAdvisories.input.pkgName).Return(tc.getAdvisories.output.advisories,
-				tc.getAdvisories.output.err)
+			mockDBConfig := new(db.MockOperation)
+			mockDBConfig.ApplyGetAdvisoriesExpectation(tc.getAdvisories)
 
 			vs := VulnSrc{dbc: mockDBConfig}
 			advisories, err := vs.Get(tc.release, tc.pkgName)

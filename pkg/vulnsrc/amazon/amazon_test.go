@@ -9,14 +9,13 @@ import (
 
 	"golang.org/x/xerrors"
 
-	bolt "github.com/etcd-io/bbolt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/vuln-list-update/amazon"
+	bolt "github.com/etcd-io/bbolt"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
@@ -26,34 +25,44 @@ func TestMain(m *testing.M) {
 
 func TestVulnSrc_Update(t *testing.T) {
 	testCases := []struct {
-		name           string
-		cacheDir       string
-		batchUpdateErr error
-		expectedError  error
-		expectedVulns  []types.Advisory
+		name          string
+		cacheDir      string
+		batchUpdate   db.BatchUpdateExpectation
+		expectedError error
+		expectedVulns []types.Advisory
 	}{
 		{
-			name:          "happy path",
-			cacheDir:      "testdata",
-			expectedError: nil,
+			name:     "happy path",
+			cacheDir: "testdata",
+			batchUpdate: db.BatchUpdateExpectation{
+				Args: db.BatchUpdateArgs{FnAnything: true},
+			},
 		},
 		{
-			name:          "cache dir doesnt exist",
-			cacheDir:      "badpathdoesnotexist",
+			name:     "cache dir doesnt exist",
+			cacheDir: "badpathdoesnotexist",
+			batchUpdate: db.BatchUpdateExpectation{
+				Args: db.BatchUpdateArgs{FnAnything: true},
+			},
 			expectedError: errors.New("error in amazon walk: error in file walk: lstat badpathdoesnotexist/vuln-list/amazon: no such file or directory"),
 		},
 		{
-			name:           "unable to save amazon defintions",
-			cacheDir:       "testdata",
-			batchUpdateErr: errors.New("unable to batch update"),
-			expectedError:  errors.New("error in amazon save: error in batch update: unable to batch update"),
+			name:     "unable to save amazon defintions",
+			cacheDir: "testdata",
+			batchUpdate: db.BatchUpdateExpectation{
+				Args: db.BatchUpdateArgs{FnAnything: true},
+				Returns: db.BatchUpdateReturns{
+					Err: errors.New("unable to batch update"),
+				},
+			},
+			expectedError: errors.New("error in amazon save: error in batch update: unable to batch update"),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockDBConfig)
-			mockDBConfig.On("BatchUpdate", mock.Anything).Return(tc.batchUpdateErr)
+			mockDBConfig := new(db.MockOperation)
+			mockDBConfig.ApplyBatchUpdateExpectation(tc.batchUpdate)
 			ac := VulnSrc{dbc: mockDBConfig}
 
 			err := ac.Update(tc.cacheDir)
@@ -68,24 +77,11 @@ func TestVulnSrc_Update(t *testing.T) {
 }
 
 func TestVulnSrc_Get(t *testing.T) {
-	type getAdvisoriesInput struct {
-		version string
-		pkgName string
-	}
-	type getAdvisoriesOutput struct {
-		advisories []types.Advisory
-		err        error
-	}
-	type getAdvisories struct {
-		input  getAdvisoriesInput
-		output getAdvisoriesOutput
-	}
-
 	testCases := []struct {
 		name          string
 		version       string
 		pkgName       string
-		getAdvisories getAdvisories
+		getAdvisories db.GetAdvisoriesExpectation
 		expectedError error
 		expectedVulns []types.Advisory
 	}{
@@ -93,45 +89,41 @@ func TestVulnSrc_Get(t *testing.T) {
 			name:    "happy path",
 			version: "1",
 			pkgName: "curl",
-			getAdvisories: getAdvisories{
-				input: getAdvisoriesInput{
-					version: "amazon linux 1",
-					pkgName: "curl",
+			getAdvisories: db.GetAdvisoriesExpectation{
+				Args: db.GetAdvisoriesArgs{
+					Source:  "amazon linux 1",
+					PkgName: "curl",
 				},
-				output: getAdvisoriesOutput{
-					advisories: []types.Advisory{
+				Returns: db.GetAdvisoriesReturns{
+					Advisories: []types.Advisory{
 						{VulnerabilityID: "CVE-2019-0001", FixedVersion: "0.1.2"},
 					},
-					err: nil,
 				},
 			},
-			expectedError: nil,
 			expectedVulns: []types.Advisory{{VulnerabilityID: "CVE-2019-0001", FixedVersion: "0.1.2"}},
 		},
 		{
 			name:    "no advisories are returned",
 			version: "2",
 			pkgName: "bash",
-			getAdvisories: getAdvisories{
-				input: getAdvisoriesInput{
-					version: "amazon linux 2",
-					pkgName: "bash",
+			getAdvisories: db.GetAdvisoriesExpectation{
+				Args: db.GetAdvisoriesArgs{
+					Source:  "amazon linux 2",
+					PkgName: "bash",
 				},
-				output: getAdvisoriesOutput{advisories: []types.Advisory{}, err: nil},
+				Returns: db.GetAdvisoriesReturns{},
 			},
-			expectedError: nil,
-			expectedVulns: []types.Advisory{},
 		},
 		{
 			name: "amazon GetAdvisories return an error",
-			getAdvisories: getAdvisories{
-				input: getAdvisoriesInput{
-					version: mock.Anything,
-					pkgName: mock.Anything,
+			getAdvisories: db.GetAdvisoriesExpectation{
+				Args: db.GetAdvisoriesArgs{
+					SourceAnything:  true,
+					PkgNameAnything: true,
 				},
-				output: getAdvisoriesOutput{
-					advisories: []types.Advisory{},
-					err:        xerrors.New("unable to get advisories"),
+				Returns: db.GetAdvisoriesReturns{
+					Advisories: []types.Advisory{},
+					Err:        xerrors.New("unable to get advisories"),
 				},
 			},
 			expectedError: errors.New("failed to get Amazon advisories: unable to get advisories"),
@@ -141,11 +133,8 @@ func TestVulnSrc_Get(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockDBConfig)
-			mockDBConfig.On("GetAdvisories",
-				tc.getAdvisories.input.version, tc.getAdvisories.input.pkgName).Return(
-				tc.getAdvisories.output.advisories, tc.getAdvisories.output.err,
-			)
+			mockDBConfig := new(db.MockOperation)
+			mockDBConfig.ApplyGetAdvisoriesExpectation(tc.getAdvisories)
 
 			ac := VulnSrc{dbc: mockDBConfig}
 			vuls, err := ac.Get(tc.version, tc.pkgName)
@@ -296,11 +285,12 @@ func TestVulnSrc_WalkFunc(t *testing.T) {
 
 func TestVulnSrc_CommitFunc(t *testing.T) {
 	testCases := []struct {
-		name                      string
-		alasList                  []alas
-		putAdvisoryErr            error
-		putVulnerabilityDetailErr error
-		expectedError             error
+		name                   string
+		alasList               []alas
+		putAdvisory            []db.PutAdvisoryExpectation
+		putVulnerabilityDetail []db.PutVulnerabilityDetailExpectation
+		putSeverity            []db.PutSeverityExpectation
+		expectedError          error
 	}{
 		{
 			name: "happy path",
@@ -309,7 +299,7 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 					Version: "123",
 					ALAS: amazon.ALAS{
 						ID:       "123",
-						Severity: "high",
+						Severity: "important",
 						CveIDs:   []string{"CVE-2020-0001"},
 						References: []amazon.Reference{
 							{
@@ -329,9 +319,44 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 					},
 				},
 			},
+			putAdvisory: []db.PutAdvisoryExpectation{
+				{
+					Args: db.PutAdvisoryArgs{
+						TxAnything:      true,
+						Source:          "amazon linux 123",
+						PkgName:         "testpkg",
+						VulnerabilityID: "CVE-2020-0001",
+						Advisory:        types.Advisory{FixedVersion: "123:456-testing"},
+					},
+				},
+			},
+			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+				{
+					Args: db.PutVulnerabilityDetailArgs{
+						TxAnything:      true,
+						VulnerabilityID: "CVE-2020-0001",
+						Source:          vulnerability.Amazon,
+						Vulnerability: types.VulnerabilityDetail{
+							CvssScore:   0,
+							CvssScoreV3: 0,
+							Severity:    types.SeverityHigh,
+							References:  []string{"http://foo.bar/baz"},
+						},
+					},
+				},
+			},
+			putSeverity: []db.PutSeverityExpectation{
+				{
+					Args: db.PutSeverityArgs{
+						TxAnything:      true,
+						VulnerabilityID: "CVE-2020-0001",
+						Severity:        types.SeverityUnknown,
+					},
+				},
+			},
 		},
 		{
-			name: "failed to save Amazon advisory, PutNestedBucket() return an error",
+			name: "failed to save Amazon advisory, PutAdvisory() return an error",
 			alasList: []alas{
 				{
 					Version: "123",
@@ -357,17 +382,30 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 					},
 				},
 			},
-			putAdvisoryErr: errors.New("putnestedbucket failed to save"),
-			expectedError:  errors.New("failed to save amazon advisory: putnestedbucket failed to save"),
+			putAdvisory: []db.PutAdvisoryExpectation{
+				{
+					Args: db.PutAdvisoryArgs{
+						TxAnything:      true,
+						Source:          "amazon linux 123",
+						PkgName:         "testpkg",
+						VulnerabilityID: "CVE-2020-0001",
+						Advisory:        types.Advisory{FixedVersion: "123:456-testing"},
+					},
+					Returns: db.PutAdvisoryReturns{
+						Err: errors.New("failed to put advisory"),
+					},
+				},
+			},
+			expectedError: errors.New("failed to save amazon advisory: failed to put advisory"),
 		},
 		{
-			name: "failed to save Amazon advisory, Put() return an error",
+			name: "failed to save Amazon advisory, PutVulnerabilityDetail() returns an error",
 			alasList: []alas{
 				{
 					Version: "123",
 					ALAS: amazon.ALAS{
 						ID:       "123",
-						Severity: "high",
+						Severity: "important",
 						CveIDs:   []string{"CVE-2020-0001"},
 						References: []amazon.Reference{
 							{
@@ -387,22 +425,45 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetailErr: errors.New("failed to commit to db"),
-			expectedError:             errors.New("failed to save amazon vulnerability detail: failed to commit to db"),
+			putAdvisory: []db.PutAdvisoryExpectation{
+				{
+					Args: db.PutAdvisoryArgs{
+						TxAnything:      true,
+						Source:          "amazon linux 123",
+						PkgName:         "testpkg",
+						VulnerabilityID: "CVE-2020-0001",
+						Advisory:        types.Advisory{FixedVersion: "123:456-testing"},
+					},
+				},
+			},
+			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+				{
+					Args: db.PutVulnerabilityDetailArgs{
+						TxAnything:      true,
+						VulnerabilityID: "CVE-2020-0001",
+						Source:          vulnerability.Amazon,
+						Vulnerability: types.VulnerabilityDetail{
+							CvssScore:   0,
+							CvssScoreV3: 0,
+							Severity:    types.SeverityHigh,
+							References:  []string{"http://foo.bar/baz"},
+						},
+					},
+					Returns: db.PutVulnerabilityDetailReturns{
+						Err: errors.New("failed to put vulnerability detail"),
+					},
+				},
+			},
+			expectedError: errors.New("failed to save amazon vulnerability detail: failed to put vulnerability detail"),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockDBConfig)
-			mockDBConfig.On("PutAdvisory",
-				mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
-				tc.putAdvisoryErr)
-			mockDBConfig.On("PutVulnerabilityDetail",
-				mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
-				tc.putVulnerabilityDetailErr)
-			mockDBConfig.On("PutSeverity",
-				mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			mockDBConfig := new(db.MockOperation)
+			mockDBConfig.ApplyPutAdvisoryExpectations(tc.putAdvisory)
+			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tc.putVulnerabilityDetail)
+			mockDBConfig.ApplyPutSeverityExpectations(tc.putSeverity)
 
 			vs := VulnSrc{dbc: mockDBConfig, alasList: tc.alasList}
 

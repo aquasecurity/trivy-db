@@ -43,7 +43,7 @@ var (
 )
 
 type VulnSrc struct {
-	dbc db.Operations
+	dbc db.Operation
 }
 
 func NewVulnSrc() VulnSrc {
