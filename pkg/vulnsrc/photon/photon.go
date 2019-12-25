@@ -57,35 +57,37 @@ func (vs VulnSrc) Update(dir string) error {
 func (vs VulnSrc) save(cves []PhotonCVE) error {
 	log.Println("Saving Photon DB")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		for _, cve := range cves {
-			platformName := fmt.Sprintf(platformFormat, cve.OSVersion)
-			advisory := types.Advisory{
-				FixedVersion: cve.ResVer,
-			}
-			if err := vs.dbc.PutAdvisory(tx, platformName, cve.Pkg, cve.CveID, advisory); err != nil {
-				return xerrors.Errorf("failed to save Photon advisory: %w", err)
-			}
-
-			vuln := types.VulnerabilityDetail{
-				Title:       cve.CveID,
-				CvssScore:   cve.CveScore,
-				Description: cve.AffVer,
-			}
-			if err := vs.dbc.PutVulnerabilityDetail(tx, cve.CveID, vulnerability.Photon, vuln); err != nil {
-				return xerrors.Errorf("failed to save Photon vulnerability: %w", err)
-			}
-
-			// for light DB
-			if err := vs.dbc.PutSeverity(tx, cve.CveID, types.SeverityUnknown); err != nil {
-				return xerrors.Errorf("failed to save alpine vulnerability severity: %w", err)
-			}
-		}
-		return nil
+		return vs.commit(tx, cves)
 	})
 	if err != nil {
 		return xerrors.Errorf("error in batch update: %w", err)
 	}
 
+	return nil
+}
+
+func (vs VulnSrc) commit(tx *bolt.Tx, cves []PhotonCVE) error {
+	for _, cve := range cves {
+		platformName := fmt.Sprintf(platformFormat, cve.OSVersion)
+		advisory := types.Advisory{
+			FixedVersion: cve.ResVer,
+		}
+		if err := vs.dbc.PutAdvisory(tx, platformName, cve.Pkg, cve.CveID, advisory); err != nil {
+			return xerrors.Errorf("failed to save Photon advisory: %w", err)
+		}
+
+		vuln := types.VulnerabilityDetail{
+			CvssScore: cve.CveScore,
+		}
+		if err := vs.dbc.PutVulnerabilityDetail(tx, cve.CveID, vulnerability.Photon, vuln); err != nil {
+			return xerrors.Errorf("failed to save Photon vulnerability detail: %w", err)
+		}
+
+		// for light DB
+		if err := vs.dbc.PutSeverity(tx, cve.CveID, types.SeverityUnknown); err != nil {
+			return xerrors.Errorf("failed to save Photon vulnerability severity: %w", err)
+		}
+	}
 	return nil
 }
 
