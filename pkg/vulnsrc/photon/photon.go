@@ -63,7 +63,7 @@ func (vs VulnSrc) save(cves []PhotonCVE) error {
 				FixedVersion: cve.ResVer,
 			}
 			if err := vs.dbc.PutAdvisory(tx, platformName, cve.Pkg, cve.CveID, advisory); err != nil {
-				return xerrors.Errorf("failed to save Debian advisory: %w", err)
+				return xerrors.Errorf("failed to save Photon advisory: %w", err)
 			}
 
 			vuln := types.VulnerabilityDetail{
@@ -72,7 +72,7 @@ func (vs VulnSrc) save(cves []PhotonCVE) error {
 				Description: cve.AffVer,
 			}
 			if err := vs.dbc.PutVulnerabilityDetail(tx, cve.CveID, vulnerability.Photon, vuln); err != nil {
-				return xerrors.Errorf("failed to save Debian vulnerability: %w", err)
+				return xerrors.Errorf("failed to save Photon vulnerability: %w", err)
 			}
 
 			// for light DB
@@ -93,7 +93,7 @@ func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) 
 	bucket := fmt.Sprintf(platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get Debian advisories: %w", err)
+		return nil, xerrors.Errorf("failed to get Photon advisories: %w", err)
 	}
 	return advisories, nil
 }
