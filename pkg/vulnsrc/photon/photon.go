@@ -48,7 +48,7 @@ func (vs VulnSrc) Update(dir string) error {
 	}
 
 	if err = vs.save(cves); err != nil {
-		return xerrors.Errorf("error in Photon save: %w", err)
+		return xerrors.Errorf("unable to save Photon advisories: %w", err)
 	}
 
 	return nil
