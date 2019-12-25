@@ -296,3 +296,79 @@ func TestVulnSrc_commit(t *testing.T) {
 		})
 	}
 }
+
+func TestVulnSrc_Get(t *testing.T) {
+	type args struct {
+		release string
+		pkgName string
+	}
+	tests := []struct {
+		name          string
+		args          args
+		getAdvisories db.GetAdvisoriesExpectation
+		want          []types.Advisory
+		wantErr       string
+	}{
+		{
+			name: "happy path",
+			args: args{
+				release: "1.0",
+				pkgName: "ansible",
+			},
+			getAdvisories: db.GetAdvisoriesExpectation{
+				Args: db.GetAdvisoriesArgs{
+					Source:  "Photon OS 1.0",
+					PkgName: "ansible",
+				},
+				Returns: db.GetAdvisoriesReturns{
+					Advisories: []types.Advisory{
+						{
+							VulnerabilityID: "CVE-2019-3828",
+							FixedVersion:    "2.7.6-2.ph3",
+						},
+					},
+				},
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2019-3828",
+					FixedVersion:    "2.7.6-2.ph3",
+				},
+			},
+		},
+		{
+			name: "GetAdvisories returns an error",
+			args: args{
+				release: "2.0",
+				pkgName: "bash",
+			},
+			getAdvisories: db.GetAdvisoriesExpectation{
+				Args: db.GetAdvisoriesArgs{
+					Source:  "Photon OS 2.0",
+					PkgName: "bash",
+				},
+				Returns: db.GetAdvisoriesReturns{
+					Advisories: nil,
+					Err:        errors.New("error"),
+				},
+			},
+			wantErr: "failed to get Photon advisories",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockDBConfig := new(db.MockOperation)
+			mockDBConfig.ApplyGetAdvisoriesExpectation(tt.getAdvisories)
+
+			vs := VulnSrc{dbc: mockDBConfig}
+			got, err := vs.Get(tt.args.release, tt.args.pkgName)
+			if tt.wantErr != "" {
+				require.NotNil(t, err, tt.name)
+				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
+			} else {
+				assert.NoError(t, err, tt.name)
+			}
+			assert.Equal(t, tt.want, got, tt.name)
+		})
+	}
+}
