@@ -22,7 +22,7 @@ func TestVulnSrc_Update(t *testing.T) {
 	tests := []struct {
 		name        string
 		args        args
-		batchUpdate db.BatchUpdateExpectation
+		batchUpdate []db.BatchUpdateExpectation
 		wantErr     string
 	}{
 		{
@@ -30,9 +30,11 @@ func TestVulnSrc_Update(t *testing.T) {
 			args: args{
 				dir: "testdata",
 			},
-			batchUpdate: db.BatchUpdateExpectation{
-				Args: db.BatchUpdateArgs{
-					FnAnything: true,
+			batchUpdate: []db.BatchUpdateExpectation{
+				{
+					Args: db.BatchUpdateArgs{
+						FnAnything: true,
+					},
 				},
 			},
 		},
@@ -41,11 +43,6 @@ func TestVulnSrc_Update(t *testing.T) {
 			args: args{
 				dir: "badpathdoesnotexist",
 			},
-			batchUpdate: db.BatchUpdateExpectation{
-				Args: db.BatchUpdateArgs{
-					FnAnything: true,
-				},
-			},
 			wantErr: "no such file or directory",
 		},
 		{
@@ -53,12 +50,14 @@ func TestVulnSrc_Update(t *testing.T) {
 			args: args{
 				dir: "testdata",
 			},
-			batchUpdate: db.BatchUpdateExpectation{
-				Args: db.BatchUpdateArgs{
-					FnAnything: true,
-				},
-				Returns: db.BatchUpdateReturns{
-					Err: errors.New("error"),
+			batchUpdate: []db.BatchUpdateExpectation{
+				{
+					Args: db.BatchUpdateArgs{
+						FnAnything: true,
+					},
+					Returns: db.BatchUpdateReturns{
+						Err: errors.New("error"),
+					},
 				},
 			},
 			wantErr: "unable to save Photon advisories",
@@ -67,7 +66,7 @@ func TestVulnSrc_Update(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyBatchUpdateExpectation(tt.batchUpdate)
+			mockDBConfig.ApplyBatchUpdateExpectations(tt.batchUpdate)
 
 			vs := VulnSrc{
 				dbc: mockDBConfig,
@@ -79,6 +78,7 @@ func TestVulnSrc_Update(t *testing.T) {
 			} else {
 				assert.NoError(t, err, tt.name)
 			}
+			mockDBConfig.AssertExpectations(t)
 		})
 	}
 }
@@ -90,9 +90,9 @@ func TestVulnSrc_commit(t *testing.T) {
 	tests := []struct {
 		name                   string
 		args                   args
-		putAdvisory            db.PutAdvisoryExpectation
-		putVulnerabilityDetail db.PutVulnerabilityDetailExpectation
-		putSeverity            db.PutSeverityExpectation
+		putAdvisory            []db.PutAdvisoryExpectation
+		putVulnerabilityDetail []db.PutVulnerabilityDetailExpectation
+		putSeverity            []db.PutSeverityExpectation
 		wantErr                string
 	}{
 		{
@@ -109,32 +109,38 @@ func TestVulnSrc_commit(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: db.PutAdvisoryExpectation{
-				Args: db.PutAdvisoryArgs{
-					TxAnything:      true,
-					Source:          "Photon OS 1.0",
-					PkgName:         "ansible",
-					VulnerabilityID: "CVE-2019-10156",
-					Advisory: types.Advisory{
-						FixedVersion: "2.8.3-1.ph3",
+			putAdvisory: []db.PutAdvisoryExpectation{
+				{
+					Args: db.PutAdvisoryArgs{
+						TxAnything:      true,
+						Source:          "Photon OS 1.0",
+						PkgName:         "ansible",
+						VulnerabilityID: "CVE-2019-10156",
+						Advisory: types.Advisory{
+							FixedVersion: "2.8.3-1.ph3",
+						},
 					},
 				},
 			},
-			putVulnerabilityDetail: db.PutVulnerabilityDetailExpectation{
-				Args: db.PutVulnerabilityDetailArgs{
-					TxAnything:      true,
-					Source:          vulnerability.Photon,
-					VulnerabilityID: "CVE-2019-10156",
-					Vulnerability: types.VulnerabilityDetail{
-						CvssScore: 5.4,
+			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+				{
+					Args: db.PutVulnerabilityDetailArgs{
+						TxAnything:      true,
+						Source:          vulnerability.Photon,
+						VulnerabilityID: "CVE-2019-10156",
+						Vulnerability: types.VulnerabilityDetail{
+							CvssScore: 5.4,
+						},
 					},
 				},
 			},
-			putSeverity: db.PutSeverityExpectation{
-				Args: db.PutSeverityArgs{
-					TxAnything:      true,
-					VulnerabilityID: "CVE-2019-10156",
-					Severity:        types.SeverityUnknown,
+			putSeverity: []db.PutSeverityExpectation{
+				{
+					Args: db.PutSeverityArgs{
+						TxAnything:      true,
+						VulnerabilityID: "CVE-2019-10156",
+						Severity:        types.SeverityUnknown,
+					},
 				},
 			},
 		},
@@ -152,18 +158,20 @@ func TestVulnSrc_commit(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: db.PutAdvisoryExpectation{
-				Args: db.PutAdvisoryArgs{
-					TxAnything:      true,
-					Source:          "Photon OS 1.0",
-					PkgName:         "ansible",
-					VulnerabilityID: "CVE-2019-10156",
-					Advisory: types.Advisory{
-						FixedVersion: "2.8.3-1.ph3",
+			putAdvisory: []db.PutAdvisoryExpectation{
+				{
+					Args: db.PutAdvisoryArgs{
+						TxAnything:      true,
+						Source:          "Photon OS 1.0",
+						PkgName:         "ansible",
+						VulnerabilityID: "CVE-2019-10156",
+						Advisory: types.Advisory{
+							FixedVersion: "2.8.3-1.ph3",
+						},
 					},
-				},
-				Returns: db.PutAdvisoryReturns{
-					Err: errors.New("error"),
+					Returns: db.PutAdvisoryReturns{
+						Err: errors.New("error"),
+					},
 				},
 			},
 			wantErr: "failed to save Photon advisory",
@@ -182,28 +190,32 @@ func TestVulnSrc_commit(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: db.PutAdvisoryExpectation{
-				Args: db.PutAdvisoryArgs{
-					TxAnything:      true,
-					Source:          "Photon OS 1.0",
-					PkgName:         "ansible",
-					VulnerabilityID: "CVE-2019-10156",
-					Advisory: types.Advisory{
-						FixedVersion: "2.8.3-1.ph3",
+			putAdvisory: []db.PutAdvisoryExpectation{
+				{
+					Args: db.PutAdvisoryArgs{
+						TxAnything:      true,
+						Source:          "Photon OS 1.0",
+						PkgName:         "ansible",
+						VulnerabilityID: "CVE-2019-10156",
+						Advisory: types.Advisory{
+							FixedVersion: "2.8.3-1.ph3",
+						},
 					},
 				},
 			},
-			putVulnerabilityDetail: db.PutVulnerabilityDetailExpectation{
-				Args: db.PutVulnerabilityDetailArgs{
-					TxAnything:      true,
-					Source:          vulnerability.Photon,
-					VulnerabilityID: "CVE-2019-10156",
-					Vulnerability: types.VulnerabilityDetail{
-						CvssScore: 5.4,
+			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+				{
+					Args: db.PutVulnerabilityDetailArgs{
+						TxAnything:      true,
+						Source:          vulnerability.Photon,
+						VulnerabilityID: "CVE-2019-10156",
+						Vulnerability: types.VulnerabilityDetail{
+							CvssScore: 5.4,
+						},
 					},
-				},
-				Returns: db.PutVulnerabilityDetailReturns{
-					Err: errors.New("error"),
+					Returns: db.PutVulnerabilityDetailReturns{
+						Err: errors.New("error"),
+					},
 				},
 			},
 			wantErr: "failed to save Photon vulnerability detail",
@@ -222,35 +234,41 @@ func TestVulnSrc_commit(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: db.PutAdvisoryExpectation{
-				Args: db.PutAdvisoryArgs{
-					TxAnything:      true,
-					Source:          "Photon OS 1.0",
-					PkgName:         "ansible",
-					VulnerabilityID: "CVE-2019-10156",
-					Advisory: types.Advisory{
-						FixedVersion: "2.8.3-1.ph3",
+			putAdvisory: []db.PutAdvisoryExpectation{
+				{
+					Args: db.PutAdvisoryArgs{
+						TxAnything:      true,
+						Source:          "Photon OS 1.0",
+						PkgName:         "ansible",
+						VulnerabilityID: "CVE-2019-10156",
+						Advisory: types.Advisory{
+							FixedVersion: "2.8.3-1.ph3",
+						},
 					},
 				},
 			},
-			putVulnerabilityDetail: db.PutVulnerabilityDetailExpectation{
-				Args: db.PutVulnerabilityDetailArgs{
-					TxAnything:      true,
-					Source:          vulnerability.Photon,
-					VulnerabilityID: "CVE-2019-10156",
-					Vulnerability: types.VulnerabilityDetail{
-						CvssScore: 5.4,
+			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+				{
+					Args: db.PutVulnerabilityDetailArgs{
+						TxAnything:      true,
+						Source:          vulnerability.Photon,
+						VulnerabilityID: "CVE-2019-10156",
+						Vulnerability: types.VulnerabilityDetail{
+							CvssScore: 5.4,
+						},
 					},
 				},
 			},
-			putSeverity: db.PutSeverityExpectation{
-				Args: db.PutSeverityArgs{
-					TxAnything:      true,
-					VulnerabilityID: "CVE-2019-10156",
-					Severity:        types.SeverityUnknown,
-				},
-				Returns: db.PutSeverityReturns{
-					Err: errors.New("error"),
+			putSeverity: []db.PutSeverityExpectation{
+				{
+					Args: db.PutSeverityArgs{
+						TxAnything:      true,
+						VulnerabilityID: "CVE-2019-10156",
+						Severity:        types.SeverityUnknown,
+					},
+					Returns: db.PutSeverityReturns{
+						Err: errors.New("error"),
+					},
 				},
 			},
 			wantErr: "failed to save Photon vulnerability severity",
@@ -259,9 +277,9 @@ func TestVulnSrc_commit(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyPutAdvisoryExpectation(tt.putAdvisory)
-			mockDBConfig.ApplyPutVulnerabilityDetailExpectation(tt.putVulnerabilityDetail)
-			mockDBConfig.ApplyPutSeverityExpectation(tt.putSeverity)
+			mockDBConfig.ApplyPutAdvisoryExpectations(tt.putAdvisory)
+			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tt.putVulnerabilityDetail)
+			mockDBConfig.ApplyPutSeverityExpectations(tt.putSeverity)
 
 			vs := VulnSrc{
 				dbc: mockDBConfig,
@@ -274,6 +292,7 @@ func TestVulnSrc_commit(t *testing.T) {
 			} else {
 				assert.NoError(t, err, tt.name)
 			}
+			mockDBConfig.AssertExpectations(t)
 		})
 	}
 }
