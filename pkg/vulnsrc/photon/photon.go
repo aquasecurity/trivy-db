@@ -66,10 +66,9 @@ func (vs VulnSrc) save(cves []PhotonCVE) error {
 				return xerrors.Errorf("failed to save Debian advisory: %w", err)
 			}
 
-			severity := vulnerability.ScoreToSeverity(cve.CveScore)
 			vuln := types.VulnerabilityDetail{
 				Title:       cve.CveID,
-				Severity:    severity,
+				CvssScore:   cve.CveScore,
 				Description: cve.AffVer,
 			}
 			if err := vs.dbc.PutVulnerabilityDetail(tx, cve.CveID, vulnerability.Photon, vuln); err != nil {
@@ -77,7 +76,7 @@ func (vs VulnSrc) save(cves []PhotonCVE) error {
 			}
 
 			// for light DB
-			if err := vs.dbc.PutSeverity(tx, cve.CveID, severity); err != nil {
+			if err := vs.dbc.PutSeverity(tx, cve.CveID, types.SeverityUnknown); err != nil {
 				return xerrors.Errorf("failed to save alpine vulnerability severity: %w", err)
 			}
 		}
