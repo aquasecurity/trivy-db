@@ -129,7 +129,7 @@ func TestVulnSrc_commit(t *testing.T) {
 						Source:          vulnerability.Photon,
 						VulnerabilityID: "CVE-2019-10156",
 						Vulnerability: types.VulnerabilityDetail{
-							CvssScore: 5.4,
+							CvssScoreV3: 5.4,
 						},
 					},
 				},
@@ -210,7 +210,7 @@ func TestVulnSrc_commit(t *testing.T) {
 						Source:          vulnerability.Photon,
 						VulnerabilityID: "CVE-2019-10156",
 						Vulnerability: types.VulnerabilityDetail{
-							CvssScore: 5.4,
+							CvssScoreV3: 5.4,
 						},
 					},
 					Returns: db.PutVulnerabilityDetailReturns{
@@ -254,7 +254,7 @@ func TestVulnSrc_commit(t *testing.T) {
 						Source:          vulnerability.Photon,
 						VulnerabilityID: "CVE-2019-10156",
 						Vulnerability: types.VulnerabilityDetail{
-							CvssScore: 5.4,
+							CvssScoreV3: 5.4,
 						},
 					},
 				},

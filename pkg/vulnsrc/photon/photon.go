@@ -77,7 +77,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []PhotonCVE) error {
 		}
 
 		vuln := types.VulnerabilityDetail{
-			CvssScore: cve.CveScore,
+			// Photon uses CVSS Version 3.X
+			CvssScoreV3: cve.CveScore,
 		}
 		if err := vs.dbc.PutVulnerabilityDetail(tx, cve.CveID, vulnerability.Photon, vuln); err != nil {
 			return xerrors.Errorf("failed to save Photon vulnerability detail: %w", err)
