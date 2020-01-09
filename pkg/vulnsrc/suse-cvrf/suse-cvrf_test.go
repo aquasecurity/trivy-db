@@ -87,6 +87,23 @@ func TestVulnSrc_Commit(t *testing.T) {
 					Tracking: DocumentTracking{
 						ID: "SUSE-SU-2019:0048-2",
 					},
+					Notes: []DocumentNote{
+						{
+							Text:  "Security update for helm-mirror",
+							Title: "Topic",
+							Type:  "Summary",
+						},
+						{
+							Text:  "This update for helm-mirror to version 0.2.1 fixes the following issues:\n\n\nSecurity issues fixed:\n\n- CVE-2018-16873: Fixed a remote command execution (bsc#1118897)\n- CVE-2018-16874: Fixed a directory traversal in \u0026quot;go get\u0026quot; via curly braces in import path (bsc#1118898)\n- CVE-2018-16875: Fixed a CPU denial of service (bsc#1118899)\n\nNon-security issue fixed:\n\n- Update to v0.2.1 (bsc#1120762)\n- Include helm-mirror into the containers module (bsc#1116182)\n",
+							Title: "Details",
+							Type:  "General",
+						},
+						{
+							Text:  "The CVRF data is provided by SUSE under the Creative Commons License 4.0 with Attribution for Non-Commercial usage (CC-BY-NC-4.0).",
+							Title: "Terms of Use",
+							Type:  "Legal Disclaimer",
+						},
+					},
 					ProductTree: ProductTree{
 						Relationships: []Relationship{
 							{
@@ -158,7 +175,8 @@ func TestVulnSrc_Commit(t *testing.T) {
 						VulnerabilityID: "SUSE-SU-2019:0048-2",
 						Source:          "suse-cvrf",
 						Vulnerability: types.VulnerabilityDetail{
-							Title: "Security update for helm-mirror",
+							Title:       "Security update for helm-mirror",
+							Description: "This update for helm-mirror to version 0.2.1 fixes the following issues:\n\n\nSecurity issues fixed:\n\n- CVE-2018-16873: Fixed a remote command execution (bsc#1118897)\n- CVE-2018-16874: Fixed a directory traversal in \u0026quot;go get\u0026quot; via curly braces in import path (bsc#1118898)\n- CVE-2018-16875: Fixed a CPU denial of service (bsc#1118899)\n\nNon-security issue fixed:\n\n- Update to v0.2.1 (bsc#1120762)\n- Include helm-mirror into the containers module (bsc#1116182)\n",
 							References: []string{
 								"https://www.suse.com/support/update/announcement/2019/suse-su-20190048-2/",
 								"http://lists.suse.com/pipermail/sle-security-updates/2019-July/005660.html",
@@ -186,6 +204,23 @@ func TestVulnSrc_Commit(t *testing.T) {
 					Title: "Security update for strongswan",
 					Tracking: DocumentTracking{
 						ID: "openSUSE-SU-2019:2598-1",
+					},
+					Notes: []DocumentNote{
+						{
+							Text:  "Security update for GraphicsMagick",
+							Title: "Topic",
+							Type:  "Summary",
+						},
+						{
+							Text:  "This update for GraphicsMagick fixes the following issues:\n\nSecurity vulnerabilities fixed:\n\n- CVE-2018-20184: Fixed heap-based buffer overflow in the WriteTGAImage function of tga.c (bsc#1119822)\n- CVE-2018-20189: Fixed denial of service vulnerability in ReadDIBImage function of coders/dib.c (bsc#1119790)\n\nThis update was imported from the openSUSE:Leap:15.0:Update update project.",
+							Title: "Details",
+							Type:  "General",
+						},
+						{
+							Text:  "The CVRF data is provided by SUSE under the Creative Commons License 4.0 with Attribution for Non-Commercial usage (CC-BY-NC-4.0).",
+							Title: "Terms of Use",
+							Type:  "Legal Disclaimer",
+						},
 					},
 					ProductTree: ProductTree{
 						Relationships: []Relationship{
@@ -268,7 +303,8 @@ func TestVulnSrc_Commit(t *testing.T) {
 						VulnerabilityID: "openSUSE-SU-2019:2598-1",
 						Source:          "suse-cvrf",
 						Vulnerability: types.VulnerabilityDetail{
-							Title: "Security update for strongswan",
+							Title:       "Security update for strongswan",
+							Description: "This update for GraphicsMagick fixes the following issues:\n\nSecurity vulnerabilities fixed:\n\n- CVE-2018-20184: Fixed heap-based buffer overflow in the WriteTGAImage function of tga.c (bsc#1119822)\n- CVE-2018-20189: Fixed denial of service vulnerability in ReadDIBImage function of coders/dib.c (bsc#1119790)\n\nThis update was imported from the openSUSE:Leap:15.0:Update update project.",
 							References: []string{
 								"http://lists.opensuse.org/opensuse-security-announce/2019-12/msg00001.html",
 								"https://www.suse.com/support/security/rating/",
