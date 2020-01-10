@@ -123,9 +123,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 		}
 
 		vuln := types.VulnerabilityDetail{
-			References: references,
-			Title:      cvrf.Title,
-			Severity:   severity,
+			References:  references,
+			Title:       cvrf.Title,
+			Description: getDetail(cvrf.Notes),
+			Severity:    severity,
 		}
 
 		if err := vs.dbc.PutVulnerabilityDetail(tx, cvrf.Tracking.ID, vulnerability.SuseCVRF, vuln); err != nil {
@@ -208,6 +209,15 @@ func getOSVersion(platformName string) string {
 		}
 	}
 
+	return ""
+}
+
+func getDetail(notes []DocumentNote) string {
+	for _, n := range notes {
+		if n.Type == "General" && n.Title == "Details" {
+			return n.Text
+		}
+	}
 	return ""
 }
 
