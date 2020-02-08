@@ -77,8 +77,10 @@ type VulnerabilityDetail struct {
 }
 
 type Advisory struct {
-	VulnerabilityID string `json:",omitempty"`
-	FixedVersion    string `json:",omitempty"`
+	VulnerabilityID    string   `json:",omitempty"`
+	FixedVersion       string   `json:",omitempty"`
+	VulnerableVersions []string `json:",omitempty"`
+	PatchedVersions    []string `json:",omitempty"`
 }
 
 type Vulnerability struct {
