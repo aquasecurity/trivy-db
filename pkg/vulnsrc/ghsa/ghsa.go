@@ -115,6 +115,13 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 			}
 		}
 
+		for index, patchVersion := range pvs {
+			// e.g. GHSA-r4x3-g983-9g48 PatchVersion has "<" operator
+			if strings.HasPrefix(patchVersion, "<") {
+				avs[index] = fmt.Sprintf("%s, %s", avs[index], pvs[index])
+			}
+		}
+
 		a := types.Advisory{
 			VulnerabilityID:    vulnId,
 			PatchedVersions:    pvs,
