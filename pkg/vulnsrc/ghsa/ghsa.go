@@ -107,12 +107,20 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 			pvs = append(pvs, va.FirstPatchedVersion.Identifier)
 			avs = append(avs, va.VulnerableVersionRange)
 		}
+
+		vulnId := ghsa.Advisory.GhsaId
+		for _, identifier := range ghsa.Advisory.Identifiers {
+			if identifier.Type == "CVE" {
+				vulnId = identifier.Value
+			}
+		}
+
 		a := types.Advisory{
-			VulnerabilityID:    ghsa.Advisory.GhsaId,
+			VulnerabilityID:    vulnId,
 			PatchedVersions:    pvs,
 			VulnerableVersions: avs,
 		}
-		err := vs.dbc.PutAdvisory(tx, platformName, ghsa.Package.Name, ghsa.Advisory.GhsaId, a)
+		err := vs.dbc.PutAdvisory(tx, platformName, ghsa.Package.Name, vulnId, a)
 		if err != nil {
 			return xerrors.Errorf("failed to save ghsa: %w", err)
 		}
@@ -121,18 +129,20 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 		for _, ref := range ghsa.Advisory.References {
 			references = append(references, ref.Url)
 		}
+
 		vuln := types.VulnerabilityDetail{
-			ID:          ghsa.Advisory.GhsaId,
+			ID:          vulnId,
 			Severity:    severityFromThreat(ghsa.Severity),
 			References:  references,
 			Title:       ghsa.Advisory.Summary,
 			Description: ghsa.Advisory.Description,
 		}
-		if err = vs.dbc.PutVulnerabilityDetail(tx, ghsa.Advisory.GhsaId, fmt.Sprintf(datasourceFormat, strings.ToLower(vs.ecosystem.String())), vuln); err != nil {
+
+		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnId, fmt.Sprintf(datasourceFormat, strings.ToLower(vs.ecosystem.String())), vuln); err != nil {
 			return xerrors.Errorf("failed to save ghsa vulnerability detail: %w", err)
 		}
 
-		if err := vs.dbc.PutSeverity(tx, ghsa.Advisory.GhsaId, types.SeverityUnknown); err != nil {
+		if err := vs.dbc.PutSeverity(tx, vulnId, types.SeverityUnknown); err != nil {
 			return xerrors.Errorf("failed to save ghsa vulnerability severity: %w", err)
 		}
 	}

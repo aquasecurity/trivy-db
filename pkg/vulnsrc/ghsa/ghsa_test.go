@@ -124,10 +124,6 @@ func TestVulnSrc_save(t *testing.T) {
 									Type:  "GHSA",
 									Value: "GHSA-wjx8-cgrm-hh8p",
 								},
-								{
-									Type:  "CVE",
-									Value: "CVE-2019-19745",
-								},
 							},
 							Description: "### Impact\n\nA back end user with access to the form generator can upload arbitrary files and execute them on the server.\n\n### Patches\n\nUpdate to Contao 4.4.46 or 4.8.6.\n\n### Workarounds\n\nConfigure your web server so it does not execute PHP files and other scripts in the Contao file upload directory.\n\n### References\n\nhttps://contao.org/en/security-advisories/unrestricted-file-uploads.html\n\n### For more information\n\nIf you have any questions or comments about this advisory, open an issue in [contao/contao](https://github.com/contao/contao/issues/new/choose).",
 							Origin:      "UNSPECIFIED",
@@ -260,9 +256,9 @@ func TestVulnSrc_save(t *testing.T) {
 						TxAnything:      true,
 						Source:          "GitHub Security Advisory Maven",
 						PkgName:         "org.springframework.boot:spring-boot",
-						VulnerabilityID: "GHSA-xx65-cc7g-9pfp",
+						VulnerabilityID: "CVE-2018-1196",
 						Advisory: types.Advisory{
-							VulnerabilityID: "GHSA-xx65-cc7g-9pfp",
+							VulnerabilityID: "CVE-2018-1196",
 							PatchedVersions: []string{
 								"1.5.10",
 							},
@@ -278,9 +274,9 @@ func TestVulnSrc_save(t *testing.T) {
 					Args: db.PutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						Source:          vulnerability.GHSAMaven,
-						VulnerabilityID: "GHSA-xx65-cc7g-9pfp",
+						VulnerabilityID: "CVE-2018-1196",
 						Vulnerability: types.VulnerabilityDetail{
-							ID:          "GHSA-xx65-cc7g-9pfp",
+							ID:          "CVE-2018-1196",
 							Severity:    types.SeverityMedium,
 							References:  []string{"https://nvd.nist.gov/vuln/detail/CVE-2018-1196"},
 							Title:       "Moderate severity vulnerability that affects org.springframework.boot:spring-boot",
@@ -293,7 +289,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.PutSeverityArgs{
 						TxAnything:      true,
-						VulnerabilityID: "GHSA-xx65-cc7g-9pfp",
+						VulnerabilityID: "CVE-2018-1196",
 						Severity:        types.SeverityUnknown,
 					},
 				},
@@ -355,9 +351,9 @@ func TestVulnSrc_save(t *testing.T) {
 						TxAnything:      true,
 						Source:          "GitHub Security Advisory Npm",
 						PkgName:         "atob",
-						VulnerabilityID: "GHSA-8w4h-3cm3-2pm2",
+						VulnerabilityID: "CVE-2018-3745",
 						Advisory: types.Advisory{
-							VulnerabilityID:    "GHSA-8w4h-3cm3-2pm2",
+							VulnerabilityID:    "CVE-2018-3745",
 							PatchedVersions:    []string{"2.1.0"},
 							VulnerableVersions: []string{"\u003c 2.1.0"},
 						},
@@ -369,9 +365,9 @@ func TestVulnSrc_save(t *testing.T) {
 					Args: db.PutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						Source:          vulnerability.GHSANpm,
-						VulnerabilityID: "GHSA-8w4h-3cm3-2pm2",
+						VulnerabilityID: "CVE-2018-3745",
 						Vulnerability: types.VulnerabilityDetail{
-							ID:          "GHSA-8w4h-3cm3-2pm2",
+							ID:          "CVE-2018-3745",
 							Severity:    types.SeverityMedium,
 							References:  []string{"https://nvd.nist.gov/vuln/detail/CVE-2018-3745"},
 							Title:       "Moderate severity vulnerability that affects atob",
@@ -384,7 +380,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.PutSeverityArgs{
 						TxAnything:      true,
-						VulnerabilityID: "GHSA-8w4h-3cm3-2pm2",
+						VulnerabilityID: "CVE-2018-3745",
 						Severity:        types.SeverityUnknown,
 					},
 				},
@@ -446,9 +442,9 @@ func TestVulnSrc_save(t *testing.T) {
 						TxAnything:      true,
 						Source:          "GitHub Security Advisory Nuget",
 						PkgName:         "CLEditor",
-						VulnerabilityID: "GHSA-hh56-x62g-gvhc",
+						VulnerabilityID: "CVE-2019-1010113",
 						Advisory: types.Advisory{
-							VulnerabilityID:    "GHSA-hh56-x62g-gvhc",
+							VulnerabilityID:    "CVE-2019-1010113",
 							PatchedVersions:    []string{""},
 							VulnerableVersions: []string{"\u003c= 1.4.5"},
 						},
@@ -460,9 +456,9 @@ func TestVulnSrc_save(t *testing.T) {
 					Args: db.PutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						Source:          vulnerability.GHSANuget,
-						VulnerabilityID: "GHSA-hh56-x62g-gvhc",
+						VulnerabilityID: "CVE-2019-1010113",
 						Vulnerability: types.VulnerabilityDetail{
-							ID:          "GHSA-hh56-x62g-gvhc",
+							ID:          "CVE-2019-1010113",
 							Severity:    types.SeverityMedium,
 							References:  []string{"https://nvd.nist.gov/vuln/detail/CVE-2019-1010113"},
 							Title:       "Moderate severity vulnerability that affects CLEditor",
@@ -475,7 +471,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.PutSeverityArgs{
 						TxAnything:      true,
-						VulnerabilityID: "GHSA-hh56-x62g-gvhc",
+						VulnerabilityID: "CVE-2019-1010113",
 						Severity:        types.SeverityUnknown,
 					},
 				},
@@ -543,9 +539,9 @@ func TestVulnSrc_save(t *testing.T) {
 						TxAnything:      true,
 						Source:          "GitHub Security Advisory Pip",
 						PkgName:         "django",
-						VulnerabilityID: "GHSA-5hg3-6c2f-f3wr",
+						VulnerabilityID: "CVE-2018-14574",
 						Advisory: types.Advisory{
-							VulnerabilityID: "GHSA-5hg3-6c2f-f3wr",
+							VulnerabilityID: "CVE-2018-14574",
 							PatchedVersions: []string{
 								"2.0.8",
 								"1.11.15",
@@ -563,9 +559,9 @@ func TestVulnSrc_save(t *testing.T) {
 					Args: db.PutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						Source:          vulnerability.GHSAPip,
-						VulnerabilityID: "GHSA-5hg3-6c2f-f3wr",
+						VulnerabilityID: "CVE-2018-14574",
 						Vulnerability: types.VulnerabilityDetail{
-							ID:       "GHSA-5hg3-6c2f-f3wr",
+							ID:       "CVE-2018-14574",
 							Severity: types.SeverityMedium,
 							References: []string{
 								"https://nvd.nist.gov/vuln/detail/CVE-2018-14574",
@@ -580,7 +576,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.PutSeverityArgs{
 						TxAnything:      true,
-						VulnerabilityID: "GHSA-5hg3-6c2f-f3wr",
+						VulnerabilityID: "CVE-2018-14574",
 						Severity:        types.SeverityUnknown,
 					},
 				},
@@ -642,9 +638,9 @@ func TestVulnSrc_save(t *testing.T) {
 						TxAnything:      true,
 						Source:          "GitHub Security Advisory Rubygems",
 						PkgName:         "activestorage",
-						VulnerabilityID: "GHSA-7rr7-rcjw-56vj",
+						VulnerabilityID: "CVE-2018-16477",
 						Advisory: types.Advisory{
-							VulnerabilityID:    "GHSA-7rr7-rcjw-56vj",
+							VulnerabilityID:    "CVE-2018-16477",
 							PatchedVersions:    []string{"5.2.1.1"},
 							VulnerableVersions: []string{"\u003e= 5.2.0, \u003c 5.2.1.1"},
 						},
@@ -656,9 +652,9 @@ func TestVulnSrc_save(t *testing.T) {
 					Args: db.PutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						Source:          vulnerability.GHSARubygems,
-						VulnerabilityID: "GHSA-7rr7-rcjw-56vj",
+						VulnerabilityID: "CVE-2018-16477",
 						Vulnerability: types.VulnerabilityDetail{
-							ID:          "GHSA-7rr7-rcjw-56vj",
+							ID:          "CVE-2018-16477",
 							Severity:    types.SeverityHigh,
 							References:  []string{"https://nvd.nist.gov/vuln/detail/CVE-2018-16477"},
 							Title:       "High severity vulnerability that affects activestorage",
@@ -671,7 +667,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.PutSeverityArgs{
 						TxAnything:      true,
-						VulnerabilityID: "GHSA-7rr7-rcjw-56vj",
+						VulnerabilityID: "CVE-2018-16477",
 						Severity:        types.SeverityUnknown,
 					},
 				},
@@ -733,9 +729,9 @@ func TestVulnSrc_save(t *testing.T) {
 						TxAnything:      true,
 						Source:          "GitHub Security Advisory Rubygems",
 						PkgName:         "activestorage",
-						VulnerabilityID: "GHSA-7rr7-rcjw-56vj",
+						VulnerabilityID: "CVE-2018-16477",
 						Advisory: types.Advisory{
-							VulnerabilityID:    "GHSA-7rr7-rcjw-56vj",
+							VulnerabilityID:    "CVE-2018-16477",
 							PatchedVersions:    []string{"5.2.1.1"},
 							VulnerableVersions: []string{"\u003e= 5.2.0, \u003c 5.2.1.1"},
 						},
@@ -803,9 +799,9 @@ func TestVulnSrc_save(t *testing.T) {
 						TxAnything:      true,
 						Source:          "GitHub Security Advisory Rubygems",
 						PkgName:         "activestorage",
-						VulnerabilityID: "GHSA-7rr7-rcjw-56vj",
+						VulnerabilityID: "CVE-2018-16477",
 						Advisory: types.Advisory{
-							VulnerabilityID:    "GHSA-7rr7-rcjw-56vj",
+							VulnerabilityID:    "CVE-2018-16477",
 							PatchedVersions:    []string{"5.2.1.1"},
 							VulnerableVersions: []string{"\u003e= 5.2.0, \u003c 5.2.1.1"},
 						},
@@ -817,9 +813,9 @@ func TestVulnSrc_save(t *testing.T) {
 					Args: db.PutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						Source:          vulnerability.GHSARubygems,
-						VulnerabilityID: "GHSA-7rr7-rcjw-56vj",
+						VulnerabilityID: "CVE-2018-16477",
 						Vulnerability: types.VulnerabilityDetail{
-							ID:          "GHSA-7rr7-rcjw-56vj",
+							ID:          "CVE-2018-16477",
 							Severity:    types.SeverityHigh,
 							References:  []string{"https://nvd.nist.gov/vuln/detail/CVE-2018-16477"},
 							Title:       "High severity vulnerability that affects activestorage",
@@ -889,9 +885,9 @@ func TestVulnSrc_save(t *testing.T) {
 						TxAnything:      true,
 						Source:          "GitHub Security Advisory Rubygems",
 						PkgName:         "activestorage",
-						VulnerabilityID: "GHSA-7rr7-rcjw-56vj",
+						VulnerabilityID: "CVE-2018-16477",
 						Advisory: types.Advisory{
-							VulnerabilityID:    "GHSA-7rr7-rcjw-56vj",
+							VulnerabilityID:    "CVE-2018-16477",
 							PatchedVersions:    []string{"5.2.1.1"},
 							VulnerableVersions: []string{"\u003e= 5.2.0, \u003c 5.2.1.1"},
 						},
@@ -903,9 +899,9 @@ func TestVulnSrc_save(t *testing.T) {
 					Args: db.PutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						Source:          vulnerability.GHSARubygems,
-						VulnerabilityID: "GHSA-7rr7-rcjw-56vj",
+						VulnerabilityID: "CVE-2018-16477",
 						Vulnerability: types.VulnerabilityDetail{
-							ID:          "GHSA-7rr7-rcjw-56vj",
+							ID:          "CVE-2018-16477",
 							Severity:    types.SeverityHigh,
 							References:  []string{"https://nvd.nist.gov/vuln/detail/CVE-2018-16477"},
 							Title:       "High severity vulnerability that affects activestorage",
@@ -918,7 +914,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.PutSeverityArgs{
 						TxAnything:      true,
-						VulnerabilityID: "GHSA-7rr7-rcjw-56vj",
+						VulnerabilityID: "CVE-2018-16477",
 						Severity:        types.SeverityUnknown,
 					},
 					Returns: db.PutSeverityReturns{
@@ -981,7 +977,7 @@ func TestVulnSrc_Get(t *testing.T) {
 				Returns: db.GetAdvisoriesReturns{
 					Advisories: []types.Advisory{
 						{
-							VulnerabilityID:    "GHSA-wjx8-cgrm-hh8p",
+							VulnerabilityID:    "CVE-2019-19745",
 							VulnerableVersions: []string{"4.8.6", "4.4.46"},
 							PatchedVersions:    []string{"\u003e= 4.5.0, \u003c 4.8.6", "\u003e= 4.0.0, \u003c 4.4.46"},
 						},
@@ -990,7 +986,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 			want: []types.Advisory{
 				{
-					VulnerabilityID:    "GHSA-wjx8-cgrm-hh8p",
+					VulnerabilityID:    "CVE-2019-19745",
 					VulnerableVersions: []string{"4.8.6", "4.4.46"},
 					PatchedVersions:    []string{"\u003e= 4.5.0, \u003c 4.8.6", "\u003e= 4.0.0, \u003c 4.4.46"},
 				},
@@ -1011,7 +1007,7 @@ func TestVulnSrc_Get(t *testing.T) {
 				Returns: db.GetAdvisoriesReturns{
 					Advisories: []types.Advisory{
 						{
-							VulnerabilityID:    "GHSA-xx65-cc7g-9pfp",
+							VulnerabilityID:    "CVE-2018-1196",
 							VulnerableVersions: []string{"1.5.10"},
 							PatchedVersions:    []string{"\u003e= 1.5.0, \u003c 1.5.10"},
 						},
@@ -1020,7 +1016,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 			want: []types.Advisory{
 				{
-					VulnerabilityID:    "GHSA-xx65-cc7g-9pfp",
+					VulnerabilityID:    "CVE-2018-1196",
 					VulnerableVersions: []string{"1.5.10"},
 					PatchedVersions:    []string{"\u003e= 1.5.0, \u003c 1.5.10"},
 				},
