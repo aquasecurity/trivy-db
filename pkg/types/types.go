@@ -9,6 +9,8 @@ import (
 
 type Severity int
 
+type VendorSeverity map[string]Severity
+
 const (
 	SeverityUnknown Severity = iota
 	SeverityLow
@@ -66,14 +68,15 @@ type LastUpdated struct {
 	Date time.Time
 }
 type VulnerabilityDetail struct {
-	ID          string   `json:",omitempty"` // e.g. CVE-2019-8331, OSVDB-104365
-	CvssScore   float64  `json:",omitempty"`
-	CvssScoreV3 float64  `json:",omitempty"`
-	Severity    Severity `json:",omitempty"`
-	SeverityV3  Severity `json:",omitempty"`
-	References  []string `json:",omitempty"`
-	Title       string   `json:",omitempty"`
-	Description string   `json:",omitempty"`
+	ID             string         `json:",omitempty"` // e.g. CVE-2019-8331, OSVDB-104365
+	CvssScore      float64        `json:",omitempty"`
+	CvssScoreV3    float64        `json:",omitempty"`
+	Severity       Severity       `json:",omitempty"`
+	SeverityV3     Severity       `json:",omitempty"`
+	VendorSeverity VendorSeverity `json:",omitempty"`
+	References     []string       `json:",omitempty"`
+	Title          string         `json:",omitempty"`
+	Description    string         `json:",omitempty"`
 }
 
 type Advisory struct {
