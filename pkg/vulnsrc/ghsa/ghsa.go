@@ -170,13 +170,10 @@ func severityFromThreat(urgency string) types.Severity {
 	switch urgency {
 	case "LOW":
 		return types.SeverityLow
-
 	case "MODERATE":
 		return types.SeverityMedium
-
 	case "HIGH":
 		return types.SeverityHigh
-
 	case "CRITICAL":
 		return types.SeverityCritical
 	default:

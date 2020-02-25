@@ -146,6 +146,12 @@ func TestVulnSrc_save(t *testing.T) {
 								},
 								VulnerableVersionRange: "\u003e= 4.0.0, \u003c 4.4.46",
 							},
+							{
+								FirstPatchedVersion: FirstPatchedVersion{
+									Identifier: "< 5.8.6",
+								},
+								VulnerableVersionRange: "\u003e= 4.5.0, \u003c 4.8.6",
+							},
 						},
 					},
 				},
@@ -162,10 +168,12 @@ func TestVulnSrc_save(t *testing.T) {
 							PatchedVersions: []string{
 								"4.8.6",
 								"4.4.46",
+								"< 5.8.6",
 							},
 							VulnerableVersions: []string{
 								"\u003e= 4.5.0, \u003c 4.8.6",
 								"\u003e= 4.0.0, \u003c 4.4.46",
+								"\u003e= 4.5.0, \u003c 4.8.6, \u003c 5.8.6",
 							},
 						},
 					},
