@@ -104,6 +104,15 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 		platformName := fmt.Sprintf(platformFormat, vs.ecosystem)
 		var pvs, avs []string
 		for _, va := range ghsa.VersionAdvisories {
+			// e.g. GHSA-r4x3-g983-9g48 PatchVersion has "<" operator
+			if strings.HasPrefix(va.FirstPatchedVersion.Identifier, "<") {
+				va.VulnerableVersionRange = fmt.Sprintf(
+					"%s, %s",
+					va.VulnerableVersionRange,
+					va.FirstPatchedVersion.Identifier,
+				)
+			}
+
 			pvs = append(pvs, va.FirstPatchedVersion.Identifier)
 			avs = append(avs, va.VulnerableVersionRange)
 		}
@@ -112,13 +121,6 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 		for _, identifier := range ghsa.Advisory.Identifiers {
 			if identifier.Type == "CVE" {
 				vulnId = identifier.Value
-			}
-		}
-
-		for index, patchVersion := range pvs {
-			// e.g. GHSA-r4x3-g983-9g48 PatchVersion has "<" operator
-			if strings.HasPrefix(patchVersion, "<") {
-				avs[index] = fmt.Sprintf("%s, %s", avs[index], pvs[index])
 			}
 		}
 
