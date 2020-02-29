@@ -28,54 +28,38 @@ jobs:
             dep ensure
         fi
 
-    - name: Prepare dirs
-      run: mkdir cache assets
-
-    - name: Download vuln-list
-      run: |
-        wget --quiet https://github.com/aquasecurity/vuln-list/archive/master.zip
-        unzip -q master.zip
-        mv vuln-list-master cache/vuln-list
-
-    - name: Clone advisories
-      run: |
-        git clone --depth 1 https://github.com/rubysec/ruby-advisory-db.git cache/ruby-advisory-db
-        git clone --depth 1 https://github.com/RustSec/advisory-db.git cache/rust-advisory-db
-        git clone --depth 1 https://github.com/FriendsOfPHP/security-advisories cache/php-security-advisories
-        git clone --depth 1 https://github.com/nodejs/security-wg.git cache/nodejs-security-wg
-        git clone --depth 1 https://github.com/pyupio/safety-db.git cache/python-safety-db
+    - name: Download vuln-list and advisories
+      run: make db-fetch
 
     - name: Build the binary
-      run: go build -o trivy-db cmd/trivy-db/main.go
+      run: make build
 
     #
     # Full DB
     #
     - name: Build full database
-      run: ./trivy-db build --cache-dir ./cache --update-interval 12h
+      run: make db-build
 
     - name: Compact DB
-      run: |
-        export PATH=$PATH:$(go env GOPATH)/bin
-        bbolt compact -o assets/trivy.db cache/db/trivy.db
-        rm cache/db/trivy.db
+      run: make db-compact
 
     #
     # Light DB
     #
     - name: Build light database
-      run: ./trivy-db build --light --cache-dir ./cache --update-interval 12h
+      run: make db-build
+      env:
+        DB_TYPE: trivy-light
 
     - name: Compact DB
-      run: |
-        export PATH=$PATH:$(go env GOPATH)/bin
-        bbolt compact -o assets/trivy-light.db cache/db/trivy.db
-
+      run: make db-compact
+      env:
+        DB_TYPE: trivy-light
     #
     # Upload
     #
     - name: Compress assets
-      run: gzip assets/*
+      run: make db-compress
 
     - name: Upload assets
       run: ./trivy-db upload --dir assets

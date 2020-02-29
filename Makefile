@@ -42,3 +42,50 @@ build:
 .PHONY: clean
 clean:
 	rm -rf integration/testdata/fixtures/
+
+$(GOBIN)/bbolt:
+	go get -v github.com/etcd-io/bbolt/cmd/bbolt
+
+export DB_TYPE ?= trivy
+
+ifeq ($(DB_TYPE),trivy-light)
+	DB_ARG := --light
+endif
+
+trivy-db:
+	make build
+
+.PHONY: db-all
+db-all:
+	make build db-fetch
+	make db-build
+	make db-compact
+	make db-compress
+
+.PHONY: db-fetch
+db-fetch:
+	mkdir -p cache/vuln-list cache/ruby-advisory-db cache/rust-advisory-db cache/php-security-advisories cache/nodejs-security-wg cache/python-safety-db
+	wget -qO - https://github.com/aquasecurity/vuln-list/archive/master.tar.gz | tar xz -C cache/vuln-list --strip-components=1
+	wget -qO - https://github.com/rubysec/ruby-advisory-db/archive/master.tar.gz | tar xz -C cache/ruby-advisory-db --strip-components=1
+	wget -qO - https://github.com/RustSec/advisory-db/archive/master.tar.gz | tar xz -C cache/rust-advisory-db --strip-components=1
+	wget -qO - https://github.com/FriendsOfPHP/security-advisories/archive/master.tar.gz | tar xz -C cache/php-security-advisories --strip-components=1
+	wget -qO - https://github.com/nodejs/security-wg/archive/master.tar.gz | tar xz -C cache/nodejs-security-wg --strip-components=1
+	wget -qO - https://github.com/pyupio/safety-db/archive/master.tar.gz | tar xz -C cache/python-safety-db --strip-components=1
+
+.PHONY: db-build
+db-build: trivy-db
+	./trivy-db build $(DB_ARG) --cache-dir cache --update-interval 12h
+
+.PHONY: db-compact
+db-compact: $(GOBIN)/bbolt cache/db/trivy.db
+	mkdir -p assets
+	$(GOBIN)/bbolt compact -o ./assets/$(DB_TYPE).db cache/db/trivy.db
+	rm cache/db/trivy.db
+
+.PHONY: db-compress
+db-compress: assets/$(DB_TYPE).db
+	gzip assets/*
+
+.PHONY: db-clean
+db-clean:
+	rm -rf cache assets
