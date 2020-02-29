@@ -111,6 +111,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 					va.VulnerableVersionRange,
 					va.FirstPatchedVersion.Identifier,
 				)
+				va.FirstPatchedVersion.Identifier = strings.TrimPrefix(va.FirstPatchedVersion.Identifier, "< ")
 			}
 
 			pvs = append(pvs, va.FirstPatchedVersion.Identifier)

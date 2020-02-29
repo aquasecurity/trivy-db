@@ -168,7 +168,7 @@ func TestVulnSrc_save(t *testing.T) {
 							PatchedVersions: []string{
 								"4.8.6",
 								"4.4.46",
-								"< 5.8.6",
+								"5.8.6",
 							},
 							VulnerableVersions: []string{
 								"\u003e= 4.5.0, \u003c 4.8.6",
