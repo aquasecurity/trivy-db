@@ -125,7 +125,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 			}
 		}
 
-		a := types.Advisory{
+		a := Advisory{
 			VulnerabilityID:    vulnId,
 			PatchedVersions:    pvs,
 			VulnerableVersions: avs,
@@ -160,13 +160,23 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 	return nil
 }
 
-func (vs VulnSrc) Get(pkgName string) ([]types.Advisory, error) {
+func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
 	bucket := fmt.Sprintf(platformFormat, vs.ecosystem.String())
-	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
+	advisories, err := vs.dbc.ForEachAdvisory(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get ghsa %s vulnerabilities: %w", vs.ecosystem.String(), err)
+		return nil, xerrors.Errorf("failed to iterate GHSA: %w", err)
 	}
-	return advisories, nil
+
+	var results []Advisory
+	for vulnID, a := range advisories {
+		var advisory Advisory
+		if err = json.Unmarshal(a, &advisory); err != nil {
+			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
+		}
+		advisory.VulnerabilityID = vulnID
+		results = append(results, advisory)
+	}
+	return results, nil
 }
 
 func severityFromThreat(urgency string) types.Severity {

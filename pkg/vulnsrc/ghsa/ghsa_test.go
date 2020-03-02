@@ -163,7 +163,7 @@ func TestVulnSrc_save(t *testing.T) {
 						Source:          "GitHub Security Advisory Composer",
 						PkgName:         "contao/core-bundle",
 						VulnerabilityID: "GHSA-wjx8-cgrm-hh8p",
-						Advisory: types.Advisory{
+						Advisory: Advisory{
 							VulnerabilityID: "GHSA-wjx8-cgrm-hh8p",
 							PatchedVersions: []string{
 								"4.8.6",
@@ -265,7 +265,7 @@ func TestVulnSrc_save(t *testing.T) {
 						Source:          "GitHub Security Advisory Maven",
 						PkgName:         "org.springframework.boot:spring-boot",
 						VulnerabilityID: "CVE-2018-1196",
-						Advisory: types.Advisory{
+						Advisory: Advisory{
 							VulnerabilityID: "CVE-2018-1196",
 							PatchedVersions: []string{
 								"1.5.10",
@@ -360,7 +360,7 @@ func TestVulnSrc_save(t *testing.T) {
 						Source:          "GitHub Security Advisory Npm",
 						PkgName:         "atob",
 						VulnerabilityID: "CVE-2018-3745",
-						Advisory: types.Advisory{
+						Advisory: Advisory{
 							VulnerabilityID:    "CVE-2018-3745",
 							PatchedVersions:    []string{"2.1.0"},
 							VulnerableVersions: []string{"\u003c 2.1.0"},
@@ -451,7 +451,7 @@ func TestVulnSrc_save(t *testing.T) {
 						Source:          "GitHub Security Advisory Nuget",
 						PkgName:         "CLEditor",
 						VulnerabilityID: "CVE-2019-1010113",
-						Advisory: types.Advisory{
+						Advisory: Advisory{
 							VulnerabilityID:    "CVE-2019-1010113",
 							PatchedVersions:    []string{""},
 							VulnerableVersions: []string{"\u003c= 1.4.5"},
@@ -548,7 +548,7 @@ func TestVulnSrc_save(t *testing.T) {
 						Source:          "GitHub Security Advisory Pip",
 						PkgName:         "django",
 						VulnerabilityID: "CVE-2018-14574",
-						Advisory: types.Advisory{
+						Advisory: Advisory{
 							VulnerabilityID: "CVE-2018-14574",
 							PatchedVersions: []string{
 								"2.0.8",
@@ -647,7 +647,7 @@ func TestVulnSrc_save(t *testing.T) {
 						Source:          "GitHub Security Advisory Rubygems",
 						PkgName:         "activestorage",
 						VulnerabilityID: "CVE-2018-16477",
-						Advisory: types.Advisory{
+						Advisory: Advisory{
 							VulnerabilityID:    "CVE-2018-16477",
 							PatchedVersions:    []string{"5.2.1.1"},
 							VulnerableVersions: []string{"\u003e= 5.2.0, \u003c 5.2.1.1"},
@@ -738,7 +738,7 @@ func TestVulnSrc_save(t *testing.T) {
 						Source:          "GitHub Security Advisory Rubygems",
 						PkgName:         "activestorage",
 						VulnerabilityID: "CVE-2018-16477",
-						Advisory: types.Advisory{
+						Advisory: Advisory{
 							VulnerabilityID:    "CVE-2018-16477",
 							PatchedVersions:    []string{"5.2.1.1"},
 							VulnerableVersions: []string{"\u003e= 5.2.0, \u003c 5.2.1.1"},
@@ -808,7 +808,7 @@ func TestVulnSrc_save(t *testing.T) {
 						Source:          "GitHub Security Advisory Rubygems",
 						PkgName:         "activestorage",
 						VulnerabilityID: "CVE-2018-16477",
-						Advisory: types.Advisory{
+						Advisory: Advisory{
 							VulnerabilityID:    "CVE-2018-16477",
 							PatchedVersions:    []string{"5.2.1.1"},
 							VulnerableVersions: []string{"\u003e= 5.2.0, \u003c 5.2.1.1"},
@@ -876,7 +876,7 @@ func TestVulnSrc_save(t *testing.T) {
 							UpdatedAt:   "2019-07-03T21:02:05Z",
 							WithdrawnAt: "",
 						},
-						VersionAdvisories: []VersionAdvisory{
+						Versions: []Version{
 							{
 								FirstPatchedVersion: FirstPatchedVersion{
 									Identifier: "5.2.1.1",
@@ -894,7 +894,7 @@ func TestVulnSrc_save(t *testing.T) {
 						Source:          "GitHub Security Advisory Rubygems",
 						PkgName:         "activestorage",
 						VulnerabilityID: "CVE-2018-16477",
-						Advisory: types.Advisory{
+						Advisory: Advisory{
 							VulnerabilityID:    "CVE-2018-16477",
 							PatchedVersions:    []string{"5.2.1.1"},
 							VulnerableVersions: []string{"\u003e= 5.2.0, \u003c 5.2.1.1"},
@@ -963,12 +963,12 @@ func TestVulnSrc_Get(t *testing.T) {
 		pkgName string
 	}
 	tests := []struct {
-		name          string
-		args          args
-		ecosystem     Ecosystem
-		getAdvisories db.GetAdvisoriesExpectation
-		want          []types.Advisory
-		wantErr       string
+		name                       string
+		args                       args
+		ecosystem                  Ecosystem
+		forEachAdvisoryExpectation db.ForEachAdvisoryExpectation
+		want                       []Advisory
+		wantErr                    string
 	}{
 		{
 			name:      "happy path composer",
@@ -977,22 +977,18 @@ func TestVulnSrc_Get(t *testing.T) {
 				release: "GitHub Security Advisory Composer",
 				pkgName: "contao/core-bundle",
 			},
-			getAdvisories: db.GetAdvisoriesExpectation{
-				Args: db.GetAdvisoriesArgs{
+			forEachAdvisoryExpectation: db.ForEachAdvisoryExpectation{
+				Args: db.ForEachAdvisoryArgs{
 					Source:  "GitHub Security Advisory Composer",
 					PkgName: "contao/core-bundle",
 				},
-				Returns: db.GetAdvisoriesReturns{
-					Advisories: []types.Advisory{
-						{
-							VulnerabilityID:    "CVE-2019-19745",
-							VulnerableVersions: []string{"4.8.6", "4.4.46"},
-							PatchedVersions:    []string{"\u003e= 4.5.0, \u003c 4.8.6", "\u003e= 4.0.0, \u003c 4.4.46"},
-						},
+				Returns: db.ForEachAdvisoryReturns{
+					Value: map[string][]byte{
+						"CVE-2019-19745": []byte(`{"VulnerableVersions": ["4.8.6", "4.4.46"], "PatchedVersions": ["\u003e= 4.5.0, \u003c 4.8.6", "\u003e= 4.0.0, \u003c 4.4.46"]}`),
 					},
 				},
 			},
-			want: []types.Advisory{
+			want: []Advisory{
 				{
 					VulnerabilityID:    "CVE-2019-19745",
 					VulnerableVersions: []string{"4.8.6", "4.4.46"},
@@ -1007,22 +1003,18 @@ func TestVulnSrc_Get(t *testing.T) {
 				release: "GitHub Security Advisory Maven",
 				pkgName: "org.springframework.boot:spring-boot",
 			},
-			getAdvisories: db.GetAdvisoriesExpectation{
-				Args: db.GetAdvisoriesArgs{
+			forEachAdvisoryExpectation: db.ForEachAdvisoryExpectation{
+				Args: db.ForEachAdvisoryArgs{
 					Source:  "GitHub Security Advisory Maven",
 					PkgName: "org.springframework.boot:spring-boot",
 				},
-				Returns: db.GetAdvisoriesReturns{
-					Advisories: []types.Advisory{
-						{
-							VulnerabilityID:    "CVE-2018-1196",
-							VulnerableVersions: []string{"1.5.10"},
-							PatchedVersions:    []string{"\u003e= 1.5.0, \u003c 1.5.10"},
-						},
+				Returns: db.ForEachAdvisoryReturns{
+					Value: map[string][]byte{
+						"CVE-2018-1196": []byte(`{"VulnerableVersions": ["1.5.10"], "PatchedVersions": ["\u003e= 1.5.0, \u003c 1.5.10"]}`),
 					},
 				},
 			},
-			want: []types.Advisory{
+			want: []Advisory{
 				{
 					VulnerabilityID:    "CVE-2018-1196",
 					VulnerableVersions: []string{"1.5.10"},
@@ -1037,22 +1029,18 @@ func TestVulnSrc_Get(t *testing.T) {
 				release: "GitHub Security Advisory Npm",
 				pkgName: "atob",
 			},
-			getAdvisories: db.GetAdvisoriesExpectation{
-				Args: db.GetAdvisoriesArgs{
+			forEachAdvisoryExpectation: db.ForEachAdvisoryExpectation{
+				Args: db.ForEachAdvisoryArgs{
 					Source:  "GitHub Security Advisory Npm",
 					PkgName: "atob",
 				},
-				Returns: db.GetAdvisoriesReturns{
-					Advisories: []types.Advisory{
-						{
-							VulnerabilityID:    "GHSA-8w4h-3cm3-2pm2",
-							VulnerableVersions: []string{"2.1.0"},
-							PatchedVersions:    []string{"\u003c 2.1.0"},
-						},
+				Returns: db.ForEachAdvisoryReturns{
+					Value: map[string][]byte{
+						"GHSA-8w4h-3cm3-2pm2": []byte(`{"VulnerableVersions": ["2.1.0"], "PatchedVersions": ["\u003c 2.1.0"]}`),
 					},
 				},
 			},
-			want: []types.Advisory{
+			want: []Advisory{
 				{
 					VulnerabilityID:    "GHSA-8w4h-3cm3-2pm2",
 					VulnerableVersions: []string{"2.1.0"},
@@ -1067,22 +1055,18 @@ func TestVulnSrc_Get(t *testing.T) {
 				release: "GitHub Security Advisory Nuget",
 				pkgName: "CLEditor",
 			},
-			getAdvisories: db.GetAdvisoriesExpectation{
-				Args: db.GetAdvisoriesArgs{
+			forEachAdvisoryExpectation: db.ForEachAdvisoryExpectation{
+				Args: db.ForEachAdvisoryArgs{
 					Source:  "GitHub Security Advisory Nuget",
 					PkgName: "CLEditor",
 				},
-				Returns: db.GetAdvisoriesReturns{
-					Advisories: []types.Advisory{
-						{
-							VulnerabilityID:    "GHSA-hh56-x62g-gvhc",
-							VulnerableVersions: []string{""},
-							PatchedVersions:    []string{"\u003c= 1.4.5"},
-						},
+				Returns: db.ForEachAdvisoryReturns{
+					Value: map[string][]byte{
+						"GHSA-hh56-x62g-gvhc": []byte(`{"VulnerableVersions": [""], "PatchedVersions": ["\u003c= 1.4.5"]}`),
 					},
 				},
 			},
-			want: []types.Advisory{
+			want: []Advisory{
 				{
 					VulnerabilityID:    "GHSA-hh56-x62g-gvhc",
 					VulnerableVersions: []string{""},
@@ -1097,22 +1081,18 @@ func TestVulnSrc_Get(t *testing.T) {
 				release: "GitHub Security Advisory Pip",
 				pkgName: "django",
 			},
-			getAdvisories: db.GetAdvisoriesExpectation{
-				Args: db.GetAdvisoriesArgs{
+			forEachAdvisoryExpectation: db.ForEachAdvisoryExpectation{
+				Args: db.ForEachAdvisoryArgs{
 					Source:  "GitHub Security Advisory Pip",
 					PkgName: "django",
 				},
-				Returns: db.GetAdvisoriesReturns{
-					Advisories: []types.Advisory{
-						{
-							VulnerabilityID:    "GHSA-5hg3-6c2f-f3wr",
-							VulnerableVersions: []string{"2.0.8", "1.11.15"},
-							PatchedVersions:    []string{"\u003e= 2.0, \u003c 2.0.8", "\u003e= 1.11.0, \u003c 1.11.15"},
-						},
+				Returns: db.ForEachAdvisoryReturns{
+					Value: map[string][]byte{
+						"GHSA-5hg3-6c2f-f3wr": []byte(`{"VulnerableVersions": ["2.0.8", "1.11.15"], "PatchedVersions": ["\u003e= 2.0, \u003c 2.0.8", "\u003e= 1.11.0, \u003c 1.11.15"]}`),
 					},
 				},
 			},
-			want: []types.Advisory{
+			want: []Advisory{
 				{
 					VulnerabilityID:    "GHSA-5hg3-6c2f-f3wr",
 					VulnerableVersions: []string{"2.0.8", "1.11.15"},
@@ -1127,22 +1107,18 @@ func TestVulnSrc_Get(t *testing.T) {
 				release: "GitHub Security Advisory Rubygems",
 				pkgName: "activestorage",
 			},
-			getAdvisories: db.GetAdvisoriesExpectation{
-				Args: db.GetAdvisoriesArgs{
+			forEachAdvisoryExpectation: db.ForEachAdvisoryExpectation{
+				Args: db.ForEachAdvisoryArgs{
 					Source:  "GitHub Security Advisory Rubygems",
 					PkgName: "activestorage",
 				},
-				Returns: db.GetAdvisoriesReturns{
-					Advisories: []types.Advisory{
-						{
-							VulnerabilityID:    "GHSA-7rr7-rcjw-56vj",
-							VulnerableVersions: []string{"5.2.1.1"},
-							PatchedVersions:    []string{"\u003e= 5.2.0, \u003c 5.2.1.1"},
-						},
+				Returns: db.ForEachAdvisoryReturns{
+					Value: map[string][]byte{
+						"GHSA-7rr7-rcjw-56vj": []byte(`{"VulnerableVersions": ["5.2.1.1"], "PatchedVersions": ["\u003e= 5.2.0, \u003c 5.2.1.1"]}`),
 					},
 				},
 			},
-			want: []types.Advisory{
+			want: []Advisory{
 				{
 					VulnerabilityID:    "GHSA-7rr7-rcjw-56vj",
 					VulnerableVersions: []string{"5.2.1.1"},
@@ -1157,23 +1133,22 @@ func TestVulnSrc_Get(t *testing.T) {
 				release: "contao/core-bundle",
 				pkgName: "4.8.6",
 			},
-			getAdvisories: db.GetAdvisoriesExpectation{
-				Args: db.GetAdvisoriesArgs{
+			forEachAdvisoryExpectation: db.ForEachAdvisoryExpectation{
+				Args: db.ForEachAdvisoryArgs{
 					Source:  "GitHub Security Advisory Composer",
 					PkgName: "4.8.6",
 				},
-				Returns: db.GetAdvisoriesReturns{
-					Advisories: nil,
-					Err:        errors.New("error"),
+				Returns: db.ForEachAdvisoryReturns{
+					Err: errors.New("error"),
 				},
 			},
-			wantErr: "failed to get ghsa Composer vulnerabilities",
+			wantErr: "failed to iterate GHSA",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyGetAdvisoriesExpectation(tt.getAdvisories)
+			mockDBConfig.ApplyForEachAdvisoryExpectation(tt.forEachAdvisoryExpectation)
 
 			vs := VulnSrc{
 				dbc:       mockDBConfig,
