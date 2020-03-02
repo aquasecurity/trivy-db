@@ -164,7 +164,6 @@ func TestVulnSrc_save(t *testing.T) {
 						PkgName:         "contao/core-bundle",
 						VulnerabilityID: "GHSA-wjx8-cgrm-hh8p",
 						Advisory: Advisory{
-							VulnerabilityID: "GHSA-wjx8-cgrm-hh8p",
 							PatchedVersions: []string{
 								"4.8.6",
 								"4.4.46",
@@ -266,7 +265,6 @@ func TestVulnSrc_save(t *testing.T) {
 						PkgName:         "org.springframework.boot:spring-boot",
 						VulnerabilityID: "CVE-2018-1196",
 						Advisory: Advisory{
-							VulnerabilityID: "CVE-2018-1196",
 							PatchedVersions: []string{
 								"1.5.10",
 							},
@@ -361,7 +359,6 @@ func TestVulnSrc_save(t *testing.T) {
 						PkgName:         "atob",
 						VulnerabilityID: "CVE-2018-3745",
 						Advisory: Advisory{
-							VulnerabilityID:    "CVE-2018-3745",
 							PatchedVersions:    []string{"2.1.0"},
 							VulnerableVersions: []string{"\u003c 2.1.0"},
 						},
@@ -452,7 +449,6 @@ func TestVulnSrc_save(t *testing.T) {
 						PkgName:         "CLEditor",
 						VulnerabilityID: "CVE-2019-1010113",
 						Advisory: Advisory{
-							VulnerabilityID:    "CVE-2019-1010113",
 							PatchedVersions:    []string{""},
 							VulnerableVersions: []string{"\u003c= 1.4.5"},
 						},
@@ -549,7 +545,6 @@ func TestVulnSrc_save(t *testing.T) {
 						PkgName:         "django",
 						VulnerabilityID: "CVE-2018-14574",
 						Advisory: Advisory{
-							VulnerabilityID: "CVE-2018-14574",
 							PatchedVersions: []string{
 								"2.0.8",
 								"1.11.15",
@@ -648,7 +643,6 @@ func TestVulnSrc_save(t *testing.T) {
 						PkgName:         "activestorage",
 						VulnerabilityID: "CVE-2018-16477",
 						Advisory: Advisory{
-							VulnerabilityID:    "CVE-2018-16477",
 							PatchedVersions:    []string{"5.2.1.1"},
 							VulnerableVersions: []string{"\u003e= 5.2.0, \u003c 5.2.1.1"},
 						},
@@ -739,7 +733,6 @@ func TestVulnSrc_save(t *testing.T) {
 						PkgName:         "activestorage",
 						VulnerabilityID: "CVE-2018-16477",
 						Advisory: Advisory{
-							VulnerabilityID:    "CVE-2018-16477",
 							PatchedVersions:    []string{"5.2.1.1"},
 							VulnerableVersions: []string{"\u003e= 5.2.0, \u003c 5.2.1.1"},
 						},
@@ -809,7 +802,6 @@ func TestVulnSrc_save(t *testing.T) {
 						PkgName:         "activestorage",
 						VulnerabilityID: "CVE-2018-16477",
 						Advisory: Advisory{
-							VulnerabilityID:    "CVE-2018-16477",
 							PatchedVersions:    []string{"5.2.1.1"},
 							VulnerableVersions: []string{"\u003e= 5.2.0, \u003c 5.2.1.1"},
 						},
@@ -895,7 +887,6 @@ func TestVulnSrc_save(t *testing.T) {
 						PkgName:         "activestorage",
 						VulnerabilityID: "CVE-2018-16477",
 						Advisory: Advisory{
-							VulnerabilityID:    "CVE-2018-16477",
 							PatchedVersions:    []string{"5.2.1.1"},
 							VulnerableVersions: []string{"\u003e= 5.2.0, \u003c 5.2.1.1"},
 						},
