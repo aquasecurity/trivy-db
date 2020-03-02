@@ -133,7 +133,7 @@ func TestVulnSrc_save(t *testing.T) {
 							UpdatedAt:   "2019-12-17T22:53:10Z",
 							WithdrawnAt: "",
 						},
-						VersionAdvisories: []VersionAdvisory{
+						Versions: []Version{
 							{
 								FirstPatchedVersion: FirstPatchedVersion{
 									Identifier: "4.8.6",
@@ -247,7 +247,7 @@ func TestVulnSrc_save(t *testing.T) {
 							UpdatedAt:   "2019-07-03T21:02:04Z",
 							WithdrawnAt: "",
 						},
-						VersionAdvisories: []VersionAdvisory{
+						Versions: []Version{
 							{
 								FirstPatchedVersion: FirstPatchedVersion{
 									Identifier: "1.5.10",
@@ -342,7 +342,7 @@ func TestVulnSrc_save(t *testing.T) {
 							UpdatedAt:   "2019-07-03T21:02:03Z",
 							WithdrawnAt: "",
 						},
-						VersionAdvisories: []VersionAdvisory{
+						Versions: []Version{
 							{
 								FirstPatchedVersion: FirstPatchedVersion{
 									Identifier: "2.1.0",
@@ -433,7 +433,7 @@ func TestVulnSrc_save(t *testing.T) {
 							UpdatedAt:   "2019-10-24T01:33:56Z",
 							WithdrawnAt: "",
 						},
-						VersionAdvisories: []VersionAdvisory{
+						Versions: []Version{
 							{
 								FirstPatchedVersion: FirstPatchedVersion{
 									Identifier: "",
@@ -524,7 +524,7 @@ func TestVulnSrc_save(t *testing.T) {
 							UpdatedAt:   "2019-07-03T21:02:03Z",
 							WithdrawnAt: "",
 						},
-						VersionAdvisories: []VersionAdvisory{
+						Versions: []Version{
 							{
 								FirstPatchedVersion: FirstPatchedVersion{
 									Identifier: "2.0.8",
@@ -629,7 +629,7 @@ func TestVulnSrc_save(t *testing.T) {
 							UpdatedAt:   "2019-07-03T21:02:05Z",
 							WithdrawnAt: "",
 						},
-						VersionAdvisories: []VersionAdvisory{
+						Versions: []Version{
 							{
 								FirstPatchedVersion: FirstPatchedVersion{
 									Identifier: "5.2.1.1",
@@ -720,7 +720,7 @@ func TestVulnSrc_save(t *testing.T) {
 							UpdatedAt:   "2019-07-03T21:02:05Z",
 							WithdrawnAt: "",
 						},
-						VersionAdvisories: []VersionAdvisory{
+						Versions: []Version{
 							{
 								FirstPatchedVersion: FirstPatchedVersion{
 									Identifier: "5.2.1.1",
@@ -790,7 +790,7 @@ func TestVulnSrc_save(t *testing.T) {
 							UpdatedAt:   "2019-07-03T21:02:05Z",
 							WithdrawnAt: "",
 						},
-						VersionAdvisories: []VersionAdvisory{
+						Versions: []Version{
 							{
 								FirstPatchedVersion: FirstPatchedVersion{
 									Identifier: "5.2.1.1",

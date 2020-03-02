@@ -103,7 +103,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 	for _, ghsa := range ghsas {
 		platformName := fmt.Sprintf(platformFormat, vs.ecosystem)
 		var pvs, avs []string
-		for _, va := range ghsa.VersionAdvisories {
+		for _, va := range ghsa.Versions {
 			// e.g. GHSA-r4x3-g983-9g48 PatchVersion has "<" operator
 			if strings.HasPrefix(va.FirstPatchedVersion.Identifier, "<") {
 				va.VulnerableVersionRange = fmt.Sprintf(

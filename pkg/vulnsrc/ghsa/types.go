@@ -39,15 +39,15 @@ type FirstPatchedVersion struct {
 	Identifier string
 }
 
-type VersionAdvisory struct {
+type Version struct {
 	FirstPatchedVersion    FirstPatchedVersion
 	VulnerableVersionRange string
 }
 
 type GithubSecurityAdvisory struct {
-	Severity          string
-	UpdatedAt         string
-	Package           Package
-	Advisory          GhsaAdvisory
-	VersionAdvisories []VersionAdvisory
+	Severity  string
+	UpdatedAt string
+	Package   Package
+	Advisory  GhsaAdvisory
+	Versions  []Version
 }
