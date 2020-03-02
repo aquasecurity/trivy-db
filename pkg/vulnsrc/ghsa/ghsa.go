@@ -71,24 +71,24 @@ func (vs VulnSrc) Update(dir string) error {
 	err := utils.FileWalk(filepath.Join(rootDir, strings.ToLower(vs.ecosystem.String())), func(r io.Reader, path string) error {
 		var ghsa GithubSecurityAdvisory
 		if err := json.NewDecoder(r).Decode(&ghsa); err != nil {
-			return xerrors.Errorf("failed to decode Ghsa Advisory: %w", err)
+			return xerrors.Errorf("failed to decode GHSA: %w", err)
 		}
 		ghsas = append(ghsas, ghsa)
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in Ghsa walk: %w", err)
+		return xerrors.Errorf("error in GHSA walk: %w", err)
 	}
 
 	if err = vs.save(ghsas); err != nil {
-		return xerrors.Errorf("error in Ghsa save: %w", err)
+		return xerrors.Errorf("error in GHSA save: %w", err)
 	}
 
 	return nil
 }
 
 func (vs VulnSrc) save(ghsas []GithubSecurityAdvisory) error {
-	log.Println("Saving Ghsa DB")
+	log.Println("Saving GHSA DB")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, ghsas)
 	})
@@ -132,7 +132,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 		}
 		err := vs.dbc.PutAdvisory(tx, platformName, ghsa.Package.Name, vulnId, a)
 		if err != nil {
-			return xerrors.Errorf("failed to save ghsa: %w", err)
+			return xerrors.Errorf("failed to save GHSA: %w", err)
 		}
 
 		var references []string
@@ -149,11 +149,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 		}
 
 		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnId, fmt.Sprintf(datasourceFormat, strings.ToLower(vs.ecosystem.String())), vuln); err != nil {
-			return xerrors.Errorf("failed to save ghsa vulnerability detail: %w", err)
+			return xerrors.Errorf("failed to save GHSA vulnerability detail: %w", err)
 		}
 
 		if err := vs.dbc.PutSeverity(tx, vulnId, types.SeverityUnknown); err != nil {
-			return xerrors.Errorf("failed to save ghsa vulnerability severity: %w", err)
+			return xerrors.Errorf("failed to save GHSA vulnerability severity: %w", err)
 		}
 	}
 

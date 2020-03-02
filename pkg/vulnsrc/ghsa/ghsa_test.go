@@ -58,7 +58,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 			},
-			wantErr: "error in Ghsa save",
+			wantErr: "error in GHSA save",
 		},
 	}
 	for _, tt := range tests {
@@ -749,7 +749,7 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			wantErr: "failed to save ghsa",
+			wantErr: "failed to save GHSA",
 		},
 		{
 			name:      "PutVulnerabilityDetail returns an error",
@@ -835,7 +835,7 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			wantErr: "failed to save ghsa vulnerability detail",
+			wantErr: "failed to save GHSA vulnerability detail",
 		},
 		{
 			name:      "PutVulnerabilitySeveiry returns an error",
@@ -930,7 +930,7 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			wantErr: "failed to save ghsa vulnerability severity",
+			wantErr: "failed to save GHSA vulnerability severity",
 		},
 	}
 	for _, tt := range tests {
