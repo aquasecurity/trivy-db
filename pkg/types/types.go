@@ -85,10 +85,11 @@ type Advisory struct {
 }
 
 type Vulnerability struct {
-	Title       string   `json:",omitempty"`
-	Description string   `json:",omitempty"`
-	Severity    string   `json:",omitempty"`
-	References  []string `json:",omitempty"`
+	Title          string         `json:",omitempty"`
+	Description    string         `json:",omitempty"`
+	Severity       string         `json:",omitempty"`
+	VendorSeverity VendorSeverity `json:",omitempty"`
+	References     []string       `json:",omitempty"`
 }
 
 type VulnSrc interface {
