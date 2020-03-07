@@ -127,6 +127,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 			Title:       cvrf.Title,
 			Description: getDetail(cvrf.Notes),
 			Severity:    severity,
+			VendorSeverity: types.VendorSeverity{
+				vulnerability.SuseCVRF: severity,
+			},
 		}
 
 		if err := vs.dbc.PutVulnerabilityDetail(tx, cvrf.Tracking.ID, vulnerability.SuseCVRF, vuln); err != nil {
