@@ -77,48 +77,60 @@ func (vs VulnSrc) Update(dir string) error {
 func (vs VulnSrc) save(cves []UbuntuCVE) error {
 	log.Println("Saving Ubuntu DB")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		for _, cve := range cves {
-			for packageName, patch := range cve.Patches {
-				pkgName := string(packageName)
-				for release, status := range patch {
-					if !utils.StringInSlice(status.Status, targetStatus) {
-						continue
-					}
-					osVersion, ok := UbuntuReleasesMapping[string(release)]
-					if !ok {
-						continue
-					}
-					platformName := fmt.Sprintf(platformFormat, osVersion)
-					advisory := types.Advisory{}
-					if status.Status == "released" {
-						advisory.FixedVersion = status.Note
-					}
-					if err := vs.dbc.PutAdvisory(tx, platformName, pkgName, cve.Candidate, advisory); err != nil {
-						return xerrors.Errorf("failed to save Ubuntu advisory: %w", err)
-					}
-
-					vuln := types.VulnerabilityDetail{
-						Severity:    severityFromPriority(cve.Priority),
-						References:  cve.References,
-						Description: cve.Description,
-						// TODO
-						Title: "",
-					}
-					if err := vs.dbc.PutVulnerabilityDetail(tx, cve.Candidate, vulnerability.Ubuntu, vuln); err != nil {
-						return xerrors.Errorf("failed to save Ubuntu vulnerability: %w", err)
-					}
-
-					// for light DB
-					if err := vs.dbc.PutSeverity(tx, cve.Candidate, types.SeverityUnknown); err != nil {
-						return xerrors.Errorf("failed to save alpine vulnerability severity: %w", err)
-					}
-				}
-			}
+		err := vs.commit(tx, cves)
+		if err != nil {
+			return err
 		}
 		return nil
 	})
 	if err != nil {
 		return xerrors.Errorf("error in batch update: %w", err)
+	}
+	return nil
+}
+
+func (vs VulnSrc) commit(tx *bolt.Tx, cves []UbuntuCVE) error {
+	for _, cve := range cves {
+		for packageName, patch := range cve.Patches {
+			pkgName := string(packageName)
+			for release, status := range patch {
+				if !utils.StringInSlice(status.Status, targetStatus) {
+					continue
+				}
+				osVersion, ok := UbuntuReleasesMapping[string(release)]
+				if !ok {
+					continue
+				}
+				platformName := fmt.Sprintf(platformFormat, osVersion)
+				advisory := types.Advisory{}
+				if status.Status == "released" {
+					advisory.FixedVersion = status.Note
+				}
+				if err := vs.dbc.PutAdvisory(tx, platformName, pkgName, cve.Candidate, advisory); err != nil {
+					return xerrors.Errorf("failed to save Ubuntu advisory: %w", err)
+				}
+
+				severity := severityFromPriority(cve.Priority)
+				vuln := types.VulnerabilityDetail{
+					Severity:    severity,
+					References:  cve.References,
+					Description: cve.Description,
+					// TODO
+					Title: "",
+					VendorSeverity: types.VendorSeverity{
+						vulnerability.Ubuntu: severity,
+					},
+				}
+				if err := vs.dbc.PutVulnerabilityDetail(tx, cve.Candidate, vulnerability.Ubuntu, vuln); err != nil {
+					return xerrors.Errorf("failed to save Ubuntu vulnerability: %w", err)
+				}
+
+				// for light DB
+				if err := vs.dbc.PutSeverity(tx, cve.Candidate, types.SeverityUnknown); err != nil {
+					return xerrors.Errorf("failed to save alpine vulnerability severity: %w", err)
+				}
+			}
+		}
 	}
 	return nil
 }
