@@ -85,7 +85,7 @@ func NewUpdater(cacheDir string, light bool, interval time.Duration) Updater {
 	var optimizer Optimizer
 	dbConfig := db.Config{}
 	dbType := db.TypeFull
-	optimizer = fullOptimizer{dbc: dbConfig}
+	optimizer = fullOptimizer{dbOp: dbConfig, dbConfig: db.Config{}}
 
 	if light {
 		dbType = db.TypeLight
@@ -136,38 +136,56 @@ type Optimizer interface {
 }
 
 type fullOptimizer struct {
-	dbc db.Operation
+	dbConfig db.VulnOperation
+	dbOp     db.Operation
 }
 
 func (o fullOptimizer) Optimize() error {
-	err := o.dbc.ForEachSeverity(func(tx *bolt.Tx, cveID string, _ types.Severity) error {
-		severity, vs, title, description, references := vulnerability.GetDetail(cveID)
-		vuln := types.Vulnerability{
-			Title:          title,
-			Description:    description,
-			Severity:       severity.String(),
-			VendorSeverity: vs,
-			References:     references,
-		}
-		if err := o.dbc.PutVulnerability(tx, cveID, vuln); err != nil {
-			return xerrors.Errorf("failed to put vulnerability: %w", err)
-		}
-		return nil
+	err := o.dbOp.ForEachSeverity(func(tx *bolt.Tx, cveID string, _ types.Severity) error {
+		return o.fullOptimize(cveID, tx)
 	})
 	if err != nil {
 		return xerrors.Errorf("failed to iterate severity: %w", err)
 	}
 
-	if err := o.dbc.DeleteSeverityBucket(); err != nil {
+	if err := o.dbOp.DeleteSeverityBucket(); err != nil {
 		return xerrors.Errorf("failed to delete severity bucket: %w", err)
 	}
 
-	if err := o.dbc.DeleteVulnerabilityDetailBucket(); err != nil {
+	if err := o.dbOp.DeleteVulnerabilityDetailBucket(); err != nil {
 		return xerrors.Errorf("failed to delete vulnerability detail bucket: %w", err)
 	}
 
 	return nil
 
+}
+
+// TODO: Until we can dependency inject, we need to monkey patch sadly
+var (
+	getDetailFunc = vulnerability.GetDetail
+)
+
+func (o fullOptimizer) fullOptimize(cveID string, tx *bolt.Tx) error {
+	severity, title, description, references := getDetailFunc(cveID)
+	vuln := types.Vulnerability{
+		Title:       title,
+		Description: description,
+		Severity:    severity.String(),
+		References:  references,
+	}
+
+	// assign vendor severities
+	vs := make(types.VendorSeverity)
+	vd, _ := o.dbConfig.GetVulnerabilityDetail(cveID)
+	for vendor, detail := range vd {
+		vs[vendor] = detail.Severity
+	}
+	vuln.VendorSeverity = vs
+
+	if err := o.dbOp.PutVulnerability(tx, cveID, vuln); err != nil {
+		return xerrors.Errorf("failed to put vulnerability: %w", err)
+	}
+	return nil
 }
 
 type lightOptimizer struct {

@@ -59,6 +59,10 @@ type Metadata struct {
 type Config struct {
 }
 
+type VulnOperation interface {
+	GetVulnerabilityDetail(cveID string) (map[string]types.VulnerabilityDetail, error)
+}
+
 func Init(cacheDir string) (err error) {
 	dbPath := Path(cacheDir)
 	dbDir = filepath.Dir(dbPath)

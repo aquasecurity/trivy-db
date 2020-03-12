@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/assert"
 	"k8s.io/utils/clock"
 	ct "k8s.io/utils/clock/testing"
@@ -214,14 +216,14 @@ func TestUpdater_Update(t *testing.T) {
 			mockVulnSrc := new(types.MockVulnSrc)
 			mockVulnSrc.ApplyUpdateExpectations(tt.update)
 
-			mockDBConfig := new(MockOperation)
-			mockDBConfig.ApplySetMetadataExpectations(tt.setMetadata)
+			mockDBOperation := new(MockOperation)
+			mockDBOperation.ApplySetMetadataExpectations(tt.setMetadata)
 
 			mockOptimizer := new(MockOptimizer)
 			mockOptimizer.ApplyOptimizeExpectations(tt.optimize)
 
 			u := Updater{
-				dbc: mockDBConfig,
+				dbc: mockDBOperation,
 				updateMap: map[string]VulnSrc{
 					"test": mockVulnSrc,
 				},
@@ -240,7 +242,7 @@ func TestUpdater_Update(t *testing.T) {
 			}
 
 			mockVulnSrc.AssertExpectations(t)
-			mockDBConfig.AssertExpectations(t)
+			mockDBOperation.AssertExpectations(t)
 			mockOptimizer.AssertExpectations(t)
 		})
 	}
@@ -300,13 +302,13 @@ func Test_fullOptimizer_Optimize(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyForEachSeverityExpectation(tt.forEachSeverity)
-			mockDBConfig.ApplyDeleteSeverityBucketExpectation(tt.deleteSeverityBucket)
-			mockDBConfig.ApplyDeleteVulnerabilityDetailBucketExpectation(tt.deleteVulnerabilityDetailBucket)
+			mockDBOperation := new(db.MockOperation)
+			mockDBOperation.ApplyForEachSeverityExpectation(tt.forEachSeverity)
+			mockDBOperation.ApplyDeleteSeverityBucketExpectation(tt.deleteSeverityBucket)
+			mockDBOperation.ApplyDeleteVulnerabilityDetailBucketExpectation(tt.deleteVulnerabilityDetailBucket)
 
 			o := fullOptimizer{
-				dbc: mockDBConfig,
+				dbOp: mockDBOperation,
 			}
 			err := o.Optimize()
 			switch {
@@ -382,4 +384,75 @@ func Test_lightOptimizer_Optimize(t *testing.T) {
 			}
 		})
 	}
+}
+
+type mockVulnOperation struct {
+	getVulnerabilityDetail func(cveID string) (map[string]types.VulnerabilityDetail, error)
+}
+
+func (m mockVulnOperation) GetVulnerabilityDetail(cveID string) (map[string]types.VulnerabilityDetail, error) {
+	if m.getVulnerabilityDetail != nil {
+		return m.getVulnerabilityDetail(cveID)
+	}
+	return map[string]types.VulnerabilityDetail{}, nil
+}
+
+func Test_fullOptimize(t *testing.T) {
+	oldgetDetailFunc := getDetailFunc
+	defer func() {
+		getDetailFunc = oldgetDetailFunc
+	}()
+
+	getDetailFunc = func(vulnID string) (severity types.Severity, s string, s2 string, strings []string) {
+		return types.SeverityCritical, "test title", "test description", []string{"test reference"}
+	}
+
+	mockDBOperation := new(db.MockOperation)
+	o := fullOptimizer{
+		dbConfig: mockVulnOperation{
+			getVulnerabilityDetail: func(cveID string) (m map[string]types.VulnerabilityDetail, err error) {
+				return map[string]types.VulnerabilityDetail{
+					"redhat": {
+						ID:          "CVE-2020-1234",
+						CvssScore:   4.3,
+						CvssScoreV3: 5.6,
+						Severity:    types.SeverityHigh,
+						SeverityV3:  types.SeverityCritical,
+						Title:       "test vulnerability",
+						Description: "a test vulnerability where vendor rates it lower than NVD",
+					},
+					"ubuntu": {
+						ID:          "CVE-2020-1234",
+						CvssScore:   1.2,
+						CvssScoreV3: 3.4,
+						Severity:    types.SeverityLow,
+						SeverityV3:  types.SeverityMedium,
+						Title:       "test vulnerability",
+						Description: "a test vulnerability where vendor rates it lower than NVD",
+					},
+				}, nil
+			},
+		},
+		dbOp: mockDBOperation,
+	}
+	mockDBOperation.ApplyPutVulnerabilityExpectation(db.PutVulnerabilityExpectation{
+		Args: db.PutVulnerabilityArgs{
+			TxAnything:      true,
+			VulnerabilityID: "CVE-2020-123",
+			Vulnerability: types.Vulnerability{
+				Title:       "test title",
+				Description: "test description",
+				Severity:    types.SeverityCritical.String(),
+				VendorSeverity: types.VendorSeverity{
+					"redhat": types.SeverityHigh,
+					"ubuntu": types.SeverityLow,
+				},
+				References: []string{"test reference"},
+			},
+		},
+		Returns: db.PutVulnerabilityReturns{},
+	})
+
+	err := o.fullOptimize("CVE-2020-123", nil)
+	require.NoError(t, err)
 }
