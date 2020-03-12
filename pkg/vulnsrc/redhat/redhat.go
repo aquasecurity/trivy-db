@@ -148,9 +148,6 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []RedhatCVE) error {
 			CvssScore:   cvssScore,
 			CvssScoreV3: cvss3Score,
 			Severity:    severity,
-			VendorSeverity: types.VendorSeverity{
-				vulnerability.RedHat: severity,
-			},
 			References:  cve.References,
 			Title:       strings.TrimSpace(title),
 			Description: strings.TrimSpace(strings.Join(cve.Details, "")),

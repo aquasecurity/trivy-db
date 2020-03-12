@@ -49,10 +49,7 @@ func TestVulnSrc_commit(t *testing.T) {
 						VulnerabilityID: "CVE-2020-123",
 						Source:          vulnerability.Debian,
 						Vulnerability: types.VulnerabilityDetail{
-							Severity: types.SeverityHigh,
-							VendorSeverity: types.VendorSeverity{
-								vulnerability.Debian: types.SeverityHigh,
-							},
+							Severity:    types.SeverityHigh,
 							Description: "test description",
 						},
 					},

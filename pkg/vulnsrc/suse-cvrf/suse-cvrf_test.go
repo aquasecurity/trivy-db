@@ -6,8 +6,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
-
 	bolt "github.com/etcd-io/bbolt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -184,9 +182,6 @@ func TestVulnSrc_Commit(t *testing.T) {
 								"http://lists.suse.com/pipermail/sle-security-updates/2019-July/005660.html",
 							},
 							Severity: types.SeverityHigh,
-							VendorSeverity: types.VendorSeverity{
-								vulnerability.SuseCVRF: types.SeverityHigh,
-							},
 						},
 					},
 					Returns: db.PutVulnerabilityDetailReturns{},
@@ -315,9 +310,6 @@ func TestVulnSrc_Commit(t *testing.T) {
 								"https://www.suse.com/support/security/rating/",
 							},
 							Severity: types.SeverityHigh,
-							VendorSeverity: types.VendorSeverity{
-								vulnerability.SuseCVRF: types.SeverityHigh,
-							},
 						},
 					},
 					Returns: db.PutVulnerabilityDetailReturns{},
@@ -427,9 +419,6 @@ func TestVulnSrc_Commit(t *testing.T) {
 								"https://www.suse.com/support/security/rating/",
 							},
 							Severity: types.SeverityMedium,
-							VendorSeverity: types.VendorSeverity{
-								vulnerability.SuseCVRF: types.SeverityMedium,
-							},
 						},
 					},
 					Returns: db.PutVulnerabilityDetailReturns{},

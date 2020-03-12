@@ -341,9 +341,6 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 							CvssScoreV3: 0,
 							Severity:    types.SeverityHigh,
 							References:  []string{"http://foo.bar/baz"},
-							VendorSeverity: types.VendorSeverity{
-								vulnerability.Amazon: types.SeverityHigh,
-							},
 						},
 					},
 				},
@@ -450,9 +447,6 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 							CvssScoreV3: 0,
 							Severity:    types.SeverityHigh,
 							References:  []string{"http://foo.bar/baz"},
-							VendorSeverity: types.VendorSeverity{
-								vulnerability.Amazon: types.SeverityHigh,
-							},
 						},
 					},
 					Returns: db.PutVulnerabilityDetailReturns{

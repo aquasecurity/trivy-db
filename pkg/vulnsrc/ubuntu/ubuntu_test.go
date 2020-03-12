@@ -55,10 +55,7 @@ func TestVulnSrc_commit(t *testing.T) {
 						VulnerabilityID: "CVE-2020-123",
 						Source:          vulnerability.Ubuntu,
 						Vulnerability: types.VulnerabilityDetail{
-							Severity: types.SeverityCritical,
-							VendorSeverity: types.VendorSeverity{
-								vulnerability.Ubuntu: types.SeverityCritical,
-							},
+							Severity:    types.SeverityCritical,
 							Description: "test description",
 							References:  []string{"test reference 123"},
 						},

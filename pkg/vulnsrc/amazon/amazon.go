@@ -120,9 +120,6 @@ func (vs VulnSrc) commitFunc(tx *bolt.Tx) error {
 					References:  references,
 					Description: alas.Description,
 					Title:       "",
-					VendorSeverity: types.VendorSeverity{
-						vulnerability.Amazon: severity,
-					},
 				}
 				if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Amazon, vuln); err != nil {
 					return xerrors.Errorf("failed to save amazon vulnerability detail: %w", err)

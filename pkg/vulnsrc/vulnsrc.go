@@ -177,7 +177,7 @@ type lightOptimizer struct {
 func (o lightOptimizer) Optimize() error {
 	err := o.dbc.ForEachSeverity(func(tx *bolt.Tx, cveID string, _ types.Severity) error {
 		// get correct severity
-		sev, _, _, _, _ := vulnerability.GetDetail(cveID)
+		sev, _, _, _ := vulnerability.GetDetail(cveID)
 
 		// overwrite unknown severity with correct severity
 		if err := o.dbc.PutSeverity(tx, cveID, sev); err != nil {

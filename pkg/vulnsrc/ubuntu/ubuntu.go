@@ -117,9 +117,6 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []UbuntuCVE) error {
 					Description: cve.Description,
 					// TODO
 					Title: "",
-					VendorSeverity: types.VendorSeverity{
-						vulnerability.Ubuntu: severity,
-					},
 				}
 				if err := vs.dbc.PutVulnerabilityDetail(tx, cve.Candidate, vulnerability.Ubuntu, vuln); err != nil {
 					return xerrors.Errorf("failed to save Ubuntu vulnerability: %w", err)
