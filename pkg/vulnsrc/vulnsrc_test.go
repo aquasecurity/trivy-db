@@ -78,6 +78,9 @@ func TestNewUpdater(t *testing.T) {
 }
 
 func TestUpdater_Update(t *testing.T) {
+	fixedNextUpdateTime := time.Date(2019, 1, 1, 12, 0, 0, 0, time.UTC)
+	fixedUpdatedAtTime := time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC)
+
 	type fields struct {
 		UpdateMap      map[string]VulnSrc
 		CacheDir       string
@@ -122,8 +125,8 @@ func TestUpdater_Update(t *testing.T) {
 						Metadata: db.Metadata{
 							Version:    1,
 							Type:       db.TypeFull,
-							NextUpdate: time.Date(2019, 1, 1, 12, 0, 0, 0, time.UTC),
-							UpdatedAt:  time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC),
+							NextUpdate: &fixedNextUpdateTime,
+							UpdatedAt:  &fixedUpdatedAtTime,
 						},
 					},
 					Returns: SetMetadataReturns{},
@@ -194,8 +197,8 @@ func TestUpdater_Update(t *testing.T) {
 						Metadata: db.Metadata{
 							Version:    1,
 							Type:       db.TypeFull,
-							NextUpdate: time.Date(2019, 1, 1, 12, 0, 0, 0, time.UTC),
-							UpdatedAt:  time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC),
+							NextUpdate: &fixedNextUpdateTime,
+							UpdatedAt:  &fixedUpdatedAtTime,
 						},
 					},
 					Returns: SetMetadataReturns{

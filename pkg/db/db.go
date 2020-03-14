@@ -49,10 +49,10 @@ type Operation interface {
 }
 
 type Metadata struct {
-	Version    int
-	Type       Type
-	NextUpdate time.Time
-	UpdatedAt  time.Time
+	Version    int        `json:",omitempty"`
+	Type       Type       `json:",omitempty"`
+	NextUpdate *time.Time `json:",omitempty"`
+	UpdatedAt  *time.Time `json:",omitempty"`
 }
 
 type Config struct {
@@ -95,7 +95,7 @@ func (dbc Config) GetVersion() int {
 func (dbc Config) GetMetadata() (Metadata, error) {
 	var metadata Metadata
 	value, err := Config{}.get("trivy", "metadata", "data")
-	if err != nil {
+	if err != nil { // FIXME: get only returns nil, will this ever be true?
 		return Metadata{}, err
 	}
 	if err = json.Unmarshal(value, &metadata); err != nil {
