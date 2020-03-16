@@ -403,8 +403,11 @@ func Test_fullOptimize(t *testing.T) {
 		getDetailFunc = oldgetDetailFunc
 	}()
 
-	getDetailFunc = func(vulnID string) (severity types.Severity, s string, s2 string, strings []string) {
-		return types.SeverityCritical, "test title", "test description", []string{"test reference"}
+	getDetailFunc = func(vulnID string) (severity types.Severity, vendorSeverity types.VendorSeverity, s string, s2 string, strings []string) {
+		return types.SeverityCritical, types.VendorSeverity{
+			"redhat": types.SeverityHigh,
+			"ubuntu": types.SeverityLow,
+		}, "test title", "test description", []string{"test reference"}
 	}
 
 	mockDBOperation := new(db.MockOperation)

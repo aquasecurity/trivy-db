@@ -166,21 +166,14 @@ var (
 )
 
 func (o fullOptimizer) fullOptimize(cveID string, tx *bolt.Tx) error {
-	severity, title, description, references := getDetailFunc(cveID)
+	severity, vs, title, description, references := getDetailFunc(cveID)
 	vuln := types.Vulnerability{
-		Title:       title,
-		Description: description,
-		Severity:    severity.String(),
-		References:  references,
+		Title:          title,
+		Description:    description,
+		Severity:       severity.String(),
+		References:     references,
+		VendorSeverity: vs,
 	}
-
-	// assign vendor severities
-	vs := make(types.VendorSeverity)
-	vd, _ := o.dbConfig.GetVulnerabilityDetail(cveID)
-	for vendor, detail := range vd {
-		vs[vendor] = detail.Severity
-	}
-	vuln.VendorSeverity = vs
 
 	if err := o.dbOp.PutVulnerability(tx, cveID, vuln); err != nil {
 		return xerrors.Errorf("failed to put vulnerability: %w", err)
@@ -195,7 +188,7 @@ type lightOptimizer struct {
 func (o lightOptimizer) Optimize() error {
 	err := o.dbc.ForEachSeverity(func(tx *bolt.Tx, cveID string, _ types.Severity) error {
 		// get correct severity
-		sev, _, _, _ := vulnerability.GetDetail(cveID)
+		sev, _, _, _, _ := vulnerability.GetDetail(cveID)
 
 		// overwrite unknown severity with correct severity
 		if err := o.dbc.PutSeverity(tx, cveID, sev); err != nil {
