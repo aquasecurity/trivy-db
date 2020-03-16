@@ -110,9 +110,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []UbuntuCVE) error {
 					return xerrors.Errorf("failed to save Ubuntu advisory: %w", err)
 				}
 
-				severity := severityFromPriority(cve.Priority)
 				vuln := types.VulnerabilityDetail{
-					Severity:    severity,
+					Severity:    severityFromPriority(cve.Priority),
 					References:  cve.References,
 					Description: cve.Description,
 					// TODO

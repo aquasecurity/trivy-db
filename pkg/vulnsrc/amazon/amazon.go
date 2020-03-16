@@ -114,9 +114,8 @@ func (vs VulnSrc) commitFunc(tx *bolt.Tx) error {
 					references = append(references, ref.Href)
 				}
 
-				severity := severityFromPriority(alas.Severity)
 				vuln := types.VulnerabilityDetail{
-					Severity:    severity,
+					Severity:    severityFromPriority(alas.Severity),
 					References:  references,
 					Description: alas.Description,
 					Title:       "",

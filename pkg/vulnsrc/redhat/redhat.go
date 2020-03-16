@@ -143,11 +143,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []RedhatCVE) error {
 
 		title := strings.TrimPrefix(strings.TrimSpace(cve.Bugzilla.Description), cve.Name)
 
-		severity := severityFromThreat(cve.ThreatSeverity)
 		vuln := types.VulnerabilityDetail{
 			CvssScore:   cvssScore,
 			CvssScoreV3: cvss3Score,
-			Severity:    severity,
+			Severity:    severityFromThreat(cve.ThreatSeverity),
 			References:  cve.References,
 			Title:       strings.TrimSpace(title),
 			Description: strings.TrimSpace(strings.Join(cve.Details, "")),

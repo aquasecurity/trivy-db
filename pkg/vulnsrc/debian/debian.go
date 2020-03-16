@@ -102,9 +102,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []DebianCVE) error {
 					return xerrors.Errorf("failed to save Debian advisory: %w", err)
 				}
 
-				severity := severityFromUrgency(release.Urgency)
 				vuln := types.VulnerabilityDetail{
-					Severity:    severity,
+					Severity:    severityFromUrgency(release.Urgency),
 					Description: cve.Description,
 				}
 				if err := vs.dbc.PutVulnerabilityDetail(tx, cve.VulnerabilityID, vulnerability.Debian, vuln); err != nil {
