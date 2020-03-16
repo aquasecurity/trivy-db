@@ -125,8 +125,8 @@ func TestUpdater_Update(t *testing.T) {
 						Metadata: db.Metadata{
 							Version:    1,
 							Type:       db.TypeFull,
-							NextUpdate: &fixedNextUpdateTime,
-							UpdatedAt:  &fixedUpdatedAtTime,
+							NextUpdate: fixedNextUpdateTime,
+							UpdatedAt:  fixedUpdatedAtTime,
 						},
 					},
 					Returns: SetMetadataReturns{},
@@ -197,8 +197,8 @@ func TestUpdater_Update(t *testing.T) {
 						Metadata: db.Metadata{
 							Version:    1,
 							Type:       db.TypeFull,
-							NextUpdate: &fixedNextUpdateTime,
-							UpdatedAt:  &fixedUpdatedAtTime,
+							NextUpdate: fixedNextUpdateTime,
+							UpdatedAt:  fixedUpdatedAtTime,
 						},
 					},
 					Returns: SetMetadataReturns{

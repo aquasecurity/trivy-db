@@ -125,8 +125,8 @@ func (u Updater) Update(targets []string) error {
 	err := u.dbc.SetMetadata(db.Metadata{
 		Version:    db.SchemaVersion,
 		Type:       u.dbType,
-		NextUpdate: &timeNextUpdate,
-		UpdatedAt:  &timeUpdatedAt,
+		NextUpdate: timeNextUpdate,
+		UpdatedAt:  timeUpdatedAt,
 	})
 	if err != nil {
 		return xerrors.Errorf("failed to save metadata: %w", err)

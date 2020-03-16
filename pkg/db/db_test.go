@@ -26,8 +26,8 @@ func TestConfig_GetMetadata(t *testing.T) {
 		_ = dbc.SetMetadata(db.Metadata{
 			Version:    42,
 			Type:       db.TypeFull,
-			NextUpdate: &fixedTime,
-			UpdatedAt:  &fixedTime,
+			NextUpdate: fixedTime,
+			UpdatedAt:  fixedTime,
 		})
 
 		md, err := dbc.GetMetadata()
@@ -49,8 +49,8 @@ func TestConfig_GetMetadata(t *testing.T) {
 
 		md, err := dbc.GetMetadata()
 		assert.EqualError(t, err, "unexpected end of JSON input")
-		b, _ := json.Marshal(md) // verify output with omitempty
-		assert.Equal(t, `{}`, string(b))
+		b, _ := json.Marshal(md)
+		assert.Equal(t, `{"NextUpdate":"0001-01-01T00:00:00Z","UpdatedAt":"0001-01-01T00:00:00Z"}`, string(b))
 		assert.Empty(t, md)
 	})
 }
