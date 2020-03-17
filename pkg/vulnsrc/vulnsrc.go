@@ -119,14 +119,11 @@ func (u Updater) Update(targets []string) error {
 		}
 	}
 
-	timeUpdatedAt := u.clock.Now().UTC()
-	timeNextUpdate := timeUpdatedAt.Add(u.updateInterval)
-
 	err := u.dbc.SetMetadata(db.Metadata{
 		Version:    db.SchemaVersion,
 		Type:       u.dbType,
-		NextUpdate: timeNextUpdate,
-		UpdatedAt:  timeUpdatedAt,
+		NextUpdate: u.clock.Now().UTC().Add(u.updateInterval),
+		UpdatedAt:  u.clock.Now().UTC(),
 	})
 	if err != nil {
 		return xerrors.Errorf("failed to save metadata: %w", err)
