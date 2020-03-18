@@ -49,8 +49,8 @@ type Operation interface {
 }
 
 type Metadata struct {
-	Version    int
-	Type       Type
+	Version    int  `json:",omitempty"`
+	Type       Type `json:",omitempty"`
 	NextUpdate time.Time
 	UpdatedAt  time.Time
 }
