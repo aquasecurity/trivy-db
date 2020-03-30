@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"time"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
@@ -64,6 +65,19 @@ func Init(cacheDir string) (err error) {
 	if err = os.MkdirAll(dbDir, 0700); err != nil {
 		return xerrors.Errorf("failed to mkdir: %w", err)
 	}
+
+	// bbolt sometimes occurs the fatal error of "unexpected fault address".
+	// In that case, the local DB should be broken and needs to be removed.
+	debug.SetPanicOnFault(true)
+	defer func() {
+		if err := recover(); err != nil {
+			if err = os.Remove(dbPath); err != nil {
+				return
+			}
+			db, err = bolt.Open(dbPath, 0600, nil)
+		}
+		debug.SetPanicOnFault(false)
+	}()
 
 	db, err = bolt.Open(dbPath, 0600, nil)
 	if err != nil {
