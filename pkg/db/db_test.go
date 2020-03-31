@@ -16,9 +16,8 @@ import (
 
 func TestInit(t *testing.T) {
 	tests := []struct {
-		name    string
-		dbPath  string
-		wantErr bool
+		name   string
+		dbPath string
 	}{
 		{
 			name:   "normal db",
