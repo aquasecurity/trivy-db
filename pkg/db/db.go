@@ -70,7 +70,7 @@ func Init(cacheDir string) (err error) {
 	// In that case, the local DB should be broken and needs to be removed.
 	debug.SetPanicOnFault(true)
 	defer func() {
-		if err := recover(); err != nil {
+		if r := recover(); r != nil {
 			if err = os.Remove(dbPath); err != nil {
 				return
 			}
