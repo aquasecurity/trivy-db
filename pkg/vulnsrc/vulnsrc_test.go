@@ -456,7 +456,7 @@ func Test_fullOptimize(t *testing.T) {
 		Returns: db.PutVulnerabilityReturns{},
 	})
 
-	err := o.fullOptimize("CVE-2020-123", nil)
+	err := o.fullOptimize(nil, "CVE-2020-123")
 	require.NoError(t, err)
 
 	// TODO: Add unhappy paths

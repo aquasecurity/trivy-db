@@ -142,7 +142,7 @@ type fullOptimizer struct {
 
 func (o fullOptimizer) Optimize() error {
 	err := o.dbOp.ForEachSeverity(func(tx *bolt.Tx, cveID string, _ types.Severity) error {
-		return o.fullOptimize(cveID, tx)
+		return o.fullOptimize(tx, cveID)
 	})
 	if err != nil {
 		return xerrors.Errorf("failed to iterate severity: %w", err)
@@ -165,12 +165,12 @@ var (
 	getDetailFunc = vulnerability.GetDetail
 )
 
-func (o fullOptimizer) fullOptimize(cveID string, tx *bolt.Tx) error {
+func (o fullOptimizer) fullOptimize(tx *bolt.Tx, cveID string) error {
 	severity, vs, title, description, references := getDetailFunc(cveID)
 	vuln := types.Vulnerability{
 		Title:          title,
 		Description:    description,
-		Severity:       severity.String(),
+		Severity:       severity.String(), // TODO: We have to keep this key until we deprecate
 		References:     references,
 		VendorSeverity: vs,
 	}
