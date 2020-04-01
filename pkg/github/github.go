@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"sort"
-	"time"
 
 	"github.com/google/go-github/v28/github"
 	"golang.org/x/oauth2"
@@ -24,12 +22,12 @@ const (
 )
 
 type RepositoryInterface interface {
-	ListReleases(ctx context.Context, opt *github.ListOptions) (releases []*github.RepositoryRelease, response *github.Response, err error)
+	//ListReleases(ctx context.Context, opt *github.ListOptions) (releases []*github.RepositoryRelease, response *github.Response, err error)
 	GetReleaseByTag(ctx context.Context, tag string) (release *github.RepositoryRelease, response *github.Response, err error)
 	CreateRelease(ctx context.Context, release *github.RepositoryRelease) (result *github.RepositoryRelease, response *github.Response, err error)
 	UploadReleaseAsset(ctx context.Context, id int64, opt *github.UploadOptions, file *os.File) (asset *github.ReleaseAsset, response *github.Response, err error)
-	DeleteRelease(ctx context.Context, id int64) (res *github.Response, err error)
-	DeleteRef(ctx context.Context, ref string) (res *github.Response, err error)
+	//DeleteRelease(ctx context.Context, id int64) (res *github.Response, err error)
+	//DeleteRef(ctx context.Context, ref string) (res *github.Response, err error)
 }
 
 type Repository struct {
@@ -39,9 +37,9 @@ type Repository struct {
 	repoName   string
 }
 
-func (r Repository) ListReleases(ctx context.Context, opt *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error) {
-	return r.repository.ListReleases(ctx, r.owner, r.repoName, opt)
-}
+//func (r Repository) ListReleases(ctx context.Context, opt *github.ListOptions) ([]*github.RepositoryRelease, *github.Response, error) {
+//	return r.repository.ListReleases(ctx, r.owner, r.repoName, opt)
+//}
 
 func (r Repository) GetReleaseByTag(ctx context.Context, tag string) (*github.RepositoryRelease, *github.Response, error) {
 	return r.repository.GetReleaseByTag(ctx, r.owner, r.repoName, tag)
@@ -55,13 +53,13 @@ func (r Repository) UploadReleaseAsset(ctx context.Context, id int64, opt *githu
 	return r.repository.UploadReleaseAsset(ctx, r.owner, r.repoName, id, opt, file)
 }
 
-func (r Repository) DeleteRelease(ctx context.Context, id int64) (*github.Response, error) {
-	return r.repository.DeleteRelease(ctx, r.owner, r.repoName, id)
-}
-
-func (r Repository) DeleteRef(ctx context.Context, ref string) (*github.Response, error) {
-	return r.git.DeleteRef(ctx, r.owner, r.repoName, ref)
-}
+//func (r Repository) DeleteRelease(ctx context.Context, id int64) (*github.Response, error) {
+//	return r.repository.DeleteRelease(ctx, r.owner, r.repoName, id)
+//}
+//
+//func (r Repository) DeleteRef(ctx context.Context, ref string) (*github.Response, error) {
+//	return r.git.DeleteRef(ctx, r.owner, r.repoName, ref)
+//}
 
 type VCSClientInterface interface {
 	UploadReleaseAssets(ctx context.Context, filePaths []string) (err error)
@@ -101,9 +99,9 @@ func (c Client) UploadReleaseAssets(ctx context.Context, filePaths []string) err
 		return xerrors.Errorf("failed to update release asset: %w", err)
 	}
 
-	if err := c.deleteOldReleases(ctx, now); err != nil {
-		return xerrors.Errorf("failed to delete old releases: %w", err)
-	}
+	//if err := c.deleteOldReleases(ctx, now); err != nil {
+	//	return xerrors.Errorf("failed to delete old releases: %w", err)
+	//}
 
 	return nil
 }
@@ -150,33 +148,33 @@ func (c Client) updateReleaseAsset(ctx context.Context, tag string, filePaths []
 	return nil
 }
 
-func (c Client) deleteOldReleases(ctx context.Context, now time.Time) error {
-	options := github.ListOptions{}
-	releases, _, err := c.Repository.ListReleases(ctx, &options)
-	if err != nil {
-		return xerrors.Errorf("failed to list releases: %w", err)
-	}
-
-	if len(releases) <= 3 {
-		return nil
-	}
-
-	sort.Slice(releases, func(i, j int) bool {
-		return releases[i].GetPublishedAt().Time.After(releases[j].GetPublishedAt().Time)
-	})
-
-	for _, release := range releases[3:] {
-		log.Printf("Delete the old release, name: %s, published_at: %s",
-			release.GetName(), release.GetPublishedAt())
-		_, err = c.Repository.DeleteRelease(ctx, *release.ID)
-		if err != nil {
-			return xerrors.Errorf("failed to delete a release: %w", err)
-		}
-		log.Printf("Delete the tag: %s", release.GetTagName())
-		_, err = c.Repository.DeleteRef(ctx, fmt.Sprintf("tags/%s", release.GetTagName()))
-		if err != nil {
-			return xerrors.Errorf("failed to delete a tag: %w", err)
-		}
-	}
-	return nil
-}
+//func (c Client) deleteOldReleases(ctx context.Context, now time.Time) error {
+//	options := github.ListOptions{}
+//	releases, _, err := c.Repository.ListReleases(ctx, &options)
+//	if err != nil {
+//		return xerrors.Errorf("failed to list releases: %w", err)
+//	}
+//
+//	if len(releases) <= 3 {
+//		return nil
+//	}
+//
+//	sort.Slice(releases, func(i, j int) bool {
+//		return releases[i].GetPublishedAt().Time.After(releases[j].GetPublishedAt().Time)
+//	})
+//
+//	for _, release := range releases[3:] {
+//		log.Printf("Delete the old release, name: %s, published_at: %s",
+//			release.GetName(), release.GetPublishedAt())
+//		_, err = c.Repository.DeleteRelease(ctx, *release.ID)
+//		if err != nil {
+//			return xerrors.Errorf("failed to delete a release: %w", err)
+//		}
+//		log.Printf("Delete the tag: %s", release.GetTagName())
+//		_, err = c.Repository.DeleteRef(ctx, fmt.Sprintf("tags/%s", release.GetTagName()))
+//		if err != nil {
+//			return xerrors.Errorf("failed to delete a tag: %w", err)
+//		}
+//	}
+//	return nil
+//}

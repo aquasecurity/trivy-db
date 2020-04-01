@@ -21,11 +21,11 @@ import (
 
 func TestClient_UploadReleaseAssets(t *testing.T) {
 	testCases := []struct {
-		name               string
-		clock              clock.Clock
-		files              map[string][]byte
-		filePaths          []string
-		listReleases       []gh.ListReleasesExpectation
+		name      string
+		clock     clock.Clock
+		files     map[string][]byte
+		filePaths []string
+		//listReleases       []gh.ListReleasesExpectation
 		getReleaseByTag    []gh.GetReleaseByTagExpectation
 		createRelease      []gh.CreateReleaseExpectation
 		uploadReleaseAsset []gh.UploadReleaseAssetExpectation
@@ -44,26 +44,26 @@ func TestClient_UploadReleaseAssets(t *testing.T) {
 				"trivy.db.gz",
 				"trivy-light.db.gz",
 			},
-			listReleases: []gh.ListReleasesExpectation{
-				{
-					Args: gh.ListReleasesArgs{
-						CtxAnything: true,
-						OptAnything: true,
-					},
-					Returns: gh.ListReleasesReturns{
-						Releases: []*github.RepositoryRelease{
-							{
-								ID:      github.Int64(1),
-								Name:    github.String("v1-2020123000"),
-								TagName: github.String("v1-2020123000"),
-								PublishedAt: &github.Timestamp{
-									Time: time.Date(2020, 12, 31, 23, 59, 59, 0, time.UTC),
-								},
-							},
-						},
-					},
-				},
-			},
+			//listReleases: []gh.ListReleasesExpectation{
+			//	{
+			//		Args: gh.ListReleasesArgs{
+			//			CtxAnything: true,
+			//			OptAnything: true,
+			//		},
+			//		Returns: gh.ListReleasesReturns{
+			//			Releases: []*github.RepositoryRelease{
+			//				{
+			//					ID:      github.Int64(1),
+			//					Name:    github.String("v1-2020123000"),
+			//					TagName: github.String("v1-2020123000"),
+			//					PublishedAt: &github.Timestamp{
+			//						Time: time.Date(2020, 12, 31, 23, 59, 59, 0, time.UTC),
+			//					},
+			//				},
+			//			},
+			//		},
+			//	},
+			//},
 			getReleaseByTag: []gh.GetReleaseByTagExpectation{
 				{
 					Args: gh.GetReleaseByTagArgs{
@@ -107,26 +107,26 @@ func TestClient_UploadReleaseAssets(t *testing.T) {
 				"trivy.db.gz",
 				"trivy-light.db.gz",
 			},
-			listReleases: []gh.ListReleasesExpectation{
-				{
-					Args: gh.ListReleasesArgs{
-						CtxAnything: true,
-						OptAnything: true,
-					},
-					Returns: gh.ListReleasesReturns{
-						Releases: []*github.RepositoryRelease{
-							{
-								ID:      github.Int64(100),
-								Name:    github.String("v1-2020123000"),
-								TagName: github.String("v1-2020123000"),
-								PublishedAt: &github.Timestamp{
-									Time: time.Date(2020, 12, 31, 23, 59, 59, 0, time.UTC),
-								},
-							},
-						},
-					},
-				},
-			},
+			//listReleases: []gh.ListReleasesExpectation{
+			//	{
+			//		Args: gh.ListReleasesArgs{
+			//			CtxAnything: true,
+			//			OptAnything: true,
+			//		},
+			//		Returns: gh.ListReleasesReturns{
+			//			Releases: []*github.RepositoryRelease{
+			//				{
+			//					ID:      github.Int64(100),
+			//					Name:    github.String("v1-2020123000"),
+			//					TagName: github.String("v1-2020123000"),
+			//					PublishedAt: &github.Timestamp{
+			//						Time: time.Date(2020, 12, 31, 23, 59, 59, 0, time.UTC),
+			//					},
+			//				},
+			//			},
+			//		},
+			//	},
+			//},
 			getReleaseByTag: []gh.GetReleaseByTagExpectation{
 				{
 					Args: gh.GetReleaseByTagArgs{
@@ -190,50 +190,50 @@ func TestClient_UploadReleaseAssets(t *testing.T) {
 				"trivy.db.gz",
 				"trivy-light.db.gz",
 			},
-			listReleases: []gh.ListReleasesExpectation{
-				{
-					Args: gh.ListReleasesArgs{
-						CtxAnything: true,
-						OptAnything: true,
-					},
-					Returns: gh.ListReleasesReturns{
-						Releases: []*github.RepositoryRelease{
-							{
-								ID:      github.Int64(111),
-								Name:    github.String("v1-2019012023"),
-								TagName: github.String("v1-2019012023"),
-								PublishedAt: &github.Timestamp{
-									Time: time.Date(2019, 1, 20, 23, 59, 59, 0, time.UTC),
-								},
-							},
-							{
-								ID:      github.Int64(222),
-								Name:    github.String("v1-2019012509"),
-								TagName: github.String("v1-2019012509"),
-								PublishedAt: &github.Timestamp{
-									Time: time.Date(2019, 1, 25, 9, 0, 59, 0, time.UTC),
-								},
-							},
-							{
-								ID:      github.Int64(333),
-								Name:    github.String("v1-2019013059"),
-								TagName: github.String("v1-2019013059"),
-								PublishedAt: &github.Timestamp{
-									Time: time.Date(2019, 1, 30, 10, 59, 59, 0, time.UTC),
-								},
-							},
-							{
-								ID:      github.Int64(444),
-								Name:    github.String("v1-2019013059"),
-								TagName: github.String("v1-2019013059"),
-								PublishedAt: &github.Timestamp{
-									Time: time.Date(2019, 1, 30, 9, 59, 59, 0, time.UTC),
-								},
-							},
-						},
-					},
-				},
-			},
+			//listReleases: []gh.ListReleasesExpectation{
+			//	{
+			//		Args: gh.ListReleasesArgs{
+			//			CtxAnything: true,
+			//			OptAnything: true,
+			//		},
+			//		Returns: gh.ListReleasesReturns{
+			//			Releases: []*github.RepositoryRelease{
+			//				{
+			//					ID:      github.Int64(111),
+			//					Name:    github.String("v1-2019012023"),
+			//					TagName: github.String("v1-2019012023"),
+			//					PublishedAt: &github.Timestamp{
+			//						Time: time.Date(2019, 1, 20, 23, 59, 59, 0, time.UTC),
+			//					},
+			//				},
+			//				{
+			//					ID:      github.Int64(222),
+			//					Name:    github.String("v1-2019012509"),
+			//					TagName: github.String("v1-2019012509"),
+			//					PublishedAt: &github.Timestamp{
+			//						Time: time.Date(2019, 1, 25, 9, 0, 59, 0, time.UTC),
+			//					},
+			//				},
+			//				{
+			//					ID:      github.Int64(333),
+			//					Name:    github.String("v1-2019013059"),
+			//					TagName: github.String("v1-2019013059"),
+			//					PublishedAt: &github.Timestamp{
+			//						Time: time.Date(2019, 1, 30, 10, 59, 59, 0, time.UTC),
+			//					},
+			//				},
+			//				{
+			//					ID:      github.Int64(444),
+			//					Name:    github.String("v1-2019013059"),
+			//					TagName: github.String("v1-2019013059"),
+			//					PublishedAt: &github.Timestamp{
+			//						Time: time.Date(2019, 1, 30, 9, 59, 59, 0, time.UTC),
+			//					},
+			//				},
+			//			},
+			//		},
+			//	},
+			//},
 			getReleaseByTag: []gh.GetReleaseByTagExpectation{
 				{
 					Args: gh.GetReleaseByTagArgs{
@@ -265,24 +265,24 @@ func TestClient_UploadReleaseAssets(t *testing.T) {
 					Returns: gh.UploadReleaseAssetReturns{},
 				},
 			},
-			deleteRelease: []gh.DeleteReleaseExpectation{
-				{
-					Args: gh.DeleteReleaseArgs{
-						CtxAnything: true,
-						Id:          111,
-					},
-					Returns: gh.DeleteReleaseReturns{},
-				},
-			},
-			deleteRef: []gh.DeleteRefExpectation{
-				{
-					Args: gh.DeleteRefArgs{
-						CtxAnything: true,
-						Ref:         "tags/v1-2019012023",
-					},
-					Returns: gh.DeleteRefReturns{},
-				},
-			},
+			//deleteRelease: []gh.DeleteReleaseExpectation{
+			//	{
+			//		Args: gh.DeleteReleaseArgs{
+			//			CtxAnything: true,
+			//			Id:          111,
+			//		},
+			//		Returns: gh.DeleteReleaseReturns{},
+			//	},
+			//},
+			//deleteRef: []gh.DeleteRefExpectation{
+			//	{
+			//		Args: gh.DeleteRefArgs{
+			//			CtxAnything: true,
+			//			Ref:         "tags/v1-2019012023",
+			//		},
+			//		Returns: gh.DeleteRefReturns{},
+			//	},
+			//},
 		},
 		{
 			name:  "happy path with few old releases",
@@ -296,26 +296,26 @@ func TestClient_UploadReleaseAssets(t *testing.T) {
 				"trivy.db.gz",
 				"trivy-light.db.gz",
 			},
-			listReleases: []gh.ListReleasesExpectation{
-				{
-					Args: gh.ListReleasesArgs{
-						CtxAnything: true,
-						OptAnything: true,
-					},
-					Returns: gh.ListReleasesReturns{
-						Releases: []*github.RepositoryRelease{
-							{
-								ID:      github.Int64(111),
-								Name:    github.String("v1-2019012023"),
-								TagName: github.String("v1-2019012023"),
-								PublishedAt: &github.Timestamp{
-									Time: time.Date(2019, 1, 20, 23, 59, 59, 0, time.UTC),
-								},
-							},
-						},
-					},
-				},
-			},
+			//listReleases: []gh.ListReleasesExpectation{
+			//	{
+			//		Args: gh.ListReleasesArgs{
+			//			CtxAnything: true,
+			//			OptAnything: true,
+			//		},
+			//		Returns: gh.ListReleasesReturns{
+			//			Releases: []*github.RepositoryRelease{
+			//				{
+			//					ID:      github.Int64(111),
+			//					Name:    github.String("v1-2019012023"),
+			//					TagName: github.String("v1-2019012023"),
+			//					PublishedAt: &github.Timestamp{
+			//						Time: time.Date(2019, 1, 20, 23, 59, 59, 0, time.UTC),
+			//					},
+			//				},
+			//			},
+			//		},
+			//	},
+			//},
 			getReleaseByTag: []gh.GetReleaseByTagExpectation{
 				{
 					Args: gh.GetReleaseByTagArgs{
@@ -455,12 +455,12 @@ func TestClient_UploadReleaseAssets(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepo := new(gh.MockRepositoryInterface)
-			mockRepo.ApplyListReleasesExpectations(tc.listReleases)
+			//mockRepo.ApplyListReleasesExpectations(tc.listReleases)
 			mockRepo.ApplyGetReleaseByTagExpectations(tc.getReleaseByTag)
 			mockRepo.ApplyCreateReleaseExpectations(tc.createRelease)
 			mockRepo.ApplyUploadReleaseAssetExpectations(tc.uploadReleaseAsset)
-			mockRepo.ApplyDeleteReleaseExpectations(tc.deleteRelease)
-			mockRepo.ApplyDeleteRefExpectations(tc.deleteRef)
+			//mockRepo.ApplyDeleteReleaseExpectations(tc.deleteRelease)
+			//mockRepo.ApplyDeleteRefExpectations(tc.deleteRef)
 
 			dir, err := ioutil.TempDir("", "trivy-db")
 			assert.NoError(t, err, tc.name)
