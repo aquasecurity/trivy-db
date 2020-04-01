@@ -508,7 +508,6 @@ func Test_lightOptimize(t *testing.T) {
 			TxAnything:      true,
 			VulnerabilityID: "CVE-2020-123",
 			Vulnerability: types.Vulnerability{
-				Severity: types.SeverityCritical.String(),
 				VendorSeverity: types.VendorSeverity{
 					"redhat": types.SeverityHigh,
 					"ubuntu": types.SeverityLow,

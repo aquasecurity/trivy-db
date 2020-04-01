@@ -204,7 +204,6 @@ func (o lightOptimizer) lightOptimize(cveID string, tx *bolt.Tx) error {
 	// get correct severity
 	severity, vendorSeverity, _, _, _ := getDetailFunc(cveID)
 	vuln := types.Vulnerability{
-		Severity:       severity.String(),
 		VendorSeverity: vendorSeverity,
 	}
 
