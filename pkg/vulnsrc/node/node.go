@@ -27,6 +27,35 @@ var (
 	repoPath string
 )
 
+type Number struct {
+	Value float64
+}
+
+// This is for Go 1.14+ compat, to support mixed strings of CVSSScores
+// In Node core CVSSScore is like: "4.8 (Medium)", Type string
+// In NPM package CVSSScore is like: 4.8, Type float64
+// Details: https://github.com/golang/go/issues/37308
+func (n *Number) UnmarshalJSON(b []byte) error {
+	var data interface{}
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+
+	switch v := data.(type) {
+	case float64:
+		n.Value = v
+	case string:
+		f, err := strconv.ParseFloat(strings.Split(v, " ")[0], 64)
+		if err != nil {
+			return err
+		}
+		n.Value = f
+	default: // it can be null: https://github.com/nodejs/security-wg/blob/master/vuln/npm/334.json
+		n.Value = -1
+	}
+	return nil
+}
+
 type RawAdvisory struct {
 	ID                 int
 	Title              string
@@ -37,62 +66,8 @@ type RawAdvisory struct {
 	Overview           string
 	Recommendation     string
 	References         []string
-	CvssScoreNumber    interface{} `json:"cvss_score"`
+	CvssScoreNumber    Number `json:"cvss_score"`
 	CvssScore          float64
-}
-
-// This is for Go 1.14+ compat, to support mixed strings of CVSSScores
-// In Node core CVSSScore is like: "4.8 (Medium)", Type string
-// In NPM package CVSSScore is like: 4.8, Type float64
-// Details: https://github.com/golang/go/issues/37308
-func (ra *RawAdvisory) UnmarshalJSON(b []byte) error {
-	var x struct {
-		ID                 int
-		Title              string
-		ModuleName         string `json:"module_name"`
-		Cves               []string
-		VulnerableVersions string `json:"vulnerable_versions"`
-		PatchedVersions    string `json:"patched_versions"`
-		Overview           string
-		Recommendation     string
-		References         []string
-		CvssScore          float64
-		CvssScoreNumber    json.RawMessage `json:"cvss_score"`
-	}
-
-	if err := json.Unmarshal(b, &x); err != nil {
-		return err
-	}
-
-	// populate other sane fields first
-	ra.ID = x.ID
-	ra.Title = x.Title
-	ra.ModuleName = x.ModuleName
-	ra.Cves = x.Cves
-	ra.VulnerableVersions = x.VulnerableVersions
-	ra.PatchedVersions = x.PatchedVersions
-	ra.Overview = x.Overview
-	ra.Recommendation = x.Recommendation
-	ra.References = x.References
-
-	// CVSS score is missing
-	if len(x.CvssScoreNumber) <= 0 {
-		ra.CvssScore = -1
-		return nil
-	}
-
-	var n json.Number
-	if err := json.Unmarshal(x.CvssScoreNumber, &n); err == nil {
-		ra.CvssScore, _ = n.Float64()
-		return nil
-	}
-
-	var s string
-	if err := json.Unmarshal(x.CvssScoreNumber, &s); err != nil {
-		return err
-	}
-	ra.CvssScore, _ = strconv.ParseFloat(strings.Split(s, " ")[0], 64)
-	return nil
 }
 
 type Advisory struct {
@@ -186,10 +161,16 @@ func (vs VulnSrc) commit(tx *bolt.Tx, f *os.File) error {
 			return xerrors.Errorf("failed to save node advisory: %w", err)
 		}
 
+		// If an advisory is 0 override with -1
+		// https://github.com/nodejs/security-wg/pull/91/files
+		if advisory.CvssScoreNumber.Value <= 0 {
+			advisory.CvssScoreNumber.Value = -1
+		}
+
 		// for displaying vulnerability detail
 		vuln := types.VulnerabilityDetail{
 			ID:          vulnID,
-			CvssScore:   advisory.CvssScore,
+			CvssScore:   advisory.CvssScoreNumber.Value,
 			References:  advisory.References,
 			Title:       advisory.Title,
 			Description: advisory.Overview,

@@ -157,12 +157,52 @@ func TestVulnSrc_Commit(t *testing.T) {
 			},
 		},
 		{
+			name:      "happy-(ish) path, npm package includes null cvss",
+			inputFile: "npm_nullcvssscore.json",
+			putAdvisory: []db.PutAdvisoryExpectation{
+				{
+					Args: db.PutAdvisoryArgs{
+						TxAnything:      true,
+						Source:          "nodejs-security-wg",
+						PkgName:         "hubl-server",
+						VulnerabilityID: "NSWG-ECO-334",
+						Advisory: Advisory{
+							VulnerableVersions: "<=99.999.99999",
+							PatchedVersions:    "<0.0.0",
+						},
+					},
+				},
+			},
+			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+				{
+					Args: db.PutVulnerabilityDetailArgs{
+						TxAnything:      true,
+						VulnerabilityID: "NSWG-ECO-334",
+						Source:          vulnerability.NodejsSecurityWg,
+						Vulnerability: types.VulnerabilityDetail{
+							ID:          "NSWG-ECO-334",
+							CvssScore:   -1,
+							Description: "The hubl-server module is a wrapper for the HubL Development Server.\n\nDuring installation hubl-server downloads a set of dependencies from api.hubapi.com. It appears in the code that these files are downloaded over HTTPS however the api.hubapi.com endpoint redirects to a HTTP url. Because of this behavior an attacker with the ability to man-in-the-middle a developer or system performing a package installation could compromise the integrity of the installation.",
+							Title:       "Downloads resources over HTTP",
+						},
+					},
+				},
+			},
+			putSeverity: []db.PutSeverityExpectation{
+				{
+					Args: db.PutSeverityArgs{
+						TxAnything:      true,
+						VulnerabilityID: "NSWG-ECO-334",
+						Severity:        types.SeverityUnknown,
+					},
+				},
+			},
+		},
+		{
 			name:             "sad path, invalid json",
 			inputFile:        "invalidvuln.json",
 			expectedErrorMsg: "invalid character",
 		},
-
-		// TODO: Add more sad paths
 	}
 
 	for _, tc := range testCases {
