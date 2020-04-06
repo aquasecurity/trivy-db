@@ -3,7 +3,6 @@ package node
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -130,12 +129,8 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx, f *os.File) error {
 	advisory := RawAdvisory{}
-	b, err := ioutil.ReadAll(f)
-	if err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(b, &advisory); err != nil {
+	var err error
+	if err = json.NewDecoder(f).Decode(&advisory); err != nil {
 		return err
 	}
 
