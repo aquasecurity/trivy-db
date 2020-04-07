@@ -386,17 +386,6 @@ func Test_lightOptimizer_Optimize(t *testing.T) {
 	}
 }
 
-type mockVulnOperation struct {
-	getVulnerabilityDetail func(cveID string) (map[string]types.VulnerabilityDetail, error)
-}
-
-func (m mockVulnOperation) GetVulnerabilityDetail(cveID string) (map[string]types.VulnerabilityDetail, error) {
-	if m.getVulnerabilityDetail != nil {
-		return m.getVulnerabilityDetail(cveID)
-	}
-	return map[string]types.VulnerabilityDetail{}, nil
-}
-
 func Test_fullOptimize(t *testing.T) {
 	oldgetDetailFunc := getDetailFunc
 	defer func() {
@@ -412,30 +401,6 @@ func Test_fullOptimize(t *testing.T) {
 
 	mockDBOperation := new(db.MockOperation)
 	o := fullOptimizer{
-		dbConfig: mockVulnOperation{
-			getVulnerabilityDetail: func(cveID string) (m map[string]types.VulnerabilityDetail, err error) {
-				return map[string]types.VulnerabilityDetail{
-					"redhat": {
-						ID:          "CVE-2020-1234",
-						CvssScore:   4.3,
-						CvssScoreV3: 5.6,
-						Severity:    types.SeverityHigh,
-						SeverityV3:  types.SeverityCritical,
-						Title:       "test vulnerability",
-						Description: "a test vulnerability where vendor rates it lower than NVD",
-					},
-					"ubuntu": {
-						ID:          "CVE-2020-1234",
-						CvssScore:   1.2,
-						CvssScoreV3: 3.4,
-						Severity:    types.SeverityLow,
-						SeverityV3:  types.SeverityMedium,
-						Title:       "test vulnerability",
-						Description: "a test vulnerability where vendor rates it lower than NVD",
-					},
-				}, nil
-			},
-		},
 		dbOp: mockDBOperation,
 	}
 	mockDBOperation.ApplyPutVulnerabilityExpectation(db.PutVulnerabilityExpectation{
@@ -477,30 +442,6 @@ func Test_lightOptimize(t *testing.T) {
 
 	mockDBOperation := new(db.MockOperation)
 	o := lightOptimizer{
-		dbConfig: mockVulnOperation{
-			getVulnerabilityDetail: func(cveID string) (m map[string]types.VulnerabilityDetail, err error) {
-				return map[string]types.VulnerabilityDetail{
-					"redhat": {
-						ID:          "CVE-2020-1234",
-						CvssScore:   4.3,
-						CvssScoreV3: 5.6,
-						Severity:    types.SeverityHigh,
-						SeverityV3:  types.SeverityCritical,
-						Title:       "test vulnerability",
-						Description: "a test vulnerability where vendor rates it lower than NVD",
-					},
-					"ubuntu": {
-						ID:          "CVE-2020-1234",
-						CvssScore:   1.2,
-						CvssScoreV3: 3.4,
-						Severity:    types.SeverityLow,
-						SeverityV3:  types.SeverityMedium,
-						Title:       "test vulnerability",
-						Description: "a test vulnerability where vendor rates it lower than NVD",
-					},
-				}, nil
-			},
-		},
 		dbOp: mockDBOperation,
 	}
 	mockDBOperation.ApplyPutVulnerabilityExpectation(db.PutVulnerabilityExpectation{

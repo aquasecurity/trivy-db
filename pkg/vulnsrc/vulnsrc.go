@@ -83,9 +83,9 @@ type Updater struct {
 
 func NewUpdater(cacheDir string, light bool, interval time.Duration) Updater {
 	var optimizer Optimizer
-	dbConfig := db.Config{}
 	dbType := db.TypeFull
-	optimizer = fullOptimizer{dbOp: dbConfig, dbConfig: db.Config{}}
+	dbConfig := db.Config{}
+	optimizer = fullOptimizer{dbOp: dbConfig}
 
 	if light {
 		dbType = db.TypeLight
@@ -136,8 +136,7 @@ type Optimizer interface {
 }
 
 type fullOptimizer struct {
-	dbConfig db.VulnOperation
-	dbOp     db.Operation
+	dbOp db.Operation
 }
 
 func (o fullOptimizer) Optimize() error {
@@ -182,8 +181,7 @@ func (o fullOptimizer) fullOptimize(tx *bolt.Tx, cveID string) error {
 }
 
 type lightOptimizer struct {
-	dbConfig db.VulnOperation
-	dbOp     db.Operation
+	dbOp db.Operation
 }
 
 func (o lightOptimizer) Optimize() error {
