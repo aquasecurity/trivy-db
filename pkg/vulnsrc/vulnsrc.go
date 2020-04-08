@@ -85,7 +85,7 @@ func NewUpdater(cacheDir string, light bool, interval time.Duration) Updater {
 	var optimizer Optimizer
 	dbType := db.TypeFull
 	dbConfig := db.Config{}
-	optimizer = fullOptimizer{dbOp: dbConfig}
+	optimizer = fullOptimizer{dbc: dbConfig}
 
 	if light {
 		dbType = db.TypeLight
@@ -136,22 +136,22 @@ type Optimizer interface {
 }
 
 type fullOptimizer struct {
-	dbOp db.Operation
+	dbc db.Operation
 }
 
 func (o fullOptimizer) Optimize() error {
-	err := o.dbOp.ForEachSeverity(func(tx *bolt.Tx, cveID string, _ types.Severity) error {
+	err := o.dbc.ForEachSeverity(func(tx *bolt.Tx, cveID string, _ types.Severity) error {
 		return o.fullOptimize(tx, cveID)
 	})
 	if err != nil {
 		return xerrors.Errorf("failed to iterate severity: %w", err)
 	}
 
-	if err := o.dbOp.DeleteSeverityBucket(); err != nil {
+	if err := o.dbc.DeleteSeverityBucket(); err != nil {
 		return xerrors.Errorf("failed to delete severity bucket: %w", err)
 	}
 
-	if err := o.dbOp.DeleteVulnerabilityDetailBucket(); err != nil {
+	if err := o.dbc.DeleteVulnerabilityDetailBucket(); err != nil {
 		return xerrors.Errorf("failed to delete vulnerability detail bucket: %w", err)
 	}
 
@@ -174,7 +174,7 @@ func (o fullOptimizer) fullOptimize(tx *bolt.Tx, cveID string) error {
 		VendorSeverity: vs,
 	}
 
-	if err := o.dbOp.PutVulnerability(tx, cveID, vuln); err != nil {
+	if err := o.dbc.PutVulnerability(tx, cveID, vuln); err != nil {
 		return xerrors.Errorf("failed to put vulnerability: %w", err)
 	}
 	return nil

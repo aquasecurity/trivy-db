@@ -308,7 +308,7 @@ func Test_fullOptimizer_Optimize(t *testing.T) {
 			mockDBOperation.ApplyDeleteVulnerabilityDetailBucketExpectation(tt.deleteVulnerabilityDetailBucket)
 
 			o := fullOptimizer{
-				dbOp: mockDBOperation,
+				dbc: mockDBOperation,
 			}
 			err := o.Optimize()
 			switch {
@@ -401,7 +401,7 @@ func Test_fullOptimize(t *testing.T) {
 
 	mockDBOperation := new(db.MockOperation)
 	o := fullOptimizer{
-		dbOp: mockDBOperation,
+		dbc: mockDBOperation,
 	}
 	mockDBOperation.ApplyPutVulnerabilityExpectation(db.PutVulnerabilityExpectation{
 		Args: db.PutVulnerabilityArgs{
