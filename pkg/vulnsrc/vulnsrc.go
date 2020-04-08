@@ -83,13 +83,13 @@ type Updater struct {
 
 func NewUpdater(cacheDir string, light bool, interval time.Duration) Updater {
 	var optimizer Optimizer
-	dbConfig := db.Config{}
 	dbType := db.TypeFull
+	dbConfig := db.Config{}
 	optimizer = fullOptimizer{dbc: dbConfig}
 
 	if light {
 		dbType = db.TypeLight
-		optimizer = lightOptimizer{dbc: dbConfig}
+		optimizer = lightOptimizer{dbOp: dbConfig}
 	}
 
 	return Updater{
@@ -141,17 +141,7 @@ type fullOptimizer struct {
 
 func (o fullOptimizer) Optimize() error {
 	err := o.dbc.ForEachSeverity(func(tx *bolt.Tx, cveID string, _ types.Severity) error {
-		severity, title, description, references := vulnerability.GetDetail(cveID)
-		vuln := types.Vulnerability{
-			Title:       title,
-			Description: description,
-			Severity:    severity.String(),
-			References:  references,
-		}
-		if err := o.dbc.PutVulnerability(tx, cveID, vuln); err != nil {
-			return xerrors.Errorf("failed to put vulnerability: %w", err)
-		}
-		return nil
+		return o.fullOptimize(tx, cveID)
 	})
 	if err != nil {
 		return xerrors.Errorf("failed to iterate severity: %w", err)
@@ -169,27 +159,60 @@ func (o fullOptimizer) Optimize() error {
 
 }
 
+// TODO: Until we can dependency inject, we need to monkey patch sadly
+var (
+	getDetailFunc = vulnerability.GetDetail
+)
+
+func (o fullOptimizer) fullOptimize(tx *bolt.Tx, cveID string) error {
+	severity, vs, title, description, references := getDetailFunc(cveID)
+	vuln := types.Vulnerability{
+		Title:          title,
+		Description:    description,
+		Severity:       severity.String(), // TODO: We have to keep this key until we deprecate
+		References:     references,
+		VendorSeverity: vs,
+	}
+
+	if err := o.dbc.PutVulnerability(tx, cveID, vuln); err != nil {
+		return xerrors.Errorf("failed to put vulnerability: %w", err)
+	}
+	return nil
+}
+
 type lightOptimizer struct {
-	dbc db.Operation
+	dbOp db.Operation
 }
 
 func (o lightOptimizer) Optimize() error {
-	err := o.dbc.ForEachSeverity(func(tx *bolt.Tx, cveID string, _ types.Severity) error {
-		// get correct severity
-		sev, _, _, _ := vulnerability.GetDetail(cveID)
-
-		// overwrite unknown severity with correct severity
-		if err := o.dbc.PutSeverity(tx, cveID, sev); err != nil {
-			return xerrors.Errorf("failed to put severity: %w", err)
-		}
-		return nil
+	err := o.dbOp.ForEachSeverity(func(tx *bolt.Tx, cveID string, _ types.Severity) error {
+		return o.lightOptimize(cveID, tx)
 	})
 	if err != nil {
 		return xerrors.Errorf("failed to iterate severity: %w", err)
 	}
 
-	if err = o.dbc.DeleteVulnerabilityDetailBucket(); err != nil {
+	if err = o.dbOp.DeleteVulnerabilityDetailBucket(); err != nil {
 		return xerrors.Errorf("failed to delete vulnerability detail bucket: %w", err)
+	}
+	return nil
+}
+
+func (o lightOptimizer) lightOptimize(cveID string, tx *bolt.Tx) error {
+	// get correct severity
+	severity, vendorSeverity, _, _, _ := getDetailFunc(cveID)
+	vuln := types.Vulnerability{
+		VendorSeverity: vendorSeverity,
+	}
+
+	// TODO: We have to keep this bucket until we deprecate
+	// overwrite unknown severity with correct severity
+	if err := o.dbOp.PutSeverity(tx, cveID, severity); err != nil {
+		return xerrors.Errorf("failed to put severity: %w", err)
+	}
+
+	if err := o.dbOp.PutVulnerability(tx, cveID, vuln); err != nil {
+		return xerrors.Errorf("failed to put vulnerability: %w", err)
 	}
 	return nil
 }

@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/assert"
 	"k8s.io/utils/clock"
 	ct "k8s.io/utils/clock/testing"
@@ -214,14 +216,14 @@ func TestUpdater_Update(t *testing.T) {
 			mockVulnSrc := new(types.MockVulnSrc)
 			mockVulnSrc.ApplyUpdateExpectations(tt.update)
 
-			mockDBConfig := new(MockOperation)
-			mockDBConfig.ApplySetMetadataExpectations(tt.setMetadata)
+			mockDBOperation := new(MockOperation)
+			mockDBOperation.ApplySetMetadataExpectations(tt.setMetadata)
 
 			mockOptimizer := new(MockOptimizer)
 			mockOptimizer.ApplyOptimizeExpectations(tt.optimize)
 
 			u := Updater{
-				dbc: mockDBConfig,
+				dbc: mockDBOperation,
 				updateMap: map[string]VulnSrc{
 					"test": mockVulnSrc,
 				},
@@ -240,7 +242,7 @@ func TestUpdater_Update(t *testing.T) {
 			}
 
 			mockVulnSrc.AssertExpectations(t)
-			mockDBConfig.AssertExpectations(t)
+			mockDBOperation.AssertExpectations(t)
 			mockOptimizer.AssertExpectations(t)
 		})
 	}
@@ -300,13 +302,13 @@ func Test_fullOptimizer_Optimize(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyForEachSeverityExpectation(tt.forEachSeverity)
-			mockDBConfig.ApplyDeleteSeverityBucketExpectation(tt.deleteSeverityBucket)
-			mockDBConfig.ApplyDeleteVulnerabilityDetailBucketExpectation(tt.deleteVulnerabilityDetailBucket)
+			mockDBOperation := new(db.MockOperation)
+			mockDBOperation.ApplyForEachSeverityExpectation(tt.forEachSeverity)
+			mockDBOperation.ApplyDeleteSeverityBucketExpectation(tt.deleteSeverityBucket)
+			mockDBOperation.ApplyDeleteVulnerabilityDetailBucketExpectation(tt.deleteVulnerabilityDetailBucket)
 
 			o := fullOptimizer{
-				dbc: mockDBConfig,
+				dbc: mockDBOperation,
 			}
 			err := o.Optimize()
 			switch {
@@ -371,7 +373,7 @@ func Test_lightOptimizer_Optimize(t *testing.T) {
 			mockDBConfig.ApplyDeleteVulnerabilityDetailBucketExpectation(tt.deleteVulnerabilityDetailBucket)
 
 			o := lightOptimizer{
-				dbc: mockDBConfig,
+				dbOp: mockDBConfig,
 			}
 			err := o.Optimize()
 			switch {
@@ -382,4 +384,90 @@ func Test_lightOptimizer_Optimize(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_fullOptimize(t *testing.T) {
+	oldgetDetailFunc := getDetailFunc
+	defer func() {
+		getDetailFunc = oldgetDetailFunc
+	}()
+
+	getDetailFunc = func(vulnID string) (severity types.Severity, vendorSeverity types.VendorSeverity, s string, s2 string, strings []string) {
+		return types.SeverityCritical, types.VendorSeverity{
+			"redhat": types.SeverityHigh,
+			"ubuntu": types.SeverityLow,
+		}, "test title", "test description", []string{"test reference"}
+	}
+
+	mockDBOperation := new(db.MockOperation)
+	o := fullOptimizer{
+		dbc: mockDBOperation,
+	}
+	mockDBOperation.ApplyPutVulnerabilityExpectation(db.PutVulnerabilityExpectation{
+		Args: db.PutVulnerabilityArgs{
+			TxAnything:      true,
+			VulnerabilityID: "CVE-2020-123",
+			Vulnerability: types.Vulnerability{
+				Title:       "test title",
+				Description: "test description",
+				Severity:    types.SeverityCritical.String(),
+				VendorSeverity: types.VendorSeverity{
+					"redhat": types.SeverityHigh,
+					"ubuntu": types.SeverityLow,
+				},
+				References: []string{"test reference"},
+			},
+		},
+		Returns: db.PutVulnerabilityReturns{},
+	})
+
+	err := o.fullOptimize(nil, "CVE-2020-123")
+	require.NoError(t, err)
+
+	// TODO: Add unhappy paths
+}
+
+func Test_lightOptimize(t *testing.T) {
+	oldgetDetailFunc := getDetailFunc
+	defer func() {
+		getDetailFunc = oldgetDetailFunc
+	}()
+
+	getDetailFunc = func(vulnID string) (severity types.Severity, vendorSeverity types.VendorSeverity, s string, s2 string, strings []string) {
+		return types.SeverityCritical, types.VendorSeverity{
+			"redhat": types.SeverityHigh,
+			"ubuntu": types.SeverityLow,
+		}, "test title", "test description", []string{"test reference"}
+	}
+
+	mockDBOperation := new(db.MockOperation)
+	o := lightOptimizer{
+		dbOp: mockDBOperation,
+	}
+	mockDBOperation.ApplyPutVulnerabilityExpectation(db.PutVulnerabilityExpectation{
+		Args: db.PutVulnerabilityArgs{
+			TxAnything:      true,
+			VulnerabilityID: "CVE-2020-123",
+			Vulnerability: types.Vulnerability{
+				VendorSeverity: types.VendorSeverity{
+					"redhat": types.SeverityHigh,
+					"ubuntu": types.SeverityLow,
+				},
+			},
+		},
+		Returns: db.PutVulnerabilityReturns{},
+	})
+	mockDBOperation.ApplyPutSeverityExpectation(db.PutSeverityExpectation{
+		Args: db.PutSeverityArgs{
+			TxAnything:      true,
+			VulnerabilityID: "CVE-2020-123",
+			Severity:        types.SeverityCritical,
+		},
+		Returns: db.PutSeverityReturns{},
+	})
+
+	err := o.lightOptimize("CVE-2020-123", nil)
+	require.NoError(t, err)
+
+	// TODO: Add unhappy paths
 }

@@ -74,45 +74,49 @@ func (vs VulnSrc) Update(dir string) error {
 func (vs VulnSrc) save(cves []DebianCVE) error {
 	log.Println("Saving Debian DB")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		for _, cve := range cves {
-			for _, release := range cve.Releases {
-				for releaseStr := range release.Repositories {
-					majorVersion, ok := DebianReleasesMapping[releaseStr]
-					if !ok {
-						continue
-					}
-					platformName := fmt.Sprintf(platformFormat, majorVersion)
-					if release.Status != "open" {
-						continue
-					}
-					advisory := types.Advisory{
-						VulnerabilityID: cve.VulnerabilityID,
-					}
-					if err := vs.dbc.PutAdvisory(tx, platformName, cve.Package, cve.VulnerabilityID, advisory); err != nil {
-						return xerrors.Errorf("failed to save Debian advisory: %w", err)
-					}
-
-					vuln := types.VulnerabilityDetail{
-						Severity:    severityFromUrgency(release.Urgency),
-						Description: cve.Description,
-					}
-					if err := vs.dbc.PutVulnerabilityDetail(tx, cve.VulnerabilityID, vulnerability.Debian, vuln); err != nil {
-						return xerrors.Errorf("failed to save Debian vulnerability: %w", err)
-					}
-
-					// for light DB
-					if err := vs.dbc.PutSeverity(tx, cve.VulnerabilityID, types.SeverityUnknown); err != nil {
-						return xerrors.Errorf("failed to save alpine vulnerability severity: %w", err)
-					}
-				}
-			}
-		}
-		return nil
+		return vs.commit(tx, cves)
 	})
 	if err != nil {
 		return xerrors.Errorf("error in batch update: %w", err)
 	}
 
+	return nil
+}
+
+func (vs VulnSrc) commit(tx *bolt.Tx, cves []DebianCVE) error {
+	for _, cve := range cves {
+		for _, release := range cve.Releases {
+			for releaseStr := range release.Repositories {
+				majorVersion, ok := DebianReleasesMapping[releaseStr]
+				if !ok {
+					continue
+				}
+				platformName := fmt.Sprintf(platformFormat, majorVersion)
+				if release.Status != "open" {
+					continue
+				}
+				advisory := types.Advisory{
+					VulnerabilityID: cve.VulnerabilityID,
+				}
+				if err := vs.dbc.PutAdvisory(tx, platformName, cve.Package, cve.VulnerabilityID, advisory); err != nil {
+					return xerrors.Errorf("failed to save Debian advisory: %w", err)
+				}
+
+				vuln := types.VulnerabilityDetail{
+					Severity:    severityFromUrgency(release.Urgency),
+					Description: cve.Description,
+				}
+				if err := vs.dbc.PutVulnerabilityDetail(tx, cve.VulnerabilityID, vulnerability.Debian, vuln); err != nil {
+					return xerrors.Errorf("failed to save Debian vulnerability: %w", err)
+				}
+
+				// for light DB
+				if err := vs.dbc.PutSeverity(tx, cve.VulnerabilityID, types.SeverityUnknown); err != nil {
+					return xerrors.Errorf("failed to save alpine vulnerability severity: %w", err)
+				}
+			}
+		}
+	}
 	return nil
 }
 
