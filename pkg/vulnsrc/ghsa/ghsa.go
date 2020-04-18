@@ -135,7 +135,14 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 			PatchedVersions:    pvs,
 			VulnerableVersions: avs,
 		}
-		err := vs.dbc.PutAdvisory(tx, platformName, ghsa.Package.Name, vulnId, a)
+
+		// Nuget is case-sensitive
+		packName := ghsa.Package.Name
+		if vs.ecosystem != Nuget {
+			packName = strings.ToLower(ghsa.Package.Name)
+		}
+
+		err := vs.dbc.PutAdvisory(tx, platformName, packName, vulnId, a)
 		if err != nil {
 			return xerrors.Errorf("failed to save GHSA: %w", err)
 		}
