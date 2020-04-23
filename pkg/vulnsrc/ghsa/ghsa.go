@@ -44,7 +44,6 @@ func (e Ecosystem) String() string {
 	case Rubygems:
 		return "Rubygems"
 	}
-	log.Fatal("Unknown Ecosystem")
 	return "Unknown"
 }
 
@@ -119,16 +118,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 			avs = append(avs, va.VulnerableVersionRange)
 		}
 
-		var foo []string
 		vulnId := ghsa.Advisory.GhsaId
 		for _, identifier := range ghsa.Advisory.Identifiers {
 			if identifier.Type == "CVE" {
 				vulnId = identifier.Value
-				foo = append(foo, identifier.Value)
 			}
-		}
-		if len(foo) > 1 {
-			log.Fatal(ghsa.Advisory.GhsaId)
 		}
 
 		a := Advisory{
@@ -202,7 +196,6 @@ func severityFromThreat(urgency string) types.Severity {
 	case "CRITICAL":
 		return types.SeverityCritical
 	default:
-		log.Fatal("unknown severity")
 		return types.SeverityUnknown
 	}
 }
