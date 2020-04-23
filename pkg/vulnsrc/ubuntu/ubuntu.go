@@ -28,6 +28,7 @@ var (
 		"precise": "12.04",
 		"quantal": "12.10",
 		"raring":  "13.04",
+		"saucy":   "13.10",
 		"trusty":  "14.04",
 		"utopic":  "14.10",
 		"vivid":   "15.04",
@@ -40,6 +41,7 @@ var (
 		"cosmic":  "18.10",
 		"disco":   "19.04",
 		"eoan":    "19.10",
+		"focal":   "20.04",
 	}
 )
 
