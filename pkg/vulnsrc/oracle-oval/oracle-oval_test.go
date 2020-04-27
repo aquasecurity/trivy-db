@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	bolt "github.com/etcd-io/bbolt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"

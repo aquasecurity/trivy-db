@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	bolt "github.com/etcd-io/bbolt"
 	"github.com/hashicorp/go-version"
+	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
