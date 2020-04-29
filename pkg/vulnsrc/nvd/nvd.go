@@ -59,42 +59,48 @@ func (vs VulnSrc) Update(dir string) error {
 	return nil
 }
 
+func (vs VulnSrc) commit(tx *bolt.Tx, items []Item) error {
+	for _, item := range items {
+		cveID := item.Cve.Meta.ID
+		severity, _ := types.NewSeverity(item.Impact.BaseMetricV2.Severity)
+		severityV3, _ := types.NewSeverity(item.Impact.BaseMetricV3.CvssV3.BaseSeverity)
+
+		var references []string
+		for _, ref := range item.Cve.References.ReferenceDataList {
+			references = append(references, ref.URL)
+		}
+
+		var description string
+		for _, d := range item.Cve.Description.DescriptionDataList {
+			if d.Value != "" {
+				description = d.Value
+				break
+			}
+		}
+
+		vuln := types.VulnerabilityDetail{
+			CvssScore:    item.Impact.BaseMetricV2.CvssV2.BaseScore,
+			CvssVector:   item.Impact.BaseMetricV2.CvssV2.VectorString,
+			CvssScoreV3:  item.Impact.BaseMetricV3.CvssV3.BaseScore,
+			CvssVectorV3: item.Impact.BaseMetricV3.CvssV3.VectorString,
+			Severity:     severity,
+			SeverityV3:   severityV3,
+			References:   references,
+			Title:        "",
+			Description:  description,
+		}
+
+		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Nvd, vuln); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (vs VulnSrc) save(items []Item) error {
 	log.Println("NVD batch update")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		for _, item := range items {
-			cveID := item.Cve.Meta.ID
-			severity, _ := types.NewSeverity(item.Impact.BaseMetricV2.Severity)
-			severityV3, _ := types.NewSeverity(item.Impact.BaseMetricV3.CvssV3.BaseSeverity)
-
-			var references []string
-			for _, ref := range item.Cve.References.ReferenceDataList {
-				references = append(references, ref.URL)
-			}
-
-			var description string
-			for _, d := range item.Cve.Description.DescriptionDataList {
-				if d.Value != "" {
-					description = d.Value
-					break
-				}
-			}
-
-			vuln := types.VulnerabilityDetail{
-				CvssScore:   item.Impact.BaseMetricV2.CvssV2.BaseScore,
-				CvssScoreV3: item.Impact.BaseMetricV3.CvssV3.BaseScore,
-				Severity:    severity,
-				SeverityV3:  severityV3,
-				References:  references,
-				Title:       "",
-				Description: description,
-			}
-
-			if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Nvd, vuln); err != nil {
-				return err
-			}
-		}
-		return nil
+		return vs.commit(tx, items)
 	})
 	if err != nil {
 		return xerrors.Errorf("error in batch update: %w", err)
