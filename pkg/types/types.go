@@ -11,6 +11,9 @@ type Severity int
 
 type VendorSeverity map[string]Severity
 
+type CVSSVector map[string]string
+type VendorVectors map[string]CVSSVector
+
 const (
 	SeverityUnknown Severity = iota
 	SeverityLow
@@ -90,6 +93,7 @@ type Vulnerability struct {
 	Description    string         `json:",omitempty"`
 	Severity       string         `json:",omitempty"`
 	VendorSeverity VendorSeverity `json:",omitempty"`
+	VendorVectors  VendorVectors  `json:",omitempty"`
 	References     []string       `json:",omitempty"`
 }
 
