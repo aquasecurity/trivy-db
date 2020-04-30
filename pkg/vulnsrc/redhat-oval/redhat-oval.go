@@ -11,7 +11,7 @@ import (
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 
-	bolt "github.com/etcd-io/bbolt"
+	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
