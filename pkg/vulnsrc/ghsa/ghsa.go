@@ -19,7 +19,7 @@ import (
 const (
 	ghsaDir = "ghsa"
 
-	Composer Ecosystem = iota
+	Composer Ecosystem = iota + 1
 	Maven
 	Npm
 	Nuget
