@@ -8,12 +8,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/aquasecurity/trivy-db/pkg/types"
+	bolt "go.etcd.io/bbolt"
+	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
-	bolt "github.com/etcd-io/bbolt"
-	"golang.org/x/xerrors"
 )
 
 const (
