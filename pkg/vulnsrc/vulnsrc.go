@@ -11,6 +11,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/composer"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
 	debianoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian-oval"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/photon"
@@ -57,6 +58,12 @@ var (
 		vulnerability.NodejsSecurityWg:      node.NewVulnSrc(),
 		vulnerability.PythonSafetyDB:        python.NewVulnSrc(),
 		vulnerability.RustSec:               cargo.NewVulnSrc(),
+		vulnerability.GHSAComposer:          ghsa.NewVulnSrc(ghsa.Composer),
+		vulnerability.GHSAMaven:             ghsa.NewVulnSrc(ghsa.Maven),
+		vulnerability.GHSANpm:               ghsa.NewVulnSrc(ghsa.Npm),
+		vulnerability.GHSANuget:             ghsa.NewVulnSrc(ghsa.Nuget),
+		vulnerability.GHSAPip:               ghsa.NewVulnSrc(ghsa.Pip),
+		vulnerability.GHSARubygems:          ghsa.NewVulnSrc(ghsa.Rubygems),
 	}
 )
 

@@ -1,0 +1,49 @@
+{
+  "Severity": "MODERATE",
+  "UpdatedAt": "2018-10-04T18:05:59Z",
+  "Package": {
+    "Ecosystem": "PIP",
+    "Name": "django"
+  },
+  "Advisory": {
+    "DatabaseId": 663,
+    "Id": "MDE2OlNlY3VyaXR5QWR2aXNvcnlHSFNBLTVoZzMtNmMyZi1mM3dy",
+    "GhsaId": "GHSA-5hg3-6c2f-f3wr",
+    "References": [
+      {
+        "Url": "https://nvd.nist.gov/vuln/detail/CVE-2018-14574"
+      }
+    ],
+    "Identifiers": [
+      {
+        "Type": "GHSA",
+        "Value": "GHSA-5hg3-6c2f-f3wr"
+      },
+      {
+        "Type": "CVE",
+        "Value": "CVE-2018-14574"
+      }
+    ],
+    "Description": "django.middleware.common.CommonMiddleware in Django 1.11.x before 1.11.15 and 2.0.x before 2.0.8 has an Open Redirect.",
+    "Origin": "UNSPECIFIED",
+    "PublishedAt": "2018-10-04T21:58:46Z",
+    "Severity": "MODERATE",
+    "Summary": "Moderate severity vulnerability that affects django",
+    "UpdatedAt": "2019-07-03T21:02:03Z",
+    "WithdrawnAt": ""
+  },
+  "VersionAdvisories": [
+    {
+      "FirstPatchedVersion": {
+        "Identifier": "2.0.8"
+      },
+      "VulnerableVersionRange": "\u003e= 2.0, \u003c 2.0.8"
+    },
+    {
+      "FirstPatchedVersion": {
+        "Identifier": "1.11.15"
+      },
+      "VulnerableVersionRange": "\u003e= 1.11.0, \u003c 1.11.15"
+    }
+  ]
+}
