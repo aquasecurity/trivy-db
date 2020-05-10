@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	bolt "github.com/etcd-io/bbolt"
+	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
@@ -26,6 +26,35 @@ var (
 	repoPath string
 )
 
+type Number struct {
+	Value float64
+}
+
+// This is for Go 1.14+ compat, to support mixed strings of CVSSScores
+// In Node core CVSSScore is like: "4.8 (Medium)", Type string
+// In NPM package CVSSScore is like: 4.8, Type float64
+// Details: https://github.com/golang/go/issues/37308
+func (n *Number) UnmarshalJSON(b []byte) error {
+	var data interface{}
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+
+	switch v := data.(type) {
+	case float64:
+		n.Value = v
+	case string:
+		f, err := strconv.ParseFloat(strings.Split(v, " ")[0], 64)
+		if err != nil {
+			return err
+		}
+		n.Value = f
+	default: // it can be null: https://github.com/nodejs/security-wg/blob/master/vuln/npm/334.json
+		n.Value = -1
+	}
+	return nil
+}
+
 type RawAdvisory struct {
 	ID                 int
 	Title              string
@@ -36,7 +65,7 @@ type RawAdvisory struct {
 	Overview           string
 	Recommendation     string
 	References         []string
-	CvssScoreNumber    json.Number `json:"cvss_score"`
+	CvssScoreNumber    Number `json:"cvss_score"`
 	CvssScore          float64
 }
 
@@ -87,64 +116,70 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		if info.IsDir() || !strings.HasSuffix(info.Name(), ".json") {
 			return nil
 		}
+
 		f, err := os.Open(path)
 		if err != nil {
 			return err
 		}
 		defer f.Close()
 
-		advisory := RawAdvisory{}
-		if err = json.NewDecoder(f).Decode(&advisory); err != nil {
-			return err
-		}
-		// Node.js itself
-		if advisory.ModuleName == "" {
-			return nil
-		}
-		advisory.ModuleName = strings.ToLower(advisory.ModuleName)
-
-		// `cvss_score` returns float or string like "4.8 (MEDIUM)"
-		s := strings.Split(advisory.CvssScoreNumber.String(), " ")
-		advisory.CvssScore, err = strconv.ParseFloat(s[0], 64)
-		if err != nil {
-			advisory.CvssScore = -1
-		}
-
-		vulnerabilityIDs := advisory.Cves
-		if len(vulnerabilityIDs) == 0 {
-			vulnerabilityIDs = []string{fmt.Sprintf("NSWG-ECO-%d", advisory.ID)}
-		}
-
-		a := Advisory{
-			VulnerableVersions: advisory.VulnerableVersions,
-			PatchedVersions:    advisory.PatchedVersions,
-		}
-		for _, vulnID := range vulnerabilityIDs {
-			// for detecting vulnerabilities
-			err = vs.dbc.PutAdvisory(tx, vulnerability.NodejsSecurityWg, advisory.ModuleName, vulnID, a)
-			if err != nil {
-				return xerrors.Errorf("failed to save node advisory: %w", err)
-			}
-
-			// for displaying vulnerability detail
-			vuln := types.VulnerabilityDetail{
-				ID:          vulnID,
-				CvssScore:   advisory.CvssScore,
-				References:  advisory.References,
-				Title:       advisory.Title,
-				Description: advisory.Overview,
-			}
-			if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, vulnerability.NodejsSecurityWg, vuln); err != nil {
-				return xerrors.Errorf("failed to save node vulnerability detail: %w", err)
-			}
-
-			if err := vs.dbc.PutSeverity(tx, vulnID, types.SeverityUnknown); err != nil {
-				return xerrors.Errorf("failed to save node vulnerability severity: %w", err)
-			}
-		}
-
-		return nil
+		return vs.commit(tx, f)
 	})
+}
+
+func (vs VulnSrc) commit(tx *bolt.Tx, f *os.File) error {
+	advisory := RawAdvisory{}
+	var err error
+	if err = json.NewDecoder(f).Decode(&advisory); err != nil {
+		return err
+	}
+
+	// Node.js itself
+	if advisory.ModuleName == "" {
+		return nil
+	}
+	advisory.ModuleName = strings.ToLower(advisory.ModuleName)
+
+	vulnerabilityIDs := advisory.Cves
+	if len(vulnerabilityIDs) == 0 {
+		vulnerabilityIDs = []string{fmt.Sprintf("NSWG-ECO-%d", advisory.ID)}
+	}
+
+	a := Advisory{
+		VulnerableVersions: advisory.VulnerableVersions,
+		PatchedVersions:    advisory.PatchedVersions,
+	}
+	for _, vulnID := range vulnerabilityIDs {
+		// for detecting vulnerabilities
+		err := vs.dbc.PutAdvisory(tx, vulnerability.NodejsSecurityWg, advisory.ModuleName, vulnID, a)
+		if err != nil {
+			return xerrors.Errorf("failed to save node advisory: %w", err)
+		}
+
+		// If an advisory is 0 override with -1
+		// https://github.com/nodejs/security-wg/pull/91/files
+		if advisory.CvssScoreNumber.Value <= 0 {
+			advisory.CvssScoreNumber.Value = -1
+		}
+
+		// for displaying vulnerability detail
+		vuln := types.VulnerabilityDetail{
+			ID:          vulnID,
+			CvssScore:   advisory.CvssScoreNumber.Value,
+			References:  advisory.References,
+			Title:       advisory.Title,
+			Description: advisory.Overview,
+		}
+		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, vulnerability.NodejsSecurityWg, vuln); err != nil {
+			return xerrors.Errorf("failed to save node vulnerability detail: %w", err)
+		}
+
+		if err := vs.dbc.PutSeverity(tx, vulnID, types.SeverityUnknown); err != nil {
+			return xerrors.Errorf("failed to save node vulnerability severity: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {

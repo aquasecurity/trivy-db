@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	bolt "github.com/etcd-io/bbolt"
+	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 	"gopkg.in/yaml.v2"
 
