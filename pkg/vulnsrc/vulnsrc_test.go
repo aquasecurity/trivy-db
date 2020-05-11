@@ -398,8 +398,8 @@ func Test_fullOptimize(t *testing.T) {
 				"ubuntu": types.SeverityLow,
 			}, types.VendorVectors{
 				"redhat": types.CVSSVector{
-					"v2": "AV:N/AC:M/Au:N/C:N/I:P/A:N",
-					"v3": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+					V2: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
+					V3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
 				},
 			}, "test title", "test description", []string{"test reference"}
 	}
@@ -422,8 +422,8 @@ func Test_fullOptimize(t *testing.T) {
 				},
 				VendorVectors: map[string]types.CVSSVector{
 					"redhat": {
-						"v2": "AV:N/AC:M/Au:N/C:N/I:P/A:N",
-						"v3": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+						V2: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
+						V3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
 					},
 				},
 				References: []string{"test reference"},
