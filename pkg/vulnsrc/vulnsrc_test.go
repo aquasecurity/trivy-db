@@ -392,11 +392,16 @@ func Test_fullOptimize(t *testing.T) {
 		getDetailFunc = oldgetDetailFunc
 	}()
 
-	getDetailFunc = func(vulnID string) (severity types.Severity, vendorSeverity types.VendorSeverity, s string, s2 string, strings []string) {
+	getDetailFunc = func(vulnID string) (severity types.Severity, vendorSeverity types.VendorSeverity, vendorVectors types.VendorVectors, s string, s2 string, strings []string) {
 		return types.SeverityCritical, types.VendorSeverity{
-			"redhat": types.SeverityHigh,
-			"ubuntu": types.SeverityLow,
-		}, "test title", "test description", []string{"test reference"}
+				"redhat": types.SeverityHigh,
+				"ubuntu": types.SeverityLow,
+			}, types.VendorVectors{
+				"redhat": types.CVSSVector{
+					V2: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
+					V3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+				},
+			}, "test title", "test description", []string{"test reference"}
 	}
 
 	mockDBOperation := new(db.MockOperation)
@@ -414,6 +419,12 @@ func Test_fullOptimize(t *testing.T) {
 				VendorSeverity: types.VendorSeverity{
 					"redhat": types.SeverityHigh,
 					"ubuntu": types.SeverityLow,
+				},
+				VendorVectors: map[string]types.CVSSVector{
+					"redhat": {
+						V2: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
+						V3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+					},
 				},
 				References: []string{"test reference"},
 			},
@@ -433,11 +444,11 @@ func Test_lightOptimize(t *testing.T) {
 		getDetailFunc = oldgetDetailFunc
 	}()
 
-	getDetailFunc = func(vulnID string) (severity types.Severity, vendorSeverity types.VendorSeverity, s string, s2 string, strings []string) {
+	getDetailFunc = func(vulnID string) (severity types.Severity, vendorSeverity types.VendorSeverity, vendorVectors types.VendorVectors, s string, s2 string, strings []string) {
 		return types.SeverityCritical, types.VendorSeverity{
 			"redhat": types.SeverityHigh,
 			"ubuntu": types.SeverityLow,
-		}, "test title", "test description", []string{"test reference"}
+		}, types.VendorVectors{}, "test title", "test description", []string{"test reference"}
 	}
 
 	mockDBOperation := new(db.MockOperation)

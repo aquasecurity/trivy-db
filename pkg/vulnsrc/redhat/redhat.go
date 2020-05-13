@@ -144,12 +144,14 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []RedhatCVE) error {
 		title := strings.TrimPrefix(strings.TrimSpace(cve.Bugzilla.Description), cve.Name)
 
 		vuln := types.VulnerabilityDetail{
-			CvssScore:   cvssScore,
-			CvssScoreV3: cvss3Score,
-			Severity:    severityFromThreat(cve.ThreatSeverity),
-			References:  cve.References,
-			Title:       strings.TrimSpace(title),
-			Description: strings.TrimSpace(strings.Join(cve.Details, "")),
+			CvssScore:    cvssScore,
+			CvssVector:   cve.Cvss.CvssScoringVector,
+			CvssScoreV3:  cvss3Score,
+			CvssVectorV3: cve.Cvss3.Cvss3ScoringVector,
+			Severity:     severityFromThreat(cve.ThreatSeverity),
+			References:   cve.References,
+			Title:        strings.TrimSpace(title),
+			Description:  strings.TrimSpace(strings.Join(cve.Details, "")),
 		}
 		if err := vs.dbc.PutVulnerabilityDetail(tx, cve.Name, vulnerability.RedHat, vuln); err != nil {
 			return xerrors.Errorf("failed to save Red Hat vulnerability: %w", err)
