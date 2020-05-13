@@ -7,8 +7,8 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
-	bolt "github.com/etcd-io/bbolt"
 	"github.com/stretchr/testify/assert"
+	bolt "go.etcd.io/bbolt"
 )
 
 func TestVulnSrc_Commit(t *testing.T) {
