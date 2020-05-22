@@ -69,6 +69,31 @@ func copy(dstPath, srcPath string) error {
 	return err
 }
 
+func TestConfig_StoreMetadata(t *testing.T) {
+	d, _ := ioutil.TempDir("", "TestConfig_StoreMetadata_*")
+	defer func() {
+		os.RemoveAll(d)
+	}()
+
+	_ = db.Init(d)
+	dbc := db.Config{}
+
+	fixedTime := time.Unix(1584149443, 0)
+	metadata := db.Metadata{
+		Version:    42,
+		Type:       db.TypeFull,
+		NextUpdate: fixedTime,
+		UpdatedAt:  fixedTime,
+	}
+
+	require.NoError(t, dbc.StoreMetadata(metadata, d))
+	b, err := ioutil.ReadFile(d + "/metadata.json")
+	require.NoError(t, err)
+	var got db.Metadata
+	_ = json.Unmarshal(b, &got)
+	assert.Equal(t, metadata, got)
+}
+
 func TestConfig_GetMetadata(t *testing.T) {
 	t.Run("happy path", func(t *testing.T) {
 		d, _ := ioutil.TempDir("", "TestConfig_GetMetadata_*")

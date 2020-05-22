@@ -2,6 +2,7 @@ package vulnsrc
 
 import (
 	"log"
+	"path/filepath"
 	"time"
 
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
@@ -76,6 +77,7 @@ func init() {
 
 type Operation interface {
 	SetMetadata(metadata db.Metadata) (err error)
+	StoreMetadata(metadata db.Metadata, dir string) (err error)
 }
 
 type Updater struct {
@@ -125,14 +127,21 @@ func (u Updater) Update(targets []string) error {
 		}
 	}
 
-	err := u.dbc.SetMetadata(db.Metadata{
+	md := db.Metadata{
 		Version:    db.SchemaVersion,
 		Type:       u.dbType,
 		NextUpdate: u.clock.Now().UTC().Add(u.updateInterval),
 		UpdatedAt:  u.clock.Now().UTC(),
-	})
+	}
+
+	err := u.dbc.SetMetadata(md)
 	if err != nil {
 		return xerrors.Errorf("failed to save metadata: %w", err)
+	}
+
+	err = u.dbc.StoreMetadata(md, filepath.Join(u.cacheDir, "db"))
+	if err != nil {
+		return xerrors.Errorf("failed to store metadata: %w", err)
 	}
 
 	return u.optimizer.Optimize()

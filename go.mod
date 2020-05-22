@@ -15,9 +15,11 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/urfave/cli v1.20.0
 	go.etcd.io/bbolt v1.3.4
-	golang.org/x/crypto v0.0.0-20190404164418-38d8ce5564a5 // indirect
+	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550 // indirect
+	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b // indirect
 	golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421
-	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898
+	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
+	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
 	gopkg.in/yaml.v2 v2.2.2
 	k8s.io/utils v0.0.0-20191010214722-8d271d903fe4
