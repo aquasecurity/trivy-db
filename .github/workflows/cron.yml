@@ -55,12 +55,16 @@ jobs:
       run: make db-compact
       env:
         DB_TYPE: trivy-light
+
+    #
+    # Compress
+    #
+    - name: Compress assets
+      run: make db-compress db-compress-light
+
     #
     # Upload
     #
-    - name: Compress assets
-      run: make db-compress
-
     - name: Upload assets
       run: ./trivy-db upload --dir assets
       env:

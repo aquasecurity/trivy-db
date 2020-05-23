@@ -80,11 +80,16 @@ db-build: trivy-db
 db-compact: $(GOBIN)/bbolt cache/db/trivy.db
 	mkdir -p assets
 	$(GOBIN)/bbolt compact -o ./assets/$(DB_TYPE).db cache/db/trivy.db
+	cp cache/db/metadata.json ./assets/metadata.json
 	rm cache/db/trivy.db
 
 .PHONY: db-compress
 db-compress: assets/$(DB_TYPE).db
-	gzip assets/*
+	zip -9 assets/trivy.db.gz assets/trivy.db assets/metadata.json
+
+.PHONY: db-compress-light
+db-compress-light: assets/$(DB_TYPE).db
+	zip -9 assets/trivy-light.db.gz assets/trivy-light.db assets/metadata.json
 
 .PHONY: db-clean
 db-clean:
