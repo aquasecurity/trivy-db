@@ -82,8 +82,8 @@ func TestConfig_StoreMetadata(t *testing.T) {
 	metadata := db.Metadata{
 		Version:    42,
 		Type:       db.TypeFull,
-		NextUpdate: fixedTime,
-		UpdatedAt:  fixedTime,
+		NextUpdate: fixedTime.UTC(),
+		UpdatedAt:  fixedTime.UTC(),
 	}
 
 	require.NoError(t, dbc.StoreMetadata(metadata, d))
