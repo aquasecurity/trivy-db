@@ -30,8 +30,8 @@ type BaseMetricV2 struct {
 }
 
 type CvssV2 struct {
-	BaseScore    float64
-	VectorString string `json:"vectorString"`
+	BaseScore    float64 `json:"baseScore"`
+	VectorString string  `json:"vectorString"`
 }
 
 type BaseMetricV3 struct {
@@ -39,7 +39,7 @@ type BaseMetricV3 struct {
 }
 
 type CvssV3 struct {
-	BaseScore    float64
+	BaseScore    float64 `json:"baseScore"`
 	BaseSeverity string
 	VectorString string `json:"vectorString"`
 }
