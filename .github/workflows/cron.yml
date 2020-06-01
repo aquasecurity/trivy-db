@@ -60,7 +60,7 @@ jobs:
     # Compress
     #
     - name: Compress assets
-      run: make db-compress db-compress-light
+      run: make db-compress && DB_TYPE=trivy-light make db-compress
 
     #
     # Upload

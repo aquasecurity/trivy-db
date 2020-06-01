@@ -2,9 +2,12 @@ package pkg
 
 import (
 	"errors"
-	"io/ioutil"
+	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 
@@ -22,7 +25,21 @@ func TestAppConfig_Upload(t *testing.T) {
 		{
 			name: "happy path",
 			uploadReleaseAssert: github.UploadReleaseAssetsExpectation{
-				Args:    github.UploadReleaseAssetsArgs{CtxAnything: true, FilePathsAnything: true},
+				Args: github.UploadReleaseAssetsArgs{
+					CtxAnything: true,
+					FilePaths: []string{
+						filepath.Join(os.TempDir(), "TestAppConfig_Upload_Dir", "TestAppConfig_Upload-0.db.gz"),
+						filepath.Join(os.TempDir(), "TestAppConfig_Upload_Dir", "TestAppConfig_Upload-0.db.tgz"),
+						filepath.Join(os.TempDir(), "TestAppConfig_Upload_Dir", "TestAppConfig_Upload-1.db.gz"),
+						filepath.Join(os.TempDir(), "TestAppConfig_Upload_Dir", "TestAppConfig_Upload-1.db.tgz"),
+						filepath.Join(os.TempDir(), "TestAppConfig_Upload_Dir", "TestAppConfig_Upload-2.db.gz"),
+						filepath.Join(os.TempDir(), "TestAppConfig_Upload_Dir", "TestAppConfig_Upload-2.db.tgz"),
+						filepath.Join(os.TempDir(), "TestAppConfig_Upload_Dir", "TestAppConfig_Upload-3.db.gz"),
+						filepath.Join(os.TempDir(), "TestAppConfig_Upload_Dir", "TestAppConfig_Upload-3.db.tgz"),
+						filepath.Join(os.TempDir(), "TestAppConfig_Upload_Dir", "TestAppConfig_Upload-4.db.gz"),
+						filepath.Join(os.TempDir(), "TestAppConfig_Upload_Dir", "TestAppConfig_Upload-4.db.tgz"),
+					},
+				},
 				Returns: github.UploadReleaseAssetsReturns{},
 			},
 			expectedError: nil,
@@ -49,38 +66,46 @@ func TestAppConfig_Upload(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		d, _ := ioutil.TempDir("", "TestAppConfig_Upload_*")
-		defer func() {
-			_ = os.RemoveAll(d)
-		}()
+		t.Run("upload tests", func(t *testing.T) {
+			d := filepath.Join(os.TempDir(), "TestAppConfig_Upload_Dir")
+			require.NoError(t, os.Mkdir(d, 0700))
+			defer func() {
+				_ = os.RemoveAll(d)
+			}()
 
-		for i := 0; i < 5; i++ {
-			f1, _ := ioutil.TempFile(d, "TestAppConfig_Upload_file-*.db.gz")
-			f2, _ := ioutil.TempFile(d, "TestAppConfig_Upload_file-*.randomfile")
-			_ = f1.Close()
-			_ = f2.Close()
-		}
+			for i := 0; i < 5; i++ {
+				f1, err := os.Create(filepath.Join(d, fmt.Sprintf("TestAppConfig_Upload-%d.db.gz", i)))
+				require.NoError(t, err)
+				f2, err := os.Create(filepath.Join(d, fmt.Sprintf("TestAppConfig_Upload-%d.randomfile", i)))
+				require.NoError(t, err)
+				f3, err := os.Create(filepath.Join(d, fmt.Sprintf("TestAppConfig_Upload-%d.db.tgz", i)))
+				require.NoError(t, err)
+				_ = f1.Close()
+				_ = f2.Close()
+				_ = f3.Close()
+			}
 
-		switch {
-		case tc.inputDir != "":
-			vulnsrc.UpdateList = []string{tc.inputDir}
-		default:
-			vulnsrc.UpdateList = []string{d}
-		}
+			switch {
+			case tc.inputDir != "":
+				vulnsrc.UpdateList = []string{tc.inputDir}
+			default:
+				vulnsrc.UpdateList = []string{d}
+			}
 
-		mockVCSClient := new(github.MockVCSClientInterface)
-		mockVCSClient.ApplyUploadReleaseAssetsExpectation(tc.uploadReleaseAssert)
+			mockVCSClient := new(github.MockVCSClientInterface)
+			mockVCSClient.ApplyUploadReleaseAssetsExpectation(tc.uploadReleaseAssert)
 
-		ac := AppConfig{Client: mockVCSClient}
-		cliApp := ac.NewApp("1.2.3")
+			ac := AppConfig{Client: mockVCSClient}
+			cliApp := ac.NewApp("1.2.3")
 
-		err := cliApp.Run([]string{"trivy-db", "upload"})
+			err := cliApp.Run([]string{"trivy-db", "upload"})
 
-		switch {
-		case tc.expectedError != nil:
-			assert.Equal(t, tc.expectedError.Error(), err.Error(), tc.name)
-		default:
-			assert.NoError(t, err, tc.name)
-		}
+			switch {
+			case tc.expectedError != nil:
+				assert.Equal(t, tc.expectedError.Error(), err.Error(), tc.name)
+			default:
+				assert.NoError(t, err, tc.name)
+			}
+		})
 	}
 }

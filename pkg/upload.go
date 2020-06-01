@@ -18,10 +18,10 @@ func (ac AppConfig) upload(c *cli.Context) error {
 		return xerrors.Errorf("unable to list files: %w", err)
 	}
 
-	// only gz file
+	// only gz and tgz files
 	var filePaths []string
 	for _, f := range files {
-		if f.IsDir() || !strings.HasSuffix(f.Name(), "db.gz") {
+		if f.IsDir() || (!strings.HasSuffix(f.Name(), "db.gz") && !strings.HasSuffix(f.Name(), "db.tgz")) {
 			continue
 		}
 		path := filepath.Join(dir, f.Name())
