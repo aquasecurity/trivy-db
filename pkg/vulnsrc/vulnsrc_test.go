@@ -397,9 +397,9 @@ func Test_fullOptimize(t *testing.T) {
 				"redhat": types.SeverityHigh,
 				"ubuntu": types.SeverityLow,
 			}, types.VendorVectors{
-				"redhat": types.CVSS{
-					V2Vector: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
-					V3Vector: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+				"redhat": types.CVSSVector{
+					V2: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
+					V3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
 				},
 			}, "test title", "test description", []string{"test reference"}
 	}
@@ -420,10 +420,10 @@ func Test_fullOptimize(t *testing.T) {
 					"redhat": types.SeverityHigh,
 					"ubuntu": types.SeverityLow,
 				},
-				VendorVectors: map[string]types.CVSS{
+				VendorVectors: map[string]types.CVSSVector{
 					"redhat": {
-						V2Vector: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
-						V3Vector: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+						V2: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
+						V3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
 					},
 				},
 				References: []string{"test reference"},
