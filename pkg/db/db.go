@@ -134,7 +134,7 @@ func (dbc Config) SetMetadata(metadata Metadata) error {
 func (dbc Config) StoreMetadata(metadata Metadata, dir string) error {
 	b, err := json.Marshal(metadata)
 	if err != nil {
-		return err
+		return xerrors.Errorf("failed to store metadata: %w", err)
 	}
 	return ioutil.WriteFile(filepath.Join(dir, "metadata.json"), b, 0600)
 }
