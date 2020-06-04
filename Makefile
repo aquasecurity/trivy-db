@@ -44,7 +44,7 @@ clean:
 	rm -rf integration/testdata/fixtures/
 
 $(GOBIN)/bbolt:
-	go get -v github.com/etcd-io/bbolt/cmd/bbolt
+	go get -v go.etcd.io/bbolt/...
 
 export DB_TYPE ?= trivy
 
