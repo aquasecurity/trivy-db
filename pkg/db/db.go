@@ -2,6 +2,7 @@ package db
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime/debug"
@@ -128,6 +129,14 @@ func (dbc Config) SetMetadata(metadata Metadata) error {
 		return xerrors.Errorf("failed to save metadata: %w", err)
 	}
 	return nil
+}
+
+func (dbc Config) StoreMetadata(metadata Metadata, dir string) error {
+	b, err := json.Marshal(metadata)
+	if err != nil {
+		return xerrors.Errorf("failed to store metadata: %w", err)
+	}
+	return ioutil.WriteFile(filepath.Join(dir, "metadata.json"), b, 0600)
 }
 
 func (dbc Config) BatchUpdate(fn func(tx *bolt.Tx) error) error {

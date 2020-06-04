@@ -44,7 +44,7 @@ clean:
 	rm -rf integration/testdata/fixtures/
 
 $(GOBIN)/bbolt:
-	go get -v github.com/etcd-io/bbolt/cmd/bbolt
+	go get -v go.etcd.io/bbolt/...
 
 export DB_TYPE ?= trivy
 
@@ -78,13 +78,15 @@ db-build: trivy-db
 
 .PHONY: db-compact
 db-compact: $(GOBIN)/bbolt cache/db/trivy.db
-	mkdir -p assets
-	$(GOBIN)/bbolt compact -o ./assets/$(DB_TYPE).db cache/db/trivy.db
+	mkdir -p assets/$(DB_TYPE)
+	$(GOBIN)/bbolt compact -o ./assets/$(DB_TYPE)/$(DB_TYPE).db cache/db/trivy.db
+	cp cache/db/metadata.json ./assets/$(DB_TYPE)/metadata.json
 	rm cache/db/trivy.db
 
 .PHONY: db-compress
-db-compress: assets/$(DB_TYPE).db
-	gzip assets/*
+db-compress: assets/$(DB_TYPE)/$(DB_TYPE).db assets/$(DB_TYPE)/metadata.json
+	tar cvzf assets/$(DB_TYPE)-offline.db.tgz -C assets/$(DB_TYPE) $(DB_TYPE).db metadata.json
+	gzip --best -c assets/$(DB_TYPE)/$(DB_TYPE).db > assets/$(DB_TYPE).db.gz
 
 .PHONY: db-clean
 db-clean:

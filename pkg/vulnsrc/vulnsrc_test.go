@@ -94,13 +94,14 @@ func TestUpdater_Update(t *testing.T) {
 		targets []string
 	}
 	tests := []struct {
-		name        string
-		fields      fields
-		args        args
-		update      []types.UpdateExpectation
-		setMetadata []SetMetadataExpectation
-		optimize    []OptimizeExpectation
-		wantErr     string
+		name          string
+		fields        fields
+		args          args
+		update        []types.UpdateExpectation
+		setMetadata   []SetMetadataExpectation
+		storeMetadata []StoreMetadataExpectation
+		optimize      []OptimizeExpectation
+		wantErr       string
 	}{
 		{
 			name: "happy test",
@@ -132,6 +133,20 @@ func TestUpdater_Update(t *testing.T) {
 						},
 					},
 					Returns: SetMetadataReturns{},
+				},
+			},
+			storeMetadata: []StoreMetadataExpectation{
+				{
+					Args: StoreMetadataArgs{
+						Metadata: db.Metadata{
+							Version:    1,
+							Type:       db.TypeFull,
+							NextUpdate: fixedNextUpdateTime,
+							UpdatedAt:  fixedUpdatedAtTime,
+						},
+						DirAnything: true,
+					},
+					Returns: StoreMetadataReturns{},
 				},
 			},
 			optimize: []OptimizeExpectation{
@@ -210,6 +225,55 @@ func TestUpdater_Update(t *testing.T) {
 			},
 			wantErr: "failed to save metadata",
 		},
+		{
+			name: "StoreMetadata returns an error",
+			fields: fields{
+				CacheDir:       "cache",
+				DBType:         db.TypeFull,
+				UpdateInterval: 12 * time.Hour,
+				Clock:          ct.NewFakeClock(time.Date(2019, 1, 1, 0, 0, 0, 0, time.UTC)),
+			},
+			args: args{
+				targets: []string{"test"},
+			},
+			update: []types.UpdateExpectation{
+				{
+					Args: types.UpdateArgs{
+						Dir: "cache",
+					},
+					Returns: types.UpdateReturns{},
+				},
+			},
+			setMetadata: []SetMetadataExpectation{
+				{
+					Args: SetMetadataArgs{
+						Metadata: db.Metadata{
+							Version:    1,
+							Type:       db.TypeFull,
+							NextUpdate: fixedNextUpdateTime,
+							UpdatedAt:  fixedUpdatedAtTime,
+						},
+					},
+				},
+			},
+			storeMetadata: []StoreMetadataExpectation{
+				{
+					Args: StoreMetadataArgs{
+						Metadata: db.Metadata{
+							Version:    1,
+							Type:       db.TypeFull,
+							NextUpdate: fixedNextUpdateTime,
+							UpdatedAt:  fixedUpdatedAtTime,
+						},
+						DirAnything: true,
+					},
+					Returns: StoreMetadataReturns{
+						Err: errors.New("error"),
+					},
+				},
+			},
+			wantErr: "failed to store metadata",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -218,6 +282,7 @@ func TestUpdater_Update(t *testing.T) {
 
 			mockDBOperation := new(MockOperation)
 			mockDBOperation.ApplySetMetadataExpectations(tt.setMetadata)
+			mockDBOperation.ApplyStoreMetadataExpectations(tt.storeMetadata)
 
 			mockOptimizer := new(MockOptimizer)
 			mockOptimizer.ApplyOptimizeExpectations(tt.optimize)
