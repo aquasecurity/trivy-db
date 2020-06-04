@@ -84,10 +84,10 @@ db-compact: $(GOBIN)/bbolt cache/db/trivy.db
 	rm cache/db/trivy.db
 
 .PHONY: db-compress
-db-compress: assets/$(DB_TYPE)/$(DB_TYPE).db
 	tar -cvzf assets/$(DB_TYPE)-offline.db.tgz assets/$(DB_TYPE)/$(DB_TYPE).db assets/$(DB_TYPE)/metadata.json
 	gzip --best assets/$(DB_TYPE)/$(DB_TYPE).db
 	mv assets/$(DB_TYPE)/$(DB_TYPE).db.gz assets/$(DB_TYPE).db.gz
+db-compress: assets/$(DB_TYPE)/$(DB_TYPE).db assets/$(DB_TYPE)/metadata.json
 
 .PHONY: db-clean
 db-clean:
