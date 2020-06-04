@@ -45,8 +45,6 @@ jobs:
 
     - name: Compress assets
       run: make db-compress
-      env:
-        DB_TYPE: trivy-light
 
     #
     # Light DB
