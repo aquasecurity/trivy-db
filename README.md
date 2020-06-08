@@ -1,4 +1,4 @@
-# trivy-db
+# trivy-db ![Trivy DB](https://github.com/aquasecurity/trivy-db/workflows/Trivy%20DB/badge.svg)
 
 ## Overview
 `trivy-db` is a CLI tool and a library to manipulate Trivy DB.
