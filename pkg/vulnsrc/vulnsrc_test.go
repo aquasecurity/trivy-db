@@ -392,12 +392,12 @@ func Test_fullOptimize(t *testing.T) {
 		getDetailFunc = oldgetDetailFunc
 	}()
 
-	getDetailFunc = func(vulnID string) (severity types.Severity, vendorSeverity types.VendorSeverity, vendorVectors types.VendorVectors, s string, s2 string, strings []string) {
+	getDetailFunc = func(vulnID string) (severity types.Severity, vendorSeverity types.VendorSeverity, vendorVectors types.VendorCVSS, s string, s2 string, strings []string) {
 		return types.SeverityCritical, types.VendorSeverity{
 				"redhat": types.SeverityHigh,
 				"ubuntu": types.SeverityLow,
-			}, types.VendorVectors{
-				"redhat": types.CVSSVector{
+			}, types.VendorCVSS{
+				"redhat": types.CVSS{
 					V2: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
 					V3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
 				},
@@ -420,7 +420,7 @@ func Test_fullOptimize(t *testing.T) {
 					"redhat": types.SeverityHigh,
 					"ubuntu": types.SeverityLow,
 				},
-				VendorVectors: map[string]types.CVSSVector{
+				VendorVectors: map[string]types.CVSS{
 					"redhat": {
 						V2: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
 						V3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
@@ -444,11 +444,11 @@ func Test_lightOptimize(t *testing.T) {
 		getDetailFunc = oldgetDetailFunc
 	}()
 
-	getDetailFunc = func(vulnID string) (severity types.Severity, vendorSeverity types.VendorSeverity, vendorVectors types.VendorVectors, s string, s2 string, strings []string) {
+	getDetailFunc = func(vulnID string) (severity types.Severity, vendorSeverity types.VendorSeverity, vendorVectors types.VendorCVSS, s string, s2 string, strings []string) {
 		return types.SeverityCritical, types.VendorSeverity{
 			"redhat": types.SeverityHigh,
 			"ubuntu": types.SeverityLow,
-		}, types.VendorVectors{}, "test title", "test description", []string{"test reference"}
+		}, types.VendorCVSS{}, "test title", "test description", []string{"test reference"}
 	}
 
 	mockDBOperation := new(db.MockOperation)

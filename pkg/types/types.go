@@ -11,18 +11,14 @@ type Severity int
 
 type VendorSeverity map[string]Severity
 
-type CVSSVector struct {
-	V2     string `json:"v2,omitempty"`
-	V3     string `json:"v3,omitempty"`
-	Scores CVSSScore
+type CVSS struct {
+	V2      string  `json:"v2,omitempty"`
+	V3      string  `json:"v3,omitempty"`
+	V2Score float64 `json:"v2_score,omitempty"`
+	V3Score float64 `json:"v3_score,omitempty"`
 }
 
-type CVSSScore struct {
-	V2 float64 `json:"v2,omitempty"`
-	V3 float64 `json:"v3,omitempty"`
-}
-
-type VendorVectors map[string]CVSSVector
+type VendorCVSS map[string]CVSS
 
 const (
 	SeverityUnknown Severity = iota
@@ -103,7 +99,7 @@ type Vulnerability struct {
 	Description    string         `json:",omitempty"`
 	Severity       string         `json:",omitempty"`
 	VendorSeverity VendorSeverity `json:",omitempty"`
-	VendorVectors  VendorVectors  `json:",omitempty"`
+	VendorVectors  VendorCVSS     `json:",omitempty"`
 	References     []string       `json:",omitempty"`
 }
 
