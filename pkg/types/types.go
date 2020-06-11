@@ -18,7 +18,13 @@ type CVSS struct {
 	V3Score float64 `json:"v3_score,omitempty"`
 }
 
+type CVSSVector struct {
+	V2 string `json:"v2,omitempty"`
+	V3 string `json:"v3,omitempty"`
+}
+
 type VendorCVSS map[string]CVSS
+type VendorVectors map[string]CVSSVector
 
 const (
 	SeverityUnknown Severity = iota
@@ -99,7 +105,8 @@ type Vulnerability struct {
 	Description    string         `json:",omitempty"`
 	Severity       string         `json:",omitempty"`
 	VendorSeverity VendorSeverity `json:",omitempty"`
-	VendorVectors  VendorCVSS     `json:",omitempty"`
+	VendorVectors  VendorVectors  `json:",omitempty"` // Deprecated: VendorVectors is only for backwards compatibility. Use CVSS instead.
+	CVSS           VendorCVSS     `json:",omitempty"`
 	References     []string       `json:",omitempty"`
 }
 

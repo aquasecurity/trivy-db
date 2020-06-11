@@ -420,7 +420,7 @@ func Test_fullOptimize(t *testing.T) {
 					"redhat": types.SeverityHigh,
 					"ubuntu": types.SeverityLow,
 				},
-				VendorVectors: map[string]types.CVSS{
+				CVSS: map[string]types.CVSS{
 					"redhat": {
 						V2: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
 						V3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
