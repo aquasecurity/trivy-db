@@ -392,12 +392,20 @@ func Test_fullOptimize(t *testing.T) {
 		getDetailFunc = oldgetDetailFunc
 	}()
 
-	getDetailFunc = func(vulnID string) (severity types.Severity, vendorSeverity types.VendorSeverity, vendorVectors types.VendorCVSS, s string, s2 string, strings []string) {
+	getDetailFunc = func(vulnID string) (severity types.Severity, vendorSeverity types.VendorSeverity, vendorCVSS types.VendorCVSS, vendorVectors types.VendorVectors, s string, s2 string, strings []string) {
 		return types.SeverityCritical, types.VendorSeverity{
 				"redhat": types.SeverityHigh,
 				"ubuntu": types.SeverityLow,
 			}, types.VendorCVSS{
 				"redhat": types.CVSS{
+					V2:      "AV:N/AC:M/Au:N/C:N/I:P/A:N",
+					V2Score: 4.5,
+					V3:      "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+					V3Score: 5.6,
+				},
+			},
+			types.VendorVectors{
+				"redhat": types.CVSSVector{
 					V2: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
 					V3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
 				},
@@ -422,6 +430,14 @@ func Test_fullOptimize(t *testing.T) {
 				},
 				CVSS: map[string]types.CVSS{
 					"redhat": {
+						V2:      "AV:N/AC:M/Au:N/C:N/I:P/A:N",
+						V2Score: 4.5,
+						V3:      "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+						V3Score: 5.6,
+					},
+				},
+				VendorVectors: types.VendorVectors{
+					"redhat": types.CVSSVector{
 						V2: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
 						V3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
 					},
@@ -444,11 +460,11 @@ func Test_lightOptimize(t *testing.T) {
 		getDetailFunc = oldgetDetailFunc
 	}()
 
-	getDetailFunc = func(vulnID string) (severity types.Severity, vendorSeverity types.VendorSeverity, vendorVectors types.VendorCVSS, s string, s2 string, strings []string) {
+	getDetailFunc = func(vulnID string) (severity types.Severity, vendorSeverity types.VendorSeverity, vendorCVSS types.VendorCVSS, vendorVectors types.VendorVectors, s string, s2 string, strings []string) {
 		return types.SeverityCritical, types.VendorSeverity{
 			"redhat": types.SeverityHigh,
 			"ubuntu": types.SeverityLow,
-		}, types.VendorCVSS{}, "test title", "test description", []string{"test reference"}
+		}, types.VendorCVSS{}, types.VendorVectors{}, "test title", "test description", []string{"test reference"}
 	}
 
 	mockDBOperation := new(db.MockOperation)
