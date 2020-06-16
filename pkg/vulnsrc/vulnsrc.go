@@ -181,14 +181,15 @@ var (
 )
 
 func (o fullOptimizer) fullOptimize(tx *bolt.Tx, cveID string) error {
-	severity, vs, vv, title, description, references := getDetailFunc(cveID)
+	severity, vs, vc, vv, title, description, references := getDetailFunc(cveID)
 	vuln := types.Vulnerability{
 		Title:          title,
 		Description:    description,
 		Severity:       severity.String(), // TODO: We have to keep this key until we deprecate
 		References:     references,
 		VendorSeverity: vs,
-		VendorVectors:  vv,
+		VendorVectors:  vv, // TODO: We have to keep this for backwards compatibility.
+		CVSS:           vc,
 	}
 
 	if err := o.dbc.PutVulnerability(tx, cveID, vuln); err != nil {
@@ -217,7 +218,7 @@ func (o lightOptimizer) Optimize() error {
 
 func (o lightOptimizer) lightOptimize(cveID string, tx *bolt.Tx) error {
 	// get correct severity
-	severity, vendorSeverity, _, _, _, _ := getDetailFunc(cveID)
+	severity, vendorSeverity, _, _, _, _, _ := getDetailFunc(cveID)
 	vuln := types.Vulnerability{
 		VendorSeverity: vendorSeverity,
 	}
