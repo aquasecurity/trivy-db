@@ -12,10 +12,10 @@ type Severity int
 type VendorSeverity map[string]Severity
 
 type CVSS struct {
-	V2Vector string  `json:"v2_vector,omitempty"`
-	V3Vector string  `json:"v3_vector,omitempty"`
-	V2Score  float64 `json:"v2_score,omitempty"`
-	V3Score  float64 `json:"v3_score,omitempty"`
+	V2Vector string  `json:"V2Vector,omitempty"`
+	V3Vector string  `json:"V3Vector,omitempty"`
+	V2Score  float64 `json:"V2Score,omitempty"`
+	V3Score  float64 `json:"V3Score,omitempty"`
 }
 
 type CVSSVector struct {
