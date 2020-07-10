@@ -126,7 +126,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []UbuntuCVE) error {
 
 				// for light DB
 				if err := vs.dbc.PutSeverity(tx, cve.Candidate, types.SeverityUnknown); err != nil {
-					return xerrors.Errorf("failed to save alpine vulnerability severity: %w", err)
+					return xerrors.Errorf("failed to save Ubuntu vulnerability severity: %w", err)
 				}
 			}
 		}
@@ -138,7 +138,7 @@ func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) 
 	bucket := fmt.Sprintf(platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get Amazon advisories: %w", err)
+		return nil, xerrors.Errorf("failed to get Ubuntu advisories: %w", err)
 	}
 	return advisories, nil
 }

@@ -112,7 +112,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []DebianCVE) error {
 
 				// for light DB
 				if err := vs.dbc.PutSeverity(tx, cve.VulnerabilityID, types.SeverityUnknown); err != nil {
-					return xerrors.Errorf("failed to save alpine vulnerability severity: %w", err)
+					return xerrors.Errorf("failed to save Debian vulnerability severity: %w", err)
 				}
 			}
 		}
