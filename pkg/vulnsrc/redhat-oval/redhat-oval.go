@@ -123,7 +123,7 @@ func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) 
 	bucket := fmt.Sprintf(platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get Alpine advisories: %w", err)
+		return nil, xerrors.Errorf("failed to get Red Hat OVAL advisories: %w", err)
 	}
 	return advisories, nil
 }

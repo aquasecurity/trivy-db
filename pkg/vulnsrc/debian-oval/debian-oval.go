@@ -130,7 +130,7 @@ func (vs VulnSrc) save(cves []DebianOVAL) error {
 
 				// for light DB
 				if err := vs.dbc.PutSeverity(tx, cveID, types.SeverityUnknown); err != nil {
-					return xerrors.Errorf("failed to save alpine vulnerability severity: %w", err)
+					return xerrors.Errorf("failed to save Debian OVAL vulnerability severity: %w", err)
 				}
 			}
 		}
@@ -147,7 +147,7 @@ func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) 
 	bucket := fmt.Sprintf(platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get Alpine advisories: %w", err)
+		return nil, xerrors.Errorf("failed to get Debian OVAL advisories: %w", err)
 	}
 	return advisories, nil
 }

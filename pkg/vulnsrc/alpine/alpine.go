@@ -68,7 +68,7 @@ func (vs VulnSrc) save(cves []AlpineCVE) error {
 				FixedVersion: cve.FixedVersion,
 			}
 			if err := vs.dbc.PutAdvisory(tx, platformName, pkgName, cve.VulnerabilityID, advisory); err != nil {
-				return xerrors.Errorf("failed to save alpine advisory: %w", err)
+				return xerrors.Errorf("failed to save Alpine advisory: %w", err)
 			}
 
 			vuln := types.VulnerabilityDetail{
@@ -76,12 +76,12 @@ func (vs VulnSrc) save(cves []AlpineCVE) error {
 				Description: cve.Description,
 			}
 			if err := vs.dbc.PutVulnerabilityDetail(tx, cve.VulnerabilityID, vulnerability.Alpine, vuln); err != nil {
-				return xerrors.Errorf("failed to save alpine vulnerability: %w", err)
+				return xerrors.Errorf("failed to save Alpine vulnerability: %w", err)
 			}
 
 			// for light DB
 			if err := vs.dbc.PutSeverity(tx, cve.VulnerabilityID, types.SeverityUnknown); err != nil {
-				return xerrors.Errorf("failed to save alpine vulnerability severity: %w", err)
+				return xerrors.Errorf("failed to save Alpine vulnerability severity: %w", err)
 			}
 		}
 		return nil
