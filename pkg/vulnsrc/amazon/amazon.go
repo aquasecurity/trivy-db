@@ -50,11 +50,11 @@ func (vs VulnSrc) Update(dir string) error {
 
 	err := fileWalker(rootDir, vs.walkFunc)
 	if err != nil {
-		return xerrors.Errorf("error in amazon walk: %w", err)
+		return xerrors.Errorf("error in Amazon walk: %w", err)
 	}
 
 	if err = vs.save(); err != nil {
-		return xerrors.Errorf("error in amazon save: %w", err)
+		return xerrors.Errorf("error in Amazon save: %w", err)
 	}
 
 	return nil
@@ -67,13 +67,13 @@ func (vs *VulnSrc) walkFunc(r io.Reader, path string) error {
 	}
 	version := paths[len(paths)-2]
 	if !utils.StringInSlice(version, targetVersions) {
-		log.Printf("unsupported amazon version: %s\n", version)
+		log.Printf("unsupported Amazon version: %s\n", version)
 		return nil
 	}
 
 	var vuln amazon.ALAS
 	if err := json.NewDecoder(r).Decode(&vuln); err != nil {
-		return xerrors.Errorf("failed to decode amazon JSON: %w", err)
+		return xerrors.Errorf("failed to decode Amazon JSON: %w", err)
 	}
 
 	vs.alasList = append(vs.alasList, alas{
@@ -84,7 +84,7 @@ func (vs *VulnSrc) walkFunc(r io.Reader, path string) error {
 }
 
 func (vs VulnSrc) save() error {
-	log.Println("Saving amazon DB")
+	log.Println("Saving Amazon DB")
 	err := vs.dbc.BatchUpdate(vs.commit())
 	if err != nil {
 		return xerrors.Errorf("error in batch update: %w", err)
@@ -106,7 +106,7 @@ func (vs VulnSrc) commitFunc(tx *bolt.Tx) error {
 					FixedVersion: constructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 				}
 				if err := vs.dbc.PutAdvisory(tx, platformName, pkg.Name, cveID, advisory); err != nil {
-					return xerrors.Errorf("failed to save amazon advisory: %w", err)
+					return xerrors.Errorf("failed to save Amazon advisory: %w", err)
 				}
 
 				var references []string
@@ -121,12 +121,12 @@ func (vs VulnSrc) commitFunc(tx *bolt.Tx) error {
 					Title:       "",
 				}
 				if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Amazon, vuln); err != nil {
-					return xerrors.Errorf("failed to save amazon vulnerability detail: %w", err)
+					return xerrors.Errorf("failed to save Amazon vulnerability detail: %w", err)
 				}
 
 				// for light DB
 				if err := vs.dbc.PutSeverity(tx, cveID, types.SeverityUnknown); err != nil {
-					return xerrors.Errorf("failed to save alpine vulnerability severity: %w", err)
+					return xerrors.Errorf("failed to save Amazon vulnerability severity: %w", err)
 				}
 			}
 		}

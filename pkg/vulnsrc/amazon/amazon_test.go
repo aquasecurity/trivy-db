@@ -44,7 +44,7 @@ func TestVulnSrc_Update(t *testing.T) {
 			batchUpdate: db.BatchUpdateExpectation{
 				Args: db.BatchUpdateArgs{FnAnything: true},
 			},
-			expectedError: errors.New("error in amazon walk: error in file walk: lstat badpathdoesnotexist/vuln-list/amazon: no such file or directory"),
+			expectedError: errors.New("error in Amazon walk: error in file walk: lstat badpathdoesnotexist/vuln-list/amazon: no such file or directory"),
 		},
 		{
 			name:     "unable to save amazon defintions",
@@ -55,7 +55,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Err: errors.New("unable to batch update"),
 				},
 			},
-			expectedError: errors.New("error in amazon save: error in batch update: unable to batch update"),
+			expectedError: errors.New("error in Amazon save: error in batch update: unable to batch update"),
 		},
 	}
 
@@ -251,7 +251,7 @@ func TestVulnSrc_WalkFunc(t *testing.T) {
 			ioReader:         strings.NewReader(`invalidjson`),
 			inputPath:        "1/2/1",
 			expectedALASList: []alas(nil),
-			expectedError:    errors.New("failed to decode amazon JSON: invalid character 'i' looking for beginning of value"),
+			expectedError:    errors.New("failed to decode Amazon JSON: invalid character 'i' looking for beginning of value"),
 		},
 		{
 			name:          "unsupported amazon version",
@@ -396,7 +396,7 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 					},
 				},
 			},
-			expectedError: errors.New("failed to save amazon advisory: failed to put advisory"),
+			expectedError: errors.New("failed to save Amazon advisory: failed to put advisory"),
 		},
 		{
 			name: "failed to save Amazon advisory, PutVulnerabilityDetail() returns an error",
@@ -454,7 +454,7 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 					},
 				},
 			},
-			expectedError: errors.New("failed to save amazon vulnerability detail: failed to put vulnerability detail"),
+			expectedError: errors.New("failed to save Amazon vulnerability detail: failed to put vulnerability detail"),
 		},
 	}
 

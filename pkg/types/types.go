@@ -11,10 +11,19 @@ type Severity int
 
 type VendorSeverity map[string]Severity
 
+type CVSS struct {
+	V2Vector string  `json:"V2Vector,omitempty"`
+	V3Vector string  `json:"V3Vector,omitempty"`
+	V2Score  float64 `json:"V2Score,omitempty"`
+	V3Score  float64 `json:"V3Score,omitempty"`
+}
+
 type CVSSVector struct {
 	V2 string `json:"v2,omitempty"`
 	V3 string `json:"v3,omitempty"`
 }
+
+type VendorCVSS map[string]CVSS
 type VendorVectors map[string]CVSSVector
 
 const (
@@ -98,7 +107,8 @@ type Vulnerability struct {
 	Severity       string         `json:",omitempty"`
 	CweIDs         []string       `json:",omitempty"` // e.g. CWE-78, CWE-89
 	VendorSeverity VendorSeverity `json:",omitempty"`
-	VendorVectors  VendorVectors  `json:",omitempty"`
+	VendorVectors  VendorVectors  `json:",omitempty"` // Deprecated: VendorVectors is only for backwards compatibility. Use CVSS instead.
+	CVSS           VendorCVSS     `json:",omitempty"`
 	References     []string       `json:",omitempty"`
 }
 
