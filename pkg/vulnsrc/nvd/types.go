@@ -13,6 +13,7 @@ type Cve struct {
 	Meta        Meta `json:"CVE_data_meta"`
 	References  References
 	Description Description
+	ProblemType ProblemType
 }
 
 type Meta struct {
@@ -58,6 +59,19 @@ type Description struct {
 }
 
 type DescriptionData struct {
+	Lang  string
+	Value string
+}
+
+type ProblemType struct {
+	ProblemTypeData []ProblemTypeData `json:"problemtype_data"`
+}
+
+type ProblemTypeData struct {
+	Description []ProblemTypeDataDescription
+}
+
+type ProblemTypeDataDescription struct {
 	Lang  string
 	Value string
 }

@@ -457,11 +457,16 @@ func Test_fullOptimize(t *testing.T) {
 		getDetailFunc = oldgetDetailFunc
 	}()
 
-	getDetailFunc = func(vulnID string) (severity types.Severity, vendorSeverity types.VendorSeverity, vendorCVSS types.VendorCVSS, vendorVectors types.VendorVectors, s string, s2 string, strings []string) {
-		return types.SeverityCritical, types.VendorSeverity{
+	getDetailFunc = func(vulnID string) types.Vulnerability {
+		return types.Vulnerability{
+			Title:       "test title",
+			Description: "test description",
+			Severity:    types.SeverityCritical.String(),
+			VendorSeverity: types.VendorSeverity{
 				"redhat": types.SeverityHigh,
 				"ubuntu": types.SeverityLow,
-			}, types.VendorCVSS{
+			},
+			CVSS: types.VendorCVSS{
 				"redhat": types.CVSS{
 					V2Vector: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
 					V2Score:  4.5,
@@ -469,12 +474,15 @@ func Test_fullOptimize(t *testing.T) {
 					V3Score:  5.6,
 				},
 			},
-			types.VendorVectors{
+			VendorVectors: types.VendorVectors{
 				"redhat": types.CVSSVector{
 					V2: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
 					V3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
 				},
-			}, "test title", "test description", []string{"test reference"}
+			},
+			CweIDs:     []string{"CWE-134"},
+			References: []string{"test reference"},
+		}
 	}
 
 	mockDBOperation := new(db.MockOperation)
@@ -507,6 +515,7 @@ func Test_fullOptimize(t *testing.T) {
 						V3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
 					},
 				},
+				CweIDs:     []string{"CWE-134"},
 				References: []string{"test reference"},
 			},
 		},
@@ -525,11 +534,19 @@ func Test_lightOptimize(t *testing.T) {
 		getDetailFunc = oldgetDetailFunc
 	}()
 
-	getDetailFunc = func(vulnID string) (severity types.Severity, vendorSeverity types.VendorSeverity, vendorCVSS types.VendorCVSS, vendorVectors types.VendorVectors, s string, s2 string, strings []string) {
-		return types.SeverityCritical, types.VendorSeverity{
-			"redhat": types.SeverityHigh,
-			"ubuntu": types.SeverityLow,
-		}, types.VendorCVSS{}, types.VendorVectors{}, "test title", "test description", []string{"test reference"}
+	getDetailFunc = func(vulnID string) types.Vulnerability {
+		return types.Vulnerability{
+			Title:       "test title",
+			Description: "test description",
+			Severity:    types.SeverityCritical.String(),
+			VendorSeverity: types.VendorSeverity{
+				"redhat": types.SeverityHigh,
+				"ubuntu": types.SeverityLow,
+			},
+			VendorVectors: types.VendorVectors{},
+			CweIDs:        []string{"CWE-134"},
+			References:    []string{"test reference"},
+		}
 	}
 
 	mockDBOperation := new(db.MockOperation)

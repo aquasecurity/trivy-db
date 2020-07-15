@@ -1,7 +1,11 @@
 package nvd
 
 import (
+	"io/ioutil"
+	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -11,6 +15,63 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
+func TestVulnSrc_Update(t *testing.T) {
+	testCases := []struct {
+		name    string
+		dir     string
+		cveID   string
+		want    types.VulnerabilityDetail
+		wantErr string
+	}{
+		{
+			name:  "happy path",
+			dir:   "./testdata",
+			cveID: "CVE-2020-0001",
+			want: types.VulnerabilityDetail{
+				Description:  "In getProcessRecordLocked of ActivityManagerService.java isolated apps are not handled correctly. This could lead to local escalation of privilege with no additional execution privileges needed. User interaction is not needed for exploitation. Product: Android Versions: Android-8.0, Android-8.1, Android-9, and Android-10 Android ID: A-140055304",
+				CvssScore:    7.2,
+				CvssVector:   "AV:L/AC:L/Au:N/C:C/I:C/A:C",
+				CvssScoreV3:  7.8,
+				CvssVectorV3: "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+				Severity:     types.SeverityHigh,
+				SeverityV3:   types.SeverityHigh,
+				CweIDs:       []string{"CWE-269"},
+				References:   []string{"https://source.android.com/security/bulletin/2020-01-01"},
+			},
+		},
+		{
+			name:    "sad path",
+			dir:     "./sad",
+			wantErr: "no such file or directory",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cacheDir, err := ioutil.TempDir("", "nvd")
+			require.NoError(t, err)
+			err = db.Init(cacheDir)
+			require.NoError(t, err)
+			defer db.Close()
+			defer os.RemoveAll(cacheDir)
+
+			vs := NewVulnSrc()
+			err = vs.Update(tc.dir)
+
+			switch {
+			case tc.wantErr != "":
+				require.NotNil(t, err)
+				assert.Contains(t, err.Error(), tc.wantErr, tc.name)
+			default:
+				assert.NoError(t, err, tc.name)
+				dbc := db.Config{}
+				got, err := dbc.GetVulnerabilityDetail(tc.cveID)
+				require.NoError(t, err)
+				assert.Equal(t, tc.want, got["nvd"])
+			}
+		})
+	}
+}
 func TestVulnSrc_Commit(t *testing.T) {
 	testCases := []struct {
 		name                   string
