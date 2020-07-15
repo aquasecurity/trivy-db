@@ -181,16 +181,7 @@ var (
 )
 
 func (o fullOptimizer) fullOptimize(tx *bolt.Tx, cveID string) error {
-	severity, vs, vv, title, description, references := getDetailFunc(cveID)
-	vuln := types.Vulnerability{
-		Title:          title,
-		Description:    description,
-		Severity:       severity.String(), // TODO: We have to keep this key until we deprecate
-		References:     references,
-		VendorSeverity: vs,
-		VendorVectors:  vv,
-	}
-
+	vuln := getDetailFunc(cveID)
 	if err := o.dbc.PutVulnerability(tx, cveID, vuln); err != nil {
 		return xerrors.Errorf("failed to put vulnerability: %w", err)
 	}
@@ -217,10 +208,12 @@ func (o lightOptimizer) Optimize() error {
 
 func (o lightOptimizer) lightOptimize(cveID string, tx *bolt.Tx) error {
 	// get correct severity
-	severity, vendorSeverity, _, _, _, _ := getDetailFunc(cveID)
-	vuln := types.Vulnerability{
-		VendorSeverity: vendorSeverity,
+	vuln := getDetailFunc(cveID)
+	lightVuln := types.Vulnerability{
+		VendorSeverity: vuln.VendorSeverity,
 	}
+
+	severity, _ := types.NewSeverity(vuln.Severity)
 
 	// TODO: We have to keep this bucket until we deprecate
 	// overwrite unknown severity with correct severity
@@ -228,7 +221,7 @@ func (o lightOptimizer) lightOptimize(cveID string, tx *bolt.Tx) error {
 		return xerrors.Errorf("failed to put severity: %w", err)
 	}
 
-	if err := o.dbOp.PutVulnerability(tx, cveID, vuln); err != nil {
+	if err := o.dbOp.PutVulnerability(tx, cveID, lightVuln); err != nil {
 		return xerrors.Errorf("failed to put vulnerability: %w", err)
 	}
 	return nil
