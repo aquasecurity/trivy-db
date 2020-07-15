@@ -62,15 +62,13 @@ func TestVulnSrc_Update(t *testing.T) {
 			case tc.wantErr != "":
 				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tc.wantErr, tc.name)
-				return
 			default:
 				assert.NoError(t, err, tc.name)
+				dbc := db.Config{}
+				got, err := dbc.GetVulnerabilityDetail(tc.cveID)
+				require.NoError(t, err)
+				assert.Equal(t, tc.want, got["nvd"])
 			}
-
-			dbc := db.Config{}
-			got, err := dbc.GetVulnerabilityDetail(tc.cveID)
-			require.NoError(t, err)
-			assert.Equal(t, tc.want, got["nvd"])
 		})
 	}
 }
