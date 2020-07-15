@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"path/filepath"
+	"strings"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	bolt "go.etcd.io/bbolt"
@@ -80,6 +81,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, items []Item) error {
 		var cweIDs []string
 		for _, data := range item.Cve.ProblemType.ProblemTypeData {
 			for _, desc := range data.Description {
+				if !strings.HasPrefix(desc.Value, "CWE") {
+					continue
+				}
 				cweIDs = append(cweIDs, desc.Value)
 			}
 		}
