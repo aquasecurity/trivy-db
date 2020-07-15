@@ -213,9 +213,11 @@ func (o lightOptimizer) lightOptimize(cveID string, tx *bolt.Tx) error {
 		VendorSeverity: vuln.VendorSeverity,
 	}
 
+	// TODO: We have to keep this "severity" variable for the "severity" bucket until we deprecate
+	// GetDetail converts types.Severity to string, so this line just reconverts it.
 	severity, _ := types.NewSeverity(vuln.Severity)
 
-	// TODO: We have to keep this bucket until we deprecate
+	// TODO: We have to keep the "severity" bucket until we deprecate
 	// overwrite unknown severity with correct severity
 	if err := o.dbOp.PutSeverity(tx, cveID, severity); err != nil {
 		return xerrors.Errorf("failed to put severity: %w", err)
