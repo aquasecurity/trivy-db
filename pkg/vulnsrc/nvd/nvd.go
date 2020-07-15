@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
-
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
@@ -78,6 +77,13 @@ func (vs VulnSrc) commit(tx *bolt.Tx, items []Item) error {
 			}
 		}
 
+		var cweIDs []string
+		for _, data := range item.Cve.ProblemType.ProblemTypeData {
+			for _, desc := range data.Description {
+				cweIDs = append(cweIDs, desc.Value)
+			}
+		}
+
 		vuln := types.VulnerabilityDetail{
 			CvssScore:    item.Impact.BaseMetricV2.CvssV2.BaseScore,
 			CvssVector:   item.Impact.BaseMetricV2.CvssV2.VectorString,
@@ -85,6 +91,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, items []Item) error {
 			CvssVectorV3: item.Impact.BaseMetricV3.CvssV3.VectorString,
 			Severity:     severity,
 			SeverityV3:   severityV3,
+			CweIDs:       cweIDs,
 			References:   references,
 			Title:        "",
 			Description:  description,

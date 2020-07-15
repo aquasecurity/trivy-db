@@ -81,6 +81,7 @@ type VulnerabilityDetail struct {
 	CvssVectorV3 string   `json:",omitempty"`
 	Severity     Severity `json:",omitempty"`
 	SeverityV3   Severity `json:",omitempty"`
+	CweIDs       []string `json:",omitempty"` // e.g. CWE-78, CWE-89
 	References   []string `json:",omitempty"`
 	Title        string   `json:",omitempty"`
 	Description  string   `json:",omitempty"`
@@ -95,6 +96,7 @@ type Vulnerability struct {
 	Title          string         `json:",omitempty"`
 	Description    string         `json:",omitempty"`
 	Severity       string         `json:",omitempty"`
+	CweIDs         []string       `json:",omitempty"` // e.g. CWE-78, CWE-89
 	VendorSeverity VendorSeverity `json:",omitempty"`
 	VendorVectors  VendorVectors  `json:",omitempty"`
 	References     []string       `json:",omitempty"`
