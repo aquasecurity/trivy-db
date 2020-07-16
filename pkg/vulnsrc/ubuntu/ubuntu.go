@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"path/filepath"
+	"strings"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 
@@ -18,8 +19,9 @@ import (
 )
 
 const (
-	ubuntuDir      = "ubuntu"
-	platformFormat = "ubuntu %s"
+	ubuntuDir           = "ubuntu"
+	platformFormat      = "ubuntu %s"
+	rejectVulnerability = "** REJECT **"
 )
 
 var (
@@ -94,6 +96,9 @@ func (vs VulnSrc) save(cves []UbuntuCVE) error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx, cves []UbuntuCVE) error {
 	for _, cve := range cves {
+		if strings.HasPrefix(cve.Description, rejectVulnerability) {
+			continue
+		}
 		for packageName, patch := range cve.Patches {
 			pkgName := string(packageName)
 			for release, status := range patch {

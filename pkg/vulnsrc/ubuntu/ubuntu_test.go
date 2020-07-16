@@ -72,6 +72,28 @@ func TestVulnSrc_commit(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "happy path with ** REJECT ** in description",
+			cves: []UbuntuCVE{
+				{
+					Description: "** REJECT ** test description",
+					Candidate:   "CVE-2020-123",
+					Priority:    "critical",
+					Patches: map[PackageName]Patch{
+						"test package": {
+							"disco": Status{
+								Status: "released",
+								Note:   "v1.2.3",
+							},
+						},
+					},
+					References: []string{"test reference 123"},
+				},
+			},
+			putAdvisory:            []db.PutAdvisoryExpectation{},
+			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{},
+			putSeverity:            []db.PutSeverityExpectation{},
+		},
 
 		// TODO: Add other test cases for failing paths
 	}

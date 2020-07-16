@@ -21,8 +21,9 @@ import (
 )
 
 const (
-	redhatDir      = "redhat"
-	platformFormat = "Red Hat Enterprise Linux %s"
+	redhatDir           = "redhat"
+	platformFormat      = "Red Hat Enterprise Linux %s"
+	rejectVulnerability = "** REJECT **"
 )
 
 var (
@@ -115,6 +116,16 @@ func (vs VulnSrc) save(cves []RedhatCVE) error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx, cves []RedhatCVE) error {
 	for _, cve := range cves {
+		var isRejected bool
+		for _, detail := range cve.Details {
+			if strings.HasPrefix(detail, rejectVulnerability) {
+				isRejected = true
+				break
+			}
+		}
+		if isRejected {
+			continue
+		}
 		for _, pkgState := range cve.PackageState {
 			pkgName := pkgState.PackageName
 			if pkgName == "" {
