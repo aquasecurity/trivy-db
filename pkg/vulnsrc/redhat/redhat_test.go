@@ -220,6 +220,30 @@ func TestVulnSrc_Commit(t *testing.T) {
 			},
 		},
 		{
+			name: "happy path with ** REJECT ** in detail",
+			cves: []RedhatCVE{
+				{
+					Name: "CVE-2019-0160",
+					PackageState: []RedhatPackageState{
+						{
+							PackageName: "package",
+							ProductName: "Red Hat Enterprise Linux 6",
+							FixState:    "Will not fix",
+						},
+					},
+					Cvss:           RedhatCvss{CvssBaseScore: "7.2", CvssScoringVector: "(AV:N/AC:L/Au:N/C:P/I:P/A:P)"},
+					Cvss3:          RedhatCvss3{Cvss3BaseScore: "4.0", Cvss3ScoringVector: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"},
+					ThreatSeverity: "Moderate",
+					References:     []string{"https://example.com"},
+					Bugzilla:       RedhatBugzilla{Description: "CVE-2019-0160 package: title   "},
+					Details:        []string{"** REJECT ** detail1\n", "detail2"},
+				},
+			},
+			putAdvisory:            []db.PutAdvisoryExpectation{},
+			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{},
+			putSeverity:            []db.PutSeverityExpectation{},
+		},
+		{
 			name: "empty package name",
 			cves: []RedhatCVE{
 				{
