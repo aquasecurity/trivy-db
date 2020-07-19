@@ -145,6 +145,52 @@ func TestVulnSrc_Commit(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "happy path with **REJECT** in description",
+			cves: []Item{
+				{
+					Cve: Cve{
+						Meta: Meta{
+							ID: "CVE-2017-0012",
+						},
+						References: References{
+							ReferenceDataList: []ReferenceData{
+								{
+									Name:      "reference1",
+									Refsource: "SECTRACK",
+									URL:       "https://example.com",
+								},
+							},
+						},
+						Description: Description{
+							DescriptionDataList: []DescriptionData{
+								{
+									Lang:  "en",
+									Value: "** REJECT ** test description",
+								},
+							},
+						},
+					},
+					Impact: Impact{
+						BaseMetricV2: BaseMetricV2{
+							CvssV2: CvssV2{
+								BaseScore:    4.3,
+								VectorString: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
+							},
+							Severity: "MEDIUM",
+						},
+						BaseMetricV3: BaseMetricV3{
+							CvssV3: CvssV3{
+								BaseScore:    9.4,
+								BaseSeverity: "HIGH",
+								VectorString: "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N",
+							},
+						},
+					},
+				},
+			},
+			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{},
+		},
 
 		// TODO: Add sad paths
 	}
