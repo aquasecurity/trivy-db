@@ -18,7 +18,8 @@ import (
 )
 
 const (
-	nvdDir = "nvd"
+	nvdDir              = "nvd"
+	rejectVulnerability = "** REJECT **"
 )
 
 type VulnSrc struct {
@@ -70,14 +71,23 @@ func (vs VulnSrc) commit(tx *bolt.Tx, items []Item) error {
 			references = append(references, ref.URL)
 		}
 
-		var description string
+		var (
+			isRejected  bool
+			description string
+		)
 		for _, d := range item.Cve.Description.DescriptionDataList {
 			if d.Value != "" {
 				description = d.Value
+				if strings.HasPrefix(description, rejectVulnerability) {
+					isRejected = true
+					break
+				}
 				break
 			}
 		}
-
+		if isRejected {
+			continue
+		}
 		var cweIDs []string
 		for _, data := range item.Cve.ProblemType.ProblemTypeData {
 			for _, desc := range data.Description {
