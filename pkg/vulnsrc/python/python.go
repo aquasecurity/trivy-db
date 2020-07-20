@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 
@@ -87,28 +88,31 @@ func (vs VulnSrc) update(repoPath string) error {
 func (vs VulnSrc) commit(tx *bolt.Tx, advisoryDB AdvisoryDB) error {
 	for pkgName, advisories := range advisoryDB {
 		for _, advisory := range advisories {
-			vulnerabilityID := advisory.Cve
-			if vulnerabilityID == "" {
-				vulnerabilityID = advisory.ID
-			}
+			vulnerabilityIDs := strings.Split(advisory.Cve, ",")
+			for _, vulnerabilityID := range vulnerabilityIDs {
+				vulnerabilityID := strings.TrimSpace(vulnerabilityID)
+				if vulnerabilityID == "" {
+					vulnerabilityID = advisory.ID
+				}
 
-			// to detect vulnerabilities
-			a := Advisory{Specs: advisory.Specs}
-			err := vs.dbc.PutAdvisory(tx, vulnerability.PythonSafetyDB, pkgName, vulnerabilityID, a)
-			if err != nil {
-				return xerrors.Errorf("failed to save python advisory: %w", err)
-			}
+				// to detect vulnerabilities
+				a := Advisory{Specs: advisory.Specs}
+				err := vs.dbc.PutAdvisory(tx, vulnerability.PythonSafetyDB, pkgName, vulnerabilityID, a)
+				if err != nil {
+					return xerrors.Errorf("failed to save python advisory: %w", err)
+				}
 
-			// to display vulnerability detail
-			vuln := types.VulnerabilityDetail{
-				ID:    vulnerabilityID,
-				Title: advisory.Advisory,
-			}
-			if err = vs.dbc.PutVulnerabilityDetail(tx, vulnerabilityID, vulnerability.PythonSafetyDB, vuln); err != nil {
-				return xerrors.Errorf("failed to save python vulnerability detail: %w", err)
-			}
-			if err := vs.dbc.PutSeverity(tx, vulnerabilityID, types.SeverityUnknown); err != nil {
-				return xerrors.Errorf("failed to save python vulnerability severity: %w", err)
+				// to display vulnerability detail
+				vuln := types.VulnerabilityDetail{
+					ID:    vulnerabilityID,
+					Title: advisory.Advisory,
+				}
+				if err = vs.dbc.PutVulnerabilityDetail(tx, vulnerabilityID, vulnerability.PythonSafetyDB, vuln); err != nil {
+					return xerrors.Errorf("failed to save python vulnerability detail: %w", err)
+				}
+				if err := vs.dbc.PutSeverity(tx, vulnerabilityID, types.SeverityUnknown); err != nil {
+					return xerrors.Errorf("failed to save python vulnerability severity: %w", err)
+				}
 			}
 		}
 	}
