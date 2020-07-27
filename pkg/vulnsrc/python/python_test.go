@@ -6,9 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/stretchr/testify/require"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
@@ -63,17 +62,18 @@ func TestVulnSrc_Update(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			db.Init("testdata")
+			err := db.Init("testdata")
+			defer os.RemoveAll("testdata/db")
+			require.NoError(t, err)
 			vulSec := NewVulnSrc()
-			err := vulSec.Update(tc.args.dir)
-			assert.NoError(t, err, tc.name)
+			err = vulSec.Update(tc.args.dir)
+			require.NoError(t, err, tc.name)
 			advisories, err := vulSec.Get( "zulip")
-			assert.NoError(t, err, tc.name)
+			require.NoError(t, err, tc.name)
 			sort.Slice(advisories[:], func(i, j int) bool {
 				return strings.Compare(advisories[i].VulnerabilityID, advisories[j].VulnerabilityID) <= 0
 			})
-			assert.Equal(t, tc.expectedAdvisory,advisories, "expected %v for package zulip, got: %v",tc.expectedAdvisory, advisories)
-			os.RemoveAll("testdata/db")
+			require.Equal(t, tc.expectedAdvisory,advisories, "expected %v for package zulip, got: %v",tc.expectedAdvisory, advisories)
 		})
 	}
 }
