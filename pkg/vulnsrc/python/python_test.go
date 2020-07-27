@@ -2,15 +2,14 @@ package python
 
 import (
 	"os"
-	"reflect"
 	"sort"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -68,7 +67,7 @@ func TestVulnSrc_Update(t *testing.T) {
 			sort.Slice(advisories[:], func(i, j int) bool {
 				return strings.Compare(advisories[i].VulnerabilityID, advisories[j].VulnerabilityID) <= 0
 			})
-			assert.True(t, reflect.DeepEqual(tc.expectedAdvisory,advisories), "expected %v for package zulip, got: %v",tc.expectedAdvisory, advisories)
+			assert.Equal(t, tc.expectedAdvisory,advisories, "expected %v for package zulip, got: %v",tc.expectedAdvisory, advisories)
 			os.RemoveAll("testdata/db")
 		})
 	}
