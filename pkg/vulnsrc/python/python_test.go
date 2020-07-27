@@ -9,8 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
-	"github.com/aquasecurity/trivy-db/pkg/types"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
@@ -22,7 +20,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		args struct {
 			dir string
 		}
-		expectedAdvisory []types.Advisory
+		expectedAdvisory []Advisory
 		expectErr bool
 	}{
 		{
@@ -30,27 +28,34 @@ func TestVulnSrc_Update(t *testing.T) {
 			args: args{
 				dir: "testdata/fixtures",
 			},
-			expectedAdvisory: []types.Advisory {
+			expectedAdvisory: []Advisory {
 				{
 					VulnerabilityID: "CVE-2018-9986",
+					Specs: []string{"<1.7.2"},
 				},
 				{
 					VulnerabilityID: "CVE-2018-9987",
+					Specs: []string{"<1.7.2"},
 				},
 				{
 					VulnerabilityID: "CVE-2018-9990",
+					Specs: []string{"<1.7.2"},
 				},
 				{
 					VulnerabilityID: "CVE-2018-9999",
+					Specs: []string{"<1.7.2"},
 				},
 				{
 					VulnerabilityID: "CVE-2019-18933",
+					Specs: []string{"<2.0.7"},
 				},
 				{
 					VulnerabilityID: "CVE-2020-10935",
+					Specs: []string{"<2.1.3"},
 				},
 				{
 					VulnerabilityID: "CVE-2020-9444",
+					Specs: []string{"<2.1.3"},
 				},
 			},
 			expectErr: false,
@@ -62,7 +67,7 @@ func TestVulnSrc_Update(t *testing.T) {
 			vulSec := NewVulnSrc()
 			err := vulSec.Update(tc.args.dir)
 			assert.NoError(t, err, tc.name)
-			advisories, err := vulSec.dbc.GetAdvisories(vulnerability.PythonSafetyDB, "zulip")
+			advisories, err := vulSec.Get( "zulip")
 			assert.NoError(t, err, tc.name)
 			sort.Slice(advisories[:], func(i, j int) bool {
 				return strings.Compare(advisories[i].VulnerabilityID, advisories[j].VulnerabilityID) <= 0
