@@ -27,31 +27,31 @@ func TestVulnSrc_Update(t *testing.T) {
 	testCases := []struct {
 		name          string
 		cacheDir      string
-		batchUpdate   db.BatchUpdateExpectation
+		batchUpdate   db.OperationBatchUpdateExpectation
 		expectedError error
 		expectedVulns []types.Advisory
 	}{
 		{
 			name:     "happy path",
 			cacheDir: "testdata",
-			batchUpdate: db.BatchUpdateExpectation{
-				Args: db.BatchUpdateArgs{FnAnything: true},
+			batchUpdate: db.OperationBatchUpdateExpectation{
+				Args: db.OperationBatchUpdateArgs{FnAnything: true},
 			},
 		},
 		{
 			name:     "cache dir doesnt exist",
 			cacheDir: "badpathdoesnotexist",
-			batchUpdate: db.BatchUpdateExpectation{
-				Args: db.BatchUpdateArgs{FnAnything: true},
+			batchUpdate: db.OperationBatchUpdateExpectation{
+				Args: db.OperationBatchUpdateArgs{FnAnything: true},
 			},
 			expectedError: errors.New("error in Amazon walk: error in file walk: lstat badpathdoesnotexist/vuln-list/amazon: no such file or directory"),
 		},
 		{
 			name:     "unable to save amazon defintions",
 			cacheDir: "testdata",
-			batchUpdate: db.BatchUpdateExpectation{
-				Args: db.BatchUpdateArgs{FnAnything: true},
-				Returns: db.BatchUpdateReturns{
+			batchUpdate: db.OperationBatchUpdateExpectation{
+				Args: db.OperationBatchUpdateArgs{FnAnything: true},
+				Returns: db.OperationBatchUpdateReturns{
 					Err: errors.New("unable to batch update"),
 				},
 			},
@@ -81,7 +81,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		name          string
 		version       string
 		pkgName       string
-		getAdvisories db.GetAdvisoriesExpectation
+		getAdvisories db.OperationGetAdvisoriesExpectation
 		expectedError error
 		expectedVulns []types.Advisory
 	}{
@@ -89,12 +89,12 @@ func TestVulnSrc_Get(t *testing.T) {
 			name:    "happy path",
 			version: "1",
 			pkgName: "curl",
-			getAdvisories: db.GetAdvisoriesExpectation{
-				Args: db.GetAdvisoriesArgs{
+			getAdvisories: db.OperationGetAdvisoriesExpectation{
+				Args: db.OperationGetAdvisoriesArgs{
 					Source:  "amazon linux 1",
 					PkgName: "curl",
 				},
-				Returns: db.GetAdvisoriesReturns{
+				Returns: db.OperationGetAdvisoriesReturns{
 					Advisories: []types.Advisory{
 						{VulnerabilityID: "CVE-2019-0001", FixedVersion: "0.1.2"},
 					},
@@ -106,22 +106,22 @@ func TestVulnSrc_Get(t *testing.T) {
 			name:    "no advisories are returned",
 			version: "2",
 			pkgName: "bash",
-			getAdvisories: db.GetAdvisoriesExpectation{
-				Args: db.GetAdvisoriesArgs{
+			getAdvisories: db.OperationGetAdvisoriesExpectation{
+				Args: db.OperationGetAdvisoriesArgs{
 					Source:  "amazon linux 2",
 					PkgName: "bash",
 				},
-				Returns: db.GetAdvisoriesReturns{},
+				Returns: db.OperationGetAdvisoriesReturns{},
 			},
 		},
 		{
 			name: "amazon GetAdvisories return an error",
-			getAdvisories: db.GetAdvisoriesExpectation{
-				Args: db.GetAdvisoriesArgs{
+			getAdvisories: db.OperationGetAdvisoriesExpectation{
+				Args: db.OperationGetAdvisoriesArgs{
 					SourceAnything:  true,
 					PkgNameAnything: true,
 				},
-				Returns: db.GetAdvisoriesReturns{
+				Returns: db.OperationGetAdvisoriesReturns{
 					Advisories: []types.Advisory{},
 					Err:        xerrors.New("unable to get advisories"),
 				},
@@ -287,9 +287,9 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 	testCases := []struct {
 		name                   string
 		alasList               []alas
-		putAdvisory            []db.PutAdvisoryExpectation
-		putVulnerabilityDetail []db.PutVulnerabilityDetailExpectation
-		putSeverity            []db.PutSeverityExpectation
+		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
+		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
+		putSeverity            []db.OperationPutSeverityExpectation
 		expectedError          error
 	}{
 		{
@@ -319,9 +319,9 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "amazon linux 123",
 						PkgName:         "testpkg",
@@ -330,9 +330,9 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2020-0001",
 						Source:          vulnerability.Amazon,
@@ -345,9 +345,9 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2020-0001",
 						Severity:        types.SeverityUnknown,
@@ -382,16 +382,16 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "amazon linux 123",
 						PkgName:         "testpkg",
 						VulnerabilityID: "CVE-2020-0001",
 						Advisory:        types.Advisory{FixedVersion: "123:456-testing"},
 					},
-					Returns: db.PutAdvisoryReturns{
+					Returns: db.OperationPutAdvisoryDetailReturns{
 						Err: errors.New("failed to put advisory"),
 					},
 				},
@@ -425,9 +425,9 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "amazon linux 123",
 						PkgName:         "testpkg",
@@ -436,9 +436,9 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2020-0001",
 						Source:          vulnerability.Amazon,
@@ -449,7 +449,7 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 							References:  []string{"http://foo.bar/baz"},
 						},
 					},
-					Returns: db.PutVulnerabilityDetailReturns{
+					Returns: db.OperationPutVulnerabilityDetailReturns{
 						Err: errors.New("failed to put vulnerability detail"),
 					},
 				},
@@ -461,7 +461,7 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyPutAdvisoryExpectations(tc.putAdvisory)
+			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tc.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tc.putVulnerabilityDetail)
 			mockDBConfig.ApplyPutSeverityExpectations(tc.putSeverity)
 

@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
@@ -316,23 +318,24 @@ func TestUpdater_Update(t *testing.T) {
 func Test_fullOptimizer_Optimize(t *testing.T) {
 	tests := []struct {
 		name                            string
-		forEachSeverity                 db.ForEachSeverityExpectation
-		deleteSeverityBucket            db.DeleteSeverityBucketExpectation
-		deleteVulnerabilityDetailBucket db.DeleteVulnerabilityDetailBucketExpectation
+		forEachSeverity                 db.OperationForEachSeverityExpectation
+		deleteSeverityBucket            db.OperationDeleteSeverityBucketExpectation
+		deleteVulnerabilityDetailBucket db.OperationDeleteVulnerabilityDetailBucketExpectation
+		deleteAdvisoryDetailBucket      db.OperationDeleteAdvisoryDetailBucketExpectation
 		wantErr                         string
 	}{
 		{
 			name: "happy path",
-			forEachSeverity: db.ForEachSeverityExpectation{
-				Args:    db.ForEachSeverityArgs{FnAnything: true},
-				Returns: db.ForEachSeverityReturns{},
+			forEachSeverity: db.OperationForEachSeverityExpectation{
+				Args:    db.OperationForEachSeverityArgs{FnAnything: true},
+				Returns: db.OperationForEachSeverityReturns{},
 			},
 		},
 		{
-			name: "ForEachSeverity returns an error",
-			forEachSeverity: db.ForEachSeverityExpectation{
-				Args: db.ForEachSeverityArgs{FnAnything: true},
-				Returns: db.ForEachSeverityReturns{
+			name: "OperationForEachSeverity returns an error",
+			forEachSeverity: db.OperationForEachSeverityExpectation{
+				Args: db.OperationForEachSeverityArgs{FnAnything: true},
+				Returns: db.OperationForEachSeverityReturns{
 					Err: errors.New("error"),
 				},
 			},
@@ -340,12 +343,12 @@ func Test_fullOptimizer_Optimize(t *testing.T) {
 		},
 		{
 			name: "DeleteSeverityBucket returns an error",
-			forEachSeverity: db.ForEachSeverityExpectation{
-				Args:    db.ForEachSeverityArgs{FnAnything: true},
-				Returns: db.ForEachSeverityReturns{},
+			forEachSeverity: db.OperationForEachSeverityExpectation{
+				Args:    db.OperationForEachSeverityArgs{FnAnything: true},
+				Returns: db.OperationForEachSeverityReturns{},
 			},
-			deleteSeverityBucket: db.DeleteSeverityBucketExpectation{
-				Returns: db.DeleteSeverityBucketReturns{
+			deleteSeverityBucket: db.OperationDeleteSeverityBucketExpectation{
+				Returns: db.OperationDeleteSeverityBucketReturns{
 					Err: errors.New("error"),
 				},
 			},
@@ -353,12 +356,12 @@ func Test_fullOptimizer_Optimize(t *testing.T) {
 		},
 		{
 			name: "DeleteVulnerabilityDetailBucket returns an error",
-			forEachSeverity: db.ForEachSeverityExpectation{
-				Args:    db.ForEachSeverityArgs{FnAnything: true},
-				Returns: db.ForEachSeverityReturns{},
+			forEachSeverity: db.OperationForEachSeverityExpectation{
+				Args:    db.OperationForEachSeverityArgs{FnAnything: true},
+				Returns: db.OperationForEachSeverityReturns{},
 			},
-			deleteVulnerabilityDetailBucket: db.DeleteVulnerabilityDetailBucketExpectation{
-				Returns: db.DeleteVulnerabilityDetailBucketReturns{
+			deleteVulnerabilityDetailBucket: db.OperationDeleteVulnerabilityDetailBucketExpectation{
+				Returns: db.OperationDeleteVulnerabilityDetailBucketReturns{
 					Err: errors.New("error"),
 				},
 			},
@@ -371,7 +374,7 @@ func Test_fullOptimizer_Optimize(t *testing.T) {
 			mockDBOperation.ApplyForEachSeverityExpectation(tt.forEachSeverity)
 			mockDBOperation.ApplyDeleteSeverityBucketExpectation(tt.deleteSeverityBucket)
 			mockDBOperation.ApplyDeleteVulnerabilityDetailBucketExpectation(tt.deleteVulnerabilityDetailBucket)
-
+			mockDBOperation.ApplyDeleteAdvisoryDetailBucketExpectation(tt.deleteAdvisoryDetailBucket)
 			o := fullOptimizer{
 				dbc: mockDBOperation,
 			}
@@ -389,27 +392,27 @@ func Test_fullOptimizer_Optimize(t *testing.T) {
 func Test_lightOptimizer_Optimize(t *testing.T) {
 	tests := []struct {
 		name                            string
-		forEachSeverity                 db.ForEachSeverityExpectation
-		deleteVulnerabilityDetailBucket db.DeleteVulnerabilityDetailBucketExpectation
+		forEachSeverity                 db.OperationForEachSeverityExpectation
+		deleteVulnerabilityDetailBucket db.OperationDeleteVulnerabilityDetailBucketExpectation
 		wantErr                         string
 	}{
 		{
 			name: "happy path",
-			forEachSeverity: db.ForEachSeverityExpectation{
-				Args:    db.ForEachSeverityArgs{FnAnything: true},
-				Returns: db.ForEachSeverityReturns{},
+			forEachSeverity: db.OperationForEachSeverityExpectation{
+				Args:    db.OperationForEachSeverityArgs{FnAnything: true},
+				Returns: db.OperationForEachSeverityReturns{},
 			},
-			deleteVulnerabilityDetailBucket: db.DeleteVulnerabilityDetailBucketExpectation{
-				Returns: db.DeleteVulnerabilityDetailBucketReturns{},
+			deleteVulnerabilityDetailBucket: db.OperationDeleteVulnerabilityDetailBucketExpectation{
+				Returns: db.OperationDeleteVulnerabilityDetailBucketReturns{},
 			},
 		},
 		{
-			name: "ForEachSeverity returns an error",
-			forEachSeverity: db.ForEachSeverityExpectation{
-				Args: db.ForEachSeverityArgs{
+			name: "OperationForEachSeverity returns an error",
+			forEachSeverity: db.OperationForEachSeverityExpectation{
+				Args: db.OperationForEachSeverityArgs{
 					FnAnything: true,
 				},
-				Returns: db.ForEachSeverityReturns{
+				Returns: db.OperationForEachSeverityReturns{
 					Err: errors.New("error"),
 				},
 			},
@@ -417,14 +420,14 @@ func Test_lightOptimizer_Optimize(t *testing.T) {
 		},
 		{
 			name: "DeleteVulnerabilityDetailBucket returns an error",
-			forEachSeverity: db.ForEachSeverityExpectation{
-				Args: db.ForEachSeverityArgs{
+			forEachSeverity: db.OperationForEachSeverityExpectation{
+				Args: db.OperationForEachSeverityArgs{
 					FnAnything: true,
 				},
-				Returns: db.ForEachSeverityReturns{},
+				Returns: db.OperationForEachSeverityReturns{},
 			},
-			deleteVulnerabilityDetailBucket: db.DeleteVulnerabilityDetailBucketExpectation{
-				Returns: db.DeleteVulnerabilityDetailBucketReturns{
+			deleteVulnerabilityDetailBucket: db.OperationDeleteVulnerabilityDetailBucketExpectation{
+				Returns: db.OperationDeleteVulnerabilityDetailBucketReturns{
 					Err: errors.New("error"),
 				},
 			},
@@ -452,131 +455,474 @@ func Test_lightOptimizer_Optimize(t *testing.T) {
 }
 
 func Test_fullOptimize(t *testing.T) {
-	oldgetDetailFunc := getDetailFunc
-	defer func() {
-		getDetailFunc = oldgetDetailFunc
-	}()
-
-	getDetailFunc = func(vulnID string) types.Vulnerability {
-		return types.Vulnerability{
-			Title:       "test title",
-			Description: "test description",
-			Severity:    types.SeverityCritical.String(),
-			VendorSeverity: types.VendorSeverity{
-				"redhat": types.SeverityHigh,
-				"ubuntu": types.SeverityLow,
-			},
-			CVSS: types.VendorCVSS{
-				"redhat": types.CVSS{
-					V2Vector: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
-					V2Score:  4.5,
-					V3Vector: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
-					V3Score:  5.6,
+	tests := []struct {
+		name                              string
+		putVulnerabilityExpectation       db.OperationPutVulnerabilityExpectation
+		putAdvisoryExpectations           []db.OperationPutAdvisoryExpectation
+		getVulnerabilityDetailExpectation db.OperationGetVulnerabilityDetailExpectation
+		getAdvisoryDetailExpectation      db.OperationGetAdvisoryDetailsExpectation
+		wantErr                           string
+	}{
+		{
+			name: "happy path",
+			putAdvisoryExpectations: []db.OperationPutAdvisoryExpectation{
+				{
+					Args: db.OperationPutAdvisoryArgs{
+						TxAnything:      true,
+						Source:          "redhat",
+						PkgName:         "pkg1",
+						VulnerabilityID: "CVE-2020-1234",
+						Advisory: types.Advisory{
+							VulnerabilityID: "CVE-2020-1234",
+							FixedVersion:    "v1.2.3",
+						},
+					},
+					Returns: db.OperationPutAdvisoryReturns{},
+				},
+				{
+					Args: db.OperationPutAdvisoryArgs{
+						TxAnything:      true,
+						Source:          "ubuntu",
+						PkgName:         "pkg2",
+						VulnerabilityID: "CVE-2020-1234",
+						Advisory: types.Advisory{
+							VulnerabilityID: "CVE-2020-1234",
+							FixedVersion:    "v2.3.4",
+						},
+					},
+					Returns: db.OperationPutAdvisoryReturns{},
 				},
 			},
-			VendorVectors: types.VendorVectors{
-				"redhat": types.CVSSVector{
-					V2: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
-					V3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
-				},
-			},
-			CweIDs:     []string{"CWE-134"},
-			References: []string{"test reference"},
-		}
-	}
-
-	mockDBOperation := new(db.MockOperation)
-	o := fullOptimizer{
-		dbc: mockDBOperation,
-	}
-	mockDBOperation.ApplyPutVulnerabilityExpectation(db.PutVulnerabilityExpectation{
-		Args: db.PutVulnerabilityArgs{
-			TxAnything:      true,
-			VulnerabilityID: "CVE-2020-123",
-			Vulnerability: types.Vulnerability{
-				Title:       "test title",
-				Description: "test description",
-				Severity:    types.SeverityCritical.String(),
-				VendorSeverity: types.VendorSeverity{
-					"redhat": types.SeverityHigh,
-					"ubuntu": types.SeverityLow,
-				},
-				CVSS: map[string]types.CVSS{
-					"redhat": {
-						V2Vector: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
-						V2Score:  4.5,
-						V3Vector: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
-						V3Score:  5.6,
+			putVulnerabilityExpectation: db.OperationPutVulnerabilityExpectation{
+				Args: db.OperationPutVulnerabilityArgs{
+					TxAnything:      true,
+					VulnerabilityID: "CVE-2020-1234",
+					Vulnerability: types.Vulnerability{
+						Title:       "test title",
+						Description: "test description",
+						Severity:    types.SeverityMedium.String(),
+						VendorSeverity: types.VendorSeverity{
+							"redhat": types.SeverityCritical,
+							"ubuntu": types.SeverityLow,
+						},
+						CVSS: map[string]types.CVSS{
+							"redhat": {
+								V2Vector: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
+								V2Score:  4.5,
+								V3Vector: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+								V3Score:  5.6,
+							},
+						},
+						VendorVectors: types.VendorVectors{
+							"redhat": types.CVSSVector{
+								V2: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
+								V3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+							},
+						},
+						CweIDs:     []string{"CWE-134"},
+						References: []string{"http://example.com"},
 					},
 				},
-				VendorVectors: types.VendorVectors{
-					"redhat": types.CVSSVector{
-						V2: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
-						V3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+				Returns: db.OperationPutVulnerabilityReturns{},
+			},
+			getVulnerabilityDetailExpectation: db.OperationGetVulnerabilityDetailExpectation{
+				Args: db.OperationGetVulnerabilityDetailArgs{
+					CveID: "CVE-2020-1234",
+				},
+				Returns: db.OperationGetVulnerabilityDetailReturns{
+					Detail: map[string]types.VulnerabilityDetail{
+						"redhat": {
+							CvssScore:    4.5,
+							CvssVector:   "AV:N/AC:M/Au:N/C:N/I:P/A:N",
+							CvssScoreV3:  5.6,
+							CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+							Severity:     types.SeverityCritical,
+							SeverityV3:   types.SeverityCritical,
+							CweIDs:       []string{"CWE-134"},
+							References:   []string{"http://example.com"},
+							Title:        "test title",
+							Description:  "test description",
+						},
+						"ubuntu": {
+							Severity: types.SeverityLow,
+						},
 					},
 				},
-				CweIDs:     []string{"CWE-134"},
-				References: []string{"test reference"},
+			},
+			getAdvisoryDetailExpectation: db.OperationGetAdvisoryDetailsExpectation{
+				Args: db.OperationGetAdvisoryDetailsArgs{
+					CveID: "CVE-2020-1234",
+				},
+				Returns: db.OperationGetAdvisoryDetailsReturns{
+					Details: []types.AdvisoryDetail{
+						{
+							PlatformName: "redhat",
+							PackageName:  "pkg1",
+							AdvisoryItem: types.Advisory{
+								VulnerabilityID: "CVE-2020-1234",
+								FixedVersion:    "v1.2.3",
+							},
+						},
+						{
+							PlatformName: "ubuntu",
+							PackageName:  "pkg2",
+							AdvisoryItem: types.Advisory{
+								VulnerabilityID: "CVE-2020-1234",
+								FixedVersion:    "v2.3.4",
+							},
+						},
+					},
+				},
 			},
 		},
-		Returns: db.PutVulnerabilityReturns{},
-	})
-
-	err := o.fullOptimize(nil, "CVE-2020-123")
-	require.NoError(t, err)
-
-	// TODO: Add unhappy paths
+		{
+			name:                        "happy path when vulnerability is rejected",
+			putAdvisoryExpectations:     []db.OperationPutAdvisoryExpectation{},
+			putVulnerabilityExpectation: db.OperationPutVulnerabilityExpectation{},
+			getVulnerabilityDetailExpectation: db.OperationGetVulnerabilityDetailExpectation{
+				Args: db.OperationGetVulnerabilityDetailArgs{
+					CveID: "CVE-2020-1234",
+				},
+				Returns: db.OperationGetVulnerabilityDetailReturns{
+					Detail: map[string]types.VulnerabilityDetail{
+						"redhat": {
+							CvssScore:    4.5,
+							CvssVector:   "AV:N/AC:M/Au:N/C:N/I:P/A:N",
+							CvssScoreV3:  5.6,
+							CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+							Severity:     types.SeverityCritical,
+							SeverityV3:   types.SeverityCritical,
+							CweIDs:       []string{"CWE-134"},
+							References:   []string{"http://example.com"},
+							Title:        "test title",
+							Description:  "** REJECT ** test description",
+						},
+						"ubuntu": {
+							Severity: types.SeverityLow,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "happy path when both vulnerability and advisories are present",
+			putAdvisoryExpectations: []db.OperationPutAdvisoryExpectation{
+				{
+					Args: db.OperationPutAdvisoryArgs{
+						TxAnything:      true,
+						Source:          "redhat",
+						PkgName:         "test",
+						VulnerabilityID: "CVE-2020-1234",
+						Advisory: types.Advisory{
+							FixedVersion: "",
+						},
+					},
+				},
+			},
+			putVulnerabilityExpectation: db.OperationPutVulnerabilityExpectation{
+				Args: db.OperationPutVulnerabilityArgs{
+					TxAnything:      true,
+					VulnerabilityID: "CVE-2020-1234",
+					Vulnerability: types.Vulnerability{
+						Title:       "test title",
+						Description: "test description",
+						Severity:    types.SeverityCritical.String(),
+						VendorSeverity: types.VendorSeverity{
+							"redhat": types.SeverityCritical,
+							"ubuntu": types.SeverityLow,
+						},
+						CVSS:          map[string]types.CVSS{},
+						VendorVectors: types.VendorVectors{},
+						CweIDs:        []string{"CWE-134"},
+						References:    []string{"test reference"},
+					},
+				},
+				Returns: db.OperationPutVulnerabilityReturns{},
+			},
+			getVulnerabilityDetailExpectation: db.OperationGetVulnerabilityDetailExpectation{
+				Args: db.OperationGetVulnerabilityDetailArgs{
+					CveID: "CVE-2020-1234",
+				},
+				Returns: db.OperationGetVulnerabilityDetailReturns{
+					Detail: map[string]types.VulnerabilityDetail{
+						"redhat": {
+							ID:          "CVE-2020-1234",
+							Severity:    types.SeverityCritical,
+							SeverityV3:  0,
+							CweIDs:      []string{"CWE-134"},
+							References:  []string{"test reference"},
+							Title:       "test title",
+							Description: "test description",
+						},
+						"ubuntu": {
+							Severity: types.SeverityLow,
+						},
+					},
+				},
+			},
+			getAdvisoryDetailExpectation: db.OperationGetAdvisoryDetailsExpectation{
+				Args: db.OperationGetAdvisoryDetailsArgs{
+					CveID: "CVE-2020-1234",
+				},
+				Returns: db.OperationGetAdvisoryDetailsReturns{
+					Details: []types.AdvisoryDetail{
+						{
+							PlatformName: "redhat",
+							PackageName:  "test",
+							AdvisoryItem: types.Advisory{
+								FixedVersion: "",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockDBOperation := new(db.MockOperation)
+			mockDBOperation.ApplyPutAdvisoryExpectations(tt.putAdvisoryExpectations)
+			mockDBOperation.ApplyPutVulnerabilityExpectation(tt.putVulnerabilityExpectation)
+			mockDBOperation.ApplyGetVulnerabilityDetailExpectation(tt.getVulnerabilityDetailExpectation)
+			mockDBOperation.ApplyGetAdvisoryDetailsExpectation(tt.getAdvisoryDetailExpectation)
+			o := fullOptimizer{
+				dbc:        mockDBOperation,
+				vulnClient: vulnerability.New(mockDBOperation),
+			}
+			err := o.fullOptimize(nil, "CVE-2020-1234")
+			switch {
+			case tt.wantErr != "":
+				require.NotNil(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
+			default:
+				require.NoError(t, err)
+			}
+		})
+	}
 }
 
 func Test_lightOptimize(t *testing.T) {
-	oldgetDetailFunc := getDetailFunc
-	defer func() {
-		getDetailFunc = oldgetDetailFunc
-	}()
-
-	getDetailFunc = func(vulnID string) types.Vulnerability {
-		return types.Vulnerability{
-			Title:       "test title",
-			Description: "test description",
-			Severity:    types.SeverityCritical.String(),
-			VendorSeverity: types.VendorSeverity{
-				"redhat": types.SeverityHigh,
-				"ubuntu": types.SeverityLow,
+	tests := []struct {
+		name                              string
+		putAdvisoryExpectations           []db.OperationPutAdvisoryExpectation
+		putVulnerabilityExpectation       db.OperationPutVulnerabilityExpectation
+		putSeverityExpectation            db.OperationPutSeverityExpectation
+		getVulnerabilityDetailExpectation db.OperationGetVulnerabilityDetailExpectation
+		getAdvisoryDetailExpectation      db.OperationGetAdvisoryDetailsExpectation
+		wantErr                           string
+	}{
+		{
+			name: "happy path",
+			putAdvisoryExpectations: []db.OperationPutAdvisoryExpectation{
+				{
+					Args: db.OperationPutAdvisoryArgs{
+						TxAnything:      true,
+						Source:          "redhat",
+						PkgName:         "pkg1",
+						VulnerabilityID: "CVE-2020-1234",
+						Advisory: types.Advisory{
+							VulnerabilityID: "CVE-2020-1234",
+							FixedVersion:    "v1.2.3",
+						},
+					},
+					Returns: db.OperationPutAdvisoryReturns{},
+				},
 			},
-			VendorVectors: types.VendorVectors{},
-			CweIDs:        []string{"CWE-134"},
-			References:    []string{"test reference"},
-		}
-	}
-
-	mockDBOperation := new(db.MockOperation)
-	o := lightOptimizer{
-		dbOp: mockDBOperation,
-	}
-	mockDBOperation.ApplyPutVulnerabilityExpectation(db.PutVulnerabilityExpectation{
-		Args: db.PutVulnerabilityArgs{
-			TxAnything:      true,
-			VulnerabilityID: "CVE-2020-123",
-			Vulnerability: types.Vulnerability{
-				VendorSeverity: types.VendorSeverity{
-					"redhat": types.SeverityHigh,
-					"ubuntu": types.SeverityLow,
+			putVulnerabilityExpectation: db.OperationPutVulnerabilityExpectation{
+				Args: db.OperationPutVulnerabilityArgs{
+					TxAnything:      true,
+					VulnerabilityID: "CVE-2020-1234",
+					Vulnerability: types.Vulnerability{
+						VendorSeverity: types.VendorSeverity{
+							"redhat": types.SeverityHigh,
+							"ubuntu": types.SeverityLow,
+						},
+					},
+				},
+				Returns: db.OperationPutVulnerabilityReturns{},
+			},
+			putSeverityExpectation: db.OperationPutSeverityExpectation{
+				Args: db.OperationPutSeverityArgs{
+					TxAnything:      true,
+					VulnerabilityID: "CVE-2020-1234",
+					Severity:        types.SeverityHigh,
+				},
+				Returns: db.OperationPutSeverityReturns{},
+			},
+			getVulnerabilityDetailExpectation: db.OperationGetVulnerabilityDetailExpectation{
+				Args: db.OperationGetVulnerabilityDetailArgs{
+					CveID: "CVE-2020-1234",
+				},
+				Returns: db.OperationGetVulnerabilityDetailReturns{
+					Detail: map[string]types.VulnerabilityDetail{
+						"redhat": {
+							ID:          "CVE-2020-1234",
+							Severity:    types.SeverityHigh,
+							SeverityV3:  0,
+							CweIDs:      []string{"CWE-134"},
+							References:  []string{"test reference"},
+							Title:       "test title",
+							Description: "test description",
+						},
+						"ubuntu": {
+							Severity: types.SeverityLow,
+						},
+					},
+				},
+			},
+			getAdvisoryDetailExpectation: db.OperationGetAdvisoryDetailsExpectation{
+				Args: db.OperationGetAdvisoryDetailsArgs{
+					CveID: "CVE-2020-1234",
+				},
+				Returns: db.OperationGetAdvisoryDetailsReturns{
+					Details: []types.AdvisoryDetail{
+						{
+							PlatformName: "redhat",
+							PackageName:  "pkg1",
+							AdvisoryItem: types.Advisory{
+								VulnerabilityID: "CVE-2020-1234",
+								FixedVersion:    "v1.2.3",
+							},
+						},
+					},
 				},
 			},
 		},
-		Returns: db.PutVulnerabilityReturns{},
-	})
-	mockDBOperation.ApplyPutSeverityExpectation(db.PutSeverityExpectation{
-		Args: db.PutSeverityArgs{
-			TxAnything:      true,
-			VulnerabilityID: "CVE-2020-123",
-			Severity:        types.SeverityCritical,
+		{
+			name:                        "happy path when vulnerability is rejected",
+			putVulnerabilityExpectation: db.OperationPutVulnerabilityExpectation{},
+			putSeverityExpectation:      db.OperationPutSeverityExpectation{},
+			getVulnerabilityDetailExpectation: db.OperationGetVulnerabilityDetailExpectation{
+				Args: db.OperationGetVulnerabilityDetailArgs{
+					CveID: "CVE-2020-1234",
+				},
+				Returns: db.OperationGetVulnerabilityDetailReturns{
+					Detail: map[string]types.VulnerabilityDetail{
+						"redhat": {
+							ID:          "CVE-2020-1234",
+							Severity:    types.SeverityHigh,
+							SeverityV3:  0,
+							CweIDs:      []string{"CWE-134"},
+							References:  []string{"test reference"},
+							Title:       "test title",
+							Description: "** REJECT ** test description",
+						},
+						"ubuntu": {
+							Severity: types.SeverityLow,
+						},
+					},
+				},
+			},
 		},
-		Returns: db.PutSeverityReturns{},
-	})
-
-	err := o.lightOptimize("CVE-2020-123", nil)
-	require.NoError(t, err)
-
-	// TODO: Add unhappy paths
+		{
+			name: "happy path with advisories",
+			putAdvisoryExpectations: []db.OperationPutAdvisoryExpectation{
+				{
+					Args: db.OperationPutAdvisoryArgs{
+						TxAnything:      true,
+						Source:          "redhat",
+						PkgName:         "test",
+						VulnerabilityID: "CVE-2020-1234",
+						Advisory: types.Advisory{
+							FixedVersion: "1",
+						},
+					},
+				},
+				{
+					Args: db.OperationPutAdvisoryArgs{
+						TxAnything:      true,
+						Source:          "redhat",
+						PkgName:         "test2",
+						VulnerabilityID: "CVE-2020-1234",
+						Advisory: types.Advisory{
+							FixedVersion: "2",
+						},
+					},
+				},
+			},
+			putVulnerabilityExpectation: db.OperationPutVulnerabilityExpectation{
+				Args: db.OperationPutVulnerabilityArgs{
+					TxAnything:      true,
+					VulnerabilityID: "CVE-2020-1234",
+					Vulnerability: types.Vulnerability{
+						VendorSeverity: types.VendorSeverity{
+							"redhat": types.SeverityHigh,
+						},
+					},
+				},
+				Returns: db.OperationPutVulnerabilityReturns{},
+			},
+			putSeverityExpectation: db.OperationPutSeverityExpectation{
+				Args: db.OperationPutSeverityArgs{
+					TxAnything:      true,
+					VulnerabilityID: "CVE-2020-1234",
+					Severity:        types.SeverityHigh,
+				},
+				Returns: db.OperationPutSeverityReturns{},
+			},
+			getVulnerabilityDetailExpectation: db.OperationGetVulnerabilityDetailExpectation{
+				Args: db.OperationGetVulnerabilityDetailArgs{
+					CveID: "CVE-2020-1234",
+				},
+				Returns: db.OperationGetVulnerabilityDetailReturns{
+					Detail: map[string]types.VulnerabilityDetail{
+						"redhat": {
+							ID:          "CVE-2020-123",
+							Severity:    types.SeverityHigh,
+							SeverityV3:  0,
+							CweIDs:      []string{"CWE-134"},
+							References:  []string{"test reference"},
+							Title:       "test title",
+							Description: "test description",
+						},
+					},
+				},
+			},
+			getAdvisoryDetailExpectation: db.OperationGetAdvisoryDetailsExpectation{
+				Args: db.OperationGetAdvisoryDetailsArgs{
+					CveID: "CVE-2020-1234",
+				},
+				Returns: db.OperationGetAdvisoryDetailsReturns{
+					Details: []types.AdvisoryDetail{
+						{
+							PlatformName: "redhat",
+							PackageName:  "test",
+							AdvisoryItem: types.Advisory{
+								FixedVersion: "1",
+							},
+						},
+						{
+							PlatformName: "redhat",
+							PackageName:  "test2",
+							AdvisoryItem: types.Advisory{
+								FixedVersion: "2",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockDBOperation := new(db.MockOperation)
+			mockDBOperation.ApplyPutAdvisoryExpectations(tt.putAdvisoryExpectations)
+			mockDBOperation.ApplyPutVulnerabilityExpectation(tt.putVulnerabilityExpectation)
+			mockDBOperation.ApplyPutSeverityExpectation(tt.putSeverityExpectation)
+			mockDBOperation.ApplyGetVulnerabilityDetailExpectation(tt.getVulnerabilityDetailExpectation)
+			mockDBOperation.ApplyGetAdvisoryDetailsExpectation(tt.getAdvisoryDetailExpectation)
+			o := lightOptimizer{
+				dbOp:       mockDBOperation,
+				vulnClient: vulnerability.New(mockDBOperation),
+			}
+			err := o.lightOptimize("CVE-2020-1234", nil)
+			switch {
+			case tt.wantErr != "":
+				require.NotNil(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
+			default:
+				require.NoError(t, err)
+			}
+		})
+	}
 }

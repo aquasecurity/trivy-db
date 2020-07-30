@@ -94,11 +94,12 @@ func NewUpdater(cacheDir string, light bool, interval time.Duration) Updater {
 	var optimizer Optimizer
 	dbType := db.TypeFull
 	dbConfig := db.Config{}
-	optimizer = fullOptimizer{dbc: dbConfig}
+	v := vulnerability.New(dbConfig)
+	optimizer = fullOptimizer{dbc: dbConfig, vulnClient: v}
 
 	if light {
 		dbType = db.TypeLight
-		optimizer = lightOptimizer{dbOp: dbConfig}
+		optimizer = lightOptimizer{dbOp: dbConfig, vulnClient: v}
 	}
 
 	return Updater{
@@ -152,7 +153,8 @@ type Optimizer interface {
 }
 
 type fullOptimizer struct {
-	dbc db.Operation
+	dbc        db.Operation
+	vulnClient vulnerability.Vulnerability
 }
 
 func (o fullOptimizer) Optimize() error {
@@ -171,17 +173,28 @@ func (o fullOptimizer) Optimize() error {
 		return xerrors.Errorf("failed to delete vulnerability detail bucket: %w", err)
 	}
 
+	if err := o.dbc.DeleteAdvisoryDetailBucket(); err != nil {
+		return xerrors.Errorf("failed to delete advisory detail bucket: %w", err)
+	}
+
 	return nil
 
 }
 
-// TODO: Until we can dependency inject, we need to monkey patch sadly
-var (
-	getDetailFunc = vulnerability.GetDetail
-)
-
 func (o fullOptimizer) fullOptimize(tx *bolt.Tx, cveID string) error {
-	vuln := getDetailFunc(cveID)
+	details := o.vulnClient.GetDetails(cveID)
+	if o.vulnClient.IsRejected(details) {
+		return nil
+	}
+	advisories, err := o.vulnClient.GetAdvisoryDetails(cveID)
+	if err != nil {
+		return xerrors.Errorf("failed to get advisories: %w", err)
+	}
+	if err := saveAdvisories(o.dbc, tx, cveID, advisories); err != nil {
+		return xerrors.Errorf("failed to put advisories: %w", err)
+	}
+
+	vuln := o.vulnClient.Normalize(details)
 	if err := o.dbc.PutVulnerability(tx, cveID, vuln); err != nil {
 		return xerrors.Errorf("failed to put vulnerability: %w", err)
 	}
@@ -189,7 +202,8 @@ func (o fullOptimizer) fullOptimize(tx *bolt.Tx, cveID string) error {
 }
 
 type lightOptimizer struct {
-	dbOp db.Operation
+	dbOp       db.Operation
+	vulnClient vulnerability.Vulnerability
 }
 
 func (o lightOptimizer) Optimize() error {
@@ -208,7 +222,20 @@ func (o lightOptimizer) Optimize() error {
 
 func (o lightOptimizer) lightOptimize(cveID string, tx *bolt.Tx) error {
 	// get correct severity
-	vuln := getDetailFunc(cveID)
+	details := o.vulnClient.GetDetails(cveID)
+	if o.vulnClient.IsRejected(details) {
+		return nil
+	}
+
+	advisories, err := o.vulnClient.GetAdvisoryDetails(cveID)
+	if err != nil {
+		return xerrors.Errorf("failed to get advisories: %w", err)
+	}
+	if err := saveAdvisories(o.dbOp, tx, cveID, advisories); err != nil {
+		return xerrors.Errorf("failed to put advisories: %w", err)
+	}
+
+	vuln := o.vulnClient.Normalize(details)
 	lightVuln := types.Vulnerability{
 		VendorSeverity: vuln.VendorSeverity,
 	}
@@ -225,6 +252,15 @@ func (o lightOptimizer) lightOptimize(cveID string, tx *bolt.Tx) error {
 
 	if err := o.dbOp.PutVulnerability(tx, cveID, lightVuln); err != nil {
 		return xerrors.Errorf("failed to put vulnerability: %w", err)
+	}
+	return nil
+}
+
+func saveAdvisories(dbc db.Operation, tx *bolt.Tx, cveID string, advisories []types.AdvisoryDetail) error {
+	for _, advisory := range advisories {
+		if err := dbc.PutAdvisory(tx, advisory.PlatformName, advisory.PackageName, cveID, advisory.AdvisoryItem); err != nil {
+			return xerrors.Errorf("failed to save %v advisory: %w", advisory.PlatformName, err)
+		}
 	}
 	return nil
 }

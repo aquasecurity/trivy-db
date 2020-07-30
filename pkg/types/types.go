@@ -96,6 +96,12 @@ type VulnerabilityDetail struct {
 	Description  string   `json:",omitempty"`
 }
 
+type AdvisoryDetail struct {
+	PlatformName string
+	PackageName  string
+	AdvisoryItem interface{}
+}
+
 type Advisory struct {
 	VulnerabilityID string `json:",omitempty"`
 	FixedVersion    string `json:",omitempty"`
@@ -104,7 +110,7 @@ type Advisory struct {
 type Vulnerability struct {
 	Title          string         `json:",omitempty"`
 	Description    string         `json:",omitempty"`
-	Severity       string         `json:",omitempty"` // Deprecated: Severity is only for backwards compatibility. Use VendorSeverity instead.
+	Severity       string         `json:",omitempty"`
 	CweIDs         []string       `json:",omitempty"` // e.g. CWE-78, CWE-89
 	VendorSeverity VendorSeverity `json:",omitempty"`
 	VendorVectors  VendorVectors  `json:",omitempty"` // Deprecated: VendorVectors is only for backwards compatibility. Use CVSS instead.

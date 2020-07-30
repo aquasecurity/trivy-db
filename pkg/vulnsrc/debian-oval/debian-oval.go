@@ -110,7 +110,7 @@ func (vs VulnSrc) save(cves []DebianOVAL) error {
 				advisory := types.Advisory{
 					FixedVersion: affectedPkg.FixedVersion,
 				}
-				if err := vs.dbc.PutAdvisory(tx, platformName, affectedPkg.Name, cveID, advisory); err != nil {
+				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, platformName, affectedPkg.Name, advisory); err != nil {
 					return xerrors.Errorf("failed to save Debian OVAL advisory: %w", err)
 				}
 

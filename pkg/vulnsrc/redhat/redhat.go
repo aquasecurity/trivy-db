@@ -21,9 +21,8 @@ import (
 )
 
 const (
-	redhatDir           = "redhat"
-	platformFormat      = "Red Hat Enterprise Linux %s"
-	rejectVulnerability = "** REJECT **"
+	redhatDir      = "redhat"
+	platformFormat = "Red Hat Enterprise Linux %s"
 )
 
 var (
@@ -116,16 +115,6 @@ func (vs VulnSrc) save(cves []RedhatCVE) error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx, cves []RedhatCVE) error {
 	for _, cve := range cves {
-		var isRejected bool
-		for _, detail := range cve.Details {
-			if strings.HasPrefix(detail, rejectVulnerability) {
-				isRejected = true
-				break
-			}
-		}
-		if isRejected {
-			continue
-		}
 		for _, pkgState := range cve.PackageState {
 			pkgName := pkgState.PackageName
 			if pkgName == "" {
@@ -144,7 +133,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []RedhatCVE) error {
 				// this means all versions
 				FixedVersion: "",
 			}
-			if err := vs.dbc.PutAdvisory(tx, platformName, pkgName, cve.Name, advisory); err != nil {
+			if err := vs.dbc.PutAdvisoryDetail(tx, cve.Name, platformName, pkgName, advisory); err != nil {
 				return xerrors.Errorf("failed to save Red Hat advisory: %w", err)
 			}
 		}

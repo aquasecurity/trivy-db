@@ -67,7 +67,7 @@ func (vs VulnSrc) save(cves []AlpineCVE) error {
 			advisory := types.Advisory{
 				FixedVersion: cve.FixedVersion,
 			}
-			if err := vs.dbc.PutAdvisory(tx, platformName, pkgName, cve.VulnerabilityID, advisory); err != nil {
+			if err := vs.dbc.PutAdvisoryDetail(tx, cve.VulnerabilityID, platformName, pkgName, advisory); err != nil {
 				return xerrors.Errorf("failed to save Alpine advisory: %w", err)
 			}
 

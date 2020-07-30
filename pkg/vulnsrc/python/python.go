@@ -2,11 +2,10 @@ package python
 
 import (
 	"encoding/json"
+	"github.com/aquasecurity/trivy-db/pkg/types"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/aquasecurity/trivy-db/pkg/types"
 
 	bolt "go.etcd.io/bbolt"
 
@@ -90,14 +89,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, advisoryDB AdvisoryDB) error {
 		for _, advisory := range advisories {
 			vulnerabilityIDs := strings.Split(advisory.Cve, ",")
 			for _, vulnerabilityID := range vulnerabilityIDs {
-				vulnerabilityID := strings.TrimSpace(vulnerabilityID)
 				if vulnerabilityID == "" {
 					vulnerabilityID = advisory.ID
 				}
-
 				// to detect vulnerabilities
 				a := Advisory{Specs: advisory.Specs}
-				err := vs.dbc.PutAdvisory(tx, vulnerability.PythonSafetyDB, pkgName, vulnerabilityID, a)
+				err := vs.dbc.PutAdvisoryDetail(tx, vulnerabilityID, vulnerability.PythonSafetyDB, pkgName, a)
 				if err != nil {
 					return xerrors.Errorf("failed to save python advisory: %w", err)
 				}
