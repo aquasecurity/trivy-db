@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	nvdDir = "nvd"
+	nvdDir              = "nvd"
 	rejectVulnerability = "** REJECT **"
 )
 
@@ -100,16 +100,18 @@ func (vs VulnSrc) commit(tx *bolt.Tx, items []Item) error {
 		}
 
 		vuln := types.VulnerabilityDetail{
-			CvssScore:    item.Impact.BaseMetricV2.CvssV2.BaseScore,
-			CvssVector:   item.Impact.BaseMetricV2.CvssV2.VectorString,
-			CvssScoreV3:  item.Impact.BaseMetricV3.CvssV3.BaseScore,
-			CvssVectorV3: item.Impact.BaseMetricV3.CvssV3.VectorString,
-			Severity:     severity,
-			SeverityV3:   severityV3,
-			CweIDs:       cweIDs,
-			References:   references,
-			Title:        "",
-			Description:  description,
+			CvssScore:        item.Impact.BaseMetricV2.CvssV2.BaseScore,
+			CvssVector:       item.Impact.BaseMetricV2.CvssV2.VectorString,
+			CvssScoreV3:      item.Impact.BaseMetricV3.CvssV3.BaseScore,
+			CvssVectorV3:     item.Impact.BaseMetricV3.CvssV3.VectorString,
+			Severity:         severity,
+			SeverityV3:       severityV3,
+			CweIDs:           cweIDs,
+			References:       references,
+			Title:            "",
+			Description:      description,
+			PublishedDate:    item.PublishedDate,
+			LastModifiedDate: item.LastModifiedDate,
 		}
 
 		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Nvd, vuln); err != nil {
