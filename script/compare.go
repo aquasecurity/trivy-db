@@ -3,9 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	bolt "go.etcd.io/bbolt"
 	"log"
 	"reflect"
+
+	bolt "go.etcd.io/bbolt"
 )
 
 const (
@@ -21,20 +22,24 @@ func main() {
 	flag.Parse()
 	oldVuln, oldAdvis := readFile(*oldBboltFile)
 	newVuln, newAdv := readFile(*newBboltFile)
-	if !reflect.DeepEqual(oldVuln, newVuln) {
-		fmt.Printf("got %v vulnerabilities from old DB and %v from new DB\n", len(oldVuln), len(newVuln))
-		for k := range oldVuln {
-			if _, ok := newVuln[k]; !ok {
-				fmt.Printf("vulnerability %v does not exist in new %v", k, oldVuln[k])
-			}
+
+	fmt.Printf("=== got %v vulnerabilities from old DB and %v from new DB ===\n", len(oldVuln), len(newVuln))
+	for k, old := range oldVuln {
+		new, ok := newVuln[k]
+		if !ok {
+			fmt.Printf("vulnerability %s does not exist in new %v\n", k, old)
+		} else if !reflect.DeepEqual(old, new) {
+			fmt.Printf("vulnerability %s is different\n", k)
 		}
 	}
-	if !reflect.DeepEqual(oldAdvis, newAdv) {
-		fmt.Printf("got %v advisories from old DB and %v from new DB\n", len(oldAdvis), len(newAdv))
-		for k := range oldAdvis {
-			if _, ok := newAdv[k]; !ok {
-				fmt.Printf("advisory %v does not exist in new: %v", k, oldAdvis[k])
-			}
+
+	fmt.Printf("=== got %d advisories from old DB and %d from new DB ===\n", len(oldAdvis), len(newAdv))
+	for k, old := range oldAdvis {
+		new, ok := newAdv[k]
+		if !ok {
+			fmt.Printf("advisory %s does not exist in new %v\n", k, old)
+		} else if !reflect.DeepEqual(old, new) {
+			fmt.Printf("advisory %s is different\n", k)
 		}
 	}
 }
