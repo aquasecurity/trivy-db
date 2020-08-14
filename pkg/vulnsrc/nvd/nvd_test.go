@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -37,8 +38,8 @@ func TestVulnSrc_Update(t *testing.T) {
 				SeverityV3:       types.SeverityHigh,
 				CweIDs:           []string{"CWE-269"},
 				References:       []string{"https://source.android.com/security/bulletin/2020-01-01"},
-				LastModifiedDate: "2020-01-14T21:52Z",
-				PublishedDate:    "2020-01-08T19:15Z",
+				LastModifiedDate: time.Date(2020, 01, 01, 01, 01, 00, 00, time.UTC),
+				PublishedDate:    time.Date(2001, 01, 01, 01, 01, 00, 00, time.UTC),
 			},
 		},
 		{
