@@ -131,10 +131,10 @@ func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) 
 
 func severityFromUrgency(urgency string) types.Severity {
 	switch urgency {
-	case "not yet assigned":
+	case "not yet assigned", "end-of-life":
 		return types.SeverityUnknown
 
-	case "end-of-life", "unimportant", "low", "low*", "low**":
+	case "unimportant", "low", "low*", "low**":
 		return types.SeverityLow
 
 	case "medium", "medium*", "medium**":
