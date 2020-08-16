@@ -7,6 +7,12 @@ import (
 	"strings"
 	"time"
 
+	bolt "go.etcd.io/bbolt"
+	"golang.org/x/xerrors"
+	"k8s.io/utils/clock"
+
+	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/amazon"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bundler"
@@ -15,6 +21,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
 	debianoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/photon"
@@ -23,17 +30,7 @@ import (
 	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
 	susecvrf "github.com/aquasecurity/trivy-db/pkg/vulnsrc/suse-cvrf"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
-
-	"k8s.io/utils/clock"
-
-	"github.com/aquasecurity/trivy-db/pkg/db"
-	"github.com/aquasecurity/trivy-db/pkg/types"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
-
-	bolt "go.etcd.io/bbolt"
-
-	"golang.org/x/xerrors"
 )
 
 type VulnSrc interface {
@@ -190,12 +187,9 @@ func (o fullOptimizer) fullOptimize(tx *bolt.Tx, cveID string) error {
 	if o.vulnClient.IsRejected(details) {
 		return nil
 	}
-	advisories, err := o.vulnClient.GetAdvisoryDetails(cveID)
-	if err != nil {
-		return xerrors.Errorf("failed to get advisories: %w", err)
-	}
-	if err := saveAdvisories(o.dbc, tx, cveID, advisories); err != nil {
-		return xerrors.Errorf("failed to put advisories: %w", err)
+
+	if err := o.vulnClient.SaveAdvisoryDetails(tx, cveID); err != nil {
+		return xerrors.Errorf("failed to save advisories: %w", err)
 	}
 
 	vuln := o.vulnClient.Normalize(details)
@@ -231,12 +225,8 @@ func (o lightOptimizer) lightOptimize(cveID string, tx *bolt.Tx) error {
 		return nil
 	}
 
-	advisories, err := o.vulnClient.GetAdvisoryDetails(cveID)
-	if err != nil {
-		return xerrors.Errorf("failed to get advisories: %w", err)
-	}
-	if err := saveAdvisories(o.dbOp, tx, cveID, advisories); err != nil {
-		return xerrors.Errorf("failed to put advisories: %w", err)
+	if err := o.vulnClient.SaveAdvisoryDetails(tx, cveID); err != nil {
+		return xerrors.Errorf("failed to save advisories: %w", err)
 	}
 
 	vuln := o.vulnClient.Normalize(details)
@@ -256,15 +246,6 @@ func (o lightOptimizer) lightOptimize(cveID string, tx *bolt.Tx) error {
 
 	if err := o.dbOp.PutVulnerability(tx, cveID, lightVuln); err != nil {
 		return xerrors.Errorf("failed to put vulnerability: %w", err)
-	}
-	return nil
-}
-
-func saveAdvisories(dbc db.Operation, tx *bolt.Tx, cveID string, advisories []types.AdvisoryDetail) error {
-	for _, advisory := range advisories {
-		if err := dbc.PutAdvisory(tx, advisory.PlatformName, advisory.PackageName, cveID, advisory.AdvisoryItem); err != nil {
-			return xerrors.Errorf("failed to save %v advisory: %w", advisory.PlatformName, err)
-		}
 	}
 	return nil
 }
