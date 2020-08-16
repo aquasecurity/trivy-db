@@ -75,9 +75,6 @@ func init() {
 	for distribution := range updateMap {
 		UpdateList = append(UpdateList, distribution)
 	}
-	sort.Slice(UpdateList, func(i, j int) bool {
-		return strings.Compare(UpdateList[i], UpdateList[j]) <= 0
-	})
 }
 
 type Operation interface {
