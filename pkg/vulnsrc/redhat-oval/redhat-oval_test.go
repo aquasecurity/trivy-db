@@ -75,10 +75,10 @@ func TestVulnSrc_Update(t *testing.T) {
 
 func TestVulnSrc_Commit(t *testing.T) {
 	testCases := []struct {
-		name             string
-		advisories       []RedhatOVAL
-		putAdvisory      []db.OperationPutAdvisoryExpectation
-		expectedErrorMsg string
+		name              string
+		advisories        []RedhatOVAL
+		putAdvisoryDetail []db.OperationPutAdvisoryDetailExpectation
+		expectedErrorMsg  string
 	}{
 		{
 			name: "happy path",
@@ -130,9 +130,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.OperationPutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.OperationPutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Red Hat Enterprise Linux 8",
 						PkgName:         "rest",
@@ -141,7 +141,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.OperationPutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Red Hat Enterprise Linux 8",
 						PkgName:         "rest",
@@ -150,7 +150,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.OperationPutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Red Hat Enterprise Linux 8",
 						PkgName:         "rest-devel",
@@ -159,7 +159,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.OperationPutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Red Hat Enterprise Linux 8",
 						PkgName:         "rest-devel",
@@ -220,16 +220,16 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.OperationPutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.OperationPutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Red Hat Enterprise Linux 8",
 						PkgName:         "rest",
 						VulnerabilityID: "CVE-2015-2675",
 						Advisory:        types.Advisory{FixedVersion: "0:0.7.92-3.el7"},
 					},
-					Returns: db.OperationPutAdvisoryReturns{
+					Returns: db.OperationPutAdvisoryDetailReturns{
 						Err: errors.New("unable to put advisory"),
 					},
 				},
@@ -242,7 +242,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tx := &bolt.Tx{}
 			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyPutAdvisoryExpectations(tc.putAdvisory)
+			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tc.putAdvisoryDetail)
 
 			ac := VulnSrc{dbc: mockDBConfig}
 			err := ac.commit(tx, tc.advisories)
