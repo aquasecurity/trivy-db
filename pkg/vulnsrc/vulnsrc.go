@@ -3,6 +3,7 @@ package vulnsrc
 import (
 	"log"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
@@ -38,40 +39,52 @@ type VulnSrc interface {
 	Update(dir string) (err error)
 }
 
+type TargetWithPriority struct {
+	Target   string
+	Priority int
+}
+
 var (
 	// UpdateList has list of update distributions
 	UpdateList []string
-	updateMap  = map[string]VulnSrc{
-		vulnerability.Nvd:                   nvd.NewVulnSrc(),
-		vulnerability.Alpine:                alpine.NewVulnSrc(),
-		vulnerability.RedHat:                redhat.NewVulnSrc(),
-		vulnerability.RedHatOVAL:            redhatoval.NewVulnSrc(),
-		vulnerability.Debian:                debian.NewVulnSrc(),
-		vulnerability.DebianOVAL:            debianoval.NewVulnSrc(),
-		vulnerability.Ubuntu:                ubuntu.NewVulnSrc(),
-		vulnerability.Amazon:                amazon.NewVulnSrc(),
-		vulnerability.OracleOVAL:            oracleoval.NewVulnSrc(),
-		vulnerability.SuseCVRF:              susecvrf.NewVulnSrc(susecvrf.SUSEEnterpriseLinux),
-		vulnerability.OpenSuseCVRF:          susecvrf.NewVulnSrc(susecvrf.OpenSUSE),
-		vulnerability.Photon:                photon.NewVulnSrc(),
-		vulnerability.RubySec:               bundler.NewVulnSrc(),
-		vulnerability.PhpSecurityAdvisories: composer.NewVulnSrc(),
-		vulnerability.NodejsSecurityWg:      node.NewVulnSrc(),
-		vulnerability.PythonSafetyDB:        python.NewVulnSrc(),
-		vulnerability.RustSec:               cargo.NewVulnSrc(),
-		vulnerability.GHSAComposer:          ghsa.NewVulnSrc(ghsa.Composer),
-		vulnerability.GHSAMaven:             ghsa.NewVulnSrc(ghsa.Maven),
-		vulnerability.GHSANpm:               ghsa.NewVulnSrc(ghsa.Npm),
-		vulnerability.GHSANuget:             ghsa.NewVulnSrc(ghsa.Nuget),
-		vulnerability.GHSAPip:               ghsa.NewVulnSrc(ghsa.Pip),
-		vulnerability.GHSARubygems:          ghsa.NewVulnSrc(ghsa.Rubygems),
+	updateMap  = map[TargetWithPriority]VulnSrc{
+		{Target: vulnerability.Nvd, Priority: 0}:                    nvd.NewVulnSrc(),
+		{Target: vulnerability.Alpine, Priority: 1}:                 alpine.NewVulnSrc(),
+		{Target: vulnerability.RedHat, Priority: 2}:                 redhat.NewVulnSrc(),
+		{Target: vulnerability.RedHatOVAL, Priority: 3}:             redhatoval.NewVulnSrc(),
+		{Target: vulnerability.DebianOVAL, Priority: 4}:             debianoval.NewVulnSrc(),
+		{Target: vulnerability.Debian, Priority: 5}:                 debian.NewVulnSrc(),
+		{Target: vulnerability.Ubuntu, Priority: 6}:                 ubuntu.NewVulnSrc(),
+		{Target: vulnerability.Amazon, Priority: 7}:                 amazon.NewVulnSrc(),
+		{Target: vulnerability.OracleOVAL, Priority: 8}:             oracleoval.NewVulnSrc(),
+		{Target: vulnerability.SuseCVRF, Priority: 9}:               susecvrf.NewVulnSrc(susecvrf.SUSEEnterpriseLinux),
+		{Target: vulnerability.OpenSuseCVRF, Priority: 10}:          susecvrf.NewVulnSrc(susecvrf.OpenSUSE),
+		{Target: vulnerability.Photon, Priority: 11}:                photon.NewVulnSrc(),
+		{Target: vulnerability.RubySec, Priority: 12}:               bundler.NewVulnSrc(),
+		{Target: vulnerability.PhpSecurityAdvisories, Priority: 13}: composer.NewVulnSrc(),
+		{Target: vulnerability.NodejsSecurityWg, Priority: 14}:      node.NewVulnSrc(),
+		{Target: vulnerability.PythonSafetyDB, Priority: 15}:        python.NewVulnSrc(),
+		{Target: vulnerability.RustSec, Priority: 16}:               cargo.NewVulnSrc(),
+		{Target: vulnerability.GHSAComposer, Priority: 17}:          ghsa.NewVulnSrc(ghsa.Composer),
+		{Target: vulnerability.GHSAMaven, Priority: 18}:             ghsa.NewVulnSrc(ghsa.Maven),
+		{Target: vulnerability.GHSANpm, Priority: 19}:               ghsa.NewVulnSrc(ghsa.Npm),
+		{Target: vulnerability.GHSANuget, Priority: 20}:             ghsa.NewVulnSrc(ghsa.Nuget),
+		{Target: vulnerability.GHSAPip, Priority: 21}:               ghsa.NewVulnSrc(ghsa.Pip),
+		{Target: vulnerability.GHSARubygems, Priority: 22}:          ghsa.NewVulnSrc(ghsa.Rubygems),
 	}
 )
 
 func init() {
 	UpdateList = make([]string, 0, len(updateMap))
+	sortedKeys := make([]TargetWithPriority, 0, len(updateMap))
 	for distribution := range updateMap {
-		UpdateList = append(UpdateList, distribution)
+		sortedKeys = append(sortedKeys, distribution)
+	}
+	sort.Slice(sortedKeys, func(i, j int) bool {
+		return sortedKeys[i].Priority < sortedKeys[j].Priority
+	})
+	for _, distribution := range sortedKeys {
+		UpdateList = append(UpdateList, distribution.Target)
 	}
 }
 
@@ -82,7 +95,7 @@ type Operation interface {
 
 type Updater struct {
 	dbc            Operation
-	updateMap      map[string]VulnSrc
+	updateMap      map[TargetWithPriority]VulnSrc
 	cacheDir       string
 	dbType         db.Type
 	updateInterval time.Duration
@@ -115,15 +128,33 @@ func NewUpdater(cacheDir string, light bool, interval time.Duration) Updater {
 func (u Updater) Update(targets []string) error {
 	log.Println("Updating vulnerability database...")
 
-	for _, distribution := range targets {
-		vulnSrc, ok := u.updateMap[distribution]
-		if !ok {
-			return xerrors.Errorf("%s does not supported yet", distribution)
-		}
-		log.Printf("Updating %s data...\n", distribution)
+	sortedKeys := make([]TargetWithPriority, 0, len(u.updateMap))
+	for distribution := range u.updateMap {
+		sortedKeys = append(sortedKeys, distribution)
+	}
+	sort.Slice(sortedKeys, func(i, j int) bool {
+		return sortedKeys[i].Priority < sortedKeys[j].Priority
+	})
 
-		if err := vulnSrc.Update(u.cacheDir); err != nil {
-			return xerrors.Errorf("error in %s update: %w", distribution, err)
+	for _, t := range sortedKeys {
+		var (
+			found         bool
+			missingTarget string
+		)
+		for _, distribution := range targets {
+			missingTarget = distribution
+			if t.Target == distribution {
+				found = true
+				vulnSrc := u.updateMap[t]
+				log.Printf("Updating %s data...\n", distribution)
+				if err := vulnSrc.Update(u.cacheDir); err != nil {
+					return xerrors.Errorf("error in %s update: %w", distribution, err)
+				}
+				break
+			}
+		}
+		if !found {
+			return xerrors.Errorf("%s does not supported yet", missingTarget)
 		}
 	}
 

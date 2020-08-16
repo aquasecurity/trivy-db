@@ -289,8 +289,8 @@ func TestUpdater_Update(t *testing.T) {
 
 			u := Updater{
 				dbc: mockDBOperation,
-				updateMap: map[string]VulnSrc{
-					"test": mockVulnSrc,
+				updateMap: map[TargetWithPriority]VulnSrc{
+					{Target: "test", Priority: 0}: mockVulnSrc,
 				},
 				cacheDir:       tt.fields.CacheDir,
 				dbType:         tt.fields.DBType,
