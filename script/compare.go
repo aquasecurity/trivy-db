@@ -20,26 +20,26 @@ var (
 
 func main() {
 	flag.Parse()
-	oldVuln, oldAdvis := readFile(*oldBboltFile)
-	newVuln, newAdv := readFile(*newBboltFile)
+	oldVulns, oldAdvs := readFile(*oldBboltFile)
+	newVulns, newAdvs := readFile(*newBboltFile)
 
-	fmt.Printf("=== got %v vulnerabilities from old DB and %v from new DB ===\n", len(oldVuln), len(newVuln))
-	for k, old := range oldVuln {
-		new, ok := newVuln[k]
+	log.Printf("=== got %v vulnerabilities from old DB and %v from new DB ===", len(oldVulns), len(newVulns))
+	for cveID, oldVuln := range oldVulns {
+		newVuln, ok := newVulns[cveID]
 		if !ok {
-			fmt.Printf("vulnerability %s does not exist in new %v\n", k, old)
-		} else if !reflect.DeepEqual(old, new) {
-			fmt.Printf("vulnerability %s is different\n", k)
+			log.Printf("vulnerability %s does not exist in new %v", cveID, oldVuln)
+		} else if !reflect.DeepEqual(oldVuln, newVuln) {
+			log.Printf("vulnerability %s is different", cveID)
 		}
 	}
 
-	fmt.Printf("=== got %d advisories from old DB and %d from new DB ===\n", len(oldAdvis), len(newAdv))
-	for k, old := range oldAdvis {
-		new, ok := newAdv[k]
+	log.Printf("=== got %d advisories from old DB and %d from new DB ===", len(oldAdvs), len(newAdvs))
+	for k, oldAdv := range oldAdvs {
+		newAdv, ok := newAdvs[k]
 		if !ok {
-			fmt.Printf("advisory %s does not exist in new %v\n", k, old)
-		} else if !reflect.DeepEqual(old, new) {
-			fmt.Printf("advisory %s is different\n", k)
+			log.Printf("advisory %s does not exist in new %v", k, oldAdv)
+		} else if !reflect.DeepEqual(oldAdv, newAdv) {
+			log.Printf("advisory %s is different", k)
 		}
 	}
 }
