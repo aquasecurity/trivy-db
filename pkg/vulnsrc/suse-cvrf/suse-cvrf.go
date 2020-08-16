@@ -102,7 +102,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 				FixedVersion: affectedPkg.Package.FixedVersion,
 			}
 
-			if err := vs.dbc.PutAdvisory(tx, affectedPkg.OSVer, affectedPkg.Package.Name, cvrf.Tracking.ID, advisory); err != nil {
+			if err := vs.dbc.PutAdvisoryDetail(tx, cvrf.Tracking.ID, affectedPkg.OSVer, affectedPkg.Package.Name, advisory); err != nil {
 				return xerrors.Errorf("unable to save %s CVRF: %w", affectedPkg.OSVer, err)
 			}
 		}

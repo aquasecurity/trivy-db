@@ -15,9 +15,9 @@ func TestVulnSrc_commit(t *testing.T) {
 		name                   string
 		expectedErrorMsg       string
 		cves                   []UbuntuCVE
-		putAdvisory            []db.PutAdvisoryExpectation
-		putVulnerabilityDetail []db.PutVulnerabilityDetailExpectation
-		putSeverity            []db.PutSeverityExpectation
+		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
+		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
+		putSeverity            []db.OperationPutSeverityExpectation
 	}{
 		{
 			name: "happy path",
@@ -33,24 +33,39 @@ func TestVulnSrc_commit(t *testing.T) {
 								Note:   "v1.2.3",
 							},
 						},
+						"test package2": {
+							"disco": Status{
+								Status: "released",
+								Note:   "v2.3.4",
+							},
+						},
 					},
 					References: []string{"test reference 123"},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
+						VulnerabilityID: "CVE-2020-123",
 						Source:          "ubuntu 19.04",
 						PkgName:         "test package",
+						Advisory:        types.Advisory{FixedVersion: "v1.2.3"},
+					},
+				},
+				{
+					Args: db.OperationPutAdvisoryDetailArgs{
+						TxAnything:      true,
 						VulnerabilityID: "CVE-2020-123",
-						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "v1.2.3"},
+						Source:          "ubuntu 19.04",
+						PkgName:         "test package2",
+						Advisory:        types.Advisory{FixedVersion: "v2.3.4"},
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2020-123",
 						Source:          vulnerability.Ubuntu,
@@ -62,37 +77,15 @@ func TestVulnSrc_commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2020-123",
 						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
-		},
-		{
-			name: "happy path with ** REJECT ** in description",
-			cves: []UbuntuCVE{
-				{
-					Description: "** REJECT ** test description",
-					Candidate:   "CVE-2020-123",
-					Priority:    "critical",
-					Patches: map[PackageName]Patch{
-						"test package": {
-							"disco": Status{
-								Status: "released",
-								Note:   "v1.2.3",
-							},
-						},
-					},
-					References: []string{"test reference 123"},
-				},
-			},
-			putAdvisory:            []db.PutAdvisoryExpectation{},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{},
-			putSeverity:            []db.PutSeverityExpectation{},
 		},
 
 		// TODO: Add other test cases for failing paths
@@ -101,7 +94,7 @@ func TestVulnSrc_commit(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tx := &bolt.Tx{}
 			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyPutAdvisoryExpectations(tt.putAdvisory)
+			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tt.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tt.putVulnerabilityDetail)
 			mockDBConfig.ApplyPutSeverityExpectations(tt.putSeverity)
 

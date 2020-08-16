@@ -96,6 +96,12 @@ type VulnerabilityDetail struct {
 	Description  string   `json:",omitempty"`
 }
 
+type AdvisoryDetail struct {
+	PlatformName string
+	PackageName  string
+	AdvisoryItem interface{}
+}
+
 type Advisory struct {
 	VulnerabilityID string `json:",omitempty"`
 	FixedVersion    string `json:",omitempty"`

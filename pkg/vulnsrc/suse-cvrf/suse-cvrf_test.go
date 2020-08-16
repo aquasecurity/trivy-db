@@ -74,9 +74,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 	testCases := []struct {
 		name                   string
 		cvrfs                  []SuseCvrf
-		putAdvisory            []db.PutAdvisoryExpectation
-		putVulnerabilityDetail []db.PutVulnerabilityDetailExpectation
-		putSeverity            []db.PutSeverityExpectation
+		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
+		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
+		putSeverity            []db.OperationPutSeverityExpectation
 		expectedErrorMsg       string
 	}{
 		{
@@ -154,9 +154,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "SUSE Linux Enterprise 15.1",
 						PkgName:         "helm-mirror",
@@ -165,12 +165,12 @@ func TestVulnSrc_Commit(t *testing.T) {
 							FixedVersion: "0.2.1-1.7.1",
 						},
 					},
-					Returns: db.PutAdvisoryReturns{},
+					Returns: db.OperationPutAdvisoryDetailReturns{},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "SUSE-SU-2019:0048-2",
 						Source:          "suse-cvrf",
@@ -184,12 +184,12 @@ func TestVulnSrc_Commit(t *testing.T) {
 							Severity: types.SeverityHigh,
 						},
 					},
-					Returns: db.PutVulnerabilityDetailReturns{},
+					Returns: db.OperationPutVulnerabilityDetailReturns{},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "SUSE-SU-2019:0048-2",
 						Severity:        types.SeverityUnknown,
@@ -270,9 +270,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "openSUSE Leap 15.1",
 						PkgName:         "strongswan",
@@ -281,10 +281,10 @@ func TestVulnSrc_Commit(t *testing.T) {
 							FixedVersion: "5.6.0-lp151.4.3.1",
 						},
 					},
-					Returns: db.PutAdvisoryReturns{},
+					Returns: db.OperationPutAdvisoryDetailReturns{},
 				},
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "openSUSE Leap 15.1",
 						PkgName:         "strongswan-sqlite",
@@ -293,12 +293,12 @@ func TestVulnSrc_Commit(t *testing.T) {
 							FixedVersion: "5.6.0-lp151.4.3.1",
 						},
 					},
-					Returns: db.PutAdvisoryReturns{},
+					Returns: db.OperationPutAdvisoryDetailReturns{},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "openSUSE-SU-2019:2598-1",
 						Source:          "suse-cvrf",
@@ -312,12 +312,12 @@ func TestVulnSrc_Commit(t *testing.T) {
 							Severity: types.SeverityHigh,
 						},
 					},
-					Returns: db.PutVulnerabilityDetailReturns{},
+					Returns: db.OperationPutVulnerabilityDetailReturns{},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "openSUSE-SU-2019:2598-1",
 						Severity:        types.SeverityUnknown,
@@ -380,9 +380,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "SUSE Linux Enterprise 15",
 						PkgName:         "GraphicsMagick",
@@ -391,10 +391,10 @@ func TestVulnSrc_Commit(t *testing.T) {
 							FixedVersion: "1.3.29-bp150.2.12.1",
 						},
 					},
-					Returns: db.PutAdvisoryReturns{},
+					Returns: db.OperationPutAdvisoryDetailReturns{},
 				},
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "SUSE Linux Enterprise 15",
 						PkgName:         "GraphicsMagick-devel",
@@ -403,12 +403,12 @@ func TestVulnSrc_Commit(t *testing.T) {
 							FixedVersion: "1.3.29-bp150.2.12.1",
 						},
 					},
-					Returns: db.PutAdvisoryReturns{},
+					Returns: db.OperationPutAdvisoryDetailReturns{},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "openSUSE-SU-2019:0003-1",
 						Source:          "suse-cvrf",
@@ -421,12 +421,12 @@ func TestVulnSrc_Commit(t *testing.T) {
 							Severity: types.SeverityMedium,
 						},
 					},
-					Returns: db.PutVulnerabilityDetailReturns{},
+					Returns: db.OperationPutVulnerabilityDetailReturns{},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "openSUSE-SU-2019:0003-1",
 						Severity:        types.SeverityUnknown,
@@ -459,16 +459,16 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:              true,
 						SourceAnything:          true,
 						PkgNameAnything:         true,
 						VulnerabilityIDAnything: true,
 						AdvisoryAnything:        true,
 					},
-					Returns: db.PutAdvisoryReturns{
+					Returns: db.OperationPutAdvisoryDetailReturns{
 						Err: errors.New("error"),
 					},
 				},
@@ -500,27 +500,27 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:              true,
 						SourceAnything:          true,
 						PkgNameAnything:         true,
 						VulnerabilityIDAnything: true,
 						AdvisoryAnything:        true,
 					},
-					Returns: db.PutAdvisoryReturns{},
+					Returns: db.OperationPutAdvisoryDetailReturns{},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:              true,
 						VulnerabilityIDAnything: true,
 						SourceAnything:          true,
 						VulnerabilityAnything:   true,
 					},
-					Returns: db.PutVulnerabilityDetailReturns{
+					Returns: db.OperationPutVulnerabilityDetailReturns{
 						Err: errors.New("error"),
 					},
 				},
@@ -552,37 +552,37 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:              true,
 						SourceAnything:          true,
 						PkgNameAnything:         true,
 						VulnerabilityIDAnything: true,
 						AdvisoryAnything:        true,
 					},
-					Returns: db.PutAdvisoryReturns{},
+					Returns: db.OperationPutAdvisoryDetailReturns{},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:              true,
 						VulnerabilityIDAnything: true,
 						SourceAnything:          true,
 						VulnerabilityAnything:   true,
 					},
-					Returns: db.PutVulnerabilityDetailReturns{},
+					Returns: db.OperationPutVulnerabilityDetailReturns{},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:              true,
 						VulnerabilityIDAnything: true,
 						SeverityAnything:        true,
 					},
-					Returns: db.PutSeverityReturns{
+					Returns: db.OperationPutSeverityReturns{
 						Err: errors.New("error"),
 					},
 				},
@@ -595,7 +595,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tx := &bolt.Tx{}
 			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyPutAdvisoryExpectations(tc.putAdvisory)
+			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tc.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tc.putVulnerabilityDetail)
 			mockDBConfig.ApplyPutSeverityExpectations(tc.putSeverity)
 
@@ -620,7 +620,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		version       string
 		pkgName       string
 		dist          Distribution
-		getAdvisories db.GetAdvisoriesExpectation
+		getAdvisories db.OperationGetAdvisoriesExpectation
 		expectedError string
 		expectedVulns []types.Advisory
 	}{
@@ -629,12 +629,12 @@ func TestVulnSrc_Get(t *testing.T) {
 			version: "13.1",
 			pkgName: "bind",
 			dist:    OpenSUSE,
-			getAdvisories: db.GetAdvisoriesExpectation{
-				Args: db.GetAdvisoriesArgs{
+			getAdvisories: db.OperationGetAdvisoriesExpectation{
+				Args: db.OperationGetAdvisoriesArgs{
 					Source:  "openSUSE Leap 13.1",
 					PkgName: "bind",
 				},
-				Returns: db.GetAdvisoriesReturns{
+				Returns: db.OperationGetAdvisoriesReturns{
 					Advisories: []types.Advisory{
 						{
 							VulnerabilityID: "openSUSE-SU-2019:0003-1",
@@ -655,12 +655,12 @@ func TestVulnSrc_Get(t *testing.T) {
 			version: "15.1",
 			pkgName: "bind",
 			dist:    SUSEEnterpriseLinux,
-			getAdvisories: db.GetAdvisoriesExpectation{
-				Args: db.GetAdvisoriesArgs{
+			getAdvisories: db.OperationGetAdvisoriesExpectation{
+				Args: db.OperationGetAdvisoriesArgs{
 					SourceAnything:  true,
 					PkgNameAnything: true,
 				},
-				Returns: db.GetAdvisoriesReturns{
+				Returns: db.OperationGetAdvisoriesReturns{
 					Err: errors.New("error"),
 				},
 			},

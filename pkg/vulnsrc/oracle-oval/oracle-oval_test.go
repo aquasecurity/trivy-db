@@ -67,9 +67,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 	testCases := []struct {
 		name                   string
 		cves                   []OracleOVAL
-		putAdvisory            []db.PutAdvisoryExpectation
-		putVulnerabilityDetail []db.PutVulnerabilityDetailExpectation
-		putSeverity            []db.PutSeverityExpectation
+		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
+		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
+		putSeverity            []db.OperationPutSeverityExpectation
 		expectedErrorMsg       string
 	}{
 		{
@@ -139,9 +139,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Oracle Linux 5",
 						PkgName:         "bind-devel",
@@ -150,7 +150,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Oracle Linux 5",
 						PkgName:         "bind-devel",
@@ -159,9 +159,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2007-0493",
 						Source:          vulnerability.OracleOVAL,
@@ -177,7 +177,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2007-0494",
 						Source:          vulnerability.OracleOVAL,
@@ -193,16 +193,16 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2007-0493",
 						Severity:        types.SeverityUnknown,
 					},
 				},
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2007-0494",
 						Severity:        types.SeverityUnknown,
@@ -282,9 +282,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Oracle Linux 5",
 						PkgName:         "bind-devel",
@@ -293,7 +293,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Oracle Linux 5",
 						PkgName:         "bind-devel",
@@ -302,9 +302,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2007-0493",
 						Source:          vulnerability.OracleOVAL,
@@ -320,7 +320,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2007-0494",
 						Source:          vulnerability.OracleOVAL,
@@ -336,16 +336,16 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2007-0493",
 						Severity:        types.SeverityUnknown,
 					},
 				},
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2007-0494",
 						Severity:        types.SeverityUnknown,
@@ -477,9 +477,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Oracle Linux 6",
 						PkgName:         "kernel-uek-doc",
@@ -488,7 +488,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Oracle Linux 6",
 						PkgName:         "kernel-uek-doc",
@@ -497,7 +497,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Oracle Linux 6",
 						PkgName:         "kernel-uek-firmware",
@@ -506,7 +506,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Oracle Linux 6",
 						PkgName:         "kernel-uek-firmware",
@@ -515,7 +515,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Oracle Linux 7",
 						PkgName:         "kernel-uek-doc",
@@ -524,7 +524,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Oracle Linux 7",
 						PkgName:         "kernel-uek-doc",
@@ -533,7 +533,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Oracle Linux 7",
 						PkgName:         "kernel-uek-firmware",
@@ -542,7 +542,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Oracle Linux 7",
 						PkgName:         "kernel-uek-firmware",
@@ -551,9 +551,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2018-1094",
 						Source:          vulnerability.OracleOVAL,
@@ -569,7 +569,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2018-19824",
 						Source:          vulnerability.OracleOVAL,
@@ -585,16 +585,16 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2018-1094",
 						Severity:        types.SeverityUnknown,
 					},
 				},
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2018-19824",
 						Severity:        types.SeverityUnknown,
@@ -681,9 +681,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Oracle Linux 5",
 						PkgName:         "bind-devel",
@@ -692,7 +692,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Oracle Linux 5",
 						PkgName:         "bind-devel",
@@ -701,7 +701,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Oracle Linux 5",
 						PkgName:         "bind-sdb",
@@ -710,7 +710,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Oracle Linux 5",
 						PkgName:         "bind-sdb",
@@ -719,9 +719,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2007-0493",
 						Source:          vulnerability.OracleOVAL,
@@ -737,7 +737,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2007-0494",
 						Source:          vulnerability.OracleOVAL,
@@ -753,16 +753,16 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2007-0493",
 						Severity:        types.SeverityUnknown,
 					},
 				},
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2007-0494",
 						Severity:        types.SeverityUnknown,
@@ -837,9 +837,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Oracle Linux 5",
 						PkgName:         "bind-devel",
@@ -848,7 +848,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Oracle Linux 5",
 						PkgName:         "bind-devel",
@@ -857,9 +857,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2007-0493",
 						Source:          vulnerability.OracleOVAL,
@@ -875,7 +875,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2007-0494",
 						Source:          vulnerability.OracleOVAL,
@@ -891,16 +891,16 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2007-0493",
 						Severity:        types.SeverityUnknown,
 					},
 				},
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2007-0494",
 						Severity:        types.SeverityUnknown,
@@ -958,9 +958,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					Severity: "MODERATE",
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Oracle Linux 5",
 						PkgName:         "bind-devel",
@@ -969,9 +969,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "ELSA-2007-0057",
 						Source:          vulnerability.OracleOVAL,
@@ -986,9 +986,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "ELSA-2007-0057",
 						Severity:        types.SeverityUnknown,
@@ -1053,9 +1053,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-0001-0001",
 						Source:          vulnerability.OracleOVAL,
@@ -1071,9 +1071,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-0001-0001",
 						Severity:        types.SeverityUnknown,
@@ -1138,9 +1138,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-0001-0001",
 						Source:          vulnerability.OracleOVAL,
@@ -1156,9 +1156,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-0001-0001",
 						Severity:        types.SeverityUnknown,
@@ -1172,7 +1172,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tx := &bolt.Tx{}
 			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyPutAdvisoryExpectations(tc.putAdvisory)
+			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tc.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tc.putVulnerabilityDetail)
 			mockDBConfig.ApplyPutSeverityExpectations(tc.putSeverity)
 
@@ -1208,7 +1208,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		name          string
 		version       string
 		pkgName       string
-		getAdvisories db.GetAdvisoriesExpectation
+		getAdvisories db.OperationGetAdvisoriesExpectation
 		expectedError error
 		expectedVulns []types.Advisory
 	}{
@@ -1216,12 +1216,12 @@ func TestVulnSrc_Get(t *testing.T) {
 			name:    "happy path",
 			version: "8",
 			pkgName: "bind",
-			getAdvisories: db.GetAdvisoriesExpectation{
-				Args: db.GetAdvisoriesArgs{
+			getAdvisories: db.OperationGetAdvisoriesExpectation{
+				Args: db.OperationGetAdvisoriesArgs{
 					Source:  "Oracle Linux 8",
 					PkgName: "bind",
 				},
-				Returns: db.GetAdvisoriesReturns{
+				Returns: db.OperationGetAdvisoriesReturns{
 					Advisories: []types.Advisory{
 						{VulnerabilityID: "ELSA-2019-1145", FixedVersion: "32:9.11.4-17.P2.el8_0"},
 					},
@@ -1235,22 +1235,22 @@ func TestVulnSrc_Get(t *testing.T) {
 			name:    "no advisories are returned",
 			version: "8",
 			pkgName: "no-package",
-			getAdvisories: db.GetAdvisoriesExpectation{
-				Args: db.GetAdvisoriesArgs{
+			getAdvisories: db.OperationGetAdvisoriesExpectation{
+				Args: db.OperationGetAdvisoriesArgs{
 					Source:  "Oracle Linux 8",
 					PkgName: "no-package",
 				},
-				Returns: db.GetAdvisoriesReturns{},
+				Returns: db.OperationGetAdvisoriesReturns{},
 			},
 		},
 		{
 			name: "oracle GetAdvisories return an error",
-			getAdvisories: db.GetAdvisoriesExpectation{
-				Args: db.GetAdvisoriesArgs{
+			getAdvisories: db.OperationGetAdvisoriesExpectation{
+				Args: db.OperationGetAdvisoriesArgs{
 					SourceAnything:  true,
 					PkgNameAnything: true,
 				},
-				Returns: db.GetAdvisoriesReturns{
+				Returns: db.OperationGetAdvisoriesReturns{
 					Advisories: []types.Advisory{},
 					Err:        xerrors.New("unable to get advisories"),
 				},

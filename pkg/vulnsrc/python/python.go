@@ -97,7 +97,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, advisoryDB AdvisoryDB) error {
 
 				// to detect vulnerabilities
 				a := Advisory{Specs: advisory.Specs}
-				err := vs.dbc.PutAdvisory(tx, vulnerability.PythonSafetyDB, pkgName, vulnerabilityID, a)
+				err := vs.dbc.PutAdvisoryDetail(tx, vulnerabilityID, vulnerability.PythonSafetyDB, pkgName, a)
 				if err != nil {
 					return xerrors.Errorf("failed to save python advisory: %w", err)
 				}

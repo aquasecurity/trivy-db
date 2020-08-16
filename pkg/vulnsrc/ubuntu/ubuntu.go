@@ -6,22 +6,19 @@ import (
 	"io"
 	"log"
 	"path/filepath"
-	"strings"
-
-	"github.com/aquasecurity/trivy-db/pkg/types"
 
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 const (
-	ubuntuDir           = "ubuntu"
-	platformFormat      = "ubuntu %s"
-	rejectVulnerability = "** REJECT **"
+	ubuntuDir      = "ubuntu"
+	platformFormat = "ubuntu %s"
 )
 
 var (
@@ -96,9 +93,6 @@ func (vs VulnSrc) save(cves []UbuntuCVE) error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx, cves []UbuntuCVE) error {
 	for _, cve := range cves {
-		if strings.HasPrefix(cve.Description, rejectVulnerability) {
-			continue
-		}
 		for packageName, patch := range cve.Patches {
 			pkgName := string(packageName)
 			for release, status := range patch {
@@ -114,7 +108,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []UbuntuCVE) error {
 				if status.Status == "released" {
 					advisory.FixedVersion = status.Note
 				}
-				if err := vs.dbc.PutAdvisory(tx, platformName, pkgName, cve.Candidate, advisory); err != nil {
+				if err := vs.dbc.PutAdvisoryDetail(tx, cve.Candidate, platformName, pkgName, advisory); err != nil {
 					return xerrors.Errorf("failed to save Ubuntu advisory: %w", err)
 				}
 
