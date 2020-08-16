@@ -3,6 +3,8 @@ package vulnsrc
 import (
 	"log"
 	"path/filepath"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
@@ -114,7 +116,9 @@ func NewUpdater(cacheDir string, light bool, interval time.Duration) Updater {
 
 func (u Updater) Update(targets []string) error {
 	log.Println("Updating vulnerability database...")
-
+	sort.Slice(targets, func(i, j int) bool {
+		return strings.Compare(targets[i], targets[j]) <= 0
+	})
 	for _, distribution := range targets {
 		vulnSrc, ok := u.updateMap[distribution]
 		if !ok {
