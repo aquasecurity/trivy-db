@@ -7,6 +7,7 @@ import (
 	"log"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	bolt "go.etcd.io/bbolt"
@@ -89,17 +90,22 @@ func (vs VulnSrc) commit(tx *bolt.Tx, items []Item) error {
 			}
 		}
 
+		publishedDate, _ := time.Parse("2006-01-02T15:04Z", item.PublishedDate)
+		lastModifiedDate, _ := time.Parse("2006-01-02T15:04Z", item.LastModifiedDate)
+
 		vuln := types.VulnerabilityDetail{
-			CvssScore:    item.Impact.BaseMetricV2.CvssV2.BaseScore,
-			CvssVector:   item.Impact.BaseMetricV2.CvssV2.VectorString,
-			CvssScoreV3:  item.Impact.BaseMetricV3.CvssV3.BaseScore,
-			CvssVectorV3: item.Impact.BaseMetricV3.CvssV3.VectorString,
-			Severity:     severity,
-			SeverityV3:   severityV3,
-			CweIDs:       cweIDs,
-			References:   references,
-			Title:        "",
-			Description:  description,
+			CvssScore:        item.Impact.BaseMetricV2.CvssV2.BaseScore,
+			CvssVector:       item.Impact.BaseMetricV2.CvssV2.VectorString,
+			CvssScoreV3:      item.Impact.BaseMetricV3.CvssV3.BaseScore,
+			CvssVectorV3:     item.Impact.BaseMetricV3.CvssV3.VectorString,
+			Severity:         severity,
+			SeverityV3:       severityV3,
+			CweIDs:           cweIDs,
+			References:       references,
+			Title:            "",
+			Description:      description,
+			PublishedDate:    publishedDate,
+			LastModifiedDate: lastModifiedDate,
 		}
 
 		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Nvd, vuln); err != nil {

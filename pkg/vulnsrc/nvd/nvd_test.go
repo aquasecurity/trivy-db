@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -28,15 +29,17 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:   "./testdata",
 			cveID: "CVE-2020-0001",
 			want: types.VulnerabilityDetail{
-				Description:  "In getProcessRecordLocked of ActivityManagerService.java isolated apps are not handled correctly. This could lead to local escalation of privilege with no additional execution privileges needed. User interaction is not needed for exploitation. Product: Android Versions: Android-8.0, Android-8.1, Android-9, and Android-10 Android ID: A-140055304",
-				CvssScore:    7.2,
-				CvssVector:   "AV:L/AC:L/Au:N/C:C/I:C/A:C",
-				CvssScoreV3:  7.8,
-				CvssVectorV3: "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
-				Severity:     types.SeverityHigh,
-				SeverityV3:   types.SeverityHigh,
-				CweIDs:       []string{"CWE-269"},
-				References:   []string{"https://source.android.com/security/bulletin/2020-01-01"},
+				Description:      "In getProcessRecordLocked of ActivityManagerService.java isolated apps are not handled correctly. This could lead to local escalation of privilege with no additional execution privileges needed. User interaction is not needed for exploitation. Product: Android Versions: Android-8.0, Android-8.1, Android-9, and Android-10 Android ID: A-140055304",
+				CvssScore:        7.2,
+				CvssVector:       "AV:L/AC:L/Au:N/C:C/I:C/A:C",
+				CvssScoreV3:      7.8,
+				CvssVectorV3:     "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+				Severity:         types.SeverityHigh,
+				SeverityV3:       types.SeverityHigh,
+				CweIDs:           []string{"CWE-269"},
+				References:       []string{"https://source.android.com/security/bulletin/2020-01-01"},
+				LastModifiedDate: time.Date(2020, 01, 01, 01, 01, 00, 00, time.UTC),
+				PublishedDate:    time.Date(2001, 01, 01, 01, 01, 00, 00, time.UTC),
 			},
 		},
 		{

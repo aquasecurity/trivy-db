@@ -5,8 +5,10 @@ type NVD struct {
 }
 
 type Item struct {
-	Cve    Cve
-	Impact Impact
+	Cve              Cve
+	Impact           Impact
+	LastModifiedDate string `json:"lastModifiedDate"`
+	PublishedDate    string `json:"publishedDate"`
 }
 
 type Cve struct {
