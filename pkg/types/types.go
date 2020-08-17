@@ -98,6 +98,12 @@ type VulnerabilityDetail struct {
 	LastModifiedDate time.Time `json:",omitempty"`
 }
 
+type AdvisoryDetail struct {
+	PlatformName string
+	PackageName  string
+	AdvisoryItem interface{}
+}
+
 type Advisory struct {
 	VulnerabilityID string `json:",omitempty"`
 	FixedVersion    string `json:",omitempty"`

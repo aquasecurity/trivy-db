@@ -98,7 +98,7 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 
 		// for detecting vulnerabilities
 		a := Advisory{PatchedVersions: advisory.PatchedVersions}
-		err = vs.dbc.PutAdvisory(tx, vulnerability.RustSec, advisory.Package, advisory.Id, a)
+		err = vs.dbc.PutAdvisoryDetail(tx, advisory.Id, vulnerability.RustSec, advisory.Package, a)
 		if err != nil {
 			return xerrors.Errorf("failed to save rust advisory: %w", err)
 		}

@@ -79,9 +79,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 	testCases := []struct {
 		name                   string
 		cves                   []Item
-		putAdvisory            []db.PutAdvisoryExpectation
-		putVulnerabilityDetail []db.PutVulnerabilityDetailExpectation
-		putSeverity            []db.PutSeverityExpectation
+		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
+		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
+		putSeverity            []db.OperationPutSeverityExpectation
 		expectedErrorMsg       string
 	}{
 		{
@@ -128,9 +128,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2017-0012",
 						Source:          vulnerability.Nvd,
@@ -192,7 +192,25 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{},
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
+				{
+					Args: db.OperationPutVulnerabilityDetailArgs{
+						TxAnything:      true,
+						VulnerabilityID: "CVE-2017-0012",
+						Source:          vulnerability.Nvd,
+						Vulnerability: types.VulnerabilityDetail{
+							CvssScore:    4.3,
+							CvssVector:   "AV:N/AC:M/Au:N/C:N/I:P/A:N",
+							CvssScoreV3:  9.4,
+							CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N",
+							Severity:     types.SeverityMedium,
+							SeverityV3:   types.SeverityHigh,
+							References:   []string{"https://example.com"},
+							Description:  "** REJECT ** test description",
+						},
+					},
+				},
+			},
 		},
 
 		// TODO: Add sad paths
@@ -202,7 +220,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tx := &bolt.Tx{}
 			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyPutAdvisoryExpectations(tc.putAdvisory)
+			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tc.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tc.putVulnerabilityDetail)
 			mockDBConfig.ApplyPutSeverityExpectations(tc.putSeverity)
 

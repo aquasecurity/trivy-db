@@ -13,21 +13,21 @@ type MockOperation struct {
 	mock.Mock
 }
 
-type BatchUpdateArgs struct {
+type OperationBatchUpdateArgs struct {
 	Fn         func(*bbolt.Tx) error
 	FnAnything bool
 }
 
-type BatchUpdateReturns struct {
+type OperationBatchUpdateReturns struct {
 	Err error
 }
 
-type BatchUpdateExpectation struct {
-	Args    BatchUpdateArgs
-	Returns BatchUpdateReturns
+type OperationBatchUpdateExpectation struct {
+	Args    OperationBatchUpdateArgs
+	Returns OperationBatchUpdateReturns
 }
 
-func (_m *MockOperation) ApplyBatchUpdateExpectation(e BatchUpdateExpectation) {
+func (_m *MockOperation) ApplyBatchUpdateExpectation(e OperationBatchUpdateExpectation) {
 	var args []interface{}
 	if e.Args.FnAnything {
 		args = append(args, mock.Anything)
@@ -37,7 +37,7 @@ func (_m *MockOperation) ApplyBatchUpdateExpectation(e BatchUpdateExpectation) {
 	_m.On("BatchUpdate", args...).Return(e.Returns.Err)
 }
 
-func (_m *MockOperation) ApplyBatchUpdateExpectations(expectations []BatchUpdateExpectation) {
+func (_m *MockOperation) ApplyBatchUpdateExpectations(expectations []OperationBatchUpdateExpectation) {
 	for _, e := range expectations {
 		_m.ApplyBatchUpdateExpectation(e)
 	}
@@ -57,20 +57,53 @@ func (_m *MockOperation) BatchUpdate(fn func(*bbolt.Tx) error) error {
 	return r0
 }
 
-type DeleteSeverityBucketReturns struct {
+type OperationDeleteAdvisoryDetailBucketReturns struct {
+	_a0 error
+}
+
+type OperationDeleteAdvisoryDetailBucketExpectation struct {
+	Returns OperationDeleteAdvisoryDetailBucketReturns
+}
+
+func (_m *MockOperation) ApplyDeleteAdvisoryDetailBucketExpectation(e OperationDeleteAdvisoryDetailBucketExpectation) {
+	var args []interface{}
+	_m.On("DeleteAdvisoryDetailBucket", args...).Return(e.Returns._a0)
+}
+
+func (_m *MockOperation) ApplyDeleteAdvisoryDetailBucketExpectations(expectations []OperationDeleteAdvisoryDetailBucketExpectation) {
+	for _, e := range expectations {
+		_m.ApplyDeleteAdvisoryDetailBucketExpectation(e)
+	}
+}
+
+// DeleteAdvisoryDetailBucket provides a mock function with given fields:
+func (_m *MockOperation) DeleteAdvisoryDetailBucket() error {
+	ret := _m.Called()
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+type OperationDeleteSeverityBucketReturns struct {
 	Err error
 }
 
-type DeleteSeverityBucketExpectation struct {
-	Returns DeleteSeverityBucketReturns
+type OperationDeleteSeverityBucketExpectation struct {
+	Returns OperationDeleteSeverityBucketReturns
 }
 
-func (_m *MockOperation) ApplyDeleteSeverityBucketExpectation(e DeleteSeverityBucketExpectation) {
+func (_m *MockOperation) ApplyDeleteSeverityBucketExpectation(e OperationDeleteSeverityBucketExpectation) {
 	var args []interface{}
 	_m.On("DeleteSeverityBucket", args...).Return(e.Returns.Err)
 }
 
-func (_m *MockOperation) ApplyDeleteSeverityBucketExpectations(expectations []DeleteSeverityBucketExpectation) {
+func (_m *MockOperation) ApplyDeleteSeverityBucketExpectations(expectations []OperationDeleteSeverityBucketExpectation) {
 	for _, e := range expectations {
 		_m.ApplyDeleteSeverityBucketExpectation(e)
 	}
@@ -90,20 +123,20 @@ func (_m *MockOperation) DeleteSeverityBucket() error {
 	return r0
 }
 
-type DeleteVulnerabilityDetailBucketReturns struct {
+type OperationDeleteVulnerabilityDetailBucketReturns struct {
 	Err error
 }
 
-type DeleteVulnerabilityDetailBucketExpectation struct {
-	Returns DeleteVulnerabilityDetailBucketReturns
+type OperationDeleteVulnerabilityDetailBucketExpectation struct {
+	Returns OperationDeleteVulnerabilityDetailBucketReturns
 }
 
-func (_m *MockOperation) ApplyDeleteVulnerabilityDetailBucketExpectation(e DeleteVulnerabilityDetailBucketExpectation) {
+func (_m *MockOperation) ApplyDeleteVulnerabilityDetailBucketExpectation(e OperationDeleteVulnerabilityDetailBucketExpectation) {
 	var args []interface{}
 	_m.On("DeleteVulnerabilityDetailBucket", args...).Return(e.Returns.Err)
 }
 
-func (_m *MockOperation) ApplyDeleteVulnerabilityDetailBucketExpectations(expectations []DeleteVulnerabilityDetailBucketExpectation) {
+func (_m *MockOperation) ApplyDeleteVulnerabilityDetailBucketExpectations(expectations []OperationDeleteVulnerabilityDetailBucketExpectation) {
 	for _, e := range expectations {
 		_m.ApplyDeleteVulnerabilityDetailBucketExpectation(e)
 	}
@@ -123,24 +156,24 @@ func (_m *MockOperation) DeleteVulnerabilityDetailBucket() error {
 	return r0
 }
 
-type ForEachAdvisoryArgs struct {
+type OperationForEachAdvisoryArgs struct {
 	Source          string
 	SourceAnything  bool
 	PkgName         string
 	PkgNameAnything bool
 }
 
-type ForEachAdvisoryReturns struct {
+type OperationForEachAdvisoryReturns struct {
 	Value map[string][]byte
 	Err   error
 }
 
-type ForEachAdvisoryExpectation struct {
-	Args    ForEachAdvisoryArgs
-	Returns ForEachAdvisoryReturns
+type OperationForEachAdvisoryExpectation struct {
+	Args    OperationForEachAdvisoryArgs
+	Returns OperationForEachAdvisoryReturns
 }
 
-func (_m *MockOperation) ApplyForEachAdvisoryExpectation(e ForEachAdvisoryExpectation) {
+func (_m *MockOperation) ApplyForEachAdvisoryExpectation(e OperationForEachAdvisoryExpectation) {
 	var args []interface{}
 	if e.Args.SourceAnything {
 		args = append(args, mock.Anything)
@@ -155,7 +188,7 @@ func (_m *MockOperation) ApplyForEachAdvisoryExpectation(e ForEachAdvisoryExpect
 	_m.On("ForEachAdvisory", args...).Return(e.Returns.Value, e.Returns.Err)
 }
 
-func (_m *MockOperation) ApplyForEachAdvisoryExpectations(expectations []ForEachAdvisoryExpectation) {
+func (_m *MockOperation) ApplyForEachAdvisoryExpectations(expectations []OperationForEachAdvisoryExpectation) {
 	for _, e := range expectations {
 		_m.ApplyForEachAdvisoryExpectation(e)
 	}
@@ -184,21 +217,21 @@ func (_m *MockOperation) ForEachAdvisory(source string, pkgName string) (map[str
 	return r0, r1
 }
 
-type ForEachSeverityArgs struct {
+type OperationForEachSeverityArgs struct {
 	Fn         func(*bbolt.Tx, string, types.Severity) error
 	FnAnything bool
 }
 
-type ForEachSeverityReturns struct {
+type OperationForEachSeverityReturns struct {
 	Err error
 }
 
-type ForEachSeverityExpectation struct {
-	Args    ForEachSeverityArgs
-	Returns ForEachSeverityReturns
+type OperationForEachSeverityExpectation struct {
+	Args    OperationForEachSeverityArgs
+	Returns OperationForEachSeverityReturns
 }
 
-func (_m *MockOperation) ApplyForEachSeverityExpectation(e ForEachSeverityExpectation) {
+func (_m *MockOperation) ApplyForEachSeverityExpectation(e OperationForEachSeverityExpectation) {
 	var args []interface{}
 	if e.Args.FnAnything {
 		args = append(args, mock.Anything)
@@ -208,7 +241,7 @@ func (_m *MockOperation) ApplyForEachSeverityExpectation(e ForEachSeverityExpect
 	_m.On("ForEachSeverity", args...).Return(e.Returns.Err)
 }
 
-func (_m *MockOperation) ApplyForEachSeverityExpectations(expectations []ForEachSeverityExpectation) {
+func (_m *MockOperation) ApplyForEachSeverityExpectations(expectations []OperationForEachSeverityExpectation) {
 	for _, e := range expectations {
 		_m.ApplyForEachSeverityExpectation(e)
 	}
@@ -228,24 +261,24 @@ func (_m *MockOperation) ForEachSeverity(fn func(*bbolt.Tx, string, types.Severi
 	return r0
 }
 
-type GetAdvisoriesArgs struct {
+type OperationGetAdvisoriesArgs struct {
 	Source          string
 	SourceAnything  bool
 	PkgName         string
 	PkgNameAnything bool
 }
 
-type GetAdvisoriesReturns struct {
+type OperationGetAdvisoriesReturns struct {
 	Advisories []types.Advisory
 	Err        error
 }
 
-type GetAdvisoriesExpectation struct {
-	Args    GetAdvisoriesArgs
-	Returns GetAdvisoriesReturns
+type OperationGetAdvisoriesExpectation struct {
+	Args    OperationGetAdvisoriesArgs
+	Returns OperationGetAdvisoriesReturns
 }
 
-func (_m *MockOperation) ApplyGetAdvisoriesExpectation(e GetAdvisoriesExpectation) {
+func (_m *MockOperation) ApplyGetAdvisoriesExpectation(e OperationGetAdvisoriesExpectation) {
 	var args []interface{}
 	if e.Args.SourceAnything {
 		args = append(args, mock.Anything)
@@ -260,7 +293,7 @@ func (_m *MockOperation) ApplyGetAdvisoriesExpectation(e GetAdvisoriesExpectatio
 	_m.On("GetAdvisories", args...).Return(e.Returns.Advisories, e.Returns.Err)
 }
 
-func (_m *MockOperation) ApplyGetAdvisoriesExpectations(expectations []GetAdvisoriesExpectation) {
+func (_m *MockOperation) ApplyGetAdvisoriesExpectations(expectations []OperationGetAdvisoriesExpectation) {
 	for _, e := range expectations {
 		_m.ApplyGetAdvisoriesExpectation(e)
 	}
@@ -289,22 +322,76 @@ func (_m *MockOperation) GetAdvisories(source string, pkgName string) ([]types.A
 	return r0, r1
 }
 
-type GetSeverityArgs struct {
+type OperationGetAdvisoryDetailsArgs struct {
+	CveID         string
+	CveIDAnything bool
+}
+
+type OperationGetAdvisoryDetailsReturns struct {
+	Details []types.AdvisoryDetail
+	Err     error
+}
+
+type OperationGetAdvisoryDetailsExpectation struct {
+	Args    OperationGetAdvisoryDetailsArgs
+	Returns OperationGetAdvisoryDetailsReturns
+}
+
+func (_m *MockOperation) ApplyGetAdvisoryDetailsExpectation(e OperationGetAdvisoryDetailsExpectation) {
+	var args []interface{}
+	if e.Args.CveIDAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.CveID)
+	}
+	_m.On("GetAdvisoryDetails", args...).Return(e.Returns.Details, e.Returns.Err)
+}
+
+func (_m *MockOperation) ApplyGetAdvisoryDetailsExpectations(expectations []OperationGetAdvisoryDetailsExpectation) {
+	for _, e := range expectations {
+		_m.ApplyGetAdvisoryDetailsExpectation(e)
+	}
+}
+
+// GetAdvisoryDetails provides a mock function with given fields: cveID
+func (_m *MockOperation) GetAdvisoryDetails(cveID string) ([]types.AdvisoryDetail, error) {
+	ret := _m.Called(cveID)
+
+	var r0 []types.AdvisoryDetail
+	if rf, ok := ret.Get(0).(func(string) []types.AdvisoryDetail); ok {
+		r0 = rf(cveID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]types.AdvisoryDetail)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(cveID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+type OperationGetSeverityArgs struct {
 	VulnerabilityID         string
 	VulnerabilityIDAnything bool
 }
 
-type GetSeverityReturns struct {
+type OperationGetSeverityReturns struct {
 	Severity types.Severity
 	Err      error
 }
 
-type GetSeverityExpectation struct {
-	Args    GetSeverityArgs
-	Returns GetSeverityReturns
+type OperationGetSeverityExpectation struct {
+	Args    OperationGetSeverityArgs
+	Returns OperationGetSeverityReturns
 }
 
-func (_m *MockOperation) ApplyGetSeverityExpectation(e GetSeverityExpectation) {
+func (_m *MockOperation) ApplyGetSeverityExpectation(e OperationGetSeverityExpectation) {
 	var args []interface{}
 	if e.Args.VulnerabilityIDAnything {
 		args = append(args, mock.Anything)
@@ -314,7 +401,7 @@ func (_m *MockOperation) ApplyGetSeverityExpectation(e GetSeverityExpectation) {
 	_m.On("GetSeverity", args...).Return(e.Returns.Severity, e.Returns.Err)
 }
 
-func (_m *MockOperation) ApplyGetSeverityExpectations(expectations []GetSeverityExpectation) {
+func (_m *MockOperation) ApplyGetSeverityExpectations(expectations []OperationGetSeverityExpectation) {
 	for _, e := range expectations {
 		_m.ApplyGetSeverityExpectation(e)
 	}
@@ -341,22 +428,22 @@ func (_m *MockOperation) GetSeverity(vulnerabilityID string) (types.Severity, er
 	return r0, r1
 }
 
-type GetVulnerabilityArgs struct {
+type OperationGetVulnerabilityArgs struct {
 	VulnerabilityID         string
 	VulnerabilityIDAnything bool
 }
 
-type GetVulnerabilityReturns struct {
+type OperationGetVulnerabilityReturns struct {
 	Vulnerability types.Vulnerability
 	Err           error
 }
 
-type GetVulnerabilityExpectation struct {
-	Args    GetVulnerabilityArgs
-	Returns GetVulnerabilityReturns
+type OperationGetVulnerabilityExpectation struct {
+	Args    OperationGetVulnerabilityArgs
+	Returns OperationGetVulnerabilityReturns
 }
 
-func (_m *MockOperation) ApplyGetVulnerabilityExpectation(e GetVulnerabilityExpectation) {
+func (_m *MockOperation) ApplyGetVulnerabilityExpectation(e OperationGetVulnerabilityExpectation) {
 	var args []interface{}
 	if e.Args.VulnerabilityIDAnything {
 		args = append(args, mock.Anything)
@@ -366,7 +453,7 @@ func (_m *MockOperation) ApplyGetVulnerabilityExpectation(e GetVulnerabilityExpe
 	_m.On("GetVulnerability", args...).Return(e.Returns.Vulnerability, e.Returns.Err)
 }
 
-func (_m *MockOperation) ApplyGetVulnerabilityExpectations(expectations []GetVulnerabilityExpectation) {
+func (_m *MockOperation) ApplyGetVulnerabilityExpectations(expectations []OperationGetVulnerabilityExpectation) {
 	for _, e := range expectations {
 		_m.ApplyGetVulnerabilityExpectation(e)
 	}
@@ -393,7 +480,61 @@ func (_m *MockOperation) GetVulnerability(vulnerabilityID string) (types.Vulnera
 	return r0, r1
 }
 
-type PutAdvisoryArgs struct {
+type OperationGetVulnerabilityDetailArgs struct {
+	CveID         string
+	CveIDAnything bool
+}
+
+type OperationGetVulnerabilityDetailReturns struct {
+	Detail map[string]types.VulnerabilityDetail
+	Err    error
+}
+
+type OperationGetVulnerabilityDetailExpectation struct {
+	Args    OperationGetVulnerabilityDetailArgs
+	Returns OperationGetVulnerabilityDetailReturns
+}
+
+func (_m *MockOperation) ApplyGetVulnerabilityDetailExpectation(e OperationGetVulnerabilityDetailExpectation) {
+	var args []interface{}
+	if e.Args.CveIDAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.CveID)
+	}
+	_m.On("GetVulnerabilityDetail", args...).Return(e.Returns.Detail, e.Returns.Err)
+}
+
+func (_m *MockOperation) ApplyGetVulnerabilityDetailExpectations(expectations []OperationGetVulnerabilityDetailExpectation) {
+	for _, e := range expectations {
+		_m.ApplyGetVulnerabilityDetailExpectation(e)
+	}
+}
+
+// GetVulnerabilityDetail provides a mock function with given fields: cveID
+func (_m *MockOperation) GetVulnerabilityDetail(cveID string) (map[string]types.VulnerabilityDetail, error) {
+	ret := _m.Called(cveID)
+
+	var r0 map[string]types.VulnerabilityDetail
+	if rf, ok := ret.Get(0).(func(string) map[string]types.VulnerabilityDetail); ok {
+		r0 = rf(cveID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[string]types.VulnerabilityDetail)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(cveID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+type OperationPutAdvisoryArgs struct {
 	Tx                      *bbolt.Tx
 	TxAnything              bool
 	Source                  string
@@ -406,16 +547,16 @@ type PutAdvisoryArgs struct {
 	AdvisoryAnything        bool
 }
 
-type PutAdvisoryReturns struct {
+type OperationPutAdvisoryReturns struct {
 	Err error
 }
 
-type PutAdvisoryExpectation struct {
-	Args    PutAdvisoryArgs
-	Returns PutAdvisoryReturns
+type OperationPutAdvisoryExpectation struct {
+	Args    OperationPutAdvisoryArgs
+	Returns OperationPutAdvisoryReturns
 }
 
-func (_m *MockOperation) ApplyPutAdvisoryExpectation(e PutAdvisoryExpectation) {
+func (_m *MockOperation) ApplyPutAdvisoryExpectation(e OperationPutAdvisoryExpectation) {
 	var args []interface{}
 	if e.Args.TxAnything {
 		args = append(args, mock.Anything)
@@ -445,7 +586,7 @@ func (_m *MockOperation) ApplyPutAdvisoryExpectation(e PutAdvisoryExpectation) {
 	_m.On("PutAdvisory", args...).Return(e.Returns.Err)
 }
 
-func (_m *MockOperation) ApplyPutAdvisoryExpectations(expectations []PutAdvisoryExpectation) {
+func (_m *MockOperation) ApplyPutAdvisoryExpectations(expectations []OperationPutAdvisoryExpectation) {
 	for _, e := range expectations {
 		_m.ApplyPutAdvisoryExpectation(e)
 	}
@@ -465,7 +606,79 @@ func (_m *MockOperation) PutAdvisory(tx *bbolt.Tx, source string, pkgName string
 	return r0
 }
 
-type PutSeverityArgs struct {
+type OperationPutAdvisoryDetailArgs struct {
+	Tx                      *bbolt.Tx
+	TxAnything              bool
+	VulnerabilityID         string
+	VulnerabilityIDAnything bool
+	Source                  string
+	SourceAnything          bool
+	PkgName                 string
+	PkgNameAnything         bool
+	Advisory                interface{}
+	AdvisoryAnything        bool
+}
+
+type OperationPutAdvisoryDetailReturns struct {
+	Err error
+}
+
+type OperationPutAdvisoryDetailExpectation struct {
+	Args    OperationPutAdvisoryDetailArgs
+	Returns OperationPutAdvisoryDetailReturns
+}
+
+func (_m *MockOperation) ApplyPutAdvisoryDetailExpectation(e OperationPutAdvisoryDetailExpectation) {
+	var args []interface{}
+	if e.Args.TxAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.Tx)
+	}
+	if e.Args.VulnerabilityIDAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.VulnerabilityID)
+	}
+	if e.Args.SourceAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.Source)
+	}
+	if e.Args.PkgNameAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.PkgName)
+	}
+	if e.Args.AdvisoryAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.Advisory)
+	}
+	_m.On("PutAdvisoryDetail", args...).Return(e.Returns.Err)
+}
+
+func (_m *MockOperation) ApplyPutAdvisoryDetailExpectations(expectations []OperationPutAdvisoryDetailExpectation) {
+	for _, e := range expectations {
+		_m.ApplyPutAdvisoryDetailExpectation(e)
+	}
+}
+
+// PutAdvisoryDetail provides a mock function with given fields: tx, vulnerabilityID, source, pkgName, advisory
+func (_m *MockOperation) PutAdvisoryDetail(tx *bbolt.Tx, vulnerabilityID string, source string, pkgName string, advisory interface{}) error {
+	ret := _m.Called(tx, vulnerabilityID, source, pkgName, advisory)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*bbolt.Tx, string, string, string, interface{}) error); ok {
+		r0 = rf(tx, vulnerabilityID, source, pkgName, advisory)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+type OperationPutSeverityArgs struct {
 	Tx                      *bbolt.Tx
 	TxAnything              bool
 	VulnerabilityID         string
@@ -474,16 +687,16 @@ type PutSeverityArgs struct {
 	SeverityAnything        bool
 }
 
-type PutSeverityReturns struct {
+type OperationPutSeverityReturns struct {
 	Err error
 }
 
-type PutSeverityExpectation struct {
-	Args    PutSeverityArgs
-	Returns PutSeverityReturns
+type OperationPutSeverityExpectation struct {
+	Args    OperationPutSeverityArgs
+	Returns OperationPutSeverityReturns
 }
 
-func (_m *MockOperation) ApplyPutSeverityExpectation(e PutSeverityExpectation) {
+func (_m *MockOperation) ApplyPutSeverityExpectation(e OperationPutSeverityExpectation) {
 	var args []interface{}
 	if e.Args.TxAnything {
 		args = append(args, mock.Anything)
@@ -503,7 +716,7 @@ func (_m *MockOperation) ApplyPutSeverityExpectation(e PutSeverityExpectation) {
 	_m.On("PutSeverity", args...).Return(e.Returns.Err)
 }
 
-func (_m *MockOperation) ApplyPutSeverityExpectations(expectations []PutSeverityExpectation) {
+func (_m *MockOperation) ApplyPutSeverityExpectations(expectations []OperationPutSeverityExpectation) {
 	for _, e := range expectations {
 		_m.ApplyPutSeverityExpectation(e)
 	}
@@ -523,7 +736,7 @@ func (_m *MockOperation) PutSeverity(tx *bbolt.Tx, vulnerabilityID string, sever
 	return r0
 }
 
-type PutVulnerabilityArgs struct {
+type OperationPutVulnerabilityArgs struct {
 	Tx                      *bbolt.Tx
 	TxAnything              bool
 	VulnerabilityID         string
@@ -532,16 +745,16 @@ type PutVulnerabilityArgs struct {
 	VulnerabilityAnything   bool
 }
 
-type PutVulnerabilityReturns struct {
+type OperationPutVulnerabilityReturns struct {
 	Err error
 }
 
-type PutVulnerabilityExpectation struct {
-	Args    PutVulnerabilityArgs
-	Returns PutVulnerabilityReturns
+type OperationPutVulnerabilityExpectation struct {
+	Args    OperationPutVulnerabilityArgs
+	Returns OperationPutVulnerabilityReturns
 }
 
-func (_m *MockOperation) ApplyPutVulnerabilityExpectation(e PutVulnerabilityExpectation) {
+func (_m *MockOperation) ApplyPutVulnerabilityExpectation(e OperationPutVulnerabilityExpectation) {
 	var args []interface{}
 	if e.Args.TxAnything {
 		args = append(args, mock.Anything)
@@ -561,7 +774,7 @@ func (_m *MockOperation) ApplyPutVulnerabilityExpectation(e PutVulnerabilityExpe
 	_m.On("PutVulnerability", args...).Return(e.Returns.Err)
 }
 
-func (_m *MockOperation) ApplyPutVulnerabilityExpectations(expectations []PutVulnerabilityExpectation) {
+func (_m *MockOperation) ApplyPutVulnerabilityExpectations(expectations []OperationPutVulnerabilityExpectation) {
 	for _, e := range expectations {
 		_m.ApplyPutVulnerabilityExpectation(e)
 	}
@@ -581,7 +794,7 @@ func (_m *MockOperation) PutVulnerability(tx *bbolt.Tx, vulnerabilityID string, 
 	return r0
 }
 
-type PutVulnerabilityDetailArgs struct {
+type OperationPutVulnerabilityDetailArgs struct {
 	Tx                      *bbolt.Tx
 	TxAnything              bool
 	VulnerabilityID         string
@@ -592,16 +805,16 @@ type PutVulnerabilityDetailArgs struct {
 	VulnerabilityAnything   bool
 }
 
-type PutVulnerabilityDetailReturns struct {
+type OperationPutVulnerabilityDetailReturns struct {
 	Err error
 }
 
-type PutVulnerabilityDetailExpectation struct {
-	Args    PutVulnerabilityDetailArgs
-	Returns PutVulnerabilityDetailReturns
+type OperationPutVulnerabilityDetailExpectation struct {
+	Args    OperationPutVulnerabilityDetailArgs
+	Returns OperationPutVulnerabilityDetailReturns
 }
 
-func (_m *MockOperation) ApplyPutVulnerabilityDetailExpectation(e PutVulnerabilityDetailExpectation) {
+func (_m *MockOperation) ApplyPutVulnerabilityDetailExpectation(e OperationPutVulnerabilityDetailExpectation) {
 	var args []interface{}
 	if e.Args.TxAnything {
 		args = append(args, mock.Anything)
@@ -626,7 +839,7 @@ func (_m *MockOperation) ApplyPutVulnerabilityDetailExpectation(e PutVulnerabili
 	_m.On("PutVulnerabilityDetail", args...).Return(e.Returns.Err)
 }
 
-func (_m *MockOperation) ApplyPutVulnerabilityDetailExpectations(expectations []PutVulnerabilityDetailExpectation) {
+func (_m *MockOperation) ApplyPutVulnerabilityDetailExpectations(expectations []OperationPutVulnerabilityDetailExpectation) {
 	for _, e := range expectations {
 		_m.ApplyPutVulnerabilityDetailExpectation(e)
 	}

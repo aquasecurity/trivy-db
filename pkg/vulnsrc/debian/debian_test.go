@@ -16,9 +16,9 @@ func TestVulnSrc_commit(t *testing.T) {
 		name                   string
 		expectedErrorMsg       string
 		cves                   []DebianCVE
-		putAdvisory            []db.PutAdvisoryExpectation
-		putVulnerabilityDetail []db.PutVulnerabilityDetailExpectation
-		putSeverity            []db.PutSeverityExpectation
+		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
+		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
+		putSeverity            []db.OperationPutSeverityExpectation
 	}{
 		{
 			name: "happy path",
@@ -31,9 +31,9 @@ func TestVulnSrc_commit(t *testing.T) {
 					VulnerabilityID: "CVE-2020-123",
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "debian 10",
 						PkgName:         "test package",
@@ -42,9 +42,9 @@ func TestVulnSrc_commit(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2020-123",
 						Source:          vulnerability.Debian,
@@ -55,9 +55,9 @@ func TestVulnSrc_commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2020-123",
 						Severity:        types.SeverityUnknown,
@@ -72,7 +72,7 @@ func TestVulnSrc_commit(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tx := &bolt.Tx{}
 			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyPutAdvisoryExpectations(tt.putAdvisory)
+			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tt.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tt.putVulnerabilityDetail)
 			mockDBConfig.ApplyPutSeverityExpectations(tt.putSeverity)
 

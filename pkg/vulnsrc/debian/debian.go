@@ -98,7 +98,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []DebianCVE) error {
 				advisory := types.Advisory{
 					VulnerabilityID: cve.VulnerabilityID,
 				}
-				if err := vs.dbc.PutAdvisory(tx, platformName, cve.Package, cve.VulnerabilityID, advisory); err != nil {
+				if err := vs.dbc.PutAdvisoryDetail(tx, cve.VulnerabilityID, platformName, cve.Package, advisory); err != nil {
 					return xerrors.Errorf("failed to save Debian advisory: %w", err)
 				}
 
@@ -131,10 +131,10 @@ func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) 
 
 func severityFromUrgency(urgency string) types.Severity {
 	switch urgency {
-	case "not yet assigned":
+	case "not yet assigned", "end-of-life":
 		return types.SeverityUnknown
 
-	case "end-of-life", "unimportant", "low", "low*", "low**":
+	case "unimportant", "low", "low*", "low**":
 		return types.SeverityLow
 
 	case "medium", "medium*", "medium**":

@@ -24,108 +24,108 @@ func TestVulnSrc_Update(t *testing.T) {
 	testCases := []struct {
 		name             string
 		cacheDir         string
-		batchUpdate      db.BatchUpdateExpectation
+		batchUpdate      db.OperationBatchUpdateExpectation
 		expectedErrorMsg string
 		expectedVulns    []types.Advisory
 	}{
 		{
 			name:     "happy1: AffectedRelease is an array",
 			cacheDir: filepath.Join("testdata", "happy1"),
-			batchUpdate: db.BatchUpdateExpectation{
-				Args: db.BatchUpdateArgs{FnAnything: true},
+			batchUpdate: db.OperationBatchUpdateExpectation{
+				Args: db.OperationBatchUpdateArgs{FnAnything: true},
 			},
 		},
 		{
 			name:     "happy2: AffectedRelease is an object",
 			cacheDir: filepath.Join("testdata", "happy2"),
-			batchUpdate: db.BatchUpdateExpectation{
-				Args: db.BatchUpdateArgs{FnAnything: true},
+			batchUpdate: db.OperationBatchUpdateExpectation{
+				Args: db.OperationBatchUpdateArgs{FnAnything: true},
 			},
 		},
 		{
 			name:     "happy3: PackageState is an array",
 			cacheDir: filepath.Join("testdata", "happy3"),
-			batchUpdate: db.BatchUpdateExpectation{
-				Args: db.BatchUpdateArgs{FnAnything: true},
+			batchUpdate: db.OperationBatchUpdateExpectation{
+				Args: db.OperationBatchUpdateArgs{FnAnything: true},
 			},
 		},
 		{
 			name:     "happy4: PackageState is an object",
 			cacheDir: filepath.Join("testdata", "happy4"),
-			batchUpdate: db.BatchUpdateExpectation{
-				Args: db.BatchUpdateArgs{FnAnything: true},
+			batchUpdate: db.OperationBatchUpdateExpectation{
+				Args: db.OperationBatchUpdateArgs{FnAnything: true},
 			},
 		},
 		{
 			name:     "sad1: AffectedRelease is an invalid array",
 			cacheDir: filepath.Join("testdata", "sad1"),
-			batchUpdate: db.BatchUpdateExpectation{
-				Args: db.BatchUpdateArgs{FnAnything: true},
+			batchUpdate: db.OperationBatchUpdateExpectation{
+				Args: db.OperationBatchUpdateArgs{FnAnything: true},
 			},
 			expectedErrorMsg: "json: cannot unmarshal string into Go struct field RedhatCVEAffectedReleaseArray.affected_release of type redhat.RedhatAffectedRelease",
 		},
 		{
 			name:     "sad2: AffectedRelease is an invalid object",
 			cacheDir: filepath.Join("testdata", "sad2"),
-			batchUpdate: db.BatchUpdateExpectation{
-				Args: db.BatchUpdateArgs{FnAnything: true},
+			batchUpdate: db.OperationBatchUpdateExpectation{
+				Args: db.OperationBatchUpdateArgs{FnAnything: true},
 			},
 			expectedErrorMsg: "json: cannot unmarshal number into Go struct field RedhatAffectedRelease.affected_release.product_name of type string",
 		},
 		{
 			name:     "sad3: PackageState is an invalid array",
 			cacheDir: filepath.Join("testdata", "sad3"),
-			batchUpdate: db.BatchUpdateExpectation{
-				Args: db.BatchUpdateArgs{FnAnything: true},
+			batchUpdate: db.OperationBatchUpdateExpectation{
+				Args: db.OperationBatchUpdateArgs{FnAnything: true},
 			},
 			expectedErrorMsg: "json: cannot unmarshal string into Go struct field RedhatCVEPackageStateArray.package_state of type redhat.RedhatPackageState",
 		},
 		{
 			name:     "sad4: PackageState is an invalid object",
 			cacheDir: filepath.Join("testdata", "sad4"),
-			batchUpdate: db.BatchUpdateExpectation{
-				Args: db.BatchUpdateArgs{FnAnything: true},
+			batchUpdate: db.OperationBatchUpdateExpectation{
+				Args: db.OperationBatchUpdateArgs{FnAnything: true},
 			},
 			expectedErrorMsg: "json: cannot unmarshal number into Go struct field RedhatPackageState.package_state.product_name of type string",
 		},
 		{
 			name:     "sad5: invalid JSON",
 			cacheDir: filepath.Join("testdata", "sad5"),
-			batchUpdate: db.BatchUpdateExpectation{
-				Args: db.BatchUpdateArgs{FnAnything: true},
+			batchUpdate: db.OperationBatchUpdateExpectation{
+				Args: db.OperationBatchUpdateArgs{FnAnything: true},
 			},
 			expectedErrorMsg: "json: cannot unmarshal string into Go value of type redhat.RedhatCVE",
 		},
 		{
 			name:     "sad6: AffectedRelease is an unknown type",
 			cacheDir: filepath.Join("testdata", "sad6"),
-			batchUpdate: db.BatchUpdateExpectation{
-				Args: db.BatchUpdateArgs{FnAnything: true},
+			batchUpdate: db.OperationBatchUpdateExpectation{
+				Args: db.OperationBatchUpdateArgs{FnAnything: true},
 			},
 			expectedErrorMsg: "unknown affected_release type",
 		},
 		{
 			name:     "sad7: PackageState is an unknown type",
 			cacheDir: filepath.Join("testdata", "sad7"),
-			batchUpdate: db.BatchUpdateExpectation{
-				Args: db.BatchUpdateArgs{FnAnything: true},
+			batchUpdate: db.OperationBatchUpdateExpectation{
+				Args: db.OperationBatchUpdateArgs{FnAnything: true},
 			},
 			expectedErrorMsg: "unknown package_state type",
 		},
 		{
 			name:     "cache dir doesnt exist",
 			cacheDir: "badpathdoesnotexist",
-			batchUpdate: db.BatchUpdateExpectation{
-				Args: db.BatchUpdateArgs{FnAnything: true},
+			batchUpdate: db.OperationBatchUpdateExpectation{
+				Args: db.OperationBatchUpdateArgs{FnAnything: true},
 			},
 			expectedErrorMsg: "lstat badpathdoesnotexist/vuln-list/redhat: no such file or directory",
 		},
 		{
 			name:     "unable to save redhat defintions",
 			cacheDir: filepath.Join("testdata", "happy1"),
-			batchUpdate: db.BatchUpdateExpectation{
-				Args: db.BatchUpdateArgs{FnAnything: true},
-				Returns: db.BatchUpdateReturns{
+			batchUpdate: db.OperationBatchUpdateExpectation{
+				Args: db.OperationBatchUpdateArgs{FnAnything: true},
+				Returns: db.OperationBatchUpdateReturns{
 					Err: errors.New("unable to batch update"),
 				},
 			},
@@ -154,9 +154,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 	testCases := []struct {
 		name                   string
 		cves                   []RedhatCVE
-		putAdvisory            []db.PutAdvisoryExpectation
-		putVulnerabilityDetail []db.PutVulnerabilityDetailExpectation
-		putSeverity            []db.PutSeverityExpectation
+		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
+		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
+		putSeverity            []db.OperationPutSeverityExpectation
 		expectedErrorMsg       string
 	}{
 		{
@@ -179,9 +179,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					Details:        []string{"detail1\n", "detail2"},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Red Hat Enterprise Linux 6",
 						PkgName:         "package",
@@ -190,9 +190,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2019-0160",
 						Source:          vulnerability.RedHat,
@@ -209,39 +209,15 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2019-0160",
 						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
-		},
-		{
-			name: "happy path with ** REJECT ** in detail",
-			cves: []RedhatCVE{
-				{
-					Name: "CVE-2019-0160",
-					PackageState: []RedhatPackageState{
-						{
-							PackageName: "package",
-							ProductName: "Red Hat Enterprise Linux 6",
-							FixState:    "Will not fix",
-						},
-					},
-					Cvss:           RedhatCvss{CvssBaseScore: "7.2", CvssScoringVector: "(AV:N/AC:L/Au:N/C:P/I:P/A:P)"},
-					Cvss3:          RedhatCvss3{Cvss3BaseScore: "4.0", Cvss3ScoringVector: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"},
-					ThreatSeverity: "Moderate",
-					References:     []string{"https://example.com"},
-					Bugzilla:       RedhatBugzilla{Description: "CVE-2019-0160 package: title   "},
-					Details:        []string{"** REJECT ** detail1\n", "detail2"},
-				},
-			},
-			putAdvisory:            []db.PutAdvisoryExpectation{},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{},
-			putSeverity:            []db.PutSeverityExpectation{},
 		},
 		{
 			name: "empty package name",
@@ -257,9 +233,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					Bugzilla:       RedhatBugzilla{Description: "CVE-2019-9999 package: title!"},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2019-9999",
 						Source:          vulnerability.RedHat,
@@ -272,9 +248,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2019-9999",
 						Severity:        types.SeverityUnknown,
@@ -299,9 +275,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					Bugzilla:       RedhatBugzilla{Description: "CVE-2019-0001 package: title"},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2019-0001",
 						Source:          vulnerability.RedHat,
@@ -314,9 +290,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2019-0001",
 						Severity:        types.SeverityUnknown,
@@ -342,9 +318,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					Bugzilla:       RedhatBugzilla{Description: "CVE-2018-0001 test: title"},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2018-0001",
 						Source:          vulnerability.RedHat,
@@ -357,9 +333,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2018-0001",
 						Severity:        types.SeverityUnknown,
@@ -368,7 +344,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 			},
 		},
 		{
-			name: "PutAdvisory returns an error",
+			name: "PutAdvisoryDetail returns an error",
 			cves: []RedhatCVE{
 				{
 					Name: "CVE-2019-0160",
@@ -387,16 +363,16 @@ func TestVulnSrc_Commit(t *testing.T) {
 					Details:        []string{"detail1\n", "detail2"},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Red Hat Enterprise Linux 6",
 						PkgName:         "package",
 						VulnerabilityID: "CVE-2019-0160",
 						Advisory:        types.Advisory{FixedVersion: ""},
 					},
-					Returns: db.PutAdvisoryReturns{
+					Returns: db.OperationPutAdvisoryDetailReturns{
 						Err: errors.New("failed to put advisory"),
 					},
 				},
@@ -423,9 +399,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					Details:        []string{"detail1\n", "detail2"},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Red Hat Enterprise Linux 6",
 						PkgName:         "package",
@@ -434,9 +410,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2019-0160",
 						Source:          vulnerability.RedHat,
@@ -449,7 +425,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 							Description: "detail1\ndetail2",
 						},
 					},
-					Returns: db.PutVulnerabilityDetailReturns{
+					Returns: db.OperationPutVulnerabilityDetailReturns{
 						Err: errors.New("failed to put vulnerability detail"),
 					},
 				},
@@ -476,9 +452,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					Details:        []string{"detail1\n", "detail2"},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "Red Hat Enterprise Linux 6",
 						PkgName:         "package",
@@ -487,9 +463,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2019-0160",
 						Source:          vulnerability.RedHat,
@@ -504,14 +480,14 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2019-0160",
 						Severity:        types.SeverityUnknown,
 					},
-					Returns: db.PutSeverityReturns{
+					Returns: db.OperationPutSeverityReturns{
 						Err: errors.New("failed to put severity"),
 					},
 				},
@@ -524,7 +500,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tx := &bolt.Tx{}
 			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyPutAdvisoryExpectations(tc.putAdvisory)
+			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tc.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tc.putVulnerabilityDetail)
 			mockDBConfig.ApplyPutSeverityExpectations(tc.putSeverity)
 
@@ -547,7 +523,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		name               string
 		majorVersion       string
 		pkgName            string
-		getAdvisories      db.GetAdvisoriesExpectation
+		getAdvisories      db.OperationGetAdvisoriesExpectation
 		expectedErrorMsg   string
 		expectedAdvisories []types.Advisory
 	}{
@@ -555,12 +531,12 @@ func TestVulnSrc_Get(t *testing.T) {
 			name:         "happy path",
 			majorVersion: "6",
 			pkgName:      "package",
-			getAdvisories: db.GetAdvisoriesExpectation{
-				Args: db.GetAdvisoriesArgs{
+			getAdvisories: db.OperationGetAdvisoriesExpectation{
+				Args: db.OperationGetAdvisoriesArgs{
 					Source:  "Red Hat Enterprise Linux 6",
 					PkgName: "package",
 				},
-				Returns: db.GetAdvisoriesReturns{
+				Returns: db.OperationGetAdvisoriesReturns{
 					Advisories: []types.Advisory{{FixedVersion: "1.2.3"}},
 				},
 			},
@@ -570,12 +546,12 @@ func TestVulnSrc_Get(t *testing.T) {
 			name:         "GetAdvisories returns an error",
 			majorVersion: "6",
 			pkgName:      "package",
-			getAdvisories: db.GetAdvisoriesExpectation{
-				Args: db.GetAdvisoriesArgs{
+			getAdvisories: db.OperationGetAdvisoriesExpectation{
+				Args: db.OperationGetAdvisoriesArgs{
 					Source:  "Red Hat Enterprise Linux 6",
 					PkgName: "package",
 				},
-				Returns: db.GetAdvisoriesReturns{
+				Returns: db.OperationGetAdvisoriesReturns{
 					Err: errors.New("failed to get advisories"),
 				},
 			},

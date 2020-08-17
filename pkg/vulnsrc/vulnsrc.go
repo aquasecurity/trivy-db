@@ -3,8 +3,16 @@ package vulnsrc
 import (
 	"log"
 	"path/filepath"
+	"sort"
+	"strings"
 	"time"
 
+	bolt "go.etcd.io/bbolt"
+	"golang.org/x/xerrors"
+	"k8s.io/utils/clock"
+
+	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/amazon"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bundler"
@@ -13,6 +21,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
 	debianoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/photon"
@@ -21,17 +30,7 @@ import (
 	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
 	susecvrf "github.com/aquasecurity/trivy-db/pkg/vulnsrc/suse-cvrf"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
-
-	"k8s.io/utils/clock"
-
-	"github.com/aquasecurity/trivy-db/pkg/db"
-	"github.com/aquasecurity/trivy-db/pkg/types"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
-
-	bolt "go.etcd.io/bbolt"
-
-	"golang.org/x/xerrors"
 )
 
 type VulnSrc interface {
@@ -94,11 +93,12 @@ func NewUpdater(cacheDir string, light bool, interval time.Duration) Updater {
 	var optimizer Optimizer
 	dbType := db.TypeFull
 	dbConfig := db.Config{}
-	optimizer = fullOptimizer{dbc: dbConfig}
+	v := vulnerability.New(dbConfig)
+	optimizer = fullOptimizer{dbc: dbConfig, vulnClient: v}
 
 	if light {
 		dbType = db.TypeLight
-		optimizer = lightOptimizer{dbOp: dbConfig}
+		optimizer = lightOptimizer{dbOp: dbConfig, vulnClient: v}
 	}
 
 	return Updater{
@@ -114,7 +114,9 @@ func NewUpdater(cacheDir string, light bool, interval time.Duration) Updater {
 
 func (u Updater) Update(targets []string) error {
 	log.Println("Updating vulnerability database...")
-
+	sort.Slice(targets, func(i, j int) bool {
+		return strings.Compare(targets[i], targets[j]) <= 0
+	})
 	for _, distribution := range targets {
 		vulnSrc, ok := u.updateMap[distribution]
 		if !ok {
@@ -152,7 +154,8 @@ type Optimizer interface {
 }
 
 type fullOptimizer struct {
-	dbc db.Operation
+	dbc        db.Operation
+	vulnClient vulnerability.Vulnerability
 }
 
 func (o fullOptimizer) Optimize() error {
@@ -171,17 +174,25 @@ func (o fullOptimizer) Optimize() error {
 		return xerrors.Errorf("failed to delete vulnerability detail bucket: %w", err)
 	}
 
+	if err := o.dbc.DeleteAdvisoryDetailBucket(); err != nil {
+		return xerrors.Errorf("failed to delete advisory detail bucket: %w", err)
+	}
+
 	return nil
 
 }
 
-// TODO: Until we can dependency inject, we need to monkey patch sadly
-var (
-	getDetailFunc = vulnerability.GetDetail
-)
-
 func (o fullOptimizer) fullOptimize(tx *bolt.Tx, cveID string) error {
-	vuln := getDetailFunc(cveID)
+	details := o.vulnClient.GetDetails(cveID)
+	if o.vulnClient.IsRejected(details) {
+		return nil
+	}
+
+	if err := o.vulnClient.SaveAdvisoryDetails(tx, cveID); err != nil {
+		return xerrors.Errorf("failed to save advisories: %w", err)
+	}
+
+	vuln := o.vulnClient.Normalize(details)
 	if err := o.dbc.PutVulnerability(tx, cveID, vuln); err != nil {
 		return xerrors.Errorf("failed to put vulnerability: %w", err)
 	}
@@ -189,7 +200,8 @@ func (o fullOptimizer) fullOptimize(tx *bolt.Tx, cveID string) error {
 }
 
 type lightOptimizer struct {
-	dbOp db.Operation
+	dbOp       db.Operation
+	vulnClient vulnerability.Vulnerability
 }
 
 func (o lightOptimizer) Optimize() error {
@@ -208,7 +220,16 @@ func (o lightOptimizer) Optimize() error {
 
 func (o lightOptimizer) lightOptimize(cveID string, tx *bolt.Tx) error {
 	// get correct severity
-	vuln := getDetailFunc(cveID)
+	details := o.vulnClient.GetDetails(cveID)
+	if o.vulnClient.IsRejected(details) {
+		return nil
+	}
+
+	if err := o.vulnClient.SaveAdvisoryDetails(tx, cveID); err != nil {
+		return xerrors.Errorf("failed to save advisories: %w", err)
+	}
+
+	vuln := o.vulnClient.Normalize(details)
 	lightVuln := types.Vulnerability{
 		VendorSeverity: vuln.VendorSeverity,
 	}

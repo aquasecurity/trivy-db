@@ -31,6 +31,7 @@ var (
 type Operation interface {
 	BatchUpdate(fn func(*bolt.Tx) error) (err error)
 
+	GetVulnerabilityDetail(cveID string) (detail map[string]types.VulnerabilityDetail, err error)
 	PutVulnerabilityDetail(tx *bolt.Tx, vulnerabilityID string, source string,
 		vulnerability types.VulnerabilityDetail) (err error)
 	DeleteVulnerabilityDetailBucket() (err error)
@@ -48,6 +49,11 @@ type Operation interface {
 
 	PutVulnerability(tx *bolt.Tx, vulnerabilityID string, vulnerability types.Vulnerability) (err error)
 	GetVulnerability(vulnerabilityID string) (vulnerability types.Vulnerability, err error)
+
+	GetAdvisoryDetails(cveID string) ([]types.AdvisoryDetail, error)
+	PutAdvisoryDetail(tx *bolt.Tx, vulnerabilityID string, source string, pkgName string,
+		advisory interface{}) (err error)
+	DeleteAdvisoryDetailBucket() error
 }
 
 type Metadata struct {
@@ -58,10 +64,6 @@ type Metadata struct {
 }
 
 type Config struct {
-}
-
-type VulnOperation interface {
-	GetVulnerabilityDetail(cveID string) (map[string]types.VulnerabilityDetail, error)
 }
 
 func Init(cacheDir string) (err error) {

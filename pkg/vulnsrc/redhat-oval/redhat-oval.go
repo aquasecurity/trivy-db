@@ -110,7 +110,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, advisories []RedhatOVAL) error {
 				advisory := types.Advisory{
 					FixedVersion: affectedPkg.FixedVersion,
 				}
-				if err := vs.dbc.PutAdvisory(tx, platformName, affectedPkg.Name, cve.CveID, advisory); err != nil {
+				if err := vs.dbc.PutAdvisoryDetail(tx, cve.CveID, platformName, affectedPkg.Name, advisory); err != nil {
 					return xerrors.Errorf("failed to save Red Hat OVAL advisory: %w", err)
 				}
 			}

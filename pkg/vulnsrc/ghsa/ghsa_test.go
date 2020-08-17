@@ -20,7 +20,7 @@ func TestVulnSrc_Update(t *testing.T) {
 	tests := []struct {
 		name        string
 		args        args
-		batchUpdate []db.BatchUpdateExpectation
+		batchUpdate []db.OperationBatchUpdateExpectation
 		wantErr     string
 	}{
 		{
@@ -28,9 +28,9 @@ func TestVulnSrc_Update(t *testing.T) {
 			args: args{
 				dir: "testdata",
 			},
-			batchUpdate: []db.BatchUpdateExpectation{
+			batchUpdate: []db.OperationBatchUpdateExpectation{
 				{
-					Args: db.BatchUpdateArgs{
+					Args: db.OperationBatchUpdateArgs{
 						FnAnything: true,
 					},
 				},
@@ -48,12 +48,12 @@ func TestVulnSrc_Update(t *testing.T) {
 			args: args{
 				dir: "testdata",
 			},
-			batchUpdate: []db.BatchUpdateExpectation{
+			batchUpdate: []db.OperationBatchUpdateExpectation{
 				{
-					Args: db.BatchUpdateArgs{
+					Args: db.OperationBatchUpdateArgs{
 						FnAnything: true,
 					},
-					Returns: db.BatchUpdateReturns{
+					Returns: db.OperationBatchUpdateReturns{
 						Err: errors.New("error"),
 					},
 				},
@@ -90,9 +90,9 @@ func TestVulnSrc_save(t *testing.T) {
 		name                   string
 		ecosystem              Ecosystem
 		args                   args
-		putAdvisory            []db.PutAdvisoryExpectation
-		putVulnerabilityDetail []db.PutVulnerabilityDetailExpectation
-		putSeverity            []db.PutSeverityExpectation
+		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
+		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
+		putSeverity            []db.OperationPutSeverityExpectation
 		wantErr                string
 	}{
 		{
@@ -156,9 +156,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "GitHub Security Advisory Composer",
 						PkgName:         "contao/core-bundle",
@@ -178,9 +178,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						Source:          vulnerability.GHSAComposer,
 						VulnerabilityID: "GHSA-wjx8-cgrm-hh8p",
@@ -197,9 +197,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "GHSA-wjx8-cgrm-hh8p",
 						Severity:        types.SeverityUnknown,
@@ -257,9 +257,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "GitHub Security Advisory Maven",
 						PkgName:         "org.springframework.boot:spring-boot",
@@ -275,9 +275,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						Source:          vulnerability.GHSAMaven,
 						VulnerabilityID: "CVE-2018-1196",
@@ -291,9 +291,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2018-1196",
 						Severity:        types.SeverityUnknown,
@@ -351,9 +351,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "GitHub Security Advisory Npm",
 						PkgName:         "atob",
@@ -365,9 +365,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						Source:          vulnerability.GHSANpm,
 						VulnerabilityID: "CVE-2018-3745",
@@ -381,9 +381,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2018-3745",
 						Severity:        types.SeverityUnknown,
@@ -441,9 +441,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "GitHub Security Advisory Nuget",
 						PkgName:         "CLEditor",
@@ -455,9 +455,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						Source:          vulnerability.GHSANuget,
 						VulnerabilityID: "CVE-2019-1010113",
@@ -471,9 +471,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2019-1010113",
 						Severity:        types.SeverityUnknown,
@@ -537,9 +537,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "GitHub Security Advisory Pip",
 						PkgName:         "django",
@@ -557,9 +557,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						Source:          vulnerability.GHSAPip,
 						VulnerabilityID: "CVE-2018-14574",
@@ -575,9 +575,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2018-14574",
 						Severity:        types.SeverityUnknown,
@@ -635,9 +635,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "GitHub Security Advisory Rubygems",
 						PkgName:         "activestorage",
@@ -649,9 +649,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						Source:          vulnerability.GHSARubygems,
 						VulnerabilityID: "CVE-2018-16477",
@@ -665,9 +665,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2018-16477",
 						Severity:        types.SeverityUnknown,
@@ -676,7 +676,7 @@ func TestVulnSrc_save(t *testing.T) {
 			},
 		},
 		{
-			name:      "putAdvisory returns an error",
+			name:      "putAdvisoryDetail returns an error",
 			ecosystem: Rubygems,
 			args: args{
 				ghsas: []GithubSecurityAdvisory{
@@ -725,9 +725,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "GitHub Security Advisory Rubygems",
 						PkgName:         "activestorage",
@@ -737,7 +737,7 @@ func TestVulnSrc_save(t *testing.T) {
 							VulnerableVersions: []string{"\u003e= 5.2.0, \u003c 5.2.1.1"},
 						},
 					},
-					Returns: db.PutAdvisoryReturns{
+					Returns: db.OperationPutAdvisoryDetailReturns{
 						Err: errors.New("error"),
 					},
 				},
@@ -794,9 +794,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "GitHub Security Advisory Rubygems",
 						PkgName:         "activestorage",
@@ -808,9 +808,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						Source:          vulnerability.GHSARubygems,
 						VulnerabilityID: "CVE-2018-16477",
@@ -822,7 +822,7 @@ func TestVulnSrc_save(t *testing.T) {
 							Description: "A bypass vulnerability in Active Storage \u003e= 5.2.0 for Google Cloud Storage and Disk services allow an attacker to modify the `content-disposition` and `content-type` parameters which can be used in with HTML files and have them executed inline. Additionally, if combined with other techniques such as cookie bombing and specially crafted AppCache manifests, an attacker can gain access to private signed URLs within a specific storage path.",
 						},
 					},
-					Returns: db.PutVulnerabilityDetailReturns{
+					Returns: db.OperationPutVulnerabilityDetailReturns{
 						Err: errors.New("error"),
 					},
 				},
@@ -879,9 +879,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putAdvisory: []db.PutAdvisoryExpectation{
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.PutAdvisoryArgs{
+					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "GitHub Security Advisory Rubygems",
 						PkgName:         "activestorage",
@@ -893,9 +893,9 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putVulnerabilityDetail: []db.PutVulnerabilityDetailExpectation{
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.PutVulnerabilityDetailArgs{
+					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						Source:          vulnerability.GHSARubygems,
 						VulnerabilityID: "CVE-2018-16477",
@@ -909,14 +909,14 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.PutSeverityExpectation{
+			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.PutSeverityArgs{
+					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2018-16477",
 						Severity:        types.SeverityUnknown,
 					},
-					Returns: db.PutSeverityReturns{
+					Returns: db.OperationPutSeverityReturns{
 						Err: errors.New("error"),
 					},
 				},
@@ -927,7 +927,7 @@ func TestVulnSrc_save(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyPutAdvisoryExpectations(tt.putAdvisory)
+			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tt.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tt.putVulnerabilityDetail)
 			mockDBConfig.ApplyPutSeverityExpectations(tt.putSeverity)
 
@@ -957,7 +957,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		name                       string
 		args                       args
 		ecosystem                  Ecosystem
-		forEachAdvisoryExpectation db.ForEachAdvisoryExpectation
+		forEachAdvisoryExpectation db.OperationForEachAdvisoryExpectation
 		want                       []Advisory
 		wantErr                    string
 	}{
@@ -968,12 +968,12 @@ func TestVulnSrc_Get(t *testing.T) {
 				release: "GitHub Security Advisory Composer",
 				pkgName: "contao/core-bundle",
 			},
-			forEachAdvisoryExpectation: db.ForEachAdvisoryExpectation{
-				Args: db.ForEachAdvisoryArgs{
+			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
+				Args: db.OperationForEachAdvisoryArgs{
 					Source:  "GitHub Security Advisory Composer",
 					PkgName: "contao/core-bundle",
 				},
-				Returns: db.ForEachAdvisoryReturns{
+				Returns: db.OperationForEachAdvisoryReturns{
 					Value: map[string][]byte{
 						"CVE-2019-19745": []byte(`{"VulnerableVersions": ["4.8.6", "4.4.46"], "PatchedVersions": ["\u003e= 4.5.0, \u003c 4.8.6", "\u003e= 4.0.0, \u003c 4.4.46"]}`),
 					},
@@ -994,12 +994,12 @@ func TestVulnSrc_Get(t *testing.T) {
 				release: "GitHub Security Advisory Maven",
 				pkgName: "org.springframework.boot:spring-boot",
 			},
-			forEachAdvisoryExpectation: db.ForEachAdvisoryExpectation{
-				Args: db.ForEachAdvisoryArgs{
+			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
+				Args: db.OperationForEachAdvisoryArgs{
 					Source:  "GitHub Security Advisory Maven",
 					PkgName: "org.springframework.boot:spring-boot",
 				},
-				Returns: db.ForEachAdvisoryReturns{
+				Returns: db.OperationForEachAdvisoryReturns{
 					Value: map[string][]byte{
 						"CVE-2018-1196": []byte(`{"VulnerableVersions": ["1.5.10"], "PatchedVersions": ["\u003e= 1.5.0, \u003c 1.5.10"]}`),
 					},
@@ -1020,12 +1020,12 @@ func TestVulnSrc_Get(t *testing.T) {
 				release: "GitHub Security Advisory Npm",
 				pkgName: "atob",
 			},
-			forEachAdvisoryExpectation: db.ForEachAdvisoryExpectation{
-				Args: db.ForEachAdvisoryArgs{
+			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
+				Args: db.OperationForEachAdvisoryArgs{
 					Source:  "GitHub Security Advisory Npm",
 					PkgName: "atob",
 				},
-				Returns: db.ForEachAdvisoryReturns{
+				Returns: db.OperationForEachAdvisoryReturns{
 					Value: map[string][]byte{
 						"GHSA-8w4h-3cm3-2pm2": []byte(`{"VulnerableVersions": ["2.1.0"], "PatchedVersions": ["\u003c 2.1.0"]}`),
 					},
@@ -1046,12 +1046,12 @@ func TestVulnSrc_Get(t *testing.T) {
 				release: "GitHub Security Advisory Nuget",
 				pkgName: "CLEditor",
 			},
-			forEachAdvisoryExpectation: db.ForEachAdvisoryExpectation{
-				Args: db.ForEachAdvisoryArgs{
+			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
+				Args: db.OperationForEachAdvisoryArgs{
 					Source:  "GitHub Security Advisory Nuget",
 					PkgName: "CLEditor",
 				},
-				Returns: db.ForEachAdvisoryReturns{
+				Returns: db.OperationForEachAdvisoryReturns{
 					Value: map[string][]byte{
 						"GHSA-hh56-x62g-gvhc": []byte(`{"VulnerableVersions": [""], "PatchedVersions": ["\u003c= 1.4.5"]}`),
 					},
@@ -1072,12 +1072,12 @@ func TestVulnSrc_Get(t *testing.T) {
 				release: "GitHub Security Advisory Pip",
 				pkgName: "django",
 			},
-			forEachAdvisoryExpectation: db.ForEachAdvisoryExpectation{
-				Args: db.ForEachAdvisoryArgs{
+			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
+				Args: db.OperationForEachAdvisoryArgs{
 					Source:  "GitHub Security Advisory Pip",
 					PkgName: "django",
 				},
-				Returns: db.ForEachAdvisoryReturns{
+				Returns: db.OperationForEachAdvisoryReturns{
 					Value: map[string][]byte{
 						"GHSA-5hg3-6c2f-f3wr": []byte(`{"VulnerableVersions": ["2.0.8", "1.11.15"], "PatchedVersions": ["\u003e= 2.0, \u003c 2.0.8", "\u003e= 1.11.0, \u003c 1.11.15"]}`),
 					},
@@ -1098,12 +1098,12 @@ func TestVulnSrc_Get(t *testing.T) {
 				release: "GitHub Security Advisory Rubygems",
 				pkgName: "activestorage",
 			},
-			forEachAdvisoryExpectation: db.ForEachAdvisoryExpectation{
-				Args: db.ForEachAdvisoryArgs{
+			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
+				Args: db.OperationForEachAdvisoryArgs{
 					Source:  "GitHub Security Advisory Rubygems",
 					PkgName: "activestorage",
 				},
-				Returns: db.ForEachAdvisoryReturns{
+				Returns: db.OperationForEachAdvisoryReturns{
 					Value: map[string][]byte{
 						"GHSA-7rr7-rcjw-56vj": []byte(`{"VulnerableVersions": ["5.2.1.1"], "PatchedVersions": ["\u003e= 5.2.0, \u003c 5.2.1.1"]}`),
 					},
@@ -1124,12 +1124,12 @@ func TestVulnSrc_Get(t *testing.T) {
 				release: "contao/core-bundle",
 				pkgName: "4.8.6",
 			},
-			forEachAdvisoryExpectation: db.ForEachAdvisoryExpectation{
-				Args: db.ForEachAdvisoryArgs{
+			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
+				Args: db.OperationForEachAdvisoryArgs{
 					Source:  "GitHub Security Advisory Composer",
 					PkgName: "4.8.6",
 				},
-				Returns: db.ForEachAdvisoryReturns{
+				Returns: db.OperationForEachAdvisoryReturns{
 					Err: errors.New("error"),
 				},
 			},

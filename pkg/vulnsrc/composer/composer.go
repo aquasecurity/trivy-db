@@ -96,7 +96,7 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		}
 
 		a := Advisory{Branches: advisory.Branches}
-		err = vs.dbc.PutAdvisory(tx, vulnerability.PhpSecurityAdvisories, advisory.Reference, vulnerabilityID, a)
+		err = vs.dbc.PutAdvisoryDetail(tx, vulnerabilityID, vulnerability.PhpSecurityAdvisories, advisory.Reference, a)
 		if err != nil {
 			return xerrors.Errorf("failed to save php advisory: %w", err)
 		}
