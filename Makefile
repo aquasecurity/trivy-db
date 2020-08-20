@@ -91,3 +91,13 @@ db-compress: assets/$(DB_TYPE)/$(DB_TYPE).db assets/$(DB_TYPE)/metadata.json
 .PHONY: db-clean
 db-clean:
 	rm -rf cache assets
+
+.PHONY: create-test-db
+create-test-db:
+	make db-clean
+	make db-fetch
+	cd cache/vuln-list && git reset --hard 7cce93b3cb1921b9915a4de8ca7dc37d18452806
+	make build
+	make db-build
+	make db-compact
+	make db-compress
