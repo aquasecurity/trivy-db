@@ -24,23 +24,28 @@ const (
 
 type Lockfile struct {
 	RawAdvisory `toml:"advisory"`
+	RawVersion  `toml:"versions"`
 }
 
 type RawAdvisory struct {
-	Id                string
-	Package           string
-	Title             string `toml:"title"`
-	Url               string
-	Date              string
-	Description       string
-	Keywords          []string
-	PatchedVersions   []string `toml:"patched_versions"`
-	AffectedFunctions []string `toml:"affected_functions"`
+	Id          string
+	Package     string
+	Title       string `toml:"title"`
+	Url         string
+	Date        string
+	Description string
+	Keywords    []string
+}
+
+type RawVersion struct {
+	PatchedVersions    []string `toml:"patched"`
+	UnaffectedVersions []string `toml:"unaffected"`
 }
 
 type Advisory struct {
-	VulnerabilityID string   `json:",omitempty"`
-	PatchedVersions []string `json:",omitempty"`
+	VulnerabilityID    string   `json:",omitempty"`
+	PatchedVersions    []string `json:",omitempty"`
+	UnaffectedVersions []string `json:",omitempty"`
 }
 
 type VulnSrc struct {
@@ -97,7 +102,8 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		}
 
 		// for detecting vulnerabilities
-		a := Advisory{PatchedVersions: advisory.PatchedVersions}
+		a := Advisory{PatchedVersions: advisory.PatchedVersions,
+			UnaffectedVersions: advisory.UnaffectedVersions}
 		err = vs.dbc.PutAdvisoryDetail(tx, advisory.Id, vulnerability.RustSec, advisory.Package, a)
 		if err != nil {
 			return xerrors.Errorf("failed to save rust advisory: %w", err)
