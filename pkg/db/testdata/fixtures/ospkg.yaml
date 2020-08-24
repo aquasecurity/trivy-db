@@ -1,0 +1,10 @@
+- bucket: Red Hat Enterprise Linux 8
+  pairs:
+    - bucket: bind
+      pairs:
+        - key: CVE-2018-5745
+          value:
+            FixedVersion: "32:9.11.4-26.P2.el8"
+        - key: CVE-2020-8617
+          value:
+            FixedVersion: "32:9.11.13-5.el8_2"

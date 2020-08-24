@@ -1,6 +1,7 @@
 package db
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"os"
@@ -198,23 +199,24 @@ func (dbc Config) get(rootBucket, nestedBucket, key string) (value []byte, err e
 	return value, nil
 }
 
-func (dbc Config) forEach(rootBucket, nestedBucket string) (value map[string][]byte, err error) {
+func (dbc Config) forEach(rootBucketPrefix, nestedBucket string) (value map[string][]byte, err error) {
 	value = map[string][]byte{}
 	err = db.View(func(tx *bolt.Tx) error {
-		root := tx.Bucket([]byte(rootBucket))
-		if root == nil {
-			return nil
-		}
-		nested := root.Bucket([]byte(nestedBucket))
-		if nested == nil {
-			return nil
-		}
-		err := nested.ForEach(func(k, v []byte) error {
-			value[string(k)] = v
-			return nil
-		})
-		if err != nil {
-			return xerrors.Errorf("error in db foreach: %w", err)
+		prefix := []byte(rootBucketPrefix)
+		c := tx.Cursor()
+		for k, _ := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, _ = c.Next() {
+			root := tx.Bucket(k)
+			nested := root.Bucket([]byte(nestedBucket))
+			if nested == nil {
+				return nil
+			}
+			err := nested.ForEach(func(k, v []byte) error {
+				value[string(k)] = v
+				return nil
+			})
+			if err != nil {
+				return xerrors.Errorf("error in db foreach: %w", err)
+			}
 		}
 		return nil
 	})
