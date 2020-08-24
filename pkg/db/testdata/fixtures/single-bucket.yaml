@@ -18,3 +18,15 @@
             VulnerableVersions:
               - ">= 4.3.0, < 4.3.8"
               - ">= 3.1.0, < 3.4.35"
+
+# this bucket must not be used
+- bucket: GitHub Security Advisory Composer Dummy
+  pairs:
+    - bucket: symfony/symfony
+      pairs:
+        - key: CVE-9999-9999
+          value:
+            PatchedVersions:
+              - 4.2.7
+            VulnerableVersions:
+              - ">= 4.2.0, < 4.2.7"

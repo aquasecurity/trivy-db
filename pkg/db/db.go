@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"strings"
 	"time"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
@@ -199,13 +200,27 @@ func (dbc Config) get(rootBucket, nestedBucket, key string) (value []byte, err e
 	return value, nil
 }
 
-func (dbc Config) forEach(rootBucketPrefix, nestedBucket string) (value map[string][]byte, err error) {
+func (dbc Config) forEach(rootBucket, nestedBucket string) (value map[string][]byte, err error) {
 	value = map[string][]byte{}
 	err = db.View(func(tx *bolt.Tx) error {
-		prefix := []byte(rootBucketPrefix)
-		c := tx.Cursor()
-		for k, _ := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, _ = c.Next() {
-			root := tx.Bucket(k)
+		var rootBuckets []string
+
+		if strings.Contains(rootBucket, "::") {
+			// e.g. "python::", "php::"
+			prefix := []byte(rootBucket)
+			c := tx.Cursor()
+			for k, _ := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, _ = c.Next() {
+				rootBuckets = append(rootBuckets, string(k))
+			}
+		} else {
+			// e.g. "GitHub Security Advisory Composer"
+			rootBuckets = append(rootBuckets, rootBucket)
+		}
+		for _, r := range rootBuckets {
+			root := tx.Bucket([]byte(r))
+			if root == nil {
+				return nil
+			}
 			nested := root.Bucket([]byte(nestedBucket))
 			if nested == nil {
 				return nil
