@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	fixtures "github.com/knqyf263/bolt-fixtures"
+	fixtures "github.com/aquasecurity/bolt-fixtures"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 

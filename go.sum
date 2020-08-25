@@ -1,6 +1,8 @@
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
+github.com/aquasecurity/bolt-fixtures v0.0.0-20200825112230-c0f517aea2ed h1:o6vSjobtDn634//l4yBCGCC2RWoRc4K5AUH8W8DZZds=
+github.com/aquasecurity/bolt-fixtures v0.0.0-20200825112230-c0f517aea2ed/go.mod h1:eViGpgc5g/JGRHWUfVaNLFJQwXQOVWDDQ40c7uViyZU=
 github.com/aquasecurity/vuln-list-update v0.0.0-20191016075347-3d158c2bf9a2 h1:xbdUfr2KE4THsFx9CFWtWpU91lF+YhgP46moV94nYTA=
 github.com/aquasecurity/vuln-list-update v0.0.0-20191016075347-3d158c2bf9a2/go.mod h1:6NhOP0CjZJL27bZZcaHECtzWdwDDm2g6yCY0QgXEGQQ=
 github.com/araddon/dateparse v0.0.0-20190426192744-0d74ffceef83/go.mod h1:SLqhdZcd+dF3TEVL2RMoob5bBP5R1P1qkox+HtCBgGI=
@@ -35,8 +37,6 @@ github.com/hashicorp/go-version v1.2.0 h1:3vNe/fWF5CBgRIguda1meWhsZHy3m8gCJ5wx+d
 github.com/hashicorp/go-version v1.2.0/go.mod h1:fltr4n8CU8Ke44wwGCBoEymUuxUHl09ZGVZPK5anwXA=
 github.com/jtolds/gls v4.20.0+incompatible h1:xdiiI2gbIgH/gLH7ADydsJ1uDOEzR8yvV7C0MuV77Wo=
 github.com/jtolds/gls v4.20.0+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfVYBRgL+9YlvaHOwJU=
-github.com/knqyf263/bolt-fixtures v0.0.0-20200823180512-e1abd174f296 h1:0WjTeGVN9pnp7D0+hLyILWa4v6p/4FjXXSChWh2PfHw=
-github.com/knqyf263/bolt-fixtures v0.0.0-20200823180512-e1abd174f296/go.mod h1:/GKpE6grLbC3DZKQyz1VMMB1QNxCRMyRxadxICNIuf0=
 github.com/knqyf263/go-rpm-version v0.0.0-20170716094938-74609b86c936 h1:HDjRqotkViMNcGMGicb7cgxklx8OwnjtCBmyWEqrRvM=
 github.com/knqyf263/go-rpm-version v0.0.0-20170716094938-74609b86c936/go.mod h1:i4sF0l1fFnY1aiw08QQSwVAFxHEm311Me3WsU/X7nL0=
 github.com/kr/pretty v0.1.0 h1:L/CwN0zerZDmRFUapSPitk6f+Q3+0za1rQkzVuMiMFI=
@@ -130,6 +130,8 @@ golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200821140526-fda516888d29 h1:mNuhGagCf3lDDm5C0376C/sxh6V7fy9WbdEu/YDNA04=
 golang.org/x/sys v0.0.0-20200821140526-fda516888d29/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20200824131525-c12d262b63d8 h1:AvbQYmiaaaza3cW3QXRyPo5kYgpFIzOAfeAAN7m3qQ4=
+golang.org/x/sys v0.0.0-20200824131525-c12d262b63d8/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.2/go.mod h1:bEr9sfX3Q8Zfm5fL9x+3itogRgK3+ptLWKqgva+5dAk=
 golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
