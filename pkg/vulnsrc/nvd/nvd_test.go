@@ -4,7 +4,8 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
-	"time"
+
+	"github.com/aquasecurity/trivy-db/pkg/utils"
 
 	"github.com/stretchr/testify/require"
 
@@ -38,8 +39,8 @@ func TestVulnSrc_Update(t *testing.T) {
 				SeverityV3:       types.SeverityHigh,
 				CweIDs:           []string{"CWE-269"},
 				References:       []string{"https://source.android.com/security/bulletin/2020-01-01"},
-				LastModifiedDate: time.Date(2020, 01, 01, 01, 01, 00, 00, time.UTC),
-				PublishedDate:    time.Date(2001, 01, 01, 01, 01, 00, 00, time.UTC),
+				LastModifiedDate: utils.MustTimeParse("2020-01-01T01:01:00Z"),
+				PublishedDate:    utils.MustTimeParse("2001-01-01T01:01:00Z"),
 			},
 		},
 		{
@@ -126,6 +127,8 @@ func TestVulnSrc_Commit(t *testing.T) {
 							},
 						},
 					},
+					PublishedDate:    "2006-01-02T15:04Z",
+					LastModifiedDate: "2020-01-02T15:04Z",
 				},
 			},
 			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
@@ -135,14 +138,16 @@ func TestVulnSrc_Commit(t *testing.T) {
 						VulnerabilityID: "CVE-2017-0012",
 						Source:          vulnerability.Nvd,
 						Vulnerability: types.VulnerabilityDetail{
-							CvssScore:    4.3,
-							CvssVector:   "AV:N/AC:M/Au:N/C:N/I:P/A:N",
-							CvssScoreV3:  9.4,
-							CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N",
-							Severity:     types.SeverityMedium,
-							SeverityV3:   types.SeverityHigh,
-							References:   []string{"https://example.com"},
-							Description:  "some description",
+							CvssScore:        4.3,
+							CvssVector:       "AV:N/AC:M/Au:N/C:N/I:P/A:N",
+							CvssScoreV3:      9.4,
+							CvssVectorV3:     "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N",
+							Severity:         types.SeverityMedium,
+							SeverityV3:       types.SeverityHigh,
+							References:       []string{"https://example.com"},
+							Description:      "some description",
+							PublishedDate:    utils.MustTimeParse("2006-01-02T15:04:00Z"),
+							LastModifiedDate: utils.MustTimeParse("2020-01-02T15:04:00Z"),
 						},
 					},
 				},
@@ -190,6 +195,8 @@ func TestVulnSrc_Commit(t *testing.T) {
 							},
 						},
 					},
+					PublishedDate:    "2006-01-02T15:04Z",
+					LastModifiedDate: "2020-01-02T15:04Z",
 				},
 			},
 			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
@@ -199,14 +206,16 @@ func TestVulnSrc_Commit(t *testing.T) {
 						VulnerabilityID: "CVE-2017-0012",
 						Source:          vulnerability.Nvd,
 						Vulnerability: types.VulnerabilityDetail{
-							CvssScore:    4.3,
-							CvssVector:   "AV:N/AC:M/Au:N/C:N/I:P/A:N",
-							CvssScoreV3:  9.4,
-							CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N",
-							Severity:     types.SeverityMedium,
-							SeverityV3:   types.SeverityHigh,
-							References:   []string{"https://example.com"},
-							Description:  "** REJECT ** test description",
+							CvssScore:        4.3,
+							CvssVector:       "AV:N/AC:M/Au:N/C:N/I:P/A:N",
+							CvssScoreV3:      9.4,
+							CvssVectorV3:     "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N",
+							Severity:         types.SeverityMedium,
+							SeverityV3:       types.SeverityHigh,
+							References:       []string{"https://example.com"},
+							Description:      "** REJECT ** test description",
+							PublishedDate:    utils.MustTimeParse("2006-01-02T15:04:00Z"),
+							LastModifiedDate: utils.MustTimeParse("2020-01-02T15:04:00Z"),
 						},
 					},
 				},
@@ -229,6 +238,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 
 			switch {
 			case tc.expectedErrorMsg != "":
+				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tc.expectedErrorMsg, tc.name)
 			default:
 				assert.NoError(t, err, tc.name)

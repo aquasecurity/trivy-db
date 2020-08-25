@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/BurntSushi/toml v0.3.1
-	github.com/aquasecurity/bolt-fixtures v0.0.0-20200825112230-c0f517aea2ed // indirect
+	github.com/aquasecurity/bolt-fixtures v0.0.0-20200825112230-c0f517aea2ed
 	github.com/aquasecurity/vuln-list-update v0.0.0-20191016075347-3d158c2bf9a2
 	github.com/briandowns/spinner v0.0.0-20190319032542-ac46072a5a91
 	github.com/fatih/color v1.9.0
