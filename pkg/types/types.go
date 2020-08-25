@@ -106,7 +106,15 @@ type AdvisoryDetail struct {
 
 type Advisory struct {
 	VulnerabilityID string `json:",omitempty"`
-	FixedVersion    string `json:",omitempty"`
+
+	// for os package
+	FixedVersion string `json:",omitempty"`
+
+	// for library
+	// Some advisories provide VulnerableVersions only, others provide PatchedVersions and UnaffectedVersions
+	VulnerableVersions []string `json:",omitempty"`
+	PatchedVersions    []string `json:",omitempty"`
+	UnaffectedVersions []string `json:",omitempty"`
 }
 
 type Vulnerability struct {
