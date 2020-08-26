@@ -83,19 +83,19 @@ type LastUpdated struct {
 	Date time.Time
 }
 type VulnerabilityDetail struct {
-	ID               string    `json:",omitempty"` // e.g. CVE-2019-8331, OSVDB-104365
-	CvssScore        float64   `json:",omitempty"`
-	CvssVector       string    `json:",omitempty"`
-	CvssScoreV3      float64   `json:",omitempty"`
-	CvssVectorV3     string    `json:",omitempty"`
-	Severity         Severity  `json:",omitempty"`
-	SeverityV3       Severity  `json:",omitempty"`
-	CweIDs           []string  `json:",omitempty"` // e.g. CWE-78, CWE-89
-	References       []string  `json:",omitempty"`
-	Title            string    `json:",omitempty"`
-	Description      string    `json:",omitempty"`
-	PublishedDate    time.Time `json:",omitempty"`
-	LastModifiedDate time.Time `json:",omitempty"`
+	ID               string     `json:",omitempty"` // e.g. CVE-2019-8331, OSVDB-104365
+	CvssScore        float64    `json:",omitempty"`
+	CvssVector       string     `json:",omitempty"`
+	CvssScoreV3      float64    `json:",omitempty"`
+	CvssVectorV3     string     `json:",omitempty"`
+	Severity         Severity   `json:",omitempty"`
+	SeverityV3       Severity   `json:",omitempty"`
+	CweIDs           []string   `json:",omitempty"` // e.g. CWE-78, CWE-89
+	References       []string   `json:",omitempty"`
+	Title            string     `json:",omitempty"`
+	Description      string     `json:",omitempty"`
+	PublishedDate    *time.Time `json:",omitempty"`
+	LastModifiedDate *time.Time `json:",omitempty"`
 }
 
 type AdvisoryDetail struct {
@@ -126,8 +126,8 @@ type Vulnerability struct {
 	VendorVectors    VendorVectors  `json:",omitempty"` // Deprecated: VendorVectors is only for backwards compatibility. Use CVSS instead.
 	CVSS             VendorCVSS     `json:",omitempty"`
 	References       []string       `json:",omitempty"`
-	PublishedDate    time.Time      `json:",omitempty"`
-	LastModifiedDate time.Time      `json:",omitempty"`
+	PublishedDate    *time.Time     `json:",omitempty"`
+	LastModifiedDate *time.Time     `json:",omitempty"`
 }
 
 type VulnSrc interface {
