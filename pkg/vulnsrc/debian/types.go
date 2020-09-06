@@ -11,5 +11,6 @@ type DebianCVE struct {
 type Release struct {
 	Repositories map[string]string `json:"repositories"`
 	Status       string            `json:"status"`
+	FixedVersion string            `json:"fixed_version"`
 	Urgency      string            `json:"urgency"`
 }

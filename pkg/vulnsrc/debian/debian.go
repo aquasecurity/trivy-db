@@ -92,11 +92,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []DebianCVE) error {
 					continue
 				}
 				platformName := fmt.Sprintf(platformFormat, majorVersion)
-				if release.Status != "open" {
+				if release.Status != "open" && release.Status != "resolved" {
 					continue
 				}
 				advisory := types.Advisory{
-					VulnerabilityID: cve.VulnerabilityID,
+					FixedVersion: release.FixedVersion,
 				}
 				if err := vs.dbc.PutAdvisoryDetail(tx, cve.VulnerabilityID, platformName, cve.Package, advisory); err != nil {
 					return xerrors.Errorf("failed to save Debian advisory: %w", err)

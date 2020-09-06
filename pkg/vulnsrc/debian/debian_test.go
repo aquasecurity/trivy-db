@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	bolt "go.etcd.io/bbolt"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
@@ -24,8 +25,17 @@ func TestVulnSrc_commit(t *testing.T) {
 			name: "happy path",
 			cves: []DebianCVE{
 				{
-					Description:     "test description",
-					Releases:        map[string]Release{"foo": {map[string]string{"buster": "bar"}, "open", "high"}},
+					Description: "test description",
+					Releases: map[string]Release{
+						"foo": {
+							Repositories: map[string]string{
+								"buster": "bar",
+							},
+							Status:       "open",
+							FixedVersion: "1.2.3",
+							Urgency:      "high",
+						},
+					},
 					Scope:           "foo scope",
 					Package:         "test package",
 					VulnerabilityID: "CVE-2020-123",
@@ -38,7 +48,9 @@ func TestVulnSrc_commit(t *testing.T) {
 						Source:          "debian 10",
 						PkgName:         "test package",
 						VulnerabilityID: "CVE-2020-123",
-						Advisory:        types.Advisory{VulnerabilityID: "CVE-2020-123", FixedVersion: ""},
+						Advisory: types.Advisory{
+							FixedVersion: "1.2.3",
+						},
 					},
 				},
 			},
@@ -80,6 +92,7 @@ func TestVulnSrc_commit(t *testing.T) {
 			err := ac.commit(tx, tt.cves)
 			switch {
 			case tt.expectedErrorMsg != "":
+				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tt.expectedErrorMsg, tt.name)
 			default:
 				assert.NoError(t, err, tt.name)
