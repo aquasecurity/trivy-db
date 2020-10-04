@@ -5,8 +5,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/golang-commonmark/markdown"
 
 	"github.com/BurntSushi/toml"
 	bolt "go.etcd.io/bbolt"
@@ -92,14 +94,17 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		}
 		buf, err := ioutil.ReadFile(path)
 		if err != nil {
-			return xerrors.Errorf("failed to read a file: %w", err)
+			return xerrors.Errorf("failed to read a file(%s): %w", path, err)
 		}
+		ad := parseAdvisoryMarkdown(buf)
 
 		advisory := Lockfile{}
-		err = toml.Unmarshal(buf, &advisory)
+		err = toml.Unmarshal([]byte(ad.codeBlock), &advisory)
 		if err != nil {
-			return xerrors.Errorf("failed to unmarshal TOML: %w", err)
+			return xerrors.Errorf("failed to unmarshal TOML(%s): %w", path, err)
 		}
+		advisory.Title = ad.title
+		advisory.Description = ad.description
 
 		// for detecting vulnerabilities
 		a := Advisory{PatchedVersions: advisory.PatchedVersions,
@@ -144,4 +149,63 @@ func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
 		results = append(results, advisory)
 	}
 	return results, nil
+}
+
+type AdvisoryMarkdown struct {
+	codeBlock   string
+	title       string
+	description string
+}
+
+func parseAdvisoryMarkdown(src []byte) *AdvisoryMarkdown {
+	ad := &AdvisoryMarkdown{}
+	md := markdown.New()
+	tokens := md.Parse(src)
+	ad.codeBlock = getFirstCodeBlock(tokens)
+	ad.title, ad.description = getTitleAndDescribe(tokens)
+	return ad
+}
+
+func getFirstCodeBlock(tokens []markdown.Token) string {
+	for _, t := range tokens {
+		switch tok := t.(type) {
+		case *markdown.Fence:
+			return tok.Content
+		case *markdown.CodeBlock:
+			return tok.Content
+		}
+	}
+
+	return ""
+}
+
+func getTitleAndDescribe(tokens []markdown.Token) (string, string) {
+	title := ""
+	description := ""
+	var headOpen bool
+	var headClose bool
+	var descLines []string
+	for _, t := range tokens {
+		switch tok := t.(type) {
+		case *markdown.HeadingOpen:
+			if tok.HLevel == 1 {
+				headOpen = true
+			}
+		case *markdown.HeadingClose:
+			if tok.HLevel == 1 {
+				headClose = true
+			}
+		case *markdown.Inline:
+			content := strings.TrimSpace(tok.Content)
+			if headOpen && !headClose {
+				title = content
+			} else {
+				if content != "" {
+					descLines = append(descLines, content)
+				}
+			}
+		}
+	}
+	description = strings.Join(descLines, "\n\n")
+	return title, description
 }
