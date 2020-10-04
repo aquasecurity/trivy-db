@@ -2,6 +2,7 @@ package python
 
 import (
 	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -68,8 +69,8 @@ func (vs VulnSrc) update(repoPath string) error {
 
 	// for detecting vulnerabilities
 	var advisoryDB AdvisoryDB
-	if err = json.NewDecoder(f).Decode(&advisoryDB); err != nil {
-		return xerrors.Errorf("failed to decode JSON: %w", err)
+	if advisoryDB, err = decodeAdvisoryDB(f); err != nil {
+		return xerrors.Errorf("failed to decode AdvisoryDB: %w", err)
 	}
 
 	// for displaying vulnerability detail
@@ -135,4 +136,25 @@ func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
 		results = append(results, advisory)
 	}
 	return results, nil
+}
+
+func decodeAdvisoryDB(r io.Reader) (AdvisoryDB, error) {
+	var obj map[string]interface{}
+	advisoryDB := AdvisoryDB{}
+	if err := json.NewDecoder(r).Decode(&obj); err != nil {
+		return nil, xerrors.Errorf("failed to decode JSON: %w", err)
+	}
+	for k, v := range obj {
+		slice, ok := v.([]interface{})
+		if !ok {
+			continue
+		}
+		b, _ := json.Marshal(slice)
+		var ad []RawAdvisory
+		if err := json.Unmarshal(b, &ad); err != nil {
+			return nil, xerrors.Errorf("failed to decode JSON: %w", err)
+		}
+		advisoryDB[k] = ad
+	}
+	return advisoryDB, nil
 }
