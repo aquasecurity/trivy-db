@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -94,11 +95,11 @@ func TestVulnSrc_Update(t *testing.T) {
 	}
 }
 
-func TestAdvisoryDB_ UnmarshalJSON(t *testing.T) {
+func TestAdvisoryDB_UnmarshalJSON(t *testing.T) {
 	b, err := ioutil.ReadFile("testdata/fixtures/python-safety-db/data/insecure_full.json")
 	require.NoError(t, err)
 	advisories := AdvisoryDB{}
-	err := json.Unmarshal(b, &advisories)
+	err = json.Unmarshal(b, &advisories)
 	require.NoError(t, err)
 	expectedAdvisory := AdvisoryDB{
 		"zulip": []RawAdvisory{
