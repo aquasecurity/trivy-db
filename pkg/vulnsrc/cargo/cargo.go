@@ -96,15 +96,15 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		if err != nil {
 			return xerrors.Errorf("failed to read a file(%s): %w", path, err)
 		}
-		ad := parseAdvisoryMarkdown(buf)
+		codeBlock, title, description := parseAdvisoryMarkdown(buf)
 
 		advisory := Lockfile{}
-		err = toml.Unmarshal([]byte(ad.codeBlock), &advisory)
+		err = toml.Unmarshal([]byte(codeBlock), &advisory)
 		if err != nil {
 			return xerrors.Errorf("failed to unmarshal TOML(%s): %w", path, err)
 		}
-		advisory.Title = ad.title
-		advisory.Description = ad.description
+		advisory.Title = title
+		advisory.Description = description
 
 		// for detecting vulnerabilities
 		a := Advisory{PatchedVersions: advisory.PatchedVersions,
@@ -151,19 +151,12 @@ func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
 	return results, nil
 }
 
-type AdvisoryMarkdown struct {
-	codeBlock   string
-	title       string
-	description string
-}
-
-func parseAdvisoryMarkdown(src []byte) *AdvisoryMarkdown {
-	ad := &AdvisoryMarkdown{}
+func parseAdvisoryMarkdown(src []byte) (codeBlock, title, description string) {
 	md := markdown.New()
 	tokens := md.Parse(src)
-	ad.codeBlock = getFirstCodeBlock(tokens)
-	ad.title, ad.description = getTitleAndDescribe(tokens)
-	return ad
+	codeBlock = getFirstCodeBlock(tokens)
+	title, description = getTitleAndDescription(tokens)
+	return codeBlock, title, description
 }
 
 func getFirstCodeBlock(tokens []markdown.Token) string {
@@ -179,9 +172,7 @@ func getFirstCodeBlock(tokens []markdown.Token) string {
 	return ""
 }
 
-func getTitleAndDescribe(tokens []markdown.Token) (string, string) {
-	title := ""
-	description := ""
+func getTitleAndDescription(tokens []markdown.Token) (title, description string) {
 	var headOpen bool
 	var headClose bool
 	var descLines []string
