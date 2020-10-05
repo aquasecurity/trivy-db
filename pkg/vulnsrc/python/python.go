@@ -69,7 +69,7 @@ func (vs VulnSrc) update(repoPath string) error {
 	// for detecting vulnerabilities
 	advisoryDB := AdvisoryDB{}
 	if err = json.NewDecoder(f).Decode(&advisoryDB); err != nil {
-		return xerrors.Errorf("failed to decode AdvisoryDB: %w", err)
+		return xerrors.Errorf("failed to decode JSON: %w", err)
 	}
 
 	// for displaying vulnerability detail
