@@ -2,7 +2,6 @@ package python
 
 import (
 	"encoding/json"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -68,8 +67,8 @@ func (vs VulnSrc) update(repoPath string) error {
 	defer f.Close()
 
 	// for detecting vulnerabilities
-	var advisoryDB AdvisoryDB
-	if advisoryDB, err = decodeAdvisoryDB(f); err != nil {
+	advisoryDB := AdvisoryDB{}
+	if err = json.NewDecoder(f).Decode(&advisoryDB); err != nil {
 		return xerrors.Errorf("failed to decode AdvisoryDB: %w", err)
 	}
 
@@ -138,23 +137,20 @@ func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
 	return results, nil
 }
 
-func decodeAdvisoryDB(r io.Reader) (AdvisoryDB, error) {
-	var obj map[string]interface{}
-	advisoryDB := AdvisoryDB{}
-	if err := json.NewDecoder(r).Decode(&obj); err != nil {
-		return nil, xerrors.Errorf("failed to decode JSON: %w", err)
+func (ad AdvisoryDB) UnmarshalJSON(data []byte) error {
+	var obj map[string]json.RawMessage
+	if err := json.Unmarshal(data, &obj); err != nil {
+		return xerrors.Errorf("failed to decode JSON: %w", err)
 	}
 	for k, v := range obj {
-		slice, ok := v.([]interface{})
-		if !ok {
+		if k == "$meta" {
 			continue
 		}
-		b, _ := json.Marshal(slice)
-		var ad []RawAdvisory
-		if err := json.Unmarshal(b, &ad); err != nil {
-			return nil, xerrors.Errorf("failed to decode JSON: %w", err)
+		var raw []RawAdvisory
+		if err := json.Unmarshal(v, &raw); err != nil {
+			return xerrors.Errorf("failed to decode JSON: %w", err)
 		}
-		advisoryDB[k] = ad
+		ad[k] = raw
 	}
-	return advisoryDB, nil
+	return nil
 }

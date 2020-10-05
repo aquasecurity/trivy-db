@@ -1,7 +1,6 @@
 package python
 
 import (
-	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"os"
@@ -97,8 +96,8 @@ func TestVulnSrc_Update(t *testing.T) {
 
 func Test_decodeAdvisoryDB(t *testing.T) {
 	b, _ := ioutil.ReadFile("testdata/fixtures/python-safety-db/data/insecure_full.json")
-	r := bytes.NewReader(b)
-	advisories, err := decodeAdvisoryDB(r)
+	advisories := AdvisoryDB{}
+	err := json.Unmarshal(b, &advisories)
 	require.NoError(t, err)
 	expectedAdvisory := AdvisoryDB{
 		"zulip": []RawAdvisory{
