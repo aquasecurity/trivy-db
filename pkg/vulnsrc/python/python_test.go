@@ -140,5 +140,5 @@ func Test_decodeAdvisoryDB(t *testing.T) {
 			},
 		},
 	}
-	require.Equal(t, expectedAdvisory, advisories, "expected %v, got: %v", expectedAdvisory, advisories)
+	assert.Equal(t, expectedAdvisory, advisories)
 }
