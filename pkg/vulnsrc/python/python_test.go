@@ -94,7 +94,7 @@ func TestVulnSrc_Update(t *testing.T) {
 	}
 }
 
-func Test_decodeAdvisoryDB(t *testing.T) {
+func TestAdvisoryDB_ UnmarshalJSON(t *testing.T) {
 	b, err := ioutil.ReadFile("testdata/fixtures/python-safety-db/data/insecure_full.json")
 	require.NoError(t, err)
 	advisories := AdvisoryDB{}
