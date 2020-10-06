@@ -3,7 +3,7 @@ package cargo
 import (
 	"bufio"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -92,16 +92,19 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		if info.IsDir() {
 			return nil
 		}
-		buf, err := ioutil.ReadFile(path)
+		f, err := os.Open(path)
 		if err != nil {
-			return xerrors.Errorf("failed to read a file(%s): %w", path, err)
+			return xerrors.Errorf("failed to open a file (%s): %w", path, err)
 		}
-		codeBlock, title, description := parseAdvisoryMarkdown(string(buf))
+		codeBlock, title, description, err := parseAdvisoryMarkdown(f)
+		if err != nil {
+			return xerrors.Errorf("failed to parse markdown: %w", err)
+		}
 
 		advisory := Lockfile{}
 		err = toml.Unmarshal([]byte(codeBlock), &advisory)
 		if err != nil {
-			return xerrors.Errorf("failed to unmarshal TOML(%s): %w", path, err)
+			return xerrors.Errorf("failed to unmarshal TOML (%s): %w", path, err)
 		}
 		advisory.Title = title
 		advisory.Description = description
@@ -152,37 +155,37 @@ func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
 }
 
 // https://github.com/RustSec/advisory-db/issues/414#issuecomment-702197689
-func parseAdvisoryMarkdown(src string) (codeBlock, title, description string) {
-	scanner := bufio.NewScanner(strings.NewReader(src))
-	var codeBlockBegin, codeBlockEnd, titleBegin, titleEnd bool
-	var codeBlockLines, descriptionLines []string
+func parseAdvisoryMarkdown(r io.Reader) (string, string, string, error) {
+	scanner := bufio.NewScanner(r)
+	var isCodeBlock, isTitle bool
+	var title string
+	var codeBlockBuilder, descriptionBuilder strings.Builder
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		if !codeBlockBegin && strings.HasPrefix(line, "```toml") {
-			codeBlockBegin = true
-			continue
-		}
-		if !codeBlockEnd && strings.HasPrefix(line, "```") {
-			codeBlockEnd = true
-			continue
-		}
-		if codeBlockBegin && !codeBlockEnd {
-			codeBlockLines = append(codeBlockLines, line)
-			continue
-		}
-		if codeBlockBegin && codeBlockEnd && !titleBegin && strings.HasPrefix(line, "#") {
-			titleBegin = true
+		switch {
+		// TOML
+		case strings.HasPrefix(line, "```toml"):
+			isCodeBlock = true
+		case strings.HasPrefix(line, "```"):
+			isCodeBlock = false
+		case isCodeBlock:
+			_, _ = codeBlockBuilder.WriteString(line + "\n")
+
+		// Title/Description
+		case strings.HasPrefix(line, "#"):
+			isTitle = true
 			title = strings.TrimSpace(line[1:])
-			titleEnd = true
-			continue
-		}
-		if codeBlockBegin && codeBlockEnd && titleBegin && titleEnd {
-			descriptionLines = append(descriptionLines, line)
+		case isTitle:
+			_, _ = descriptionBuilder.WriteString(line + "\n")
 		}
 	}
 
-	codeBlock = strings.TrimSpace(strings.Join(codeBlockLines, "\n"))
-	description = strings.TrimSpace(strings.Join(descriptionLines, "\n"))
-	return
+	if err := scanner.Err(); err != nil {
+		return "", "", "", xerrors.Errorf("reading error: %w", err)
+	}
+
+	codeBlock := strings.TrimSpace(codeBlockBuilder.String())
+	description := strings.TrimSpace(descriptionBuilder.String())
+	return codeBlock, title, description, nil
 }
