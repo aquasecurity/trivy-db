@@ -158,8 +158,7 @@ func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
 func parseAdvisoryMarkdown(r io.Reader) (string, string, string, error) {
 	scanner := bufio.NewScanner(r)
 	var isCodeBlock, isTitle bool
-	var title string
-	var codeBlockBuilder, descriptionBuilder strings.Builder
+	var codeBlock, title, description string
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -170,14 +169,14 @@ func parseAdvisoryMarkdown(r io.Reader) (string, string, string, error) {
 		case strings.HasPrefix(line, "```"):
 			isCodeBlock = false
 		case isCodeBlock:
-			_, _ = codeBlockBuilder.WriteString(line + "\n")
+			codeBlock += line + "\n"
 
 		// Title/Description
 		case strings.HasPrefix(line, "#"):
 			isTitle = true
 			title = strings.TrimSpace(line[1:])
 		case isTitle:
-			_, _ = descriptionBuilder.WriteString(line + "\n")
+			description += line + "\n"
 		}
 	}
 
@@ -185,7 +184,5 @@ func parseAdvisoryMarkdown(r io.Reader) (string, string, string, error) {
 		return "", "", "", xerrors.Errorf("reading error: %w", err)
 	}
 
-	codeBlock := strings.TrimSpace(codeBlockBuilder.String())
-	description := strings.TrimSpace(descriptionBuilder.String())
-	return codeBlock, title, description, nil
+	return strings.TrimSpace(codeBlock), title, strings.TrimSpace(description), nil
 }
