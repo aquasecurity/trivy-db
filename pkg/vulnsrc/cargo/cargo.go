@@ -5,10 +5,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
-	"github.com/golang-commonmark/markdown"
 
 	"github.com/BurntSushi/toml"
 	bolt "go.etcd.io/bbolt"
@@ -23,6 +23,10 @@ import (
 const (
 	cargoDir = "rust-advisory-db"
 )
+
+// https://github.com/RustSec/advisory-db/issues/414#issuecomment-702197689
+var regexAdvisoryMarkdown = regexp.MustCompile(
+	`(?sm)^\x60\x60\x60toml\s*?$(.*?)^\x60\x60\x60\s*?$\s*^#\s*([^\r\n]+)\s*?$(.*)`)
 
 type Lockfile struct {
 	RawAdvisory `toml:"advisory"`
@@ -96,7 +100,10 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		if err != nil {
 			return xerrors.Errorf("failed to read a file(%s): %w", path, err)
 		}
-		codeBlock, title, description := parseAdvisoryMarkdown(buf)
+		codeBlock, title, description, err := parseAdvisoryMarkdown(string(buf))
+		if err != nil {
+			return xerrors.Errorf("failed to parse V3 advisory data(%s): %w", path, err)
+		}
 
 		advisory := Lockfile{}
 		err = toml.Unmarshal([]byte(codeBlock), &advisory)
@@ -151,52 +158,15 @@ func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
 	return results, nil
 }
 
-func parseAdvisoryMarkdown(src []byte) (codeBlock, title, description string) {
-	md := markdown.New()
-	tokens := md.Parse(src)
-	codeBlock = getFirstCodeBlock(tokens)
-	title, description = getTitleAndDescription(tokens)
-	return codeBlock, title, description
-}
-
-func getFirstCodeBlock(tokens []markdown.Token) string {
-	for _, t := range tokens {
-		switch tok := t.(type) {
-		case *markdown.Fence:
-			return tok.Content
-		case *markdown.CodeBlock:
-			return tok.Content
-		}
+func parseAdvisoryMarkdown(src string) (codeBlock, title, description string, err error) {
+	matches := regexAdvisoryMarkdown.FindAllStringSubmatch(src, -1)
+	if len(matches) != 1 || len(matches[0]) != 4 {
+		err = xerrors.New("invalid V3 advisory format data")
+		return
 	}
-
-	return ""
-}
-
-func getTitleAndDescription(tokens []markdown.Token) (title, description string) {
-	var headOpen bool
-	var headClose bool
-	var descLines []string
-	for _, t := range tokens {
-		switch tok := t.(type) {
-		case *markdown.HeadingOpen:
-			if tok.HLevel == 1 {
-				headOpen = true
-			}
-		case *markdown.HeadingClose:
-			if tok.HLevel == 1 {
-				headClose = true
-			}
-		case *markdown.Inline:
-			content := strings.TrimSpace(tok.Content)
-			if headOpen && !headClose {
-				title = content
-			} else {
-				if content != "" {
-					descLines = append(descLines, content)
-				}
-			}
-		}
-	}
-	description = strings.Join(descLines, "\n\n")
-	return title, description
+	match := matches[0]
+	codeBlock = strings.TrimSpace(match[1])
+	title = strings.TrimSpace(match[2])
+	description = strings.TrimSpace(match[3])
+	return
 }

@@ -8,19 +8,11 @@ require (
 	github.com/aquasecurity/vuln-list-update v0.0.0-20191016075347-3d158c2bf9a2
 	github.com/briandowns/spinner v0.0.0-20190319032542-ac46072a5a91
 	github.com/fatih/color v1.9.0
-	github.com/golang-commonmark/html v0.0.0-20180910111043-7d7c804e1d46 // indirect
-	github.com/golang-commonmark/linkify v0.0.0-20180910111149-f05efb453a0e // indirect
-	github.com/golang-commonmark/markdown v0.0.0-20180910011815-a8f139058164
-	github.com/golang-commonmark/mdurl v0.0.0-20180910110917-8d018c6567d6 // indirect
-	github.com/golang-commonmark/puny v0.0.0-20180910110745-050be392d8b8 // indirect
 	github.com/google/go-github/v28 v28.1.1
 	github.com/hashicorp/go-version v1.2.0
 	github.com/knqyf263/go-rpm-version v0.0.0-20170716094938-74609b86c936
 	github.com/mattn/go-colorable v0.1.7 // indirect
-	github.com/opennota/wd v0.0.0-20180911144301-b446539ab1e7 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/russross/blackfriday v2.0.0+incompatible // indirect
-	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.6.1
 	github.com/urfave/cli v1.20.0
