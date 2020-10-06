@@ -1,11 +1,11 @@
 package cargo
 
 import (
+	"bufio"
 	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
@@ -23,10 +23,6 @@ import (
 const (
 	cargoDir = "rust-advisory-db"
 )
-
-// https://github.com/RustSec/advisory-db/issues/414#issuecomment-702197689
-var regexAdvisoryMarkdown = regexp.MustCompile(
-	`(?sm)^\x60\x60\x60toml\s*?$(.*?)^\x60\x60\x60\s*?$\s*^#\s*([^\r\n]+)\s*?$(.*)`)
 
 type Lockfile struct {
 	RawAdvisory `toml:"advisory"`
@@ -100,10 +96,7 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		if err != nil {
 			return xerrors.Errorf("failed to read a file(%s): %w", path, err)
 		}
-		codeBlock, title, description, err := parseAdvisoryMarkdown(string(buf))
-		if err != nil {
-			return xerrors.Errorf("failed to parse V3 advisory data(%s): %w", path, err)
-		}
+		codeBlock, title, description := parseAdvisoryMarkdown(string(buf))
 
 		advisory := Lockfile{}
 		err = toml.Unmarshal([]byte(codeBlock), &advisory)
@@ -158,15 +151,38 @@ func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
 	return results, nil
 }
 
-func parseAdvisoryMarkdown(src string) (codeBlock, title, description string, err error) {
-	matches := regexAdvisoryMarkdown.FindAllStringSubmatch(src, -1)
-	if len(matches) != 1 || len(matches[0]) != 4 {
-		err = xerrors.New("invalid V3 advisory format data")
-		return
+// https://github.com/RustSec/advisory-db/issues/414#issuecomment-702197689
+func parseAdvisoryMarkdown(src string) (codeBlock, title, description string) {
+	scanner := bufio.NewScanner(strings.NewReader(src))
+	var codeBlockBegin, codeBlockEnd, titleBegin, titleEnd bool
+	var codeBlockLines, descriptionLines []string
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if !codeBlockBegin && strings.HasPrefix(line, "```toml") {
+			codeBlockBegin = true
+			continue
+		}
+		if !codeBlockEnd && strings.HasPrefix(line, "```") {
+			codeBlockEnd = true
+			continue
+		}
+		if codeBlockBegin && !codeBlockEnd {
+			codeBlockLines = append(codeBlockLines, line)
+			continue
+		}
+		if codeBlockBegin && codeBlockEnd && !titleBegin && strings.HasPrefix(line, "#") {
+			titleBegin = true
+			title = strings.TrimSpace(line[1:])
+			titleEnd = true
+			continue
+		}
+		if codeBlockBegin && codeBlockEnd && titleBegin && titleEnd {
+			descriptionLines = append(descriptionLines, line)
+		}
 	}
-	match := matches[0]
-	codeBlock = strings.TrimSpace(match[1])
-	title = strings.TrimSpace(match[2])
-	description = strings.TrimSpace(match[3])
+
+	codeBlock = strings.TrimSpace(strings.Join(codeBlockLines, "\n"))
+	description = strings.TrimSpace(strings.Join(descriptionLines, "\n"))
 	return
 }
