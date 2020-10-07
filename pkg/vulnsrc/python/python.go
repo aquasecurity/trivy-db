@@ -67,7 +67,7 @@ func (vs VulnSrc) update(repoPath string) error {
 	defer f.Close()
 
 	// for detecting vulnerabilities
-	var advisoryDB AdvisoryDB
+	advisoryDB := AdvisoryDB{}
 	if err = json.NewDecoder(f).Decode(&advisoryDB); err != nil {
 		return xerrors.Errorf("failed to decode JSON: %w", err)
 	}
@@ -135,4 +135,22 @@ func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
 		results = append(results, advisory)
 	}
 	return results, nil
+}
+
+func (ad AdvisoryDB) UnmarshalJSON(data []byte) error {
+	var obj map[string]json.RawMessage
+	if err := json.Unmarshal(data, &obj); err != nil {
+		return xerrors.Errorf("failed to decode JSON: %w", err)
+	}
+	for k, v := range obj {
+		if k == "$meta" {
+			continue
+		}
+		var raw []RawAdvisory
+		if err := json.Unmarshal(v, &raw); err != nil {
+			return xerrors.Errorf("failed to decode JSON: %w", err)
+		}
+		ad[k] = raw
+	}
+	return nil
 }
