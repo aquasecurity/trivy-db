@@ -121,7 +121,7 @@ func TestVulnSrc_update(t *testing.T) {
 								"https://github.com/myrrlyn/bitvec/issues/55",
 							},
 							Title:       "use-after or double free of allocated memory",
-							Description: "Conversion of `BitVec` to `BitBox` did not account for allocation movement.\n\nThe flaw was corrected by using the address after resizing, rather than the original base address.\n",
+							Description: "Conversion of `BitVec` to `BitBox` did not account for allocation movement.\n\nThe flaw was corrected by using the address after resizing, rather than the original base address.",
 						},
 					},
 				},
