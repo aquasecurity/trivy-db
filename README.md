@@ -1,4 +1,5 @@
-# trivy-db ![Trivy DB](https://github.com/aquasecurity/trivy-db/workflows/Trivy%20DB/badge.svg)
+# trivy-db
+![Trivy DB](https://github.com/aquasecurity/trivy-db/workflows/Trivy%20DB/badge.svg)
 
 ## Overview
 `trivy-db` is a CLI tool and a library to manipulate Trivy DB.
@@ -34,3 +35,17 @@ You can utilize `make db-all` to build the database, the DB artifact is outputte
 If you want to build the light DB, please set your environment to contain `DB_TYPE=trivy-light`.
 Alternatively Docker is supported, you can run `docker build . -t trivy-db`.
 If you want to build the light DB, please run `docker build --build-arg DB_TYPE=trivy-light . -t trivy-db-light`
+
+
+## Contributing
+
+
+### Pull Requests
+
+We welcome pull requests!
+
+- Your PR is more likely to be accepted if it focuses on just one change.
+- Please include a comment with the results before and after your change.
+- Your PR is more likely to be accepted if it includes tests. (We have not historically been very strict about tests, but we would like to improve this!).
+- You're welcome to submit a draft PR if you would like early feedback on an idea or an approach.
+- Happy coding!
