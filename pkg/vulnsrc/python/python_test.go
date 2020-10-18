@@ -14,9 +14,6 @@ import (
 )
 
 func TestVulnSrc_Update(t *testing.T) {
-	type args struct {
-		dir string
-	}
 	testCases := []struct {
 		name string
 		args struct {
