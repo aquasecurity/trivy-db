@@ -24,7 +24,6 @@ type CVSSVector struct {
 }
 
 type VendorCVSS map[string]CVSS
-type VendorVectors map[string]CVSSVector
 
 const (
 	SeverityUnknown Severity = iota
@@ -123,7 +122,6 @@ type Vulnerability struct {
 	Severity         string         `json:",omitempty"` // Deprecated: Severity is only for backwards compatibility. Use VendorSeverity instead.
 	CweIDs           []string       `json:",omitempty"` // e.g. CWE-78, CWE-89
 	VendorSeverity   VendorSeverity `json:",omitempty"`
-	VendorVectors    VendorVectors  `json:",omitempty"` // Deprecated: VendorVectors is only for backwards compatibility. Use CVSS instead.
 	CVSS             VendorCVSS     `json:",omitempty"`
 	References       []string       `json:",omitempty"`
 	PublishedDate    *time.Time     `json:",omitempty"`
