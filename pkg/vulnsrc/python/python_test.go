@@ -19,9 +19,7 @@ func TestVulnSrc_Update(t *testing.T) {
 	}
 	testCases := []struct {
 		name string
-		args struct {
-			dir string
-		}
+		args args
 		expectedAdvisory []Advisory
 		expectErr        bool
 	}{
@@ -75,16 +73,14 @@ func TestVulnSrc_Update(t *testing.T) {
 			for _, a := range tc.expectedAdvisory {
 				adv, err := db.Config{}.GetAdvisoryDetails(a.VulnerabilityID)
 				require.NoError(t, err)
-				if adv != nil {
-					for _, advis := range adv {
-						rawAdv, err := json.Marshal(advis.AdvisoryItem)
-						require.NoError(t, err)
-						var pythonAdv Advisory
-						err = json.Unmarshal(rawAdv, &pythonAdv)
-						require.NoError(t, err)
-						pythonAdv.VulnerabilityID = a.VulnerabilityID
-						advisories = append(advisories, pythonAdv)
-					}
+				for _, advis := range adv {
+					rawAdv, err := json.Marshal(advis.AdvisoryItem)
+					require.NoError(t, err)
+					var pythonAdv Advisory
+					err = json.Unmarshal(rawAdv, &pythonAdv)
+					require.NoError(t, err)
+					pythonAdv.VulnerabilityID = a.VulnerabilityID
+					advisories = append(advisories, pythonAdv)
 				}
 			}
 			sort.Slice(advisories[:], func(i, j int) bool {
