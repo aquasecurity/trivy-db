@@ -120,7 +120,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 
 		vulnID := ghsa.Advisory.GhsaId
 		for _, identifier := range ghsa.Advisory.Identifiers {
-			if identifier.Type == "CVE" {
+			if identifier.Type == "CVE" && identifier.Value != "" {
 				vulnID = identifier.Value
 			}
 		}

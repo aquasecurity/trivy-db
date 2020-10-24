@@ -676,6 +676,96 @@ func TestVulnSrc_save(t *testing.T) {
 			},
 		},
 		{
+			name:      "happy path with empty CVE-ID",
+			ecosystem: Npm,
+			args: args{
+				ghsas: []GithubSecurityAdvisory{
+					{
+						Severity:  "MODERATE",
+						UpdatedAt: "2019-10-18T15:22:29Z",
+						Package: Package{
+							Ecosystem: "NPM",
+							Name:      "renovate",
+						},
+						Advisory: GhsaAdvisory{
+							DatabaseId: 1749,
+							Id:         "MDE2OlNlY3VyaXR5QWR2aXNvcnlHSFNBLXY3eDMtN2h3Ny1wY2pn",
+							GhsaId:     "GHSA-v7x3-7hw7-pcjg",
+							References: []Reference{
+								{
+									Url: "https://github.com/advisories/GHSA-v7x3-7hw7-pcjg",
+								},
+							},
+							Identifiers: []Identifier{
+								{
+									Type:  "GHSA",
+									Value: "GHSA-v7x3-7hw7-pcjg",
+								},
+								{
+									Type:  "CVE",
+									Value: "",
+								},
+							},
+							Description: "## Go Modules Vulnerability Disclosure\\n\\n### Impact\\r\\n\\r\\nTemporary repository tokens were leaked into Pull Requests comments in during certain Go Modules update failure scenarios.\\r\\n\\r\\n### Patches\\r\\n\\r\\nThe problem has been patched. Self-hosted users should upgrade to v19.38.7 or later.\\r\\n\\r\\n### Workarounds\\r\\n\\r\\nDisable Go Modules support.\\r\\n\\r\\n### References\\r\\n\\r\\nBlog post: https://renovatebot.com/blog/go-modules-vulnerability-disclosure\\r\\n\\r\\n### For more information\\r\\n\\r\\nIf you have any questions or comments about this advisory:\\r\\n* Open an issue in [Renovate](http://github.com/renovatebot/renovate)\\r\\n* Email us at [support@renovatebot.com](mailto:support@renovatebot.com)\\r\\n\\n",
+							Origin:      "UNSPECIFIED",
+							PublishedAt: "2019-10-21T16:02:33",
+							Severity:    "MODERATE",
+							Summary:     "Moderate severity vulnerability that affects renovate",
+							UpdatedAt:   "2019-10-21T16:02:33Z",
+							WithdrawnAt: "",
+						},
+						Versions: []Version{
+							{
+								FirstPatchedVersion: FirstPatchedVersion{
+									Identifier: "19.38.7",
+								},
+								VulnerableVersionRange: "\u003c 19.38.7",
+							},
+						},
+					},
+				},
+			},
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
+				{
+					Args: db.OperationPutAdvisoryDetailArgs{
+						TxAnything:      true,
+						Source:          "GitHub Security Advisory Npm",
+						PkgName:         "renovate",
+						VulnerabilityID: "GHSA-v7x3-7hw7-pcjg",
+						Advisory: Advisory{
+							PatchedVersions:    []string{"19.38.7"},
+							VulnerableVersions: []string{"< 19.38.7"},
+						},
+					},
+				},
+			},
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
+				{
+					Args: db.OperationPutVulnerabilityDetailArgs{
+						TxAnything:      true,
+						Source:          vulnerability.GHSANpm,
+						VulnerabilityID: "GHSA-v7x3-7hw7-pcjg",
+						Vulnerability: types.VulnerabilityDetail{
+							ID:          "GHSA-v7x3-7hw7-pcjg",
+							Severity:    types.SeverityMedium,
+							References:  []string{"https://github.com/advisories/GHSA-v7x3-7hw7-pcjg"},
+							Title:       "Moderate severity vulnerability that affects renovate",
+							Description: "## Go Modules Vulnerability Disclosure\\n\\n### Impact\\r\\n\\r\\nTemporary repository tokens were leaked into Pull Requests comments in during certain Go Modules update failure scenarios.\\r\\n\\r\\n### Patches\\r\\n\\r\\nThe problem has been patched. Self-hosted users should upgrade to v19.38.7 or later.\\r\\n\\r\\n### Workarounds\\r\\n\\r\\nDisable Go Modules support.\\r\\n\\r\\n### References\\r\\n\\r\\nBlog post: https://renovatebot.com/blog/go-modules-vulnerability-disclosure\\r\\n\\r\\n### For more information\\r\\n\\r\\nIf you have any questions or comments about this advisory:\\r\\n* Open an issue in [Renovate](http://github.com/renovatebot/renovate)\\r\\n* Email us at [support@renovatebot.com](mailto:support@renovatebot.com)\\r\\n\\n",
+						},
+					},
+				},
+			},
+			putSeverity: []db.OperationPutSeverityExpectation{
+				{
+					Args: db.OperationPutSeverityArgs{
+						TxAnything:      true,
+						VulnerabilityID: "GHSA-v7x3-7hw7-pcjg",
+						Severity:        types.SeverityUnknown,
+					},
+				},
+			},
+		},
+		{
 			name:      "putAdvisoryDetail returns an error",
 			ecosystem: Rubygems,
 			args: args{
