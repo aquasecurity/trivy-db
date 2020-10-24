@@ -59,10 +59,11 @@ type Operation interface {
 }
 
 type Metadata struct {
-	Version    int  `json:",omitempty"`
-	Type       Type `json:",omitempty"`
-	NextUpdate time.Time
-	UpdatedAt  time.Time
+	Version      int  `json:",omitempty"`
+	Type         Type `json:",omitempty"`
+	NextUpdate   time.Time
+	UpdatedAt    time.Time
+	DownloadedAt time.Time
 }
 
 type Config struct {

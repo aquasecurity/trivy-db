@@ -132,7 +132,7 @@ func TestConfig_GetMetadata(t *testing.T) {
 		md, err := dbc.GetMetadata()
 		assert.EqualError(t, err, "unexpected end of JSON input")
 		b, _ := json.Marshal(md)
-		assert.Equal(t, `{"NextUpdate":"0001-01-01T00:00:00Z","UpdatedAt":"0001-01-01T00:00:00Z"}`, string(b))
+		assert.Equal(t, `{"NextUpdate":"0001-01-01T00:00:00Z","UpdatedAt":"0001-01-01T00:00:00Z","DownloadedAt":"0001-01-01T00:00:00Z"}`, string(b))
 		assert.Empty(t, md)
 	})
 }
