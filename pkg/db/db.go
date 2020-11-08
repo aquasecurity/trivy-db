@@ -207,7 +207,7 @@ func (dbc Config) forEach(rootBucket, nestedBucket string) (value map[string][]b
 		var rootBuckets []string
 
 		if strings.Contains(rootBucket, "::") {
-			// e.g. "python::", "php::"
+			// e.g. "pip::", "rubygems::"
 			prefix := []byte(rootBucket)
 			c := tx.Cursor()
 			for k, _ := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, _ = c.Next() {
