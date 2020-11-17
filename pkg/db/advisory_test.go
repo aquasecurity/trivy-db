@@ -41,7 +41,7 @@ func TestConfig_ForEachAdvisory(t *testing.T) {
 		{
 			name: "prefix scan",
 			args: args{
-				source:  "php::",
+				source:  "composer::",
 				pkgName: "symfony/symfony",
 			},
 			fixtures: []string{"testdata/fixtures/multiple-buckets.yaml"},
@@ -155,7 +155,7 @@ func TestConfig_GetAdvisories(t *testing.T) {
 		{
 			name: "prefix scan",
 			args: args{
-				source:  "php::",
+				source:  "composer::",
 				pkgName: "symfony/symfony",
 			},
 			fixtures: []string{"testdata/fixtures/multiple-buckets.yaml"},
