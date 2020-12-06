@@ -99,13 +99,11 @@ db-fetch-vuln-list-master:
 .PHONY: db-fetch-vuln-list-fixed
 db-fetch-vuln-list-fixed:
 	mkdir -p cache/vuln-list
-	wget -qO - https://github.com/aquasecurity/vuln-list/archive/8b786696ee5c47495e19f9453b467e729b844a17.tar.gz | tar xz -C cache/vuln-list --strip-components=1
+	wget -qO - https://github.com/aquasecurity/vuln-list/archive/8f40e0ae016df0be4148b1b5936ade4aab06a5bc.tar.gz | tar xz -C cache/vuln-list --strip-components=1
 
 .PHONY: create-test-db
-create-test-db:
-	make db-clean
+create-test-db: trivy-db
 	make db-fetch-langs db-fetch-vuln-list-fixed
-	make build
 	make db-build
 	make db-compact
 	make db-compress
