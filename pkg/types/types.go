@@ -24,7 +24,6 @@ type CVSSVector struct {
 }
 
 type VendorCVSS map[string]CVSS
-type VendorVectors map[string]CVSSVector
 
 const (
 	SeverityUnknown Severity = iota
@@ -83,19 +82,19 @@ type LastUpdated struct {
 	Date time.Time
 }
 type VulnerabilityDetail struct {
-	ID               string    `json:",omitempty"` // e.g. CVE-2019-8331, OSVDB-104365
-	CvssScore        float64   `json:",omitempty"`
-	CvssVector       string    `json:",omitempty"`
-	CvssScoreV3      float64   `json:",omitempty"`
-	CvssVectorV3     string    `json:",omitempty"`
-	Severity         Severity  `json:",omitempty"`
-	SeverityV3       Severity  `json:",omitempty"`
-	CweIDs           []string  `json:",omitempty"` // e.g. CWE-78, CWE-89
-	References       []string  `json:",omitempty"`
-	Title            string    `json:",omitempty"`
-	Description      string    `json:",omitempty"`
-	PublishedDate    time.Time `json:",omitempty"`
-	LastModifiedDate time.Time `json:",omitempty"`
+	ID               string     `json:",omitempty"` // e.g. CVE-2019-8331, OSVDB-104365
+	CvssScore        float64    `json:",omitempty"`
+	CvssVector       string     `json:",omitempty"`
+	CvssScoreV3      float64    `json:",omitempty"`
+	CvssVectorV3     string     `json:",omitempty"`
+	Severity         Severity   `json:",omitempty"`
+	SeverityV3       Severity   `json:",omitempty"`
+	CweIDs           []string   `json:",omitempty"` // e.g. CWE-78, CWE-89
+	References       []string   `json:",omitempty"`
+	Title            string     `json:",omitempty"`
+	Description      string     `json:",omitempty"`
+	PublishedDate    *time.Time `json:",omitempty"`
+	LastModifiedDate *time.Time `json:",omitempty"`
 }
 
 type AdvisoryDetail struct {
@@ -106,7 +105,15 @@ type AdvisoryDetail struct {
 
 type Advisory struct {
 	VulnerabilityID string `json:",omitempty"`
-	FixedVersion    string `json:",omitempty"`
+
+	// for os package
+	FixedVersion string `json:",omitempty"`
+
+	// for library
+	// Some advisories provide VulnerableVersions only, others provide PatchedVersions and UnaffectedVersions
+	VulnerableVersions []string `json:",omitempty"`
+	PatchedVersions    []string `json:",omitempty"`
+	UnaffectedVersions []string `json:",omitempty"`
 }
 
 type Vulnerability struct {
@@ -115,11 +122,10 @@ type Vulnerability struct {
 	Severity         string         `json:",omitempty"` // Deprecated: Severity is only for backwards compatibility. Use VendorSeverity instead.
 	CweIDs           []string       `json:",omitempty"` // e.g. CWE-78, CWE-89
 	VendorSeverity   VendorSeverity `json:",omitempty"`
-	VendorVectors    VendorVectors  `json:",omitempty"` // Deprecated: VendorVectors is only for backwards compatibility. Use CVSS instead.
 	CVSS             VendorCVSS     `json:",omitempty"`
 	References       []string       `json:",omitempty"`
-	PublishedDate    time.Time      `json:",omitempty"`
-	LastModifiedDate time.Time      `json:",omitempty"`
+	PublishedDate    *time.Time     `json:",omitempty"`
+	LastModifiedDate *time.Time     `json:",omitempty"`
 }
 
 type VulnSrc interface {

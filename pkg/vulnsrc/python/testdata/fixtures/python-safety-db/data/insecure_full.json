@@ -1,4 +1,8 @@
 {
+  "$meta": {
+    "advisory": "PyUp.io metadata",
+    "timestamp": 1601532000
+  },
   "zulip": [
     {
       "advisory": "Zulip 2.0.7 inlcudes a fix for insecure account creation via social authentication - see CVE-2019-18933. It also adds backend enforcement of zxcvbn password strength checks.",
@@ -26,6 +30,26 @@
         "<1.7.2"
       ],
       "v": "<1.7.2"
+    }
+  ],
+  "kuber": [
+    {
+      "advisory": "Kuber 10.0.1 bumps the urllib3 version to pick up security fix for CVE-2019-11324.",
+      "cve": "CVE-2019-11324",
+      "id": "pyup.io-38099",
+      "specs": [
+        "<10.0.1"
+      ],
+      "v": "<10.0.1"
+    },
+    {
+      "advisory": "kuber 9.0.0a1 bumps urllib3 version to pick up security fix for CVE-2018-20060.",
+      "cve": null,
+      "id": "pyup.io-36979",
+      "specs": [
+        "<9.0.0a1"
+      ],
+      "v": "<9.0.0a1"
     }
   ]
 }

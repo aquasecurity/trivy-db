@@ -1,10 +1,12 @@
 package cargo
 
 import (
+	"bufio"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 
@@ -24,23 +26,28 @@ const (
 
 type Lockfile struct {
 	RawAdvisory `toml:"advisory"`
+	RawVersion  `toml:"versions"`
 }
 
 type RawAdvisory struct {
-	Id                string
-	Package           string
-	Title             string `toml:"title"`
-	Url               string
-	Date              string
-	Description       string
-	Keywords          []string
-	PatchedVersions   []string `toml:"patched_versions"`
-	AffectedFunctions []string `toml:"affected_functions"`
+	Id          string
+	Package     string
+	Title       string `toml:"title"`
+	Url         string
+	Date        string
+	Description string
+	Keywords    []string
+}
+
+type RawVersion struct {
+	PatchedVersions    []string `toml:"patched"`
+	UnaffectedVersions []string `toml:"unaffected"`
 }
 
 type Advisory struct {
-	VulnerabilityID string   `json:",omitempty"`
-	PatchedVersions []string `json:",omitempty"`
+	VulnerabilityID    string   `json:",omitempty"`
+	PatchedVersions    []string `json:",omitempty"`
+	UnaffectedVersions []string `json:",omitempty"`
 }
 
 type VulnSrc struct {
@@ -85,19 +92,26 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		if info.IsDir() {
 			return nil
 		}
-		buf, err := ioutil.ReadFile(path)
+		f, err := os.Open(path)
 		if err != nil {
-			return xerrors.Errorf("failed to read a file: %w", err)
+			return xerrors.Errorf("failed to open a file (%s): %w", path, err)
+		}
+		codeBlock, title, description, err := parseAdvisoryMarkdown(f)
+		if err != nil {
+			return xerrors.Errorf("failed to parse markdown: %w", err)
 		}
 
 		advisory := Lockfile{}
-		err = toml.Unmarshal(buf, &advisory)
+		err = toml.Unmarshal([]byte(codeBlock), &advisory)
 		if err != nil {
-			return xerrors.Errorf("failed to unmarshal TOML: %w", err)
+			return xerrors.Errorf("failed to unmarshal TOML (%s): %w", path, err)
 		}
+		advisory.Title = title
+		advisory.Description = description
 
 		// for detecting vulnerabilities
-		a := Advisory{PatchedVersions: advisory.PatchedVersions}
+		a := Advisory{PatchedVersions: advisory.PatchedVersions,
+			UnaffectedVersions: advisory.UnaffectedVersions}
 		err = vs.dbc.PutAdvisoryDetail(tx, advisory.Id, vulnerability.RustSec, advisory.Package, a)
 		if err != nil {
 			return xerrors.Errorf("failed to save rust advisory: %w", err)
@@ -138,4 +152,37 @@ func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
 		results = append(results, advisory)
 	}
 	return results, nil
+}
+
+// https://github.com/RustSec/advisory-db/issues/414#issuecomment-702197689
+func parseAdvisoryMarkdown(r io.Reader) (string, string, string, error) {
+	scanner := bufio.NewScanner(r)
+	var isCodeBlock, isTitle bool
+	var codeBlock, title, description string
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		switch {
+		// TOML
+		case strings.HasPrefix(line, "```toml"):
+			isCodeBlock = true
+		case strings.HasPrefix(line, "```"):
+			isCodeBlock = false
+		case isCodeBlock:
+			codeBlock += line + "\n"
+
+		// Title/Description
+		case strings.HasPrefix(line, "#"):
+			isTitle = true
+			title = strings.TrimSpace(line[1:])
+		case isTitle:
+			description += line + "\n"
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return "", "", "", xerrors.Errorf("reading error: %w", err)
+	}
+
+	return strings.TrimSpace(codeBlock), title, strings.TrimSpace(description), nil
 }

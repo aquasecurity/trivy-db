@@ -104,8 +104,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, items []Item) error {
 			References:       references,
 			Title:            "",
 			Description:      description,
-			PublishedDate:    publishedDate,
-			LastModifiedDate: lastModifiedDate,
+			PublishedDate:    &publishedDate,
+			LastModifiedDate: &lastModifiedDate,
 		}
 
 		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Nvd, vuln); err != nil {

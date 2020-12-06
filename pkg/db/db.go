@@ -1,11 +1,13 @@
 package db
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"strings"
 	"time"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
@@ -57,10 +59,11 @@ type Operation interface {
 }
 
 type Metadata struct {
-	Version    int  `json:",omitempty"`
-	Type       Type `json:",omitempty"`
-	NextUpdate time.Time
-	UpdatedAt  time.Time
+	Version      int  `json:",omitempty"`
+	Type         Type `json:",omitempty"`
+	NextUpdate   time.Time
+	UpdatedAt    time.Time
+	DownloadedAt time.Time
 }
 
 type Config struct {
@@ -201,20 +204,35 @@ func (dbc Config) get(rootBucket, nestedBucket, key string) (value []byte, err e
 func (dbc Config) forEach(rootBucket, nestedBucket string) (value map[string][]byte, err error) {
 	value = map[string][]byte{}
 	err = db.View(func(tx *bolt.Tx) error {
-		root := tx.Bucket([]byte(rootBucket))
-		if root == nil {
-			return nil
+		var rootBuckets []string
+
+		if strings.Contains(rootBucket, "::") {
+			// e.g. "python::", "php::"
+			prefix := []byte(rootBucket)
+			c := tx.Cursor()
+			for k, _ := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, _ = c.Next() {
+				rootBuckets = append(rootBuckets, string(k))
+			}
+		} else {
+			// e.g. "GitHub Security Advisory Composer"
+			rootBuckets = append(rootBuckets, rootBucket)
 		}
-		nested := root.Bucket([]byte(nestedBucket))
-		if nested == nil {
-			return nil
-		}
-		err := nested.ForEach(func(k, v []byte) error {
-			value[string(k)] = v
-			return nil
-		})
-		if err != nil {
-			return xerrors.Errorf("error in db foreach: %w", err)
+		for _, r := range rootBuckets {
+			root := tx.Bucket([]byte(r))
+			if root == nil {
+				return nil
+			}
+			nested := root.Bucket([]byte(nestedBucket))
+			if nested == nil {
+				return nil
+			}
+			err := nested.ForEach(func(k, v []byte) error {
+				value[string(k)] = v
+				return nil
+			})
+			if err != nil {
+				return xerrors.Errorf("error in db foreach: %w", err)
+			}
 		}
 		return nil
 	})
