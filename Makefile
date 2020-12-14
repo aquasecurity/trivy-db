@@ -57,15 +57,14 @@ trivy-db:
 
 .PHONY: db-all
 db-all:
-	make build db-fetch
+	make build db-fetch-langs db-fetch-vuln-list-master
 	make db-build
 	make db-compact
 	make db-compress
 
-.PHONY: db-fetch
-db-fetch:
-	mkdir -p cache/vuln-list cache/ruby-advisory-db cache/rust-advisory-db cache/php-security-advisories cache/nodejs-security-wg cache/python-safety-db
-	wget -qO - https://github.com/aquasecurity/vuln-list/archive/master.tar.gz | tar xz -C cache/vuln-list --strip-components=1
+.PHONY: db-fetch-langs
+db-fetch-langs:
+	mkdir -p cache/ruby-advisory-db cache/rust-advisory-db cache/php-security-advisories cache/nodejs-security-wg cache/python-safety-db
 	wget -qO - https://github.com/rubysec/ruby-advisory-db/archive/master.tar.gz | tar xz -C cache/ruby-advisory-db --strip-components=1
 	wget -qO - https://github.com/RustSec/advisory-db/archive/master.tar.gz | tar xz -C cache/rust-advisory-db --strip-components=1
 	wget -qO - https://github.com/FriendsOfPHP/security-advisories/archive/master.tar.gz | tar xz -C cache/php-security-advisories --strip-components=1
@@ -91,3 +90,20 @@ db-compress: assets/$(DB_TYPE)/$(DB_TYPE).db assets/$(DB_TYPE)/metadata.json
 .PHONY: db-clean
 db-clean:
 	rm -rf cache assets
+
+.PHONY: db-fetch-vuln-list-master
+db-fetch-vuln-list-master:
+	mkdir -p cache/vuln-list
+	wget -qO - https://github.com/aquasecurity/vuln-list/archive/master.tar.gz | tar xz -C cache/vuln-list --strip-components=1
+
+.PHONY: db-fetch-vuln-list-fixed
+db-fetch-vuln-list-fixed:
+	mkdir -p cache/vuln-list
+	wget -qO - https://github.com/aquasecurity/vuln-list/archive/8f40e0ae016df0be4148b1b5936ade4aab06a5bc.tar.gz | tar xz -C cache/vuln-list --strip-components=1
+
+.PHONY: create-test-db
+create-test-db: trivy-db
+	make db-fetch-langs db-fetch-vuln-list-fixed
+	make db-build
+	make db-compact
+	make db-compress

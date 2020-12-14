@@ -31,6 +31,11 @@ GLOBAL OPTIONS:
 
 ### Building the DB
 You can utilize `make db-all` to build the database, the DB artifact is outputted to the assets folder.
+
 If you want to build the light DB, please set your environment to contain `DB_TYPE=trivy-light`.
+
 Alternatively Docker is supported, you can run `docker build . -t trivy-db`.
+
 If you want to build the light DB, please run `docker build --build-arg DB_TYPE=trivy-light . -t trivy-db-light`
+
+If you want to build a trivy integration test DB, please run `make create-test-db`
