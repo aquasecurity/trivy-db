@@ -57,7 +57,7 @@ trivy-db:
 
 .PHONY: db-all
 db-all:
-	make build db-fetch-langs db-fetch-vuln-list-master
+	make build db-fetch-langs db-fetch-vuln-list-main
 	make db-build
 	make db-compact
 	make db-compress
@@ -91,10 +91,10 @@ db-compress: assets/$(DB_TYPE)/$(DB_TYPE).db assets/$(DB_TYPE)/metadata.json
 db-clean:
 	rm -rf cache assets
 
-.PHONY: db-fetch-vuln-list-master
-db-fetch-vuln-list-master:
+.PHONY: db-fetch-vuln-list-main
+db-fetch-vuln-list-main:
 	mkdir -p cache/vuln-list
-	wget -qO - https://github.com/aquasecurity/vuln-list/archive/master.tar.gz | tar xz -C cache/vuln-list --strip-components=1
+	wget -qO - https://github.com/aquasecurity/vuln-list/archive/main.tar.gz | tar xz -C cache/vuln-list --strip-components=1
 
 .PHONY: db-fetch-vuln-list-fixed
 db-fetch-vuln-list-fixed:
