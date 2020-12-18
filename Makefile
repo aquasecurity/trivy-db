@@ -29,7 +29,7 @@ $(GOBIN)/golangci-lint:
 
 .PHONY: test
 test:
-	go test -v -short ./...
+	go test -v -short -race -timeout 30s -coverprofile=coverage.txt -covermode=atomic ./...
 
 .PHONY: lint
 lint: $(GOBIN)/golangci-lint
