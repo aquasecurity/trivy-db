@@ -1,4 +1,4 @@
-name: Publish
+name: Publish-ECR
 on:
   push:
     tags:
@@ -28,8 +28,9 @@ jobs:
       - name: Publish to ECR
         env:
           IMAGE_TAG: ${{steps.vars.outputs.tag}}
+          REP_NAME: aquasec/trivy-db
         run: |
           aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/aquasec
-          docker build -t aquasec/trivy-db:$IMAGE_TAG .
-          docker tag aquasec/trivy-db:$IMAGE_TAG public.ecr.aws/aquasec/trivy-db:$IMAGE_TAG
-          docker push public.ecr.aws/aquasec/trivy-db:$IMAGE_TAG
+          docker build -t $REP_NAME:$IMAGE_TAG .
+          docker tag $REP_NAME:$IMAGE_TAG public.ecr.aws/$REP_NAME:$IMAGE_TAG
+          docker push public.ecr.aws/$REP_NAME:$IMAGE_TAG
