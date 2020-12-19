@@ -1,10 +1,10 @@
 FROM golang:1.15-alpine as builder
 
-ARG DB_TYPE=trivy
+ARG DB_TYPE=trivy-light
 
 WORKDIR /build
 COPY . /build
-SHELL ["/bin/ash", "-o", "pipefail", "-c"]
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
 RUN apk --no-cache add make
 
