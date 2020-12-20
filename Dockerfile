@@ -1,6 +1,6 @@
 FROM golang:1.15-alpine as builder
 
-ARG DB_TYPE=trivy-light
+ARG DB_TYPE=trivy
 
 WORKDIR /build
 COPY . /build
