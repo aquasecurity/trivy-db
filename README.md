@@ -1,5 +1,6 @@
-# trivy-db ![Trivy DB](https://github.com/aquasecurity/trivy-db/workflows/Trivy%20DB/badge.svg)
+# trivy-db 
 
+![Build DB](https://github.com/aquasecurity/trivy-db/workflows/Trivy%20DB/badge.svg)
 [![GitHub Release][release-img]][release]
 ![Downloads][download]
 [![Go Report Card][report-card-img]][report-card]
