@@ -54,8 +54,10 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           push: true
           tags: |
-            ${{ secrets.DOCKER_HUB_USERNAME }}/${{ env.REP }}:${{ steps.docker_meta.outputs.version }}
+            ${{ secrets.DOCKERHUB_USER }}/${{ env.REP }}:${{ steps.docker_meta.outputs.version }}
             public.ecr.aws/${{ env.ALIAS }}/${{ env.REP }}:${{ steps.docker_meta.outputs.version }}
+            ${{ secrets.DOCKERHUB_USER }}/${{ env.REP }}:latest
+            public.ecr.aws/${{ env.ALIAS }}/${{ env.REP }}:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
           labels: ${{ steps.docker_meta.outputs.labels }}
