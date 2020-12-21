@@ -6,7 +6,7 @@ WORKDIR /build
 COPY . /build
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
-RUN apk --no-cache add make
+RUN apk --no-cache add make gzip
 
 RUN DB_TYPE=${DB_TYPE} make db-all
 
