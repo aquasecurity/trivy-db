@@ -119,7 +119,7 @@ type Advisory struct {
 type Vulnerability struct {
 	Title            string         `json:",omitempty"`
 	Description      string         `json:",omitempty"`
-	Severity         string         `json:",omitempty"` // Deprecated: Severity is only for backwards compatibility. Use VendorSeverity instead.
+	Severity         string         `json:",omitempty"` // Selected from VendorSeverity, depending on a scan target
 	CweIDs           []string       `json:",omitempty"` // e.g. CWE-78, CWE-89
 	VendorSeverity   VendorSeverity `json:",omitempty"`
 	CVSS             VendorCVSS     `json:",omitempty"`
