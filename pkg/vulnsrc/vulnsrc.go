@@ -28,6 +28,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/python"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat"
 	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat2"
 	susecvrf "github.com/aquasecurity/trivy-db/pkg/vulnsrc/suse-cvrf"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -44,6 +45,7 @@ var (
 		vulnerability.Nvd:                   nvd.NewVulnSrc(),
 		vulnerability.Alpine:                alpine.NewVulnSrc(),
 		vulnerability.RedHat:                redhat.NewVulnSrc(),
+		vulnerability.RedHat2:               redhat2.NewVulnSrc(),
 		vulnerability.RedHatOVAL:            redhatoval.NewVulnSrc(),
 		vulnerability.Debian:                debian.NewVulnSrc(),
 		vulnerability.DebianOVAL:            debianoval.NewVulnSrc(),

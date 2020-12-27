@@ -134,3 +134,8 @@ type Evr struct {
 	Datatype  string
 	Operation string
 }
+
+type Package struct {
+	Name         string
+	FixedVersion string
+}

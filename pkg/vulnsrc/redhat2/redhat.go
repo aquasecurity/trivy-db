@@ -18,13 +18,12 @@ import (
 )
 
 const (
-	platformFormat = "Red Hat Enterprise Linux OvalV2 %s"
+	platformFormat = "Red Hat Enterprise Linux %s"
 )
 
 var (
 	redhatDir       = filepath.Join("oval", "redhat2")
-	targetPlatforms = []string{"Red Hat Enterprise Linux OvalV2 5", "Red Hat Enterprise Linux OvalV2 6", "Red Hat Enterprise Linux OvalV2 7", "Red Hat Enterprise Linux OvalV2 8"}
-	targetStatus    = []string{"Affected", "Fix deferred", "Will not fix"}
+	targetPlatforms = []string{"Red Hat Enterprise Linux 5", "Red Hat Enterprise Linux 6", "Red Hat Enterprise Linux 7", "Red Hat Enterprise Linux 8"}
 
 	platformDirFormat = "%s-including-unpatched"
 	supportPlatform   = []string{"rhel-5", "rhel-6", "rhel-7", "rhel-8"}
@@ -45,6 +44,9 @@ func (vs VulnSrc) Update(dir string) error {
 
 	var advisories []RedhatOVAL
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
+		// path:  ~/Caches/trivy-db/vuln-list/oval/redhat2/8/storage-gluster-3-including-unpatched/definitions/2020/CVE-2020-1472.json
+		// TODO: Skip unsupportPlatform
+
 		var advisory RedhatOVAL
 		if err := json.NewDecoder(r).Decode(&advisory); err != nil {
 			return xerrors.Errorf("failed to decode Red Hat OVAL JSON: %w", err)
@@ -63,6 +65,28 @@ func (vs VulnSrc) Update(dir string) error {
 	return nil
 }
 
+func (vs VulnSrc) walkRedhat(cri Criteria, pkgs []Package) []Package {
+	for _, c := range cri.Criterions {
+		// e.g. firefox is earlier than 0:60.6.1-1.el8
+		ss := strings.Split(c.Comment, " is earlier than ")
+		if len(ss) != 2 {
+			continue
+		}
+
+		pkgs = append(pkgs, Package{
+			Name:         ss[0],
+			FixedVersion: strings.TrimSpace(ss[1]),
+		})
+	}
+
+	if len(cri.Criterias) == 0 {
+		return pkgs
+	}
+	for _, c := range cri.Criterias {
+		pkgs = vs.walkRedhat(c, pkgs)
+	}
+	return pkgs
+}
 func (vs VulnSrc) commit(tx *bolt.Tx, advisories []RedhatOVAL) error {
 	// for _, advisory := range advisories {
 	// 	platforms := vs.getPlatforms(advisory.Affecteds)
