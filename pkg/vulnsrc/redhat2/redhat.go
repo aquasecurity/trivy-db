@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"path/filepath"
 	"strings"
@@ -41,27 +40,46 @@ func NewVulnSrc() VulnSrc {
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", redhatDir)
 
-	var ovals []RedhatOVAL
-	err := utils.FileWalk(rootDir, func(r io.Reader, _ string) error {
-		content, err := ioutil.ReadAll(r)
-		if err != nil {
-			return err
+	var advisories []RedhatOVAL
+	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
+		var advisory RedhatOVAL
+		if err := json.NewDecoder(r).Decode(&advisory); err != nil {
+			return xerrors.Errorf("failed to decode Red Hat OVAL JSON: %w", err)
 		}
-		oval := RedhatOVAL{}
-		if err = json.Unmarshal(content, &oval); err != nil {
-			return xerrors.Errorf("failed to decode RedHat JSON: %w", err)
-		}
-		ovals = append(ovals, oval)
+		advisories = append(advisories, advisory)
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in Red Hat walk: %w", err)
+		return xerrors.Errorf("error in Red Hat OVAL walk: %w", err)
 	}
 
-	if err = vs.save(ovals); err != nil {
-		return xerrors.Errorf("error in Red Hat save: %w", err)
+	if err = vs.save(advisories); err != nil {
+		return xerrors.Errorf("error in Red Hat OVAL save: %w", err)
 	}
 
+	return nil
+}
+
+func (vs VulnSrc) commit(tx *bolt.Tx, advisories []RedhatOVAL) error {
+	for _, advisory := range advisories {
+		platforms := vs.getPlatforms(advisory.Affecteds)
+		if len(platforms) != 1 {
+			log.Printf("Invalid advisory: %s\n", advisory.ID)
+			continue
+		}
+		platformName := fmt.Sprintf(platformFormat, platforms[0])
+		affectedPkgs := vs.walkRedhat(advisory.Criteria, []Package{})
+		for _, affectedPkg := range affectedPkgs {
+			for _, cve := range advisory.Advisory.Cves {
+				advisory := types.Advisory{
+					FixedVersion: affectedPkg.FixedVersion,
+				}
+				if err := vs.dbc.PutAdvisoryDetail(tx, cve.CveID, platformName, affectedPkg.Name, advisory); err != nil {
+					return xerrors.Errorf("failed to save Red Hat OVAL advisory: %w", err)
+				}
+			}
+		}
+	}
 	return nil
 }
 
@@ -73,59 +91,6 @@ func (vs VulnSrc) save(ovals []RedhatOVAL) error {
 	if err != nil {
 		return xerrors.Errorf("failed batch update: %w", err)
 	}
-	return nil
-}
-
-func (vs VulnSrc) commit(tx *bolt.Tx, ovals []RedhatOVAL) error {
-	for _, oval := range ovals {
-		// for _, pkgState := range oval.PackageState {
-		// 	pkgName := pkgState.PackageName
-		// 	if pkgName == "" {
-		// 		continue
-		// 	}
-		// 	// e.g. Red Hat Enterprise Linux 7
-		// 	platformName := pkgState.ProductName
-		// 	if !utils.StringInSlice(platformName, targetPlatforms) {
-		// 		continue
-		// 	}
-		// 	if !utils.StringInSlice(pkgState.FixState, targetStatus) {
-		// 		continue
-		// 	}
-
-		// 	advisory := types.Advisory{
-		// 		// this means all versions
-		// 		FixedVersion: "",
-		// 	}
-		// 	if err := vs.dbc.PutAdvisoryDetail(tx, cve.Name, platformName, pkgName, advisory); err != nil {
-		// 		return xerrors.Errorf("failed to save Red Hat advisory: %w", err)
-		// 	}
-		// }
-
-		// cvssScore, _ := strconv.ParseFloat(cve.Cvss.CvssBaseScore, 64)
-		// cvss3Score, _ := strconv.ParseFloat(cve.Cvss3.Cvss3BaseScore, 64)
-
-		// title := strings.TrimPrefix(strings.TrimSpace(cve.Bugzilla.Description), cve.Name)
-
-		// vuln := types.VulnerabilityDetail{
-		// 	CvssScore:    cvssScore,
-		// 	CvssVector:   cve.Cvss.CvssScoringVector,
-		// 	CvssScoreV3:  cvss3Score,
-		// 	CvssVectorV3: cve.Cvss3.Cvss3ScoringVector,
-		// 	Severity:     severityFromThreat(cve.ThreatSeverity),
-		// 	References:   cve.References,
-		// 	Title:        strings.TrimSpace(title),
-		// 	Description:  strings.TrimSpace(strings.Join(cve.Details, "")),
-		// }
-		// if err := vs.dbc.PutVulnerabilityDetail(tx, cve.Name, vulnerability.RedHat, vuln); err != nil {
-		// 	return xerrors.Errorf("failed to save Red Hat vulnerability: %w", err)
-		// }
-
-		// // for light DB
-		// if err := vs.dbc.PutSeverity(tx, cve.Name, types.SeverityUnknown); err != nil {
-		// 	return xerrors.Errorf("failed to save Red Hat vulnerability severity: %w", err)
-		// }
-	}
-
 	return nil
 }
 
@@ -150,4 +115,22 @@ func severityFromThreat(sev string) types.Severity {
 		return types.SeverityCritical
 	}
 	return types.SeverityUnknown
+}
+
+func (vs VulnSrc) getPlatforms(affectedList []Affected) []string {
+	var platforms []string
+	for _, affected := range affectedList {
+		for _, platform := range affected.Platforms {
+			match := platformRegexp.FindStringSubmatch(platform)
+			if len(match) < 2 {
+				continue
+			}
+			majorVersion := match[1]
+			if !utils.StringInSlice(majorVersion, supportedPlatform) {
+				continue
+			}
+			platforms = append(platforms, majorVersion)
+		}
+	}
+	return platforms
 }

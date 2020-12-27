@@ -9,11 +9,11 @@ type RedhatOVAL struct {
 }
 
 type Metadata struct {
-	Title       string
-	Affected    []Affected
-	References  []Reference
-	Description string
-	Advisory    Advisory
+	Title        string
+	AffectedList []Affected
+	References   []Reference
+	Description  string
+	Advisory     Advisory
 }
 
 type Advisory struct {
@@ -39,8 +39,8 @@ type Criterion struct {
 }
 
 type Affected struct {
-	Family   string
-	Platform []string
+	Family    string
+	Platforms []string
 }
 
 type Reference struct {
