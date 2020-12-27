@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	redhatDir = filepath.Join("oval", "redhat")
+	redhatDir = filepath.Join("oval", "redhat2")
 
 	// the same bucket name as Red Hat Security Data API
 	platformFormat = "Red Hat Enterprise Linux %s"
@@ -43,6 +43,7 @@ func (vs VulnSrc) Update(dir string) error {
 
 	var advisories []RedhatOVAL
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
+		fmt.Println(path)
 		var advisory RedhatOVAL
 		if err := json.NewDecoder(r).Decode(&advisory); err != nil {
 			return xerrors.Errorf("failed to decode Red Hat OVAL JSON: %w", err)
@@ -53,6 +54,7 @@ func (vs VulnSrc) Update(dir string) error {
 	if err != nil {
 		return xerrors.Errorf("error in Red Hat OVAL walk: %w", err)
 	}
+	return nil
 
 	if err = vs.save(advisories); err != nil {
 		return xerrors.Errorf("error in Red Hat OVAL save: %w", err)
@@ -98,7 +100,7 @@ func (vs VulnSrc) save(advisories []RedhatOVAL) error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx, advisories []RedhatOVAL) error {
 	for _, advisory := range advisories {
-		platforms := vs.getPlatforms(advisory.Affecteds)
+		platforms := vs.getPlatforms(advisory.Metadata.AffectedList)
 		if len(platforms) != 1 {
 			log.Printf("Invalid advisory: %s\n", advisory.ID)
 			continue
@@ -106,7 +108,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, advisories []RedhatOVAL) error {
 		platformName := fmt.Sprintf(platformFormat, platforms[0])
 		affectedPkgs := vs.walkRedhat(advisory.Criteria, []Package{})
 		for _, affectedPkg := range affectedPkgs {
-			for _, cve := range advisory.Advisory.Cves {
+			if len(advisory.Metadata.Advisory.Cves) == 0 {
+
+			}
+			for _, cve := range advisory.Metadata.Advisory.Cves {
 				advisory := types.Advisory{
 					FixedVersion: affectedPkg.FixedVersion,
 				}
