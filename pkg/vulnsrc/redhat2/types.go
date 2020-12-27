@@ -24,7 +24,7 @@ type Advisory struct {
 	Updated         Updated
 	Cves            []Cve
 	Bugzilla        Bugzilla
-	AffectedCpeList AffectedCpeList
+	AffectedCpeList []string
 }
 
 type Criteria struct {
@@ -70,10 +70,6 @@ type Cve struct {
 type Bugzilla struct {
 	Href string
 	ID   string
-}
-
-type AffectedCpeList struct {
-	Cpe []string
 }
 
 type Tests struct {

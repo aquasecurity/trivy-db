@@ -25,6 +25,9 @@ var (
 	redhatDir       = filepath.Join("oval", "redhat2")
 	targetPlatforms = []string{"Red Hat Enterprise Linux OvalV2 5", "Red Hat Enterprise Linux OvalV2 6", "Red Hat Enterprise Linux OvalV2 7", "Red Hat Enterprise Linux OvalV2 8"}
 	targetStatus    = []string{"Affected", "Fix deferred", "Will not fix"}
+
+	platformDirFormat = "%s-including-unpatched"
+	supportPlatform   = []string{"rhel-5", "rhel-6", "rhel-7", "rhel-8"}
 )
 
 type VulnSrc struct {
@@ -61,25 +64,25 @@ func (vs VulnSrc) Update(dir string) error {
 }
 
 func (vs VulnSrc) commit(tx *bolt.Tx, advisories []RedhatOVAL) error {
-	for _, advisory := range advisories {
-		platforms := vs.getPlatforms(advisory.Affecteds)
-		if len(platforms) != 1 {
-			log.Printf("Invalid advisory: %s\n", advisory.ID)
-			continue
-		}
-		platformName := fmt.Sprintf(platformFormat, platforms[0])
-		affectedPkgs := vs.walkRedhat(advisory.Criteria, []Package{})
-		for _, affectedPkg := range affectedPkgs {
-			for _, cve := range advisory.Advisory.Cves {
-				advisory := types.Advisory{
-					FixedVersion: affectedPkg.FixedVersion,
-				}
-				if err := vs.dbc.PutAdvisoryDetail(tx, cve.CveID, platformName, affectedPkg.Name, advisory); err != nil {
-					return xerrors.Errorf("failed to save Red Hat OVAL advisory: %w", err)
-				}
-			}
-		}
-	}
+	// for _, advisory := range advisories {
+	// 	platforms := vs.getPlatforms(advisory.Affecteds)
+	// 	if len(platforms) != 1 {
+	// 		log.Printf("Invalid advisory: %s\n", advisory.ID)
+	// 		continue
+	// 	}
+	// 	platformName := fmt.Sprintf(platformFormat, platforms[0])
+	// 	affectedPkgs := vs.walkRedhat(advisory.Criteria, []Package{})
+	// 	for _, affectedPkg := range affectedPkgs {
+	// 		for _, cve := range advisory.Advisory.Cves {
+	// 			advisory := types.Advisory{
+	// 				FixedVersion: affectedPkg.FixedVersion,
+	// 			}
+	// 			if err := vs.dbc.PutAdvisoryDetail(tx, cve.CveID, platformName, affectedPkg.Name, advisory); err != nil {
+	// 				return xerrors.Errorf("failed to save Red Hat OVAL advisory: %w", err)
+	// 			}
+	// 		}
+	// 	}
+	// }
 	return nil
 }
 
@@ -119,18 +122,18 @@ func severityFromThreat(sev string) types.Severity {
 
 func (vs VulnSrc) getPlatforms(affectedList []Affected) []string {
 	var platforms []string
-	for _, affected := range affectedList {
-		for _, platform := range affected.Platforms {
-			match := platformRegexp.FindStringSubmatch(platform)
-			if len(match) < 2 {
-				continue
-			}
-			majorVersion := match[1]
-			if !utils.StringInSlice(majorVersion, supportedPlatform) {
-				continue
-			}
-			platforms = append(platforms, majorVersion)
-		}
-	}
+	// for _, affected := range affectedList {
+	// 	for _, platform := range affected.Platforms {
+	// 		match := platformRegexp.FindStringSubmatch(platform)
+	// 		if len(match) < 2 {
+	// 			continue
+	// 		}
+	// 		majorVersion := match[1]
+	// 		if !utils.StringInSlice(majorVersion, supportedPlatform) {
+	// 			continue
+	// 		}
+	// 		platforms = append(platforms, majorVersion)
+	// 	}
+	// }
 	return platforms
 }
