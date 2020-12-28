@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"path/filepath"
 	"regexp"
@@ -24,8 +25,13 @@ var (
 	// the same bucket name as Red Hat Security Data API
 	platformFormat = "Red Hat Enterprise Linux %s"
 
-	supportedPlatform = []string{"5", "6", "7", "8"}
-	platformRegexp    = regexp.MustCompile(`Red Hat Enterprise Linux (\d)`)
+	supportedVersions = []string{"5", "6", "7", "8"}
+
+	// PULP_MANIFEST files prefix
+	supportedPlatformFileFormat = "rhel-%s-including-unpatched"
+
+	platformRegexp = regexp.MustCompile(`(Red Hat Enterprise Linux \d) is installed`)
+	moduleRegexp   = regexp.MustCompile(`Module\s+(.*)\s+is enabled`)
 )
 
 type VulnSrc struct {
@@ -41,9 +47,42 @@ func NewVulnSrc() VulnSrc {
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", redhatDir)
 
+	for _, majorVersion := range supportedVersions {
+		versionDir := filepath.Join(rootDir, majorVersion)
+		files, err := ioutil.ReadDir(versionDir)
+		if err != nil {
+			return err
+		}
+		for _, f := range files {
+			if !f.IsDir() {
+				continue
+			}
+
+			// TODO: keep it unless CPE is supported
+			// RHEL is supported for now
+			if f.Name() != fmt.Sprintf(supportedPlatformFileFormat, majorVersion) {
+				continue
+			}
+			if err = vs.update(filepath.Join(versionDir, f.Name())); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (vs VulnSrc) update(dir string) error {
+	log.Printf("Parsing %s", dir)
+	// Parse tests
+	tests, err := parseTests(dir)
+	if err != nil {
+		return xerrors.Errorf("failed to parse tests: %w", err)
+	}
+
 	var advisories []RedhatOVAL
-	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-		fmt.Println(path)
+	definitionsDir := filepath.Join(dir, "definitions")
+	err = utils.FileWalk(definitionsDir, func(r io.Reader, path string) error {
 		var advisory RedhatOVAL
 		if err := json.NewDecoder(r).Decode(&advisory); err != nil {
 			return xerrors.Errorf("failed to decode Red Hat OVAL JSON: %w", err)
@@ -51,46 +90,77 @@ func (vs VulnSrc) Update(dir string) error {
 		advisories = append(advisories, advisory)
 		return nil
 	})
+
 	if err != nil {
 		return xerrors.Errorf("error in Red Hat OVAL walk: %w", err)
 	}
-	return nil
 
-	if err = vs.save(advisories); err != nil {
+	if err = vs.save(advisories, tests); err != nil {
 		return xerrors.Errorf("error in Red Hat OVAL save: %w", err)
 	}
 
 	return nil
 }
 
-// fromhttps://github.com/kotakanbe/goval-dictionary/blob/eff7f862637c3536b5ffef5a255bd1dd2779f582/models/redhat.go
-func (vs VulnSrc) walkRedhat(cri Criteria, pkgs []Package) []Package {
+func (vs VulnSrc) walkCriterion(cri Criteria, tests map[string]rpmInfoTest) (string, string, []Package) {
+	var platform string
+	var moduleName string
+	var packages []Package
+
 	for _, c := range cri.Criterions {
-		// e.g. firefox is earlier than 0:60.6.1-1.el8
-		ss := strings.Split(c.Comment, " is earlier than ")
-		if len(ss) != 2 {
+		// parse module name
+		m := moduleRegexp.FindStringSubmatch(c.Comment)
+		if m != nil && len(m) > 1 && m[1] != "" {
+			moduleName = m[1]
 			continue
 		}
 
-		pkgs = append(pkgs, Package{
-			Name:         ss[0],
-			FixedVersion: strings.TrimSpace(ss[1]),
+		// parse platform name
+		m = platformRegexp.FindStringSubmatch(c.Comment)
+		if m != nil && len(m) > 1 && m[1] != "" {
+			platform = m[1]
+			continue
+		}
+
+		t, ok := tests[c.TestRef]
+		if !ok {
+			continue
+		}
+
+		// Skip red-def:signature_keyid
+		if t.SignatureKeyID.Text != "" {
+			continue
+		}
+
+		packages = append(packages, Package{
+			Name:         t.Name,
+			FixedVersion: t.FixedVersion,
 		})
 	}
 
 	if len(cri.Criterias) == 0 {
-		return pkgs
+		return platform, moduleName, packages
 	}
+
 	for _, c := range cri.Criterias {
-		pkgs = vs.walkRedhat(c, pkgs)
+		p, m, pkgs := vs.walkCriterion(c, tests)
+		if p != "" {
+			platform = p
+		}
+		if m != "" {
+			moduleName = m
+		}
+		if len(pkgs) != 0 {
+			packages = append(packages, pkgs...)
+		}
 	}
-	return pkgs
+	return platform, moduleName, packages
 }
 
-func (vs VulnSrc) save(advisories []RedhatOVAL) error {
+func (vs VulnSrc) save(advisories []RedhatOVAL, tests map[string]rpmInfoTest) error {
 	log.Println("Saving Red Hat OVAL")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		return vs.commit(tx, advisories)
+		return vs.commit(tx, advisories, tests)
 	})
 	if err != nil {
 		return xerrors.Errorf("failed batch update: %w", err)
@@ -98,24 +168,31 @@ func (vs VulnSrc) save(advisories []RedhatOVAL) error {
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, advisories []RedhatOVAL) error {
+func (vs VulnSrc) commit(tx *bolt.Tx, advisories []RedhatOVAL, tests map[string]rpmInfoTest) error {
 	for _, advisory := range advisories {
-		platforms := vs.getPlatforms(advisory.Metadata.AffectedList)
-		if len(platforms) != 1 {
-			log.Printf("Invalid advisory: %s\n", advisory.ID)
+		// Skip unaffected vulnerabilities
+		if strings.Contains(advisory.ID, "unaffected") {
 			continue
 		}
-		platformName := fmt.Sprintf(platformFormat, platforms[0])
-		affectedPkgs := vs.walkRedhat(advisory.Criteria, []Package{})
-		for _, affectedPkg := range affectedPkgs {
-			if len(advisory.Metadata.Advisory.Cves) == 0 {
 
+		// Insert advisories
+		platformName, moduleName, affectedPkgs := vs.walkCriterion(advisory.Criteria, tests)
+		for _, affectedPkg := range affectedPkgs {
+			pkgName := affectedPkg.Name
+			if moduleName != "" {
+				// Add modular namespace
+				pkgName = fmt.Sprintf("%s::%s", moduleName, pkgName)
 			}
-			for _, cve := range advisory.Metadata.Advisory.Cves {
+
+			for _, ref := range advisory.Metadata.References {
+				// Skip RHSA-ID
+				if ref.Source != "CVE" {
+					continue
+				}
 				advisory := types.Advisory{
 					FixedVersion: affectedPkg.FixedVersion,
 				}
-				if err := vs.dbc.PutAdvisoryDetail(tx, cve.CveID, platformName, affectedPkg.Name, advisory); err != nil {
+				if err := vs.dbc.PutAdvisoryDetail(tx, ref.RefID, platformName, pkgName, advisory); err != nil {
 					return xerrors.Errorf("failed to save Red Hat OVAL advisory: %w", err)
 				}
 			}
@@ -131,22 +208,4 @@ func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) 
 		return nil, xerrors.Errorf("failed to get Red Hat OVAL advisories: %w", err)
 	}
 	return advisories, nil
-}
-
-func (vs VulnSrc) getPlatforms(affectedList []Affected) []string {
-	var platforms []string
-	for _, affected := range affectedList {
-		for _, platform := range affected.Platforms {
-			match := platformRegexp.FindStringSubmatch(platform)
-			if len(match) < 2 {
-				continue
-			}
-			majorVersion := match[1]
-			if !utils.StringInSlice(majorVersion, supportedPlatform) {
-				continue
-			}
-			platforms = append(platforms, majorVersion)
-		}
-	}
-	return platforms
 }
