@@ -23,7 +23,7 @@ type Advisory struct {
 	Issued          Issued
 	Updated         Updated
 	Cves            []Cve
-	Bugzilla        Bugzilla
+	Bugzilla        []Bugzilla
 	AffectedCpeList []string
 }
 
