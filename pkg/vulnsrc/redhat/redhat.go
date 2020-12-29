@@ -26,8 +26,9 @@ const (
 )
 
 var (
-	targetPlatforms = []string{"Red Hat Enterprise Linux 5", "Red Hat Enterprise Linux 6", "Red Hat Enterprise Linux 7", "Red Hat Enterprise Linux 8"}
-	targetStatus    = []string{"Affected", "Fix deferred", "Will not fix"}
+	targetPlatforms = []string{"Red Hat Enterprise Linux 5", "Red Hat Enterprise Linux 6",
+		"Red Hat Enterprise Linux 7", "Red Hat Enterprise Linux 8"}
+	targetStatus = []string{"Affected", "Fix deferred", "Will not fix"}
 )
 
 type VulnSrc struct {
@@ -115,31 +116,70 @@ func (vs VulnSrc) save(cves []RedhatCVE) error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx, cves []RedhatCVE) error {
 	for _, cve := range cves {
-		cvssScore, _ := strconv.ParseFloat(cve.Cvss.CvssBaseScore, 64)
-		cvss3Score, _ := strconv.ParseFloat(cve.Cvss3.Cvss3BaseScore, 64)
-
-		title := strings.TrimPrefix(strings.TrimSpace(cve.Bugzilla.Description), cve.Name)
-
-		vuln := types.VulnerabilityDetail{
-			CvssScore:    cvssScore,
-			CvssVector:   cve.Cvss.CvssScoringVector,
-			CvssScoreV3:  cvss3Score,
-			CvssVectorV3: cve.Cvss3.Cvss3ScoringVector,
-			Severity:     severityFromThreat(cve.ThreatSeverity),
-			References:   cve.References,
-			Title:        strings.TrimSpace(title),
-			Description:  strings.TrimSpace(strings.Join(cve.Details, "")),
+		if err := vs.putAdvisoryDetail(tx, cve); err != nil {
+			return err
 		}
-		if err := vs.dbc.PutVulnerabilityDetail(tx, cve.Name, vulnerability.RedHat, vuln); err != nil {
-			return xerrors.Errorf("failed to save Red Hat vulnerability: %w", err)
-		}
-
-		// for light DB
-		if err := vs.dbc.PutSeverity(tx, cve.Name, types.SeverityUnknown); err != nil {
-			return xerrors.Errorf("failed to save Red Hat vulnerability severity: %w", err)
+		if err := vs.putVulnerabilityDetail(tx, cve); err != nil {
+			return err
 		}
 	}
 
+	return nil
+}
+
+func (vs VulnSrc) putAdvisoryDetail(tx *bolt.Tx, cve RedhatCVE) error {
+	// OVAL v2 contains unpatched vulnerabilities as well, so this process is usually unnecessary.
+	// But OVAL v2 is missing some unpatched vulnerabilities and Security Data API should be used for now.
+	for _, pkgState := range cve.PackageState {
+		pkgName := pkgState.PackageName
+		if pkgName == "" {
+			continue
+		}
+
+		// e.g. Red Hat Enterprise Linux 7
+		platformName := pkgState.ProductName
+		if !utils.StringInSlice(platformName, targetPlatforms) {
+			continue
+		}
+		if !utils.StringInSlice(pkgState.FixState, targetStatus) {
+			continue
+		}
+
+		advisory := types.Advisory{
+			// It means this vulnerability affects all versions
+			FixedVersion: "",
+		}
+		if err := vs.dbc.PutAdvisoryDetail(tx, cve.Name, platformName, pkgName, advisory); err != nil {
+			return xerrors.Errorf("failed to save Red Hat advisory: %w", err)
+		}
+	}
+	return nil
+}
+
+func (vs VulnSrc) putVulnerabilityDetail(tx *bolt.Tx, cve RedhatCVE) error {
+	cvssScore, _ := strconv.ParseFloat(cve.Cvss.CvssBaseScore, 64)
+	cvss3Score, _ := strconv.ParseFloat(cve.Cvss3.Cvss3BaseScore, 64)
+
+	title := strings.TrimPrefix(strings.TrimSpace(cve.Bugzilla.Description), cve.Name)
+
+	vuln := types.VulnerabilityDetail{
+		CvssScore:    cvssScore,
+		CvssVector:   cve.Cvss.CvssScoringVector,
+		CvssScoreV3:  cvss3Score,
+		CvssVectorV3: cve.Cvss3.Cvss3ScoringVector,
+		Severity:     severityFromThreat(cve.ThreatSeverity),
+		References:   cve.References,
+		Title:        strings.TrimSpace(title),
+		Description:  strings.TrimSpace(strings.Join(cve.Details, "")),
+	}
+	if err := vs.dbc.PutVulnerabilityDetail(tx, cve.Name, vulnerability.RedHat, vuln); err != nil {
+		return xerrors.Errorf("failed to save Red Hat vulnerability: %w", err)
+	}
+
+	// for light DB
+	if err := vs.dbc.PutSeverity(tx, cve.Name, types.SeverityUnknown); err != nil {
+		return xerrors.Errorf("failed to save Red Hat vulnerability severity: %w", err)
+	}
 	return nil
 }
 
