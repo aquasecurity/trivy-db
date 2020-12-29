@@ -131,7 +131,8 @@ func (vs VulnSrc) putAdvisoryDetail(tx *bolt.Tx, cve RedhatCVE) error {
 	// OVAL v2 contains unpatched vulnerabilities as well, so this process is usually unnecessary.
 	// But OVAL v2 is missing some unpatched vulnerabilities and Security Data API should be used for now.
 	for _, pkgState := range cve.PackageState {
-		pkgName := pkgState.PackageName
+		// Add modular namespace: nodejs:12/npm => nodejs:12::npm
+		pkgName := strings.ReplaceAll(pkgState.PackageName, "/", "::")
 		if pkgName == "" {
 			continue
 		}
