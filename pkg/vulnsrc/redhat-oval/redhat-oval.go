@@ -186,6 +186,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, advisories []RedhatOVAL, tests map[string]
 			pkgName := affectedPkg.Name
 			if moduleName != "" {
 				// Add modular namespace
+				// e.g. nodejs:12::npm
 				pkgName = fmt.Sprintf("%s::%s", moduleName, pkgName)
 			}
 
