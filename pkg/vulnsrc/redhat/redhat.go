@@ -104,7 +104,7 @@ func (vs VulnSrc) Update(dir string) error {
 }
 
 func (vs VulnSrc) save(cves []RedhatCVE) error {
-	log.Println("Saving RedHat DB")
+	log.Println("Saving Red Hat DB")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, cves)
 	})
