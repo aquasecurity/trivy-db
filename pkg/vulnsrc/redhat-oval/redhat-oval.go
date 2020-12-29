@@ -51,7 +51,7 @@ func (vs VulnSrc) Update(dir string) error {
 		versionDir := filepath.Join(rootDir, majorVersion)
 		files, err := ioutil.ReadDir(versionDir)
 		if err != nil {
-			return err
+			return xerrors.Errorf("unable to get a list of directory entries (%s): %w", versionDir, err)
 		}
 		for _, f := range files {
 			if !f.IsDir() {
@@ -64,7 +64,7 @@ func (vs VulnSrc) Update(dir string) error {
 				continue
 			}
 			if err = vs.update(filepath.Join(versionDir, f.Name())); err != nil {
-				return err
+				return xerrors.Errorf("update error (%s): %w", f.Name(), err)
 			}
 		}
 	}
