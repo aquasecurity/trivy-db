@@ -6,12 +6,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	bolt "go.etcd.io/bbolt"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
@@ -235,23 +236,47 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Metadata: Metadata{
 						AffectedList: []Affected{
-							{Platforms: []string{"Red Hat Enterprise Linux 8"}},
+							{Platforms: []string{"Red Hat Enterprise Linux 7"}},
 						},
 						Advisory: Advisory{
 							Cves: []Cve{{CveID: "CVE-2015-2675"}},
+						},
+						References: []Reference{
+							{
+								Source: "RHSA",
+								RefID:  "RHSA-2015:2237",
+							},
+							{
+								Source: "CVE",
+								RefID:  "CVE-2015-2675",
+							},
 						},
 					},
 					Criteria: Criteria{
 						Operator: "AND",
 						Criterias: []Criteria{
 							{
-								Operator: "OR",
+								Operator: "AND",
+								Criterions: []Criterion{
+									{Comment: "Red Hat Enterprise Linux 7 is installed"},
+								},
 								Criterias: []Criteria{
 									{
-										Operator: "AND",
-										Criterions: []Criterion{
-											{Comment: "rest is earlier than 0:0.7.92-3.el7"},
-											{Comment: "rest is signed with Red Hat redhatrelease2 key"},
+										Operator: "OR",
+										Criterias: []Criteria{
+											{
+												Operator: "AND",
+												Criterions: []Criterion{
+													{
+														Comment: "rest is earlier than 0:0.7.92-3.el7",
+														TestRef: "oval:com.redhat.rhsa:tst:20152237003",
+													},
+													{
+														Comment: "rest is signed with Red Hat redhatrelease2 key",
+														TestRef: "oval:com.redhat.rhsa:tst:20152237002",
+													},
+												},
+											},
 										},
 									},
 								},
@@ -260,11 +285,37 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
+			tests: map[string]rpmInfoTest{
+				"oval:com.redhat.rhsa:tst:20152237001": {
+					Name:         "rest-devel",
+					FixedVersion: "0:0.7.92-3.el7",
+					Arch:         "aarch64|i686|ppc|ppc64|ppc64le|s390|s390x|x86_64",
+				},
+				"oval:com.redhat.rhsa:tst:20152237003": {
+					Name:         "rest",
+					FixedVersion: "0:0.7.92-3.el7",
+					Arch:         "aarch64|i686|ppc|ppc64|ppc64le|s390|s390x|x86_64",
+				},
+				"oval:com.redhat.rhsa:tst:20152237004": {
+					Name: "rest-devel",
+					SignatureKeyID: SignatureKeyID{
+						Text:      "199e2f91fd431d51",
+						Operation: "equals",
+					},
+				},
+				"oval:com.redhat.rhsa:tst:20152237002": {
+					Name: "rest",
+					SignatureKeyID: SignatureKeyID{
+						Text:      "199e2f91fd431d51",
+						Operation: "equals",
+					},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Red Hat Enterprise Linux 8",
+						Source:          "Red Hat Enterprise Linux 7",
 						PkgName:         "rest",
 						VulnerabilityID: "CVE-2015-2675",
 						Advisory:        types.Advisory{FixedVersion: "0:0.7.92-3.el7"},
@@ -289,6 +340,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 
 			switch {
 			case tc.expectedErrorMsg != "":
+				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tc.expectedErrorMsg, tc.name)
 			default:
 				assert.NoError(t, err, tc.name)

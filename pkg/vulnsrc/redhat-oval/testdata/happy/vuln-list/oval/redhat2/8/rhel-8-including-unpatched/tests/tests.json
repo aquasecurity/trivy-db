@@ -1,0 +1,96 @@
+{
+  "RpminfoTests": [
+    {
+      "Check": "at least one",
+      "Comment": "thunderbird is earlier than 0:78.6.0-1.el8_3",
+      "ID": "oval:com.redhat.rhsa:tst:20205624001",
+      "Version": "633",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:201812383003"
+      },
+      "State": {
+        "StateRef": "oval:com.redhat.rhsa:ste:20205624001"
+      }
+    },
+    {
+      "Check": "at least one",
+      "Comment": "thunderbird is signed with Red Hat redhatrelease2 key",
+      "ID": "oval:com.redhat.cve:tst:201812383006",
+      "Version": "631",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:201812383003"
+      },
+      "State": {
+        "StateRef": "oval:com.redhat.cve:ste:20137488001"
+      }
+    },
+    {
+      "Check": "at least one",
+      "Comment": "thunderbird-debugsource is earlier than 0:78.6.0-1.el8_3",
+      "ID": "oval:com.redhat.rhsa:tst:20205624003",
+      "Version": "633",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:201812383002"
+      },
+      "State": {
+        "StateRef": "oval:com.redhat.rhsa:ste:20205624001"
+      }
+    },
+    {
+      "Check": "at least one",
+      "Comment": "thunderbird-debugsource is signed with Red Hat redhatrelease2 key",
+      "ID": "oval:com.redhat.cve:tst:201812383004",
+      "Version": "631",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:201812383002"
+      },
+      "State": {
+        "StateRef": "oval:com.redhat.cve:ste:20137488001"
+      }
+    },
+    {
+      "Check": "at least one",
+      "Comment": "pam_cifscreds is installed",
+      "ID": "oval:com.redhat.cve:tst:202014342001",
+      "Version": "631",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:202014342001"
+      },
+      "State": {}
+    },
+    {
+      "Check": "at least one",
+      "Comment": "pam_cifscreds is signed with Red Hat redhatrelease2 key",
+      "ID": "oval:com.redhat.cve:tst:202014342002",
+      "Version": "631",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:202014342001"
+      },
+      "State": {
+        "StateRef": "oval:com.redhat.cve:ste:20137488001"
+      }
+    },
+    {
+      "Check": "at least one",
+      "Comment": "cifs-utils is installed",
+      "ID": "oval:com.redhat.cve:tst:202014342003",
+      "Version": "631",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:202014342002"
+      },
+      "State": {}
+    },
+    {
+      "Check": "at least one",
+      "Comment": "cifs-utils is signed with Red Hat redhatrelease2 key",
+      "ID": "oval:com.redhat.cve:tst:202014342004",
+      "Version": "631",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:202014342002"
+      },
+      "State": {
+        "StateRef": "oval:com.redhat.cve:ste:20137488001"
+      }
+    }
+  ]
+}
