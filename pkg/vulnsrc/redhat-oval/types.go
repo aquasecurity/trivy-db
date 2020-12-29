@@ -29,13 +29,13 @@ type Advisory struct {
 
 type Criteria struct {
 	Operator   string
-	Criterions []Criterion
 	Criterias  []Criteria
+	Criterions []Criterion
 }
 
 type Criterion struct {
-	Comment string
 	TestRef string
+	Comment string
 }
 
 type Affected struct {
@@ -68,8 +68,8 @@ type Cve struct {
 }
 
 type Bugzilla struct {
-	Href string
 	ID   string
+	Href string
 }
 
 type Tests struct {
