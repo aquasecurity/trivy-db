@@ -178,6 +178,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, advisories []RedhatOVAL, tests map[string]
 		// Insert advisories
 		platformName, moduleName, affectedPkgs := vs.walkCriterion(advisory.Criteria, tests)
 		for _, affectedPkg := range affectedPkgs {
+			// OVAL v2 is missing some unpatched vulnerabilities.
+			// They should be fetched from Security Data API unless the issue is addressed.
+			if affectedPkg.FixedVersion == "" {
+				continue
+			}
+
 			pkgName := affectedPkg.Name
 			if moduleName != "" {
 				// Add modular namespace
