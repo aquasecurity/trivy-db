@@ -73,7 +73,7 @@ func (vs VulnSrc) Update(dir string) error {
 }
 
 func (vs VulnSrc) update(dir string) error {
-	log.Printf("Parsing %s", dir)
+	log.Printf("    Parsing %s", dir)
 	// Parse tests
 	tests, err := parseTests(dir)
 	if err != nil {
@@ -158,7 +158,6 @@ func (vs VulnSrc) walkCriterion(cri Criteria, tests map[string]rpmInfoTest) (str
 }
 
 func (vs VulnSrc) save(advisories []RedhatOVAL, tests map[string]rpmInfoTest) error {
-	log.Println("Saving Red Hat OVAL")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, advisories, tests)
 	})
