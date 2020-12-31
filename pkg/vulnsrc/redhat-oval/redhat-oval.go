@@ -108,14 +108,14 @@ func (vs VulnSrc) walkCriterion(cri Criteria, tests map[string]rpmInfoTest) (str
 	var packages []Package
 
 	for _, c := range cri.Criterions {
-		// parse module name
+		// Parse module name
 		m := moduleRegexp.FindStringSubmatch(c.Comment)
 		if len(m) > 1 && m[1] != "" {
 			moduleName = m[1]
 			continue
 		}
 
-		// parse platform name
+		// Parse platform name
 		m = platformRegexp.FindStringSubmatch(c.Comment)
 		if len(m) > 1 && m[1] != "" {
 			platform = m[1]

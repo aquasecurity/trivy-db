@@ -18,7 +18,7 @@ type rpmInfoTest struct {
 func unmarshalJSONFile(v interface{}, fileName string) error {
 	f, err := os.Open(fileName)
 	if err != nil {
-		return err
+		return xerrors.Errorf("unable to open a file (%s): %w", fileName, err)
 	}
 	defer f.Close()
 
@@ -71,8 +71,7 @@ func parseTests(dir string) (map[string]rpmInfoTest, error) {
 
 	tests := map[string]rpmInfoTest{}
 	for _, test := range tt.RpminfoTests {
-		// test.Check
-		// "at least one"
+		// test.Check should be "at least one"
 		if test.Check != "at least one" {
 			continue
 		}
