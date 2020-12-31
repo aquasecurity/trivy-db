@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	redhatDir = filepath.Join("oval", "redhat2")
+	redhatDir = filepath.Join("oval", "redhat")
 
 	// the same bucket name as Red Hat Security Data API
 	platformFormat = "Red Hat Enterprise Linux %s"
