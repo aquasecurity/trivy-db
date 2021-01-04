@@ -1,0 +1,24 @@
+{
+  "RpminfoObjects": [
+    {
+      "ID": "oval:com.redhat.cve:obj:201812383003",
+      "Version": "631",
+      "Name": "thunderbird"
+    },
+    {
+      "ID": "oval:com.redhat.cve:obj:201812383002",
+      "Version": "631",
+      "Name": "thunderbird-debugsource"
+    },
+    {
+      "ID": "oval:com.redhat.cve:obj:202014342001",
+      "Version": "631",
+      "Name": "pam_cifscreds"
+    },
+    {
+      "ID": "oval:com.redhat.cve:obj:202014342002",
+      "Version": "631",
+      "Name": "cifs-utils"
+    }
+  ]
+}
