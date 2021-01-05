@@ -1,0 +1,11 @@
+---
+extends: default
+
+rules:
+  line-length: disable
+  truthy: disable
+
+ignore: |
+  /cache/
+  /pkg/
+  !/bin/*.lint-me-anyway.yaml

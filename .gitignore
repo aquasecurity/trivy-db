@@ -16,3 +16,6 @@ coverage.txt
 
 assets
 cache
+
+# trivy-db Outputs
+trivy-db
