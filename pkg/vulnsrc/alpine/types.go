@@ -1,11 +1,11 @@
 package alpine
 
-type AlpineCVE struct {
-	VulnerabilityID string
-	Release         string
-	Package         string
-	Repository      string
-	FixedVersion    string
-	Subject         string
-	Description     string
+type advisory struct {
+	PkgName       string              `json:"name"`
+	Secfixes      map[string][]string `json:"secfixes"`
+	Apkurl        string              `json:"apkurl"`
+	Archs         []string            `json:"archs"`
+	Urlprefix     string              `json:"urlprefix"`
+	Reponame      string              `json:"reponame"`
+	Distroversion string              `json:"distroversion"`
 }

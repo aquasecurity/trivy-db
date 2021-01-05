@@ -4,17 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"path/filepath"
-
-	"github.com/aquasecurity/trivy-db/pkg/types"
+	"strings"
 
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 const (
@@ -37,51 +35,33 @@ func NewVulnSrc() VulnSrc {
 
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", alpineDir)
-	var cves []AlpineCVE
+	var advisories []advisory
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-		var cve AlpineCVE
-		if err := json.NewDecoder(r).Decode(&cve); err != nil {
-			return xerrors.Errorf("failed to decode Alpine JSON: %w", err)
+		var advisory advisory
+		if err := json.NewDecoder(r).Decode(&advisory); err != nil {
+			return xerrors.Errorf("failed to decode Alpine advisory: %w", err)
 		}
-		cves = append(cves, cve)
+		advisories = append(advisories, advisory)
 		return nil
 	})
 	if err != nil {
 		return xerrors.Errorf("error in Alpine walk: %w", err)
 	}
 
-	if err = vs.save(cves); err != nil {
+	if err = vs.save(advisories); err != nil {
 		return xerrors.Errorf("error in Alpine save: %w", err)
 	}
 
 	return nil
 }
 
-func (vs VulnSrc) save(cves []AlpineCVE) error {
-	log.Println("Saving Alpine DB")
-
+func (vs VulnSrc) save(advisories []advisory) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		for _, cve := range cves {
-			platformName := fmt.Sprintf(platformFormat, cve.Release)
-			pkgName := cve.Package
-			advisory := types.Advisory{
-				FixedVersion: cve.FixedVersion,
-			}
-			if err := vs.dbc.PutAdvisoryDetail(tx, cve.VulnerabilityID, platformName, pkgName, advisory); err != nil {
-				return xerrors.Errorf("failed to save Alpine advisory: %w", err)
-			}
-
-			vuln := types.VulnerabilityDetail{
-				Title:       cve.Subject,
-				Description: cve.Description,
-			}
-			if err := vs.dbc.PutVulnerabilityDetail(tx, cve.VulnerabilityID, vulnerability.Alpine, vuln); err != nil {
-				return xerrors.Errorf("failed to save Alpine vulnerability: %w", err)
-			}
-
-			// for light DB
-			if err := vs.dbc.PutSeverity(tx, cve.VulnerabilityID, types.SeverityUnknown); err != nil {
-				return xerrors.Errorf("failed to save Alpine vulnerability severity: %w", err)
+		for _, advisory := range advisories {
+			version := strings.TrimPrefix(advisory.Distroversion, "v")
+			platformName := fmt.Sprintf(platformFormat, version)
+			if err := vs.saveSecFixes(tx, platformName, advisory.PkgName, advisory.Secfixes); err != nil {
+				return err
 			}
 		}
 		return nil
@@ -92,7 +72,35 @@ func (vs VulnSrc) save(cves []AlpineCVE) error {
 	return nil
 }
 
-func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
+func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes map[string][]string) error {
+	for fixedVersion, vulnIDs := range secfixes {
+		advisory := types.Advisory{
+			FixedVersion: fixedVersion,
+		}
+		for _, vulnID := range vulnIDs {
+			// See https://gitlab.alpinelinux.org/alpine/infra/docker/secdb/-/issues/3
+			// e.g. CVE-2017-2616 (+ regression fix)
+			ids := strings.Fields(vulnID)
+			for _, cveID := range ids {
+				cveID = strings.ReplaceAll(cveID, "CVE_", "CVE-")
+				if !strings.HasPrefix(cveID, "CVE-") {
+					continue
+				}
+				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, platform, pkgName, advisory); err != nil {
+					return xerrors.Errorf("failed to save Alpine advisory: %w", err)
+				}
+
+				// for light DB
+				if err := vs.dbc.PutSeverity(tx, cveID, types.SeverityUnknown); err != nil {
+					return xerrors.Errorf("failed to save Alpine vulnerability severity: %w", err)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (vs VulnSrc) Get(release, pkgName string) ([]types.Advisory, error) {
 	bucket := fmt.Sprintf(platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
