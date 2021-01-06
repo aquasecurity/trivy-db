@@ -3,6 +3,7 @@ name: Publish
 on:
   schedule:
     - cron: '0 */12 * * *'
+  workflow_dispatch:
 env:
   ALIAS: aquasecurity
   REP: trivy-db
