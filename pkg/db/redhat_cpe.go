@@ -31,13 +31,13 @@ func (dbc Config) PutRedHatCPEs(tx *bolt.Tx, repository string, cpes []string) e
 func (dbc Config) GetRedHatCPEs(repository string) ([]string, error) {
 	var cpes []string
 	err := db.View(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte(redhatCPEBucket))
-		if err != nil {
-			return xerrors.Errorf("failed to create a bucket (%s): %w", redhatCPEBucket, err)
+		bucket := tx.Bucket([]byte(redhatCPEBucket))
+		if bucket == nil {
+			return xerrors.Errorf("no such bucket (%s): %w", redhatCPEBucket)
 		}
 
 		b := bucket.Get([]byte(repository))
-		if err = json.Unmarshal(b, &cpes); err != nil {
+		if err := json.Unmarshal(b, &cpes); err != nil {
 			return err
 		}
 		return nil
