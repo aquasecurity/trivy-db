@@ -21,11 +21,14 @@ import (
 
 var (
 	redhatDir = filepath.Join("oval", "redhat")
+const (
+	mappingURL = "https://www.redhat.com/security/data/metrics/repository-to-cpe.json"
 
 	// the same bucket name as Red Hat Security Data API
 	platformFormat = "Red Hat Enterprise Linux %s"
 
 	supportedVersions = []string{"5", "6", "7", "8"}
+)
 
 	// PULP_MANIFEST files prefix
 	supportedPlatformFileFormat = "rhel-%s-including-unpatched"
@@ -45,6 +48,9 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Update(dir string) error {
+	if err := vs.storeRepositoryCPEMapping(); err != nil {
+		return xerrors.Errorf("unable to store the mapping between repositories and CPE names: %w", err)
+	}
 	rootDir := filepath.Join(dir, "vuln-list", redhatDir)
 
 	for _, majorVersion := range supportedVersions {
@@ -65,8 +71,28 @@ func (vs VulnSrc) Update(dir string) error {
 			}
 			if err = vs.update(filepath.Join(versionDir, f.Name())); err != nil {
 				return xerrors.Errorf("update error (%s): %w", f.Name(), err)
+func (vs VulnSrc) storeRepositoryCPEMapping() error {
+	resp, err := http.Get(mappingURL)
+	if err != nil {
+		return xerrors.Errorf("failed to get %s: %w", mappingURL, err)
+	}
+	defer resp.Body.Close()
+
+	var repositoryToCPE repositoryToCPE
+	if err = json.NewDecoder(resp.Body).Decode(&repositoryToCPE); err != nil {
+		return xerrors.Errorf("JSON parse error: %w", err)
+	}
+
+	return vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
+		for repo, cpes := range repositoryToCPE.Data {
+			if err = vs.dbc.PutRedHatCPEs(tx, repo, cpes.Cpes); err != nil {
+				return err
 			}
 		}
+		return nil
+	})
+}
+
 	}
 
 	return nil

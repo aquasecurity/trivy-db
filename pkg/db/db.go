@@ -56,6 +56,9 @@ type Operation interface {
 	PutAdvisoryDetail(tx *bolt.Tx, vulnerabilityID string, source string, pkgName string,
 		advisory interface{}) (err error)
 	DeleteAdvisoryDetailBucket() error
+
+	PutRedHatCPEs(tx *bolt.Tx, repository string, cpes []string) (err error)
+	GetRedHatCPEs(repository string) (cpes []string, err error)
 }
 
 type Metadata struct {
