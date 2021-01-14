@@ -128,3 +128,38 @@ func TestUniq(t *testing.T) {
 	}
 
 }
+
+func TestHasIntersection(t *testing.T) {
+	type args struct {
+		list1 []string
+		list2 []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "happy path",
+			args: args{
+				list1: []string{"a", "b", "c"},
+				list2: []string{"d", "b", "f", "g"},
+			},
+			want: true,
+		},
+		{
+			name: "sad path",
+			args: args{
+				list1: []string{"a", "b", "c"},
+				list2: []string{"d", "f", "g"},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := HasIntersection(tt.args.list1, tt.args.list2)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
