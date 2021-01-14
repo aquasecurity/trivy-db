@@ -6,8 +6,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/google/go-github/v28/github"
@@ -19,8 +21,8 @@ import (
 )
 
 const (
-	owner = "aquasecurity"
-	repo  = "trivy-db"
+	defaultOwner      = "aquasecurity"
+	defaultRepository = "trivy-db"
 )
 
 type RepositoryInterface interface {
@@ -79,11 +81,20 @@ func NewClient(ctx context.Context) Client {
 	tc := oauth2.NewClient(ctx, ts)
 	gc := github.NewClient(tc)
 
+	owner, repository := path.Split(os.Getenv("GITHUB_REPOSITORY"))
+	owner = strings.TrimSuffix(owner, "/")
+	if owner == "" {
+		owner = defaultOwner
+	}
+	if repository == "" {
+		repository = defaultRepository
+	}
+
 	repo := Repository{
 		repository: gc.Repositories,
 		git:        gc.Git,
 		owner:      owner,
-		repoName:   repo,
+		repoName:   repository,
 	}
 
 	return Client{
