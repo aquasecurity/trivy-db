@@ -204,6 +204,7 @@ func filterAdvisoriesByCPEs(vulnID string, raw []byte, cpes []string) ([]types.A
 		if utils.HasIntersection(cpes, def.AffectedCPEList) {
 			advisories = append(advisories, types.Advisory{
 				VulnerabilityID: vulnID,
+				VendorID:        def.AdvisoryID,
 				FixedVersion:    def.FixedVersion,
 			})
 		}

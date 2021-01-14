@@ -105,6 +105,7 @@ type AdvisoryDetail struct {
 
 type Advisory struct {
 	VulnerabilityID string `json:",omitempty"`
+	VendorID        string `json:",omitempty"`
 
 	// for os package
 	FixedVersion string `json:",omitempty"`
