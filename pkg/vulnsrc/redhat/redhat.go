@@ -186,9 +186,17 @@ func (vs VulnSrc) putVulnerabilityDetail(tx *bolt.Tx, cve RedhatCVE) error {
 
 func (vs VulnSrc) Get(majorVersion string, pkgName string) ([]types.Advisory, error) {
 	bucket := fmt.Sprintf(platformFormat, majorVersion)
-	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
+	advs, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get Red Hat advisories: %w", err)
+	}
+
+	var advisories []types.Advisory
+	for _, adv := range advs {
+		if adv.FixedVersion != "" {
+			continue
+		}
+		advisories = append(advisories, adv)
 	}
 	return advisories, nil
 }
