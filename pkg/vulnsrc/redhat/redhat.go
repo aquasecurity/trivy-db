@@ -23,6 +23,8 @@ import (
 const (
 	redhatDir      = "redhat"
 	platformFormat = "Red Hat Enterprise Linux %s"
+
+	resourceURL = "https://access.redhat.com/security/cve/%s"
 )
 
 var (
@@ -160,8 +162,8 @@ func (vs VulnSrc) putAdvisoryDetail(tx *bolt.Tx, cve RedhatCVE) error {
 func (vs VulnSrc) putVulnerabilityDetail(tx *bolt.Tx, cve RedhatCVE) error {
 	cvssScore, _ := strconv.ParseFloat(cve.Cvss.CvssBaseScore, 64)
 	cvss3Score, _ := strconv.ParseFloat(cve.Cvss3.Cvss3BaseScore, 64)
-
 	title := strings.TrimPrefix(strings.TrimSpace(cve.Bugzilla.Description), cve.Name)
+	references := append(cve.References, fmt.Sprintf(resourceURL, cve.Name))
 
 	vuln := types.VulnerabilityDetail{
 		CvssScore:    cvssScore,
@@ -169,7 +171,7 @@ func (vs VulnSrc) putVulnerabilityDetail(tx *bolt.Tx, cve RedhatCVE) error {
 		CvssScoreV3:  cvss3Score,
 		CvssVectorV3: cve.Cvss3.Cvss3ScoringVector,
 		Severity:     severityFromThreat(cve.ThreatSeverity),
-		References:   cve.References,
+		References:   references,
 		Title:        strings.TrimSpace(title),
 		Description:  strings.TrimSpace(strings.Join(cve.Details, "")),
 	}
