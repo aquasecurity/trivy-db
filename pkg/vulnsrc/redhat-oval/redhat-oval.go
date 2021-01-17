@@ -173,6 +173,10 @@ func (vs VulnSrc) Get(release, pkgName string, repositories []string) ([]types.A
 
 	var advisories []types.Advisory
 	for vulnID, v := range rawAdvisories {
+		if len(v) == 0 {
+			continue
+		}
+
 		advs, err := filterAdvisoriesByCPEs(vulnID, v, cpes)
 		if err != nil {
 			return nil, err

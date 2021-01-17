@@ -37,6 +37,9 @@ func (dbc Config) GetRedHatCPEs(repository string) ([]string, error) {
 		}
 
 		b := bucket.Get([]byte(repository))
+		if len(b) == 0 {
+			return nil
+		}
 		if err := json.Unmarshal(b, &cpes); err != nil {
 			return err
 		}
