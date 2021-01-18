@@ -91,6 +91,30 @@
       "State": {
         "StateRef": "oval:com.redhat.cve:ste:20137488001"
       }
+    },
+    {
+      "Check": "at least one",
+      "Comment": "httpd is earlier than 0:2.4.37-30.module+el8.3.0+7001+0766b9e7",
+      "ID": "oval:com.redhat.rhsa:tst:20204751001",
+      "Version": "634",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:201817199004"
+      },
+      "State": {
+        "StateRef": "oval:com.redhat.rhsa:ste:20204751001"
+      }
+    },
+    {
+      "Check": "at most one",
+      "Comment": "dummy",
+      "ID": "oval:com.redhat.cve:tst:202014342005",
+      "Version": "631",
+      "Object": {
+        "ObjectRef": "dummy"
+      },
+      "State": {
+        "StateRef": "dummy"
+      }
     }
   ]
 }
