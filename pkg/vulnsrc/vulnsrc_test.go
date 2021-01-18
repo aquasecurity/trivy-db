@@ -394,6 +394,7 @@ func Test_lightOptimizer_Optimize(t *testing.T) {
 		name                            string
 		forEachSeverity                 db.OperationForEachSeverityExpectation
 		deleteVulnerabilityDetailBucket db.OperationDeleteVulnerabilityDetailBucketExpectation
+		deleteAdvisoryDetailBucket      db.OperationDeleteAdvisoryDetailBucketExpectation
 		wantErr                         string
 	}{
 		{
@@ -439,6 +440,7 @@ func Test_lightOptimizer_Optimize(t *testing.T) {
 			mockDBConfig := new(db.MockOperation)
 			mockDBConfig.ApplyForEachSeverityExpectation(tt.forEachSeverity)
 			mockDBConfig.ApplyDeleteVulnerabilityDetailBucketExpectation(tt.deleteVulnerabilityDetailBucket)
+			mockDBConfig.ApplyDeleteAdvisoryDetailBucketExpectation(tt.deleteAdvisoryDetailBucket)
 
 			o := lightOptimizer{
 				dbOp: mockDBConfig,
@@ -570,7 +572,7 @@ func Test_fullOptimize(t *testing.T) {
 			},
 		},
 		{
-			name:                        "happy path when vulnerability is rejected",
+			name: "happy path when vulnerability is rejected",
 			putAdvisoryExpectations:     []db.OperationPutAdvisoryExpectation{},
 			putVulnerabilityExpectation: db.OperationPutVulnerabilityExpectation{},
 			getVulnerabilityDetailExpectation: db.OperationGetVulnerabilityDetailExpectation{
@@ -782,7 +784,7 @@ func Test_lightOptimize(t *testing.T) {
 			},
 		},
 		{
-			name:                        "happy path when vulnerability is rejected",
+			name: "happy path when vulnerability is rejected",
 			putVulnerabilityExpectation: db.OperationPutVulnerabilityExpectation{},
 			putSeverityExpectation:      db.OperationPutSeverityExpectation{},
 			getVulnerabilityDetailExpectation: db.OperationGetVulnerabilityDetailExpectation{

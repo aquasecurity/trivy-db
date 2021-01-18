@@ -218,6 +218,10 @@ func (o lightOptimizer) Optimize() error {
 	if err = o.dbOp.DeleteVulnerabilityDetailBucket(); err != nil {
 		return xerrors.Errorf("failed to delete vulnerability detail bucket: %w", err)
 	}
+
+	if err := o.dbOp.DeleteAdvisoryDetailBucket(); err != nil {
+		return xerrors.Errorf("failed to delete advisory detail bucket: %w", err)
+	}
 	return nil
 }
 
