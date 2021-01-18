@@ -39,13 +39,28 @@ var (
 )
 
 type VulnSrc struct {
-	dbc db.Operation
+	dbc        db.Operation
+	mappingURL string
 }
 
-func NewVulnSrc() VulnSrc {
-	return VulnSrc{
-		dbc: db.Config{},
+type Option func(c *VulnSrc)
+
+func WithMappingURL(url string) Option {
+	return func(vs *VulnSrc) {
+		vs.mappingURL = url
 	}
+}
+
+func NewVulnSrc(opts ...Option) VulnSrc {
+	vs := &VulnSrc{
+		dbc:        db.Config{},
+		mappingURL: mappingURL,
+	}
+	for _, opt := range opts {
+		opt(vs)
+	}
+
+	return *vs
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -95,7 +110,7 @@ func (vs VulnSrc) Update(dir string) error {
 }
 
 func (vs VulnSrc) storeRepositoryCPEMapping() error {
-	resp, err := http.Get(mappingURL)
+	resp, err := http.Get(vs.mappingURL)
 	if err != nil {
 		return xerrors.Errorf("failed to get %s: %w", mappingURL, err)
 	}
@@ -175,7 +190,7 @@ func (vs VulnSrc) Get(release, pkgName string, repositories []string) ([]types.A
 	for _, repo := range repositories {
 		res, err := vs.dbc.GetRedHatCPEs(repo)
 		if err != nil {
-			return nil, err
+			return nil, xerrors.Errorf("unable to convert repositories to CPEs: %w", err)
 		}
 		cpes = append(cpes, res...)
 	}
