@@ -26,7 +26,7 @@ func TestMain(m *testing.M) {
 func TestVulnSrc_Update(t *testing.T) {
 	type want struct {
 		key   []string
-		value advisory
+		value interface{}
 	}
 
 	testCases := []struct {
@@ -48,6 +48,10 @@ func TestVulnSrc_Update(t *testing.T) {
 				  }
 				}`,
 			wants: []want{
+				{
+					key:   []string{"Red Hat CPE", "rhel-8-for-x86_64-baseos-rpms"},
+					value: []string{"cpe:/o:redhat:enterprise_linux:8::baseos"},
+				},
 				{
 					key: []string{"advisory-detail", "CVE-2020-16042", "Red Hat Enterprise Linux 8", "thunderbird"},
 					value: advisory{
