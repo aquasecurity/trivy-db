@@ -1,0 +1,13 @@
+- bucket: Red Hat Enterprise Linux 8
+  pairs:
+    - bucket: bind
+      pairs:
+        - key: CVE-2020-8624
+          value:
+            FixedVersion: "32:9.11.20-5.el8"
+            Definitions:
+              - AdvisoryID: "RHSA-2020:4500"
+                AffectedCPEList:
+                  - "cpe:/o:redhat:enterprise_linux:8::baseos"
+                  - "cpe:/a:redhat:enterprise_linux:8::appstream"
+                FixedVersion: "32:9.11.20-5.el8"

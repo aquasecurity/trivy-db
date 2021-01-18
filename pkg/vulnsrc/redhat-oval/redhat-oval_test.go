@@ -1,16 +1,19 @@
 package redhatoval
 
 import (
-	"errors"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	bolt "go.etcd.io/bbolt"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 )
@@ -21,405 +24,327 @@ func TestMain(m *testing.M) {
 }
 
 func TestVulnSrc_Update(t *testing.T) {
+	type want struct {
+		key   []string
+		value advisory
+	}
+
 	testCases := []struct {
-		name             string
-		cacheDir         string
-		batchUpdate      db.OperationBatchUpdateExpectation
-		expectedErrorMsg string
+		name            string
+		cacheDir        string
+		repositoryToCPE string
+		wants           []want
+		wantErr         string
 	}{
 		{
 			name:     "happy path",
 			cacheDir: filepath.Join("testdata", "happy"),
-			batchUpdate: db.OperationBatchUpdateExpectation{
-				Args:    db.OperationBatchUpdateArgs{FnAnything: true},
-				Returns: db.OperationBatchUpdateReturns{},
-			},
-		},
-		{
-			name:     "broken JSON",
-			cacheDir: filepath.Join("testdata", "sad"),
-			batchUpdate: db.OperationBatchUpdateExpectation{
-				Args:    db.OperationBatchUpdateArgs{FnAnything: true},
-				Returns: db.OperationBatchUpdateReturns{},
-			},
-			expectedErrorMsg: "failed to decode Red Hat OVAL JSON",
-		},
-		{
-			name:     "BatchUpdate returns an error",
-			cacheDir: filepath.Join("testdata", "happy"),
-			batchUpdate: db.OperationBatchUpdateExpectation{
-				Args: db.OperationBatchUpdateArgs{FnAnything: true},
-				Returns: db.OperationBatchUpdateReturns{
-					Err: errors.New("batch update failed"),
+			repositoryToCPE: `
+				{
+				  "data": {
+				    "rhel-8-for-x86_64-baseos-rpms": {
+				      "cpes": ["cpe:/o:redhat:enterprise_linux:8::baseos"]
+				    }
+				  }
+				}`,
+			wants: []want{
+				{
+					key: []string{"advisory-detail", "CVE-2020-16042", "Red Hat Enterprise Linux 8", "thunderbird"},
+					value: advisory{
+						Advisory: types.Advisory{
+							FixedVersion: "0:78.6.0-1.el8_3",
+						},
+						Definitions: []Definition{
+							{
+								FixedVersion: "0:78.6.0-1.el8_3",
+								AffectedCPEList: []string{
+									"cpe:/a:redhat:enterprise_linux:8",
+									"cpe:/a:redhat:enterprise_linux:8::appstream",
+								},
+								AdvisoryID: "RHSA-2020:5624",
+							},
+						},
+					},
+				},
+				{
+					key: []string{"advisory-detail", "CVE-2020-16042", "Red Hat Enterprise Linux 8", "thunderbird-debugsource"},
+					value: advisory{
+						Advisory: types.Advisory{
+							FixedVersion: "0:78.6.0-1.el8_3",
+						},
+						Definitions: []Definition{
+							{
+								FixedVersion: "0:78.6.0-1.el8_3",
+								AffectedCPEList: []string{
+									"cpe:/a:redhat:enterprise_linux:8",
+									"cpe:/a:redhat:enterprise_linux:8::appstream",
+								},
+								AdvisoryID: "RHSA-2020:5624",
+							},
+						},
+					},
+				},
+				{
+					key: []string{"advisory-detail", "CVE-2020-26971", "Red Hat Enterprise Linux 8", "thunderbird"},
+					value: advisory{
+						Advisory: types.Advisory{
+							FixedVersion: "0:78.6.0-1.el8_3",
+						},
+						Definitions: []Definition{
+							{
+								FixedVersion: "0:78.6.0-1.el8_3",
+								AffectedCPEList: []string{
+									"cpe:/a:redhat:enterprise_linux:8",
+									"cpe:/a:redhat:enterprise_linux:8::appstream",
+								},
+								AdvisoryID: "RHSA-2020:5624",
+							},
+							{
+								FixedVersion: "0:999.el8_3",
+								AffectedCPEList: []string{
+									"cpe:/a:redhat:rhel_eus:8.1",
+									"cpe:/a:redhat:rhel_eus:8.1::appstream",
+								},
+								AdvisoryID: "RHSA-2020:9999",
+							},
+						},
+					},
+				},
+				{
+					key: []string{"advisory-detail", "CVE-2020-26971", "Red Hat Enterprise Linux 8", "thunderbird"},
+					value: advisory{
+						Advisory: types.Advisory{
+							FixedVersion: "0:78.6.0-1.el8_3",
+						},
+						Definitions: []Definition{
+							{
+								FixedVersion: "0:78.6.0-1.el8_3",
+								AffectedCPEList: []string{
+									"cpe:/a:redhat:enterprise_linux:8",
+									"cpe:/a:redhat:enterprise_linux:8::appstream",
+								},
+								AdvisoryID: "RHSA-2020:5624",
+							},
+							{
+								FixedVersion: "0:999.el8_3",
+								AffectedCPEList: []string{
+									"cpe:/a:redhat:rhel_eus:8.1",
+									"cpe:/a:redhat:rhel_eus:8.1::appstream",
+								},
+								AdvisoryID: "RHSA-2020:9999",
+							},
+						},
+					},
+				},
+				{
+					key: []string{"advisory-detail", "CVE-2020-26972", "Red Hat Enterprise Linux 8", "thunderbird"},
+					value: advisory{
+						Advisory: types.Advisory{
+							FixedVersion: "0",
+						},
+						Definitions: []Definition{
+							{
+								FixedVersion: "0:999.el8_3",
+								AffectedCPEList: []string{
+									"cpe:/a:redhat:rhel_eus:8.1",
+									"cpe:/a:redhat:rhel_eus:8.1::appstream",
+								},
+								AdvisoryID: "RHSA-2020:9999",
+							},
+						},
+					},
+				},
+				{
+					key: []string{"advisory-detail", "CVE-2018-17189", "Red Hat Enterprise Linux 8", "httpd:2.4::httpd"},
+					value: advisory{
+						Advisory: types.Advisory{
+							FixedVersion: "0:2.4.37-30.module+el8.3.0+7001+0766b9e7",
+						},
+						Definitions: []Definition{
+							{
+								FixedVersion: "0:2.4.37-30.module+el8.3.0+7001+0766b9e7",
+								AffectedCPEList: []string{
+									"cpe:/a:redhat:enterprise_linux:8",
+									"cpe:/a:redhat:enterprise_linux:8::appstream",
+								},
+								AdvisoryID: "RHSA-2020:4751",
+							},
+						},
+					},
 				},
 			},
-			expectedErrorMsg: "batch update failed",
+		},
+		{
+			name:            "no definitions dir",
+			cacheDir:        filepath.Join("testdata", "no-definitions"),
+			repositoryToCPE: `{"data": {}}`,
+		},
+		{
+			name:            "repository-to-cpe is unavailable",
+			cacheDir:        filepath.Join("testdata", "happy"),
+			repositoryToCPE: ``,
+			wantErr:         "returns 503",
+		},
+		{
+			name:            "broken mapping",
+			cacheDir:        filepath.Join("testdata", "happy"),
+			repositoryToCPE: `{"data": "broken"}`,
+			wantErr:         "JSON parse error",
+		},
+		{
+			name:            "broken JSON",
+			cacheDir:        filepath.Join("testdata", "sad"),
+			repositoryToCPE: `{"data": {}}`,
+			wantErr:         "failed to decode Red Hat OVAL JSON",
+		},
+		{
+			name:            "no version dir",
+			cacheDir:        filepath.Join("testdata", "no-version"),
+			repositoryToCPE: `{"data": {}}`,
+			wantErr:         "no such file or directory",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyBatchUpdateExpectation(tc.batchUpdate)
+			dir := t.TempDir()
+			require.NoError(t, db.Init(dir))
 
-			ac := VulnSrc{dbc: mockDBConfig}
-			err := ac.Update(tc.cacheDir)
-			switch {
-			case tc.expectedErrorMsg != "":
-				assert.Contains(t, err.Error(), tc.expectedErrorMsg, tc.name)
-			default:
-				assert.NoError(t, err, tc.name)
-			}
-		})
-	}
-}
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if tc.repositoryToCPE == "" {
+					http.Error(w, "We'll be back soon", http.StatusServiceUnavailable)
+					return
+				}
+				_, _ = fmt.Fprintln(w, tc.repositoryToCPE)
+			}))
+			defer ts.Close()
 
-func TestVulnSrc_Commit(t *testing.T) {
-	testCases := []struct {
-		name              string
-		advisories        []RedhatOVAL
-		tests             map[string]rpmInfoTest
-		putAdvisoryDetail []db.OperationPutAdvisoryDetailExpectation
-		expectedErrorMsg  string
-	}{
-		{
-			name: "happy path",
-			advisories: []RedhatOVAL{
-				{
-					ID: "oval:com.redhat.rhsa:def:20152237",
-					Metadata: Metadata{
-						AffectedList: []Affected{
-							{Platforms: []string{"Red Hat Enterprise Linux 7"}},
-						},
-						References: []Reference{
-							{
-								Source: "RHSA",
-								RefID:  "RHSA-2015:2237",
-							},
-							{
-								Source: "CVE",
-								RefID:  "CVE-2015-2675",
-							},
-						},
-						Advisory: Advisory{
-							Severity: "",
-							Cves: []Cve{
-								{CveID: "CVE-2015-2675"},
-							},
-						},
-					},
-					Criteria: Criteria{
-						Operator: "OR",
-						Criterions: []Criterion{
-							{Comment: "Red Hat Enterprise Linux must be installed"},
-						},
-						Criterias: []Criteria{
-							{
-								Operator: "AND",
-								Criterions: []Criterion{
-									{Comment: "Red Hat Enterprise Linux 7 is installed"},
-								},
-								Criterias: []Criteria{
-									{
-										Operator: "OR",
-										Criterias: []Criteria{
-											{
-												Operator: "AND",
-												Criterions: []Criterion{
-													{
-														Comment: "rest-devel is earlier than 0:0.7.92-3.el7",
-														TestRef: "oval:com.redhat.rhsa:tst:20152237001",
-													},
-													{
-														Comment: "rest-devel is signed with Red Hat redhatrelease2 key",
-														TestRef: "oval:com.redhat.rhsa:tst:20152237004",
-													},
-												},
-											},
-											{
-												Operator: "AND",
-												Criterions: []Criterion{
-													{
-														Comment: "rest is earlier than 0:0.7.92-3.el7",
-														TestRef: "oval:com.redhat.rhsa:tst:20152237003",
-													},
-													{
-														Comment: "rest is signed with Red Hat redhatrelease2 key",
-														TestRef: "oval:com.redhat.rhsa:tst:20152237002",
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			tests: map[string]rpmInfoTest{
-				"oval:com.redhat.rhsa:tst:20152237001": {
-					Name:         "rest-devel",
-					FixedVersion: "0:0.7.92-3.el7",
-					Arch:         "aarch64|i686|ppc|ppc64|ppc64le|s390|s390x|x86_64",
-				},
-				"oval:com.redhat.rhsa:tst:20152237003": {
-					Name:         "rest",
-					FixedVersion: "0:0.7.92-3.el7",
-					Arch:         "aarch64|i686|ppc|ppc64|ppc64le|s390|s390x|x86_64",
-				},
-				"oval:com.redhat.rhsa:tst:20152237004": {
-					Name: "rest-devel",
-					SignatureKeyID: SignatureKeyID{
-						Text:      "199e2f91fd431d51",
-						Operation: "equals",
-					},
-				},
-				"oval:com.redhat.rhsa:tst:20152237002": {
-					Name: "rest",
-					SignatureKeyID: SignatureKeyID{
-						Text:      "199e2f91fd431d51",
-						Operation: "equals",
-					},
-				},
-			},
-			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
-				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:      true,
-						Source:          "Red Hat Enterprise Linux 7",
-						PkgName:         "rest",
-						VulnerabilityID: "CVE-2015-2675",
-						Advisory:        types.Advisory{FixedVersion: "0:0.7.92-3.el7"},
-					},
-				},
-				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:      true,
-						Source:          "Red Hat Enterprise Linux 7",
-						PkgName:         "rest-devel",
-						VulnerabilityID: "CVE-2015-2675",
-						Advisory:        types.Advisory{FixedVersion: "0:0.7.92-3.el7"},
-					},
-				},
-			},
-		},
-		{
-			name: "invalid platform",
-			advisories: []RedhatOVAL{
-				{
-					ID: "oval:com.redhat.rhsa:def:20152237",
-					Metadata: Metadata{
-						AffectedList: []Affected{
-							{Platforms: []string{"Red Hat Unknown"}},
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "invalid major version",
-			advisories: []RedhatOVAL{
-				{
-					ID: "oval:com.redhat.rhsa:def:20152237",
-					Metadata: Metadata{
-						AffectedList: []Affected{
-							{Platforms: []string{"Red Hat Enterprise Linux 100"}},
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "PutAdvisory returns an error",
-			advisories: []RedhatOVAL{
-				{
-					Metadata: Metadata{
-						AffectedList: []Affected{
-							{Platforms: []string{"Red Hat Enterprise Linux 7"}},
-						},
-						Advisory: Advisory{
-							Cves: []Cve{{CveID: "CVE-2015-2675"}},
-						},
-						References: []Reference{
-							{
-								Source: "RHSA",
-								RefID:  "RHSA-2015:2237",
-							},
-							{
-								Source: "CVE",
-								RefID:  "CVE-2015-2675",
-							},
-						},
-					},
-					Criteria: Criteria{
-						Operator: "AND",
-						Criterias: []Criteria{
-							{
-								Operator: "AND",
-								Criterions: []Criterion{
-									{Comment: "Red Hat Enterprise Linux 7 is installed"},
-								},
-								Criterias: []Criteria{
-									{
-										Operator: "OR",
-										Criterias: []Criteria{
-											{
-												Operator: "AND",
-												Criterions: []Criterion{
-													{
-														Comment: "rest is earlier than 0:0.7.92-3.el7",
-														TestRef: "oval:com.redhat.rhsa:tst:20152237003",
-													},
-													{
-														Comment: "rest is signed with Red Hat redhatrelease2 key",
-														TestRef: "oval:com.redhat.rhsa:tst:20152237002",
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			tests: map[string]rpmInfoTest{
-				"oval:com.redhat.rhsa:tst:20152237001": {
-					Name:         "rest-devel",
-					FixedVersion: "0:0.7.92-3.el7",
-					Arch:         "aarch64|i686|ppc|ppc64|ppc64le|s390|s390x|x86_64",
-				},
-				"oval:com.redhat.rhsa:tst:20152237003": {
-					Name:         "rest",
-					FixedVersion: "0:0.7.92-3.el7",
-					Arch:         "aarch64|i686|ppc|ppc64|ppc64le|s390|s390x|x86_64",
-				},
-				"oval:com.redhat.rhsa:tst:20152237004": {
-					Name: "rest-devel",
-					SignatureKeyID: SignatureKeyID{
-						Text:      "199e2f91fd431d51",
-						Operation: "equals",
-					},
-				},
-				"oval:com.redhat.rhsa:tst:20152237002": {
-					Name: "rest",
-					SignatureKeyID: SignatureKeyID{
-						Text:      "199e2f91fd431d51",
-						Operation: "equals",
-					},
-				},
-			},
-			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
-				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:      true,
-						Source:          "Red Hat Enterprise Linux 7",
-						PkgName:         "rest",
-						VulnerabilityID: "CVE-2015-2675",
-						Advisory:        types.Advisory{FixedVersion: "0:0.7.92-3.el7"},
-					},
-					Returns: db.OperationPutAdvisoryDetailReturns{
-						Err: errors.New("unable to put advisory"),
-					},
-				},
-			},
-			expectedErrorMsg: "unable to put advisory",
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			tx := &bolt.Tx{}
-			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tc.putAdvisoryDetail)
-
-			ac := VulnSrc{dbc: mockDBConfig}
-			err := ac.commit(tx, tc.advisories, tc.tests)
-
-			switch {
-			case tc.expectedErrorMsg != "":
+			vs := NewVulnSrc(WithMappingURL(ts.URL))
+			err := vs.Update(tc.cacheDir)
+			if tc.wantErr != "" {
 				require.NotNil(t, err)
-				assert.Contains(t, err.Error(), tc.expectedErrorMsg, tc.name)
-			default:
-				assert.NoError(t, err, tc.name)
+				assert.Contains(t, err.Error(), tc.wantErr, tc.name)
+				return
 			}
-			mockDBConfig.AssertExpectations(t)
+			db.Close()
+
+			assert.NoError(t, err)
+			for _, w := range tc.wants {
+				b, err := json.Marshal(w.value)
+				require.NoError(t, err)
+
+				dbtest.JSONEq(t, db.Path(dir), w.key, string(b))
+			}
 		})
 	}
 }
 
 func TestVulnSrc_Get(t *testing.T) {
-	testCases := []struct {
-		name               string
-		release            string
-		pkgName            string
-		getAdvisories      db.OperationGetAdvisoriesExpectation
-		expectedErrorMsg   string
-		expectedAdvisories []types.Advisory
+	type args struct {
+		release      string
+		pkgName      string
+		repositories []string
+	}
+	tests := []struct {
+		name         string
+		args         args
+		fixtureFiles []string
+		want         []types.Advisory
+		wantErr      string
 	}{
 		{
-			name:    "happy path",
-			release: "6",
-			pkgName: "package",
-			getAdvisories: db.OperationGetAdvisoriesExpectation{
-				Args: db.OperationGetAdvisoriesArgs{
-					Source:  "Red Hat Enterprise Linux 6",
-					PkgName: "package",
-				},
-				Returns: db.OperationGetAdvisoriesReturns{
-					Advisories: []types.Advisory{
-						{
-							VulnerabilityID: "CVE-2019-0123",
-							FixedVersion:    "1.2.3",
-						},
-					},
-				},
+			name: "happy path",
+			args: args{
+				release:      "8",
+				pkgName:      "bind",
+				repositories: []string{"rhel-8-for-x86_64-baseos-rpms"},
 			},
-			expectedAdvisories: []types.Advisory{
+			fixtureFiles: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/cpe.yaml"},
+			want: []types.Advisory{
 				{
-					VulnerabilityID: "CVE-2019-0123",
-					FixedVersion:    "1.2.3",
+					VulnerabilityID: "CVE-2020-8624",
+					VendorID:        "RHSA-2020:4500",
+					FixedVersion:    "32:9.11.20-5.el8",
 				},
 			},
 		},
 		{
-			name:    "GetAdvisories returns an error",
-			release: "6",
-			pkgName: "package",
-			getAdvisories: db.OperationGetAdvisoriesExpectation{
-				Args: db.OperationGetAdvisoriesArgs{
-					Source:  "Red Hat Enterprise Linux 6",
-					PkgName: "package",
-				},
-				Returns: db.OperationGetAdvisoriesReturns{
-					Err: errors.New("failed to get advisories"),
+			name: "CPE doesn't match",
+			args: args{
+				release:      "8",
+				pkgName:      "bind",
+				repositories: []string{"3scale-amp-2-rpms-for-rhel-8-x86_64-debug-rpms"},
+			},
+			fixtureFiles: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/cpe.yaml"},
+			want:         []types.Advisory(nil),
+		},
+		{
+			//This should not be happened
+			name: "unknown repository",
+			args: args{
+				release:      "8",
+				pkgName:      "bind",
+				repositories: []string{"unknown"},
+			},
+			fixtureFiles: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/cpe.yaml"},
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2020-8624",
+					FixedVersion:    "32:9.11.20-5.el8",
 				},
 			},
-			expectedErrorMsg:   "failed to get advisories",
-			expectedAdvisories: nil,
+		},
+		{
+			name: "no advisory bucket",
+			args: args{
+				release:      "8",
+				pkgName:      "bind",
+				repositories: []string{"rhel-8-for-x86_64-baseos-rpms"},
+			},
+			fixtureFiles: []string{"testdata/fixtures/cpe.yaml"},
+			want:         []types.Advisory(nil),
+		},
+		{
+			name: "no CPE bucket",
+			args: args{
+				release:      "8",
+				pkgName:      "bind",
+				repositories: []string{"rhel-8-for-x86_64-baseos-rpms"},
+			},
+			fixtureFiles: []string{"testdata/fixtures/happy.yaml"},
+			want:         []types.Advisory(nil),
+			wantErr:      "no such bucket (Red Hat CPE)",
+		},
+		{
+			name: "broken JSON",
+			args: args{
+				release:      "8",
+				pkgName:      "bind",
+				repositories: []string{"rhel-8-for-x86_64-baseos-rpms"},
+			},
+			fixtureFiles: []string{"testdata/fixtures/broken.yaml", "testdata/fixtures/cpe.yaml"},
+			want:         []types.Advisory(nil),
+			wantErr:      "failed to unmarshal advisory JSON",
 		},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := dbtest.InitDB(t, tt.fixtureFiles)
+			require.NoError(t, db.Init(dir))
+			defer db.Close()
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyGetAdvisoriesExpectation(tc.getAdvisories)
+			vs := NewVulnSrc()
+			got, err := vs.Get(tt.args.release, tt.args.pkgName, tt.args.repositories)
 
-			vs := VulnSrc{dbc: mockDBConfig}
-			advisories, err := vs.Get(tc.release, tc.pkgName)
-
-			switch {
-			case tc.expectedErrorMsg != "":
-				assert.Contains(t, err.Error(), tc.expectedErrorMsg, tc.name)
-			default:
-				assert.NoError(t, err, tc.name)
+			if tt.wantErr != "" {
+				require.NotNil(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
+				return
 			}
 
-			assert.ElementsMatch(t, advisories, tc.expectedAdvisories, tc.name)
-
-			mockDBConfig.AssertExpectations(t)
+			// Compare
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
