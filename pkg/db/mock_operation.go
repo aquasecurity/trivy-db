@@ -376,6 +376,60 @@ func (_m *MockOperation) GetAdvisoryDetails(cveID string) ([]types.AdvisoryDetai
 	return r0, r1
 }
 
+type OperationGetRedHatCPEsArgs struct {
+	Repository         string
+	RepositoryAnything bool
+}
+
+type OperationGetRedHatCPEsReturns struct {
+	Cpes []string
+	Err  error
+}
+
+type OperationGetRedHatCPEsExpectation struct {
+	Args    OperationGetRedHatCPEsArgs
+	Returns OperationGetRedHatCPEsReturns
+}
+
+func (_m *MockOperation) ApplyGetRedHatCPEsExpectation(e OperationGetRedHatCPEsExpectation) {
+	var args []interface{}
+	if e.Args.RepositoryAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.Repository)
+	}
+	_m.On("GetRedHatCPEs", args...).Return(e.Returns.Cpes, e.Returns.Err)
+}
+
+func (_m *MockOperation) ApplyGetRedHatCPEsExpectations(expectations []OperationGetRedHatCPEsExpectation) {
+	for _, e := range expectations {
+		_m.ApplyGetRedHatCPEsExpectation(e)
+	}
+}
+
+// GetRedHatCPEs provides a mock function with given fields: repository
+func (_m *MockOperation) GetRedHatCPEs(repository string) ([]string, error) {
+	ret := _m.Called(repository)
+
+	var r0 []string
+	if rf, ok := ret.Get(0).(func(string) []string); ok {
+		r0 = rf(repository)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(repository)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 type OperationGetSeverityArgs struct {
 	VulnerabilityID         string
 	VulnerabilityIDAnything bool
@@ -671,6 +725,64 @@ func (_m *MockOperation) PutAdvisoryDetail(tx *bbolt.Tx, vulnerabilityID string,
 	var r0 error
 	if rf, ok := ret.Get(0).(func(*bbolt.Tx, string, string, string, interface{}) error); ok {
 		r0 = rf(tx, vulnerabilityID, source, pkgName, advisory)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+type OperationPutRedHatCPEsArgs struct {
+	Tx                 *bbolt.Tx
+	TxAnything         bool
+	Repository         string
+	RepositoryAnything bool
+	Cpes               []string
+	CpesAnything       bool
+}
+
+type OperationPutRedHatCPEsReturns struct {
+	Err error
+}
+
+type OperationPutRedHatCPEsExpectation struct {
+	Args    OperationPutRedHatCPEsArgs
+	Returns OperationPutRedHatCPEsReturns
+}
+
+func (_m *MockOperation) ApplyPutRedHatCPEsExpectation(e OperationPutRedHatCPEsExpectation) {
+	var args []interface{}
+	if e.Args.TxAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.Tx)
+	}
+	if e.Args.RepositoryAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.Repository)
+	}
+	if e.Args.CpesAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.Cpes)
+	}
+	_m.On("PutRedHatCPEs", args...).Return(e.Returns.Err)
+}
+
+func (_m *MockOperation) ApplyPutRedHatCPEsExpectations(expectations []OperationPutRedHatCPEsExpectation) {
+	for _, e := range expectations {
+		_m.ApplyPutRedHatCPEsExpectation(e)
+	}
+}
+
+// PutRedHatCPEs provides a mock function with given fields: tx, repository, cpes
+func (_m *MockOperation) PutRedHatCPEs(tx *bbolt.Tx, repository string, cpes []string) error {
+	ret := _m.Called(tx, repository, cpes)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*bbolt.Tx, string, []string) error); ok {
+		r0 = rf(tx, repository, cpes)
 	} else {
 		r0 = ret.Error(0)
 	}

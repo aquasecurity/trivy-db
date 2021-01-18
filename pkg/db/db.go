@@ -52,7 +52,7 @@ type Operation interface {
 	PutVulnerability(tx *bolt.Tx, vulnerabilityID string, vulnerability types.Vulnerability) (err error)
 	GetVulnerability(vulnerabilityID string) (vulnerability types.Vulnerability, err error)
 
-	GetAdvisoryDetails(cveID string) ([]types.AdvisoryDetail, error)
+	GetAdvisoryDetails(cveID string) (details []types.AdvisoryDetail, err error)
 	PutAdvisoryDetail(tx *bolt.Tx, vulnerabilityID, source, pkgName string,
 		advisory interface{}) (err error)
 	DeleteAdvisoryDetailBucket() error
