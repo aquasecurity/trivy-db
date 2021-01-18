@@ -101,6 +101,10 @@ func (vs VulnSrc) storeRepositoryCPEMapping() error {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return xerrors.Errorf("the API (%s) returns %d", mappingURL, resp.StatusCode)
+	}
+
 	var repositoryToCPE repositoryToCPE
 	if err = json.NewDecoder(resp.Body).Decode(&repositoryToCPE); err != nil {
 		return xerrors.Errorf("JSON parse error: %w", err)
