@@ -26,7 +26,7 @@ const (
 	// the same bucket name as Red Hat Security Data API
 	platformFormat = "Red Hat Enterprise Linux %s"
 
-	rhelFileFormat = "rhel-%s-including-unpatched"
+	rhelFileFormat = "rhel-%s"
 )
 
 var (
@@ -65,6 +65,11 @@ func (vs VulnSrc) Update(dir string) error {
 		var details []vulnerabilityDetail
 		for _, f := range files {
 			if !f.IsDir() {
+				continue
+			}
+
+			// Skip unpatched vulnerabilities until OVAL v2 includes necessary information
+			if strings.Contains(f.Name(), "-including-unpatched") {
 				continue
 			}
 
