@@ -174,9 +174,11 @@ func TestVulnSrc_Commit(t *testing.T) {
 					Cvss:           RedhatCvss{CvssBaseScore: "7.2", CvssScoringVector: "(AV:N/AC:L/Au:N/C:P/I:P/A:P)"},
 					Cvss3:          RedhatCvss3{Cvss3BaseScore: "4.0", Cvss3ScoringVector: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"},
 					ThreatSeverity: "Moderate",
-					References:     []string{"https://example.com"},
-					Bugzilla:       RedhatBugzilla{Description: "CVE-2019-0160 package: title   "},
-					Details:        []string{"detail1\n", "detail2"},
+					References: []string{
+						"https://example.com",
+					},
+					Bugzilla: RedhatBugzilla{Description: "CVE-2019-0160 package: title   "},
+					Details:  []string{"detail1\n", "detail2"},
 				},
 			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
@@ -202,9 +204,12 @@ func TestVulnSrc_Commit(t *testing.T) {
 							CvssScoreV3:  4.0,
 							CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
 							Severity:     types.SeverityMedium,
-							References:   []string{"https://example.com"},
-							Title:        "package: title",
-							Description:  "detail1\ndetail2",
+							References: []string{
+								"https://example.com",
+								"https://access.redhat.com/security/cve/CVE-2019-0160",
+							},
+							Title:       "package: title",
+							Description: "detail1\ndetail2",
 						},
 					},
 				},
@@ -244,6 +249,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 							CvssScoreV3: 5.1,
 							Severity:    types.SeverityLow,
 							Title:       "package: title!",
+							References: []string{
+								"https://access.redhat.com/security/cve/CVE-2019-9999",
+							},
 						},
 					},
 				},
@@ -286,6 +294,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 							CvssScoreV3: 0,
 							Severity:    types.SeverityHigh,
 							Title:       "package: title",
+							References: []string{
+								"https://access.redhat.com/security/cve/CVE-2019-0001",
+							},
 						},
 					},
 				},
@@ -329,6 +340,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 							CvssScoreV3: 9,
 							Severity:    types.SeverityCritical,
 							Title:       "test: title",
+							References: []string{
+								"https://access.redhat.com/security/cve/CVE-2018-0001",
+							},
 						},
 					},
 				},
@@ -420,7 +434,10 @@ func TestVulnSrc_Commit(t *testing.T) {
 							CvssScore:   7.2,
 							CvssScoreV3: 4.0,
 							Severity:    types.SeverityMedium,
-							References:  []string{"https://example.com"},
+							References: []string{
+								"https://example.com",
+								"https://access.redhat.com/security/cve/CVE-2019-0160",
+							},
 							Title:       "package: title",
 							Description: "detail1\ndetail2",
 						},
@@ -473,7 +490,10 @@ func TestVulnSrc_Commit(t *testing.T) {
 							CvssScore:   7.2,
 							CvssScoreV3: 4.0,
 							Severity:    types.SeverityUnknown,
-							References:  []string{"https://example.com"},
+							References: []string{
+								"https://example.com",
+								"https://access.redhat.com/security/cve/CVE-2019-0160",
+							},
 							Title:       "package: title",
 							Description: "detail1\ndetail2",
 						},
@@ -537,10 +557,24 @@ func TestVulnSrc_Get(t *testing.T) {
 					PkgName: "package",
 				},
 				Returns: db.OperationGetAdvisoriesReturns{
-					Advisories: []types.Advisory{{FixedVersion: "1.2.3"}},
+					Advisories: []types.Advisory{
+						{
+							VulnerabilityID: "CVE-2020-0001",
+							FixedVersion:    "",
+						},
+						{
+							VulnerabilityID: "CVE-2020-0002",
+							FixedVersion:    "1.2.3",
+						},
+					},
 				},
 			},
-			expectedAdvisories: []types.Advisory{{FixedVersion: "1.2.3"}},
+			expectedAdvisories: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2020-0001",
+					FixedVersion:    "",
+				},
+			},
 		},
 		{
 			name:         "GetAdvisories returns an error",
