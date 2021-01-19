@@ -150,6 +150,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, details []vulnerabilityDetail) error {
 	for _, detail := range details {
 		var adv advisory
 		if v, ok := advisories[detail.bucket]; ok {
+			if !isUniqAdvisory(detail.definition, v.Definitions) {
+				continue
+			}
 			v.Definitions = append(v.Definitions, detail.definition)
 			adv = v
 		} else {
@@ -240,6 +243,15 @@ func filterAdvisoriesByCPEs(vulnID string, raw []byte, cpes []string) ([]types.A
 
 	return advisories, nil
 
+}
+
+func isUniqAdvisory(def Definition, defs []Definition) bool {
+	for _, d := range defs {
+		if d.AdvisoryID == def.AdvisoryID {
+			return false
+		}
+	}
+	return true
 }
 
 func parseOVALStream(dir string) ([]vulnerabilityDetail, error) {
