@@ -33,7 +33,7 @@ func (dbc Config) GetRedHatCPEs(repository string) ([]string, error) {
 	err := db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(redhatCPEBucket))
 		if bucket == nil {
-			return xerrors.Errorf("no such bucket (%s)", redhatCPEBucket)
+			return nil
 		}
 
 		b := bucket.Get([]byte(repository))

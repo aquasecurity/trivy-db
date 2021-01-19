@@ -316,8 +316,12 @@ func TestVulnSrc_Get(t *testing.T) {
 				repositories: []string{"rhel-8-for-x86_64-baseos-rpms"},
 			},
 			fixtureFiles: []string{"testdata/fixtures/happy.yaml"},
-			want:         []types.Advisory(nil),
-			wantErr:      "no such bucket (Red Hat CPE)",
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2020-8624",
+					FixedVersion:    "32:9.11.20-5.el8",
+				},
+			},
 		},
 		{
 			name: "broken JSON",
