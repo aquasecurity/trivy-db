@@ -449,7 +449,6 @@ func TestVulnSrc_save(t *testing.T) {
 						PkgName:         "CLEditor",
 						VulnerabilityID: "CVE-2019-1010113",
 						Advisory: Advisory{
-							PatchedVersions:    []string{""},
 							VulnerableVersions: []string{"\u003c= 1.4.5"},
 						},
 					},
