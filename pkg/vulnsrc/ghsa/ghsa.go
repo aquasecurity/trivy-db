@@ -114,7 +114,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 				va.FirstPatchedVersion.Identifier = strings.TrimPrefix(va.FirstPatchedVersion.Identifier, "< ")
 			}
 
-			pvs = append(pvs, va.FirstPatchedVersion.Identifier)
+			if len(va.FirstPatchedVersion.Identifier) != 0 {
+				pvs = append(pvs, va.FirstPatchedVersion.Identifier)
+			}
 			avs = append(avs, va.VulnerableVersionRange)
 		}
 
@@ -126,6 +128,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 		}
 		vulnID = strings.TrimSpace(vulnID)
 
+		if len(pvs) == 0 {
+			pvs = []string{""}
+		}
 		a := Advisory{
 			PatchedVersions:    pvs,
 			VulnerableVersions: avs,
