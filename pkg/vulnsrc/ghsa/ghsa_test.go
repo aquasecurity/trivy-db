@@ -449,7 +449,6 @@ func TestVulnSrc_save(t *testing.T) {
 						PkgName:         "CLEditor",
 						VulnerabilityID: "CVE-2019-1010113",
 						Advisory: Advisory{
-							PatchedVersions:    []string{""},
 							VulnerableVersions: []string{"\u003c= 1.4.5"},
 						},
 					},
@@ -670,6 +669,125 @@ func TestVulnSrc_save(t *testing.T) {
 					Args: db.OperationPutSeverityArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2018-16477",
+						Severity:        types.SeverityUnknown,
+					},
+				},
+			},
+		},
+		{
+			name:      "happy path with empty PatchedVersion",
+			ecosystem: Maven,
+			args: args{
+				ghsas: []GithubSecurityAdvisory{
+					{
+						Severity:  "HIGH",
+						UpdatedAt: "2019-10-18T15:22:29Z",
+						Package: Package{
+							Ecosystem: "Maven",
+							Name:      "com.fasterxml.jackson.core:jackson-databind",
+						},
+						Advisory: GhsaAdvisory{
+							DatabaseId: 1950,
+							Id:         "MDE2OlNlY3VyaXR5QWR2aXNvcnlHSFNBLWd3dzctcDV3NC13cmZ2",
+							GhsaId:     "GHSA-gww7-p5w4-wrfv",
+							References: []Reference{
+								{
+									Url: "https://nvd.nist.gov/vuln/detail/CVE-2019-20330",
+								},
+								{
+									Url: "https://github.com/advisories/GHSA-gww7-p5w4-wrfv",
+								},
+							},
+							Identifiers: []Identifier{
+								{
+									Type:  "GHSA",
+									Value: "GHSA-gww7-p5w4-wrfv",
+								},
+								{
+									Type:  "CVE",
+									Value: "CVE-2019-20330",
+								},
+							},
+							Description: "FasterXML jackson-databind 2.x before 2.9.10.2 lacks certain net.sf.ehcache blocking.",
+							Origin:      "UNSPECIFIED",
+							PublishedAt: "2020-03-04T20:52:11Z",
+							Severity:    "HIGH",
+							Summary:     "Deserialization of Untrusted Data in jackson-databind",
+							UpdatedAt:   "2020-03-04T20:52:11Z",
+							WithdrawnAt: "",
+						},
+						Versions: []Version{
+							{
+								FirstPatchedVersion: FirstPatchedVersion{
+									Identifier: "2.9.10.2",
+								},
+								VulnerableVersionRange: "\u003e= 2.9.0, \u003c= 2.9.10.1",
+							},
+							{
+								FirstPatchedVersion: FirstPatchedVersion{
+									Identifier: "2.8.11.5",
+								},
+								VulnerableVersionRange: "\u003e= 2.8.0, \u003c= 2.8.11.4",
+							},
+							{
+								FirstPatchedVersion: FirstPatchedVersion{
+									Identifier: "",
+								},
+								VulnerableVersionRange: "\u003e= 2.7.0, \u003c= 2.7.9.6",
+							},
+							{
+								FirstPatchedVersion: FirstPatchedVersion{
+									Identifier: "",
+								},
+								VulnerableVersionRange: "\u003e= 2.6.0, \u003c= 2.6.7.3",
+							},
+						},
+					},
+				},
+			},
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
+				{
+					Args: db.OperationPutAdvisoryDetailArgs{
+						TxAnything:      true,
+						Source:          "GitHub Security Advisory Maven",
+						PkgName:         "com.fasterxml.jackson.core:jackson-databind",
+						VulnerabilityID: "CVE-2019-20330",
+						Advisory: Advisory{
+							PatchedVersions: []string{"2.9.10.2", "2.8.11.5"},
+							VulnerableVersions: []string{
+								"\u003e= 2.9.0, \u003c= 2.9.10.1",
+								"\u003e= 2.8.0, \u003c= 2.8.11.4",
+								"\u003e= 2.7.0, \u003c= 2.7.9.6",
+								"\u003e= 2.6.0, \u003c= 2.6.7.3",
+							},
+						},
+					},
+				},
+			},
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
+				{
+					Args: db.OperationPutVulnerabilityDetailArgs{
+						TxAnything:      true,
+						Source:          vulnerability.GHSAMaven,
+						VulnerabilityID: "CVE-2019-20330",
+						Vulnerability: types.VulnerabilityDetail{
+							ID:       "CVE-2019-20330",
+							Severity: types.SeverityHigh,
+							References: []string{
+								"https://nvd.nist.gov/vuln/detail/CVE-2019-20330",
+								"https://github.com/advisories/GHSA-gww7-p5w4-wrfv",
+							},
+							Title:       "Deserialization of Untrusted Data in jackson-databind",
+							Description: "FasterXML jackson-databind 2.x before 2.9.10.2 lacks certain net.sf.ehcache blocking.",
+						},
+					},
+				},
+			},
+			putSeverity: []db.OperationPutSeverityExpectation{
+				{
+					Args: db.OperationPutSeverityArgs{
+						TxAnything:      true,
+						VulnerabilityID: "CVE-2019-20330",
 						Severity:        types.SeverityUnknown,
 					},
 				},
