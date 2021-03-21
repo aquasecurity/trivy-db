@@ -135,25 +135,6 @@ func (vs VulnSrc) commit(tx *bolt.Tx, gemnasiums []GemnasiumAdvisory) error {
 	return nil
 }
 
-func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
-	bucket := vs.packageType.platformName()
-	advisories, err := vs.dbc.ForEachAdvisory(bucket, pkgName)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to iterate Gemnasium: %w", err)
-	}
-
-	var results []Advisory
-	for vulnID, a := range advisories {
-		var advisory Advisory
-		if err = json.Unmarshal(a, &advisory); err != nil {
-			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
-		}
-		advisory.VulnerabilityID = vulnID
-		results = append(results, advisory)
-	}
-	return results, nil
-}
-
 func (pt PackageType) ConvertToEcosystem() string {
 	switch pt {
 	case Npm:
