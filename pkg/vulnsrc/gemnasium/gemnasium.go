@@ -55,11 +55,15 @@ func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", gemnasiumDir)
 
 	err := utils.FileWalk(filepath.Join(rootDir, strings.ToLower(vs.packageType.String())), func(r io.Reader, path string) error {
+		skip := true
 		for _, IDPrefix := range supportIDPrefixes {
 			_, fileName := filepath.Split(path)
 			if strings.HasPrefix(fileName, IDPrefix) {
+				skip = false
 				break
 			}
+		}
+		if skip {
 			return nil
 		}
 
