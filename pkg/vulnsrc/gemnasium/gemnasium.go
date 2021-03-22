@@ -99,9 +99,9 @@ func (vs VulnSrc) save(gemnasiums []GemnasiumAdvisory) error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx, gemnasiums []GemnasiumAdvisory) error {
 	for _, gemnasium := range gemnasiums {
-		a := Advisory{
-			AffectedRange:   gemnasium.AffectedRange,
-			PatchedVersions: gemnasium.FixedVersions,
+		a := types.Advisory{
+			VulnerableVersions: []string{gemnasium.AffectedRange},
+			PatchedVersions:    gemnasium.FixedVersions,
 		}
 		ss := strings.Split(gemnasium.PackageSlug, "/")
 		if len(ss) < 2 {

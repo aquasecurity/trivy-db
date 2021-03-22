@@ -128,9 +128,9 @@ func TestVulnSrc_save(t *testing.T) {
 						Source:          "conan::Gemnasium Advisory Conan",
 						PkgName:         "bison",
 						VulnerabilityID: "CVE-2020-14150",
-						Advisory: Advisory{
-							AffectedRange:   "\u003c3.5.4",
-							PatchedVersions: []string{"3.7.1"},
+						Advisory: types.Advisory{
+							VulnerableVersions: []string{"\u003c3.5.4"},
+							PatchedVersions:    []string{"3.7.1"},
 						},
 					},
 				},
@@ -199,9 +199,9 @@ func TestVulnSrc_save(t *testing.T) {
 						Source:          "rubygems::Gemnasium Advisory Gem",
 						PkgName:         "activejob",
 						VulnerabilityID: "OSVDB-112347",
-						Advisory: Advisory{
-							AffectedRange:   "=4.2.0.beta1",
-							PatchedVersions: []string{"4.2.0.beta2"},
+						Advisory: types.Advisory{
+							VulnerableVersions: []string{"=4.2.0.beta1"},
+							PatchedVersions:    []string{"4.2.0.beta2"},
 						},
 					},
 				},
@@ -269,9 +269,9 @@ func TestVulnSrc_save(t *testing.T) {
 						Source:          "go::Gemnasium Advisory Go",
 						PkgName:         "k8s.io/kubernetes",
 						VulnerabilityID: "CVE-2016-1905",
-						Advisory: Advisory{
-							AffectedRange:   "\u003cv1.2.0",
-							PatchedVersions: []string{"v1.2.0"},
+						Advisory: types.Advisory{
+							VulnerableVersions: []string{"\u003cv1.2.0"},
+							PatchedVersions:    []string{"v1.2.0"},
 						},
 					},
 				},
@@ -337,9 +337,9 @@ func TestVulnSrc_save(t *testing.T) {
 						Source:          "maven::Gemnasium Advisory Maven",
 						PkgName:         "org.springframework.boot/spring-boot",
 						VulnerabilityID: "CVE-2018-1196",
-						Advisory: Advisory{
-							AffectedRange:   "(,1.5.10)",
-							PatchedVersions: []string{"1.5.10.RELEASE"},
+						Advisory: types.Advisory{
+							VulnerableVersions: []string{"(,1.5.10)"},
+							PatchedVersions:    []string{"1.5.10.RELEASE"},
 						},
 					},
 				},
@@ -409,9 +409,9 @@ func TestVulnSrc_save(t *testing.T) {
 						Source:          "npm::Gemnasium Advisory Npm",
 						PkgName:         "axios",
 						VulnerabilityID: "CVE-2019-10742",
-						Advisory: Advisory{
-							AffectedRange:   "\u003c=0.18.0",
-							PatchedVersions: []string{"0.18.1"},
+						Advisory: types.Advisory{
+							VulnerableVersions: []string{"\u003c=0.18.0"},
+							PatchedVersions:    []string{"0.18.1"},
 						},
 					},
 				},
@@ -482,9 +482,9 @@ func TestVulnSrc_save(t *testing.T) {
 						Source:          "nuget::Gemnasium Advisory Nuget",
 						PkgName:         "powershell",
 						VulnerabilityID: "CVE-2020-1108",
-						Advisory: Advisory{
-							AffectedRange:   "[7.0]",
-							PatchedVersions: []string{"7.1.0"},
+						Advisory: types.Advisory{
+							VulnerableVersions: []string{"[7.0]"},
+							PatchedVersions:    []string{"7.1.0"},
 						},
 					},
 				},
@@ -555,9 +555,9 @@ func TestVulnSrc_save(t *testing.T) {
 						Source:          "composer::Gemnasium Advisory Packagist",
 						PkgName:         "adodb/adodb-php",
 						VulnerabilityID: "GMS-2018-25",
-						Advisory: Advisory{
-							AffectedRange:   "\u003c5.20.11",
-							PatchedVersions: []string{"v5.20.11"},
+						Advisory: types.Advisory{
+							VulnerableVersions: []string{"\u003c5.20.11"},
+							PatchedVersions:    []string{"v5.20.11"},
 						},
 					},
 				},
@@ -633,8 +633,8 @@ func TestVulnSrc_save(t *testing.T) {
 						Source:          "pip::Gemnasium Advisory Pypi",
 						PkgName:         "Django",
 						VulnerabilityID: "CVE-2020-13254",
-						Advisory: Advisory{
-							AffectedRange: "\u003e=2.2,\u003c2.2.13||\u003e=3.0,\u003c3.0.7",
+						Advisory: types.Advisory{
+							VulnerableVersions: []string{"\u003e=2.2,\u003c2.2.13||\u003e=3.0,\u003c3.0.7"},
 							PatchedVersions: []string{
 								"2.2.13",
 								"3.0.7",
@@ -714,8 +714,8 @@ func TestVulnSrc_save(t *testing.T) {
 						Source:          "pip::Gemnasium Advisory Pypi",
 						PkgName:         "Django",
 						VulnerabilityID: "CVE-2020-13254",
-						Advisory: Advisory{
-							AffectedRange: "\u003e=2.2,\u003c2.2.13||\u003e=3.0,\u003c3.0.7",
+						Advisory: types.Advisory{
+							VulnerableVersions: []string{"\u003e=2.2,\u003c2.2.13||\u003e=3.0,\u003c3.0.7"},
 							PatchedVersions: []string{
 								"2.2.13",
 								"3.0.7",
@@ -790,8 +790,8 @@ func TestVulnSrc_save(t *testing.T) {
 						Source:          "pip::Gemnasium Advisory Pypi",
 						PkgName:         "Django",
 						VulnerabilityID: "CVE-2020-13254",
-						Advisory: Advisory{
-							AffectedRange: "\u003e=2.2,\u003c2.2.13||\u003e=3.0,\u003c3.0.7",
+						Advisory: types.Advisory{
+							VulnerableVersions: []string{"\u003e=2.2,\u003c2.2.13||\u003e=3.0,\u003c3.0.7"},
 							PatchedVersions: []string{
 								"2.2.13",
 								"3.0.7",
