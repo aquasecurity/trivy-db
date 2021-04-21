@@ -1,11 +1,17 @@
 package nvd
 
+import (
+	"encoding/json"
+
+	"github.com/aquasecurity/trivy-db/pkg/types"
+)
+
 type NVD struct {
 	CVEItems []Item `json:"CVE_Items"`
 }
 
 type Item struct {
-	Configurations   interface{}
+	Configurations   Configurations
 	Cve              Cve
 	Impact           Impact
 	LastModifiedDate string `json:"lastModifiedDate"`
@@ -77,4 +83,33 @@ type ProblemTypeData struct {
 type ProblemTypeDataDescription struct {
 	Lang  string
 	Value string
+}
+
+type Configurations struct {
+	CveDataVersion string `json:"CVE_data_version"`
+	Nodes          []Node `json:"nodes,omitempty"`
+}
+
+type Node struct {
+	Children            []Node `json:"children,omitempty"`
+	Operator            string `json:"operator,omitempty"`
+	CPEMatch            []Node `json:"cpe_match,omitempty"`
+	Cpe23Uri            string `json:"cpe23Uri,omitempty"`
+	VersionEndExcluding string `json:"versionEndExcluding,omitempty"`
+	Vulnerable          *bool  `json:"vulnerable,omitempty"`
+}
+
+func mapConfigurationsToCPEDetails(configuration Configurations, cpeDetail *types.CPEDetails) error {
+	rawJson, err := json.Marshal(configuration)
+	if err != nil {
+		return err
+	}
+	if err = json.Unmarshal(rawJson, &cpeDetail); err != nil {
+		return err
+	}
+	return nil
+}
+
+func boolptr(val bool) *bool {
+	return &val
 }

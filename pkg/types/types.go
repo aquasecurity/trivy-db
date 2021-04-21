@@ -95,7 +95,21 @@ type VulnerabilityDetail struct {
 	Description      string     `json:",omitempty"`
 	PublishedDate    *time.Time `json:",omitempty"`
 	LastModifiedDate *time.Time `json:",omitempty"`
-	CPEDetails       string     `json:",omitempty"`
+	CPEDetails       CPEDetails `json:",omitempty"`
+}
+
+type CPEDetails struct {
+	CveDataVersion string `json:"CVE_data_version"`
+	Nodes          []Node `json:"nodes,omitempty"`
+}
+
+type Node struct {
+	Children            []Node `json:"children,omitempty"`
+	Operator            string `json:"operator,omitempty"`
+	CPEMatch            []Node `json:"cpe_match,omitempty"`
+	Cpe23Uri            string `json:"cpe23Uri,omitempty"`
+	VersionEndExcluding string `json:"versionEndExcluding,omitempty"`
+	Vulnerable          *bool  `json:"vulnerable,omitempty"`
 }
 
 type AdvisoryDetail struct {
@@ -127,6 +141,7 @@ type Vulnerability struct {
 	References       []string       `json:",omitempty"`
 	PublishedDate    *time.Time     `json:",omitempty"`
 	LastModifiedDate *time.Time     `json:",omitempty"`
+	CPEDetails       CPEDetails     `json:",omitempty"`
 }
 
 type VulnSrc interface {

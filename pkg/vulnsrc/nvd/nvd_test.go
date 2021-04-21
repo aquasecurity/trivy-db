@@ -41,7 +41,78 @@ func TestVulnSrc_Update(t *testing.T) {
 				References:       []string{"https://source.android.com/security/bulletin/2020-01-01"},
 				LastModifiedDate: utils.MustTimeParse("2020-01-01T01:01:00Z"),
 				PublishedDate:    utils.MustTimeParse("2001-01-01T01:01:00Z"),
-				CPEDetails:       `{"CVE_data_version":"4.0","nodes":[{"cpe_match":[{"cpe23Uri":"cpe:2.3:o:google:android:8.0:*:*:*:*:*:*:*","vulnerable":true},{"cpe23Uri":"cpe:2.3:o:google:android:8.1:*:*:*:*:*:*:*","vulnerable":true},{"cpe23Uri":"cpe:2.3:o:google:android:9.0:*:*:*:*:*:*:*","vulnerable":true},{"cpe23Uri":"cpe:2.3:o:google:android:10.0:*:*:*:*:*:*:*","vulnerable":true}],"operator":"OR"}]}`,
+				CPEDetails: types.CPEDetails{
+					CveDataVersion: "4.0",
+					Nodes: []types.Node{
+						types.Node{
+							Operator: "OR",
+							CPEMatch: []types.Node{
+								{
+									Cpe23Uri:   "cpe:2.3:o:google:android:8.0:*:*:*:*:*:*:*",
+									Vulnerable: boolptr(true),
+								},
+								{
+									Cpe23Uri:   "cpe:2.3:o:google:android:8.1:*:*:*:*:*:*:*",
+									Vulnerable: boolptr(true),
+								},
+								{
+									Cpe23Uri:   "cpe:2.3:o:google:android:9.0:*:*:*:*:*:*:*",
+									Vulnerable: boolptr(true),
+								},
+								{
+									Cpe23Uri:   "cpe:2.3:o:google:android:10.0:*:*:*:*:*:*:*",
+									Vulnerable: boolptr(true),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:  "happy path with CPE detail having children",
+			dir:   "./testdata",
+			cveID: "CVE-2021-0109",
+			want: types.VulnerabilityDetail{
+				Description:      "Insecure inherited permissions for the Intel(R) SOC driver package for STK1A32SC before version 604 may allow an authenticated user to potentially enable escalation of privilege via local access.",
+				CvssScore:        4.6,
+				CvssVector:       "AV:L/AC:L/Au:N/C:P/I:P/A:P",
+				CvssScoreV3:      7.8,
+				CvssVectorV3:     "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+				Severity:         types.SeverityMedium,
+				SeverityV3:       types.SeverityHigh,
+				References:       []string{"https://www.intel.com/content/www/us/en/security-center/advisory/intel-sa-00471.html"},
+				LastModifiedDate: utils.MustTimeParse("2021-02-22T20:23:00Z"),
+				PublishedDate:    utils.MustTimeParse("2021-02-17T14:15:00Z"),
+				CPEDetails: types.CPEDetails{
+					CveDataVersion: "4.0",
+					Nodes: []types.Node{
+						{
+							Operator: "AND",
+							Children: []types.Node{
+								types.Node{
+									Operator: "OR",
+									CPEMatch: []types.Node{
+										types.Node{
+											Cpe23Uri:            "cpe:2.3:o:intel:compute_stick_stk1a32sc_firmware:*:*:*:*:*:*:*:*",
+											VersionEndExcluding: "604",
+											Vulnerable:          boolptr(true),
+										},
+									},
+								},
+								types.Node{
+									Operator: "OR",
+									CPEMatch: []types.Node{
+										types.Node{
+											Cpe23Uri:   "cpe:2.3:h:intel:compute_stick_stk1a32sc:-:*:*:*:*:*:*:*",
+											Vulnerable: boolptr(false),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 		{
