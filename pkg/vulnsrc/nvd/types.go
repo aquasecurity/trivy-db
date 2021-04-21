@@ -5,6 +5,7 @@ type NVD struct {
 }
 
 type Item struct {
+	Configurations   interface{}
 	Cve              Cve
 	Impact           Impact
 	LastModifiedDate string `json:"lastModifiedDate"`

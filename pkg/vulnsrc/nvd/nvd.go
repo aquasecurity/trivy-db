@@ -92,7 +92,6 @@ func (vs VulnSrc) commit(tx *bolt.Tx, items []Item) error {
 
 		publishedDate, _ := time.Parse("2006-01-02T15:04Z", item.PublishedDate)
 		lastModifiedDate, _ := time.Parse("2006-01-02T15:04Z", item.LastModifiedDate)
-
 		vuln := types.VulnerabilityDetail{
 			CvssScore:        item.Impact.BaseMetricV2.CvssV2.BaseScore,
 			CvssVector:       item.Impact.BaseMetricV2.CvssV2.VectorString,
@@ -107,7 +106,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, items []Item) error {
 			PublishedDate:    &publishedDate,
 			LastModifiedDate: &lastModifiedDate,
 		}
-
+		if item.Configurations != nil {
+			configurationString, err := json.Marshal(item.Configurations)
+			if err == nil {
+				vuln.CPEDetails = string(configurationString)
+			}
+		}
 		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Nvd, vuln); err != nil {
 			return err
 		}

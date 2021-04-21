@@ -41,6 +41,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				References:       []string{"https://source.android.com/security/bulletin/2020-01-01"},
 				LastModifiedDate: utils.MustTimeParse("2020-01-01T01:01:00Z"),
 				PublishedDate:    utils.MustTimeParse("2001-01-01T01:01:00Z"),
+				CPEDetails:       `{"CVE_data_version":"4.0","nodes":[{"cpe_match":[{"cpe23Uri":"cpe:2.3:o:google:android:8.0:*:*:*:*:*:*:*","vulnerable":true},{"cpe23Uri":"cpe:2.3:o:google:android:8.1:*:*:*:*:*:*:*","vulnerable":true},{"cpe23Uri":"cpe:2.3:o:google:android:9.0:*:*:*:*:*:*:*","vulnerable":true},{"cpe23Uri":"cpe:2.3:o:google:android:10.0:*:*:*:*:*:*:*","vulnerable":true}],"operator":"OR"}]}`,
 			},
 		},
 		{

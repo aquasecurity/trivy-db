@@ -95,6 +95,7 @@ type VulnerabilityDetail struct {
 	Description      string     `json:",omitempty"`
 	PublishedDate    *time.Time `json:",omitempty"`
 	LastModifiedDate *time.Time `json:",omitempty"`
+	CPEDetails       string     `json:",omitempty"`
 }
 
 type AdvisoryDetail struct {
