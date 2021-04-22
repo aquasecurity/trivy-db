@@ -1,4 +1,4 @@
-package gemnasium
+package glad
 
 import (
 	"encoding/json"
@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	gemnasiumDir = "gemnasium"
+	gladDir = "glad"
 
 	Conan PackageType = iota + 1
 	Gem
@@ -31,9 +31,9 @@ const (
 
 var (
 	supportIDPrefixes = []string{"CVE", "OSVDB", "GMS"}
-	datasourceFormat  = "gemnasium-%s"
+	datasourceFormat  = "glad-%s"
 	PlatformSeperator = "::"
-	platformFormat    = "Gemnasium Advisory %s"
+	platformFormat    = "GitLab Advisory Database %s"
 )
 
 type PackageType int
@@ -51,8 +51,8 @@ func NewVulnSrc(packageType PackageType) VulnSrc {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	var gemnasiums []GemnasiumAdvisory
-	rootDir := filepath.Join(dir, "vuln-list", gemnasiumDir)
+	var glads []GladAdvisory
+	rootDir := filepath.Join(dir, "vuln-list", gladDir)
 
 	err := utils.FileWalk(filepath.Join(rootDir, strings.ToLower(vs.packageType.String())), func(r io.Reader, path string) error {
 		skip := true
@@ -67,29 +67,29 @@ func (vs VulnSrc) Update(dir string) error {
 			return nil
 		}
 
-		var gemnasium GemnasiumAdvisory
-		if err := json.NewDecoder(r).Decode(&gemnasium); err != nil {
-			return xerrors.Errorf("failed to decode Gemnasium: %w", err)
+		var glad GladAdvisory
+		if err := json.NewDecoder(r).Decode(&glad); err != nil {
+			return xerrors.Errorf("failed to decode GLAD: %w", err)
 		}
 
-		gemnasiums = append(gemnasiums, gemnasium)
+		glads = append(glads, glad)
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in Gemnasium walk: %w", err)
+		return xerrors.Errorf("error in GLAD walk: %w", err)
 	}
 
-	if err = vs.save(gemnasiums); err != nil {
-		return xerrors.Errorf("error in Gemnasium save: %w", err)
+	if err = vs.save(glads); err != nil {
+		return xerrors.Errorf("error in GLAD save: %w", err)
 	}
 
 	return nil
 }
 
-func (vs VulnSrc) save(gemnasiums []GemnasiumAdvisory) error {
-	log.Println("Saveing Gemnasium DB")
+func (vs VulnSrc) save(glads []GladAdvisory) error {
+	log.Println("Saveing GLAD DB")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		return vs.commit(tx, gemnasiums)
+		return vs.commit(tx, glads)
 	})
 	if err != nil {
 		return xerrors.Errorf("error in batch update: %w", err)
@@ -97,38 +97,38 @@ func (vs VulnSrc) save(gemnasiums []GemnasiumAdvisory) error {
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, gemnasiums []GemnasiumAdvisory) error {
-	for _, gemnasium := range gemnasiums {
+func (vs VulnSrc) commit(tx *bolt.Tx, glads []GladAdvisory) error {
+	for _, glad := range glads {
 		a := types.Advisory{
-			VulnerableVersions: []string{gemnasium.AffectedRange},
-			PatchedVersions:    gemnasium.FixedVersions,
+			VulnerableVersions: []string{glad.AffectedRange},
+			PatchedVersions:    glad.FixedVersions,
 		}
-		ss := strings.Split(gemnasium.PackageSlug, "/")
+		ss := strings.Split(glad.PackageSlug, "/")
 		if len(ss) < 2 {
-			return xerrors.Errorf("failed to parse package slug: %s", gemnasium.PackageSlug)
+			return xerrors.Errorf("failed to parse package slug: %s", glad.PackageSlug)
 		}
 		pkgName := strings.Join(ss[1:], "/")
 
-		err := vs.dbc.PutAdvisoryDetail(tx, gemnasium.Identifier, vs.packageType.platformName(), pkgName, a)
+		err := vs.dbc.PutAdvisoryDetail(tx, glad.Identifier, vs.packageType.platformName(), pkgName, a)
 		if err != nil {
-			return xerrors.Errorf("failed to save Gemnasium: %w", err)
+			return xerrors.Errorf("failed to save GLAD: %w", err)
 		}
 
 		vuln := types.VulnerabilityDetail{
-			ID:           gemnasium.Identifier,
+			ID:           glad.Identifier,
 			Severity:     types.SeverityUnknown,
-			References:   gemnasium.Urls,
-			Title:        gemnasium.Title,
-			Description:  gemnasium.Description,
-			CvssVector:   gemnasium.CvssV2,
-			CvssVectorV3: gemnasium.CvssV3,
+			References:   glad.Urls,
+			Title:        glad.Title,
+			Description:  glad.Description,
+			CvssVector:   glad.CvssV2,
+			CvssVectorV3: glad.CvssV3,
 		}
-		if err = vs.dbc.PutVulnerabilityDetail(tx, gemnasium.Identifier, fmt.Sprintf(datasourceFormat, strings.ToLower(vs.packageType.String())), vuln); err != nil {
-			return xerrors.Errorf("failed to save Gemnasium vulnerability detail: %w", err)
+		if err = vs.dbc.PutVulnerabilityDetail(tx, glad.Identifier, fmt.Sprintf(datasourceFormat, strings.ToLower(vs.packageType.String())), vuln); err != nil {
+			return xerrors.Errorf("failed to save GLAD vulnerability detail: %w", err)
 		}
 
-		if err := vs.dbc.PutSeverity(tx, gemnasium.Identifier, types.SeverityUnknown); err != nil {
-			return xerrors.Errorf("failed to save Gemnasium vulnerability severity: %w", err)
+		if err := vs.dbc.PutSeverity(tx, glad.Identifier, types.SeverityUnknown); err != nil {
+			return xerrors.Errorf("failed to save GLAD vulnerability severity: %w", err)
 		}
 	}
 

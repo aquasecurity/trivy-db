@@ -20,8 +20,8 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/composer"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
 	debianoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian-oval"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/gemnasium"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/glad"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
@@ -65,14 +65,14 @@ var (
 		vulnerability.GHSANuget:             ghsa.NewVulnSrc(ghsa.Nuget),
 		vulnerability.GHSAPip:               ghsa.NewVulnSrc(ghsa.Pip),
 		vulnerability.GHSARubygems:          ghsa.NewVulnSrc(ghsa.Rubygems),
-		vulnerability.GemnasiumConan:        gemnasium.NewVulnSrc(gemnasium.Conan),
-		vulnerability.GemnasiumGo:           gemnasium.NewVulnSrc(gemnasium.Go),
-		vulnerability.GemnasiumGem:          gemnasium.NewVulnSrc(gemnasium.Gem),
-		vulnerability.GemnasiumMaven:        gemnasium.NewVulnSrc(gemnasium.Maven),
-		vulnerability.GemnasiumNpm:          gemnasium.NewVulnSrc(gemnasium.Npm),
-		vulnerability.GemnasiumPackagist:    gemnasium.NewVulnSrc(gemnasium.Packagist),
-		vulnerability.GemnasiumNuget:        gemnasium.NewVulnSrc(gemnasium.Nuget),
-		vulnerability.GemnasiumPypi:         gemnasium.NewVulnSrc(gemnasium.Pypi),
+		vulnerability.GLADConan:             glad.NewVulnSrc(glad.Conan),
+		vulnerability.GLADGo:                glad.NewVulnSrc(glad.Go),
+		vulnerability.GLADGem:               glad.NewVulnSrc(glad.Gem),
+		vulnerability.GLADMaven:             glad.NewVulnSrc(glad.Maven),
+		vulnerability.GLADNpm:               glad.NewVulnSrc(glad.Npm),
+		vulnerability.GLADPackagist:         glad.NewVulnSrc(glad.Packagist),
+		vulnerability.GLADNuget:             glad.NewVulnSrc(glad.Nuget),
+		vulnerability.GLADPypi:              glad.NewVulnSrc(glad.Pypi),
 	}
 )
 

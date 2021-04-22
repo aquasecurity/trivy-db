@@ -1,4 +1,4 @@
-package gemnasium
+package glad
 
 type Advisory struct {
 	VulnerabilityID string   `json:",omitempty"`
@@ -6,7 +6,7 @@ type Advisory struct {
 	PatchedVersions []string `json:",omitempty"`
 }
 
-type GemnasiumAdvisory struct {
+type GladAdvisory struct {
 	Identifier       string
 	PackageSlug      string
 	Title            string
