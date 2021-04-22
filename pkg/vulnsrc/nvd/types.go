@@ -106,7 +106,6 @@ func mapConfigurationsToCPEDetails(configuration Configurations, cpeDetail *type
 			cpeDetail.Nodes = append(cpeDetail.Nodes, cpeNode)
 		}
 	}
-	return
 }
 
 func mapConfigNodeToCPENode(configNode Node, cpeNode *types.Node) {
