@@ -107,7 +107,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, glads []GladAdvisory) error {
 		if len(ss) < 2 {
 			return xerrors.Errorf("failed to parse package slug: %s", glad.PackageSlug)
 		}
+
 		pkgName := strings.Join(ss[1:], "/")
+		if vs.packageType == Maven {
+			pkgName = strings.Join(ss[1:], ":")
+		}
 
 		err := vs.dbc.PutAdvisoryDetail(tx, glad.Identifier, vs.packageType.platformName(), pkgName, a)
 		if err != nil {
