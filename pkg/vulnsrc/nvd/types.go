@@ -97,7 +97,7 @@ type Node struct {
 	Vulnerable          *bool  `json:"vulnerable,omitempty"`
 }
 
-func mapConfigurationsToCPEDetails(configuration Configurations, cpeDetail *types.CPEDetails) error {
+func mapConfigurationsToCPEDetails(configuration Configurations, cpeDetail *types.CPEDetails) {
 	cpeDetail.CveDataVersion = configuration.CveDataVersion
 	if configuration.Nodes != nil {
 		for _, n := range configuration.Nodes {
@@ -106,7 +106,7 @@ func mapConfigurationsToCPEDetails(configuration Configurations, cpeDetail *type
 			cpeDetail.Nodes = append(cpeDetail.Nodes, cpeNode)
 		}
 	}
-	return nil
+	return
 }
 
 func mapConfigNodeToCPENode(configNode Node, cpeNode *types.Node) {

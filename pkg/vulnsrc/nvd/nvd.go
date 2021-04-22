@@ -107,9 +107,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, items []Item) error {
 			LastModifiedDate: &lastModifiedDate,
 		}
 		if item.Configurations.CveDataVersion != "" {
-			if err := mapConfigurationsToCPEDetails(item.Configurations, &vuln.CPEDetails); err != nil {
-				log.Printf("error mapping cpe details: %v\n", err)
-			}
+			mapConfigurationsToCPEDetails(item.Configurations, &vuln.CPEDetails)
 		}
 		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Nvd, vuln); err != nil {
 			return err
