@@ -1,8 +1,6 @@
 package nvd
 
 import (
-	"encoding/json"
-
 	"github.com/aquasecurity/trivy-db/pkg/types"
 )
 
@@ -100,14 +98,44 @@ type Node struct {
 }
 
 func mapConfigurationsToCPEDetails(configuration Configurations, cpeDetail *types.CPEDetails) error {
-	rawJson, err := json.Marshal(configuration)
-	if err != nil {
-		return err
-	}
-	if err = json.Unmarshal(rawJson, &cpeDetail); err != nil {
-		return err
+	cpeDetail.CveDataVersion = configuration.CveDataVersion
+	if configuration.Nodes != nil {
+		for _, n := range configuration.Nodes {
+			var cpeNode types.Node
+			mapConfigNodeToCPENode(n, &cpeNode)
+			cpeDetail.Nodes = append(cpeDetail.Nodes, cpeNode)
+		}
 	}
 	return nil
+}
+
+func mapConfigNodeToCPENode(configNode Node, cpeNode *types.Node) {
+	if configNode.Operator != "" {
+		cpeNode.Operator = configNode.Operator
+	}
+	if configNode.Cpe23Uri != "" {
+		cpeNode.Cpe23Uri = configNode.Cpe23Uri
+	}
+	if configNode.VersionEndExcluding != "" {
+		cpeNode.VersionEndExcluding = configNode.VersionEndExcluding
+	}
+	if configNode.Vulnerable != nil {
+		cpeNode.Vulnerable = configNode.Vulnerable
+	}
+	if configNode.Children != nil {
+		for _, n := range configNode.Children {
+			var cpeChildNode types.Node
+			mapConfigNodeToCPENode(n, &cpeChildNode)
+			cpeNode.Children = append(cpeNode.Children, cpeChildNode)
+		}
+	}
+	if configNode.CPEMatch != nil {
+		for _, n := range configNode.CPEMatch {
+			var cpeMatchNode types.Node
+			mapConfigNodeToCPENode(n, &cpeMatchNode)
+			cpeNode.CPEMatch = append(cpeNode.CPEMatch, cpeMatchNode)
+		}
+	}
 }
 
 func boolptr(val bool) *bool {

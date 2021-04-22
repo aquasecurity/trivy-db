@@ -99,17 +99,17 @@ type VulnerabilityDetail struct {
 }
 
 type CPEDetails struct {
-	CveDataVersion string `json:"CVE_data_version"`
-	Nodes          []Node `json:"nodes,omitempty"`
+	CveDataVersion string `json:"CVEDataVersion"`
+	Nodes          []Node `json:"Nodes,omitempty"`
 }
 
 type Node struct {
-	Children            []Node `json:"children,omitempty"`
-	Operator            string `json:"operator,omitempty"`
-	CPEMatch            []Node `json:"cpe_match,omitempty"`
-	Cpe23Uri            string `json:"cpe23Uri,omitempty"`
-	VersionEndExcluding string `json:"versionEndExcluding,omitempty"`
-	Vulnerable          *bool  `json:"vulnerable,omitempty"`
+	Children            []Node `json:"Children,omitempty"`
+	Operator            string `json:"Operator,omitempty"`
+	CPEMatch            []Node `json:"CpeMatch,omitempty"`
+	Cpe23Uri            string `json:"Cpe23Uri,omitempty"`
+	VersionEndExcluding string `json:"VersionEndExcluding,omitempty"`
+	Vulnerable          *bool  `json:"Vulnerable,omitempty"`
 }
 
 type AdvisoryDetail struct {
