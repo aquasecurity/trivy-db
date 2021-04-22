@@ -335,7 +335,7 @@ func TestVulnSrc_save(t *testing.T) {
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
 						Source:          "maven::GitLab Advisory Database Maven",
-						PkgName:         "org.springframework.boot/spring-boot",
+						PkgName:         "org.springframework.boot:spring-boot",
 						VulnerabilityID: "CVE-2018-1196",
 						Advisory: types.Advisory{
 							VulnerableVersions: []string{"(,1.5.10)"},
