@@ -79,7 +79,6 @@ func (vs VulnSrc) commit(tx *bolt.Tx, items []Entry) error {
 			patchedVersions = append(patchedVersions, fixedVersions.Fixed)
 		}
 		a := types.Advisory{
-			VulnerabilityID: cveID,
 			PatchedVersions: patchedVersions,
 		}
 		err := vs.dbc.PutAdvisoryDetail(tx, cveID, vulnerability.GoVulnDB, item.Package.Name, a)

@@ -166,7 +166,6 @@ func TestVulnSrc_Commit(t *testing.T) {
 						PkgName:         "github.com/dhowden/tag",
 						VulnerabilityID: "GO-2021-0097",
 						Advisory: types.Advisory{
-							VulnerabilityID: "GO-2021-0097",
 							PatchedVersions: []string{"v0.0.0-20201120070457-d52dcb253c63"},
 						},
 					},
