@@ -66,8 +66,7 @@ func TestVulnSrc_Update(t *testing.T) {
 			mockDBConfig.ApplyBatchUpdateExpectations(tt.batchUpdate)
 
 			vs := VulnSrc{
-				dbc:         mockDBConfig,
-				packageType: Pypi,
+				dbc: mockDBConfig,
 			}
 			err := vs.Update(tt.args.dir)
 			if tt.wantErr != "" {
@@ -83,11 +82,11 @@ func TestVulnSrc_Update(t *testing.T) {
 
 func TestVulnSrc_save(t *testing.T) {
 	type args struct {
-		glads []GladAdvisory
+		glads []Advisory
 	}
 	tests := []struct {
 		name                   string
-		packageType            PackageType
+		packageType            packageType
 		args                   args
 		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
 		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
@@ -98,7 +97,7 @@ func TestVulnSrc_save(t *testing.T) {
 			name:        "happy path conan",
 			packageType: Conan,
 			args: args{
-				glads: []GladAdvisory{
+				glads: []Advisory{
 					{
 						Identifier:       "CVE-2020-14150",
 						PackageSlug:      "conan/bison",
@@ -139,7 +138,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
-						Source:          vulnerability.GLADConan,
+						Source:          vulnerability.GLAD,
 						VulnerabilityID: "CVE-2020-14150",
 						Vulnerability: types.VulnerabilityDetail{
 							ID:       "CVE-2020-14150",
@@ -170,7 +169,7 @@ func TestVulnSrc_save(t *testing.T) {
 			name:        "happy path gem",
 			packageType: Gem,
 			args: args{
-				glads: []GladAdvisory{
+				glads: []Advisory{
 					{
 						Identifier:       "OSVDB-112347",
 						PackageSlug:      "gem/activejob",
@@ -210,7 +209,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
-						Source:          vulnerability.GLADGem,
+						Source:          vulnerability.GLAD,
 						VulnerabilityID: "OSVDB-112347",
 						Vulnerability: types.VulnerabilityDetail{
 							ID:       "OSVDB-112347",
@@ -240,7 +239,7 @@ func TestVulnSrc_save(t *testing.T) {
 			name:        "happy path go",
 			packageType: Go,
 			args: args{
-				glads: []GladAdvisory{
+				glads: []Advisory{
 					{
 						Identifier:       "CVE-2016-1905",
 						PackageSlug:      "go/k8s.io/kubernetes",
@@ -280,7 +279,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
-						Source:          vulnerability.GLADGo,
+						Source:          vulnerability.GLAD,
 						VulnerabilityID: "CVE-2016-1905",
 						Vulnerability: types.VulnerabilityDetail{
 							ID:       "CVE-2016-1905",
@@ -310,7 +309,7 @@ func TestVulnSrc_save(t *testing.T) {
 			name:        "happy path maven",
 			packageType: Maven,
 			args: args{
-				glads: []GladAdvisory{
+				glads: []Advisory{
 					{
 						Identifier:       "CVE-2018-1196",
 						PackageSlug:      "maven/org.springframework.boot/spring-boot",
@@ -348,7 +347,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
-						Source:          vulnerability.GLADMaven,
+						Source:          vulnerability.GLAD,
 						VulnerabilityID: "CVE-2018-1196",
 						Vulnerability: types.VulnerabilityDetail{
 							ID:       "CVE-2018-1196",
@@ -378,7 +377,7 @@ func TestVulnSrc_save(t *testing.T) {
 			name:        "happy path npm",
 			packageType: Npm,
 			args: args{
-				glads: []GladAdvisory{
+				glads: []Advisory{
 					{
 						Identifier:       "CVE-2019-10742",
 						PackageSlug:      "npm/axios",
@@ -420,7 +419,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
-						Source:          vulnerability.GLADNpm,
+						Source:          vulnerability.GLAD,
 						VulnerabilityID: "CVE-2019-10742",
 						Vulnerability: types.VulnerabilityDetail{
 							ID:       "CVE-2019-10742",
@@ -452,7 +451,7 @@ func TestVulnSrc_save(t *testing.T) {
 			name:        "happy path nuget",
 			packageType: Nuget,
 			args: args{
-				glads: []GladAdvisory{
+				glads: []Advisory{
 					{
 						Identifier:       "CVE-2020-1108",
 						PackageSlug:      "nuget/powershell",
@@ -493,7 +492,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
-						Source:          vulnerability.GLADNuget,
+						Source:          vulnerability.GLAD,
 						VulnerabilityID: "CVE-2020-1108",
 						Vulnerability: types.VulnerabilityDetail{
 							ID:       "CVE-2020-1108",
@@ -524,7 +523,7 @@ func TestVulnSrc_save(t *testing.T) {
 			name:        "happy path packagist",
 			packageType: Packagist,
 			args: args{
-				glads: []GladAdvisory{
+				glads: []Advisory{
 					{
 						Identifier:       "GMS-2018-25",
 						PackageSlug:      "packagist/adodb/adodb-php",
@@ -566,7 +565,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
-						Source:          vulnerability.GLADPackagist,
+						Source:          vulnerability.GLAD,
 						VulnerabilityID: "GMS-2018-25",
 						Vulnerability: types.VulnerabilityDetail{
 							ID:       "GMS-2018-25",
@@ -596,9 +595,9 @@ func TestVulnSrc_save(t *testing.T) {
 		},
 		{
 			name:        "happy path pypi",
-			packageType: Pypi,
+			packageType: PyPI,
 			args: args{
-				glads: []GladAdvisory{
+				glads: []Advisory{
 					{
 						Identifier:    "CVE-2020-13254",
 						PackageSlug:   "pypi/Django",
@@ -630,7 +629,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "pip::GitLab Advisory Database Pypi",
+						Source:          "pip::GitLab Advisory Database PyPI",
 						PkgName:         "Django",
 						VulnerabilityID: "CVE-2020-13254",
 						Advisory: types.Advisory{
@@ -647,7 +646,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
-						Source:          vulnerability.GLADPypi,
+						Source:          vulnerability.GLAD,
 						VulnerabilityID: "CVE-2020-13254",
 						Vulnerability: types.VulnerabilityDetail{
 							ID:       "CVE-2020-13254",
@@ -677,9 +676,9 @@ func TestVulnSrc_save(t *testing.T) {
 		},
 		{
 			name:        "PutVulnerabilityDetail returns an error",
-			packageType: Pypi,
+			packageType: PyPI,
 			args: args{
-				glads: []GladAdvisory{
+				glads: []Advisory{
 					{
 						Identifier:    "CVE-2020-13254",
 						PackageSlug:   "pypi/Django",
@@ -711,7 +710,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "pip::GitLab Advisory Database Pypi",
+						Source:          "pip::GitLab Advisory Database PyPI",
 						PkgName:         "Django",
 						VulnerabilityID: "CVE-2020-13254",
 						Advisory: types.Advisory{
@@ -728,7 +727,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
-						Source:          vulnerability.GLADPypi,
+						Source:          vulnerability.GLAD,
 						VulnerabilityID: "CVE-2020-13254",
 						Vulnerability: types.VulnerabilityDetail{
 							ID:       "CVE-2020-13254",
@@ -753,9 +752,9 @@ func TestVulnSrc_save(t *testing.T) {
 		},
 		{
 			name:        "PutVulnerabilitySeverity returns an error",
-			packageType: Pypi,
+			packageType: PyPI,
 			args: args{
-				glads: []GladAdvisory{
+				glads: []Advisory{
 					{
 						Identifier:    "CVE-2020-13254",
 						PackageSlug:   "pypi/Django",
@@ -787,7 +786,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "pip::GitLab Advisory Database Pypi",
+						Source:          "pip::GitLab Advisory Database PyPI",
 						PkgName:         "Django",
 						VulnerabilityID: "CVE-2020-13254",
 						Advisory: types.Advisory{
@@ -804,7 +803,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
-						Source:          vulnerability.GLADPypi,
+						Source:          vulnerability.GLAD,
 						VulnerabilityID: "CVE-2020-13254",
 						Vulnerability: types.VulnerabilityDetail{
 							ID:       "CVE-2020-13254",
@@ -846,10 +845,9 @@ func TestVulnSrc_save(t *testing.T) {
 			mockDBConfig.ApplyPutSeverityExpectations(tt.putSeverity)
 
 			vs := VulnSrc{
-				dbc:         mockDBConfig,
-				packageType: tt.packageType,
+				dbc: mockDBConfig,
 			}
-			err := vs.commit(nil, tt.args.glads)
+			err := vs.commit(nil, tt.packageType, tt.args.glads)
 
 			if tt.wantErr != "" {
 				require.NotNil(t, err, tt.name)

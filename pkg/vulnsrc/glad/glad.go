@@ -19,41 +19,48 @@ import (
 const (
 	gladDir = "glad"
 
-	Conan     PackageType = "Conan"
-	Gem       PackageType = "Gem"
-	Go        PackageType = "Go"
-	Maven     PackageType = "Maven"
-	Npm       PackageType = "Npm"
-	Nuget     PackageType = "Nuget"
-	Packagist PackageType = "Packagist"
-	PyPI      PackageType = "PyPI"
+	Conan     packageType = "Conan"
+	Gem       packageType = "Gem"
+	Go        packageType = "Go"
+	Maven     packageType = "Maven"
+	Npm       packageType = "Npm"
+	Nuget     packageType = "Nuget"
+	Packagist packageType = "Packagist"
+	PyPI      packageType = "PyPI"
 )
 
 var (
+	// TODO: support Conan and Packagist
+	supportedPkgTypes   = []packageType{Gem, Go, Maven, Npm, Nuget, PyPI}
 	supportedIDPrefixes = []string{"CVE", "OSVDB", "GMS"}
-	datasourceFormat    = "glad-%s"
 	PlatformSeperator   = "::"
 	platformFormat      = "GitLab Advisory Database %s"
 )
 
-type PackageType string
+type packageType string
 
 type VulnSrc struct {
-	dbc         db.Operation
-	packageType PackageType
+	dbc db.Operation
 }
 
-func NewVulnSrc(packageType PackageType) VulnSrc {
+func NewVulnSrc() VulnSrc {
 	return VulnSrc{
-		dbc:         db.Config{},
-		packageType: packageType,
+		dbc: db.Config{},
 	}
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	pkgType := strings.ToLower(string(vs.packageType))
-	rootDir := filepath.Join(dir, "vuln-list", gladDir, pkgType)
+	for _, t := range supportedPkgTypes {
+		log.Printf("Update GitLab Advisory Database %s", t)
+		rootDir := filepath.Join(dir, "vuln-list", gladDir, strings.ToLower(string(t)))
+		if err := vs.update(t, rootDir); err != nil {
+			return xerrors.Errorf("update error: %w", err)
+		}
+	}
+	return nil
+}
 
+func (vs VulnSrc) update(pkgType packageType, rootDir string) error {
 	var glads []Advisory
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		if !supportedIDs(filepath.Base(path)) {
@@ -72,25 +79,25 @@ func (vs VulnSrc) Update(dir string) error {
 		return xerrors.Errorf("walk error: %w", err)
 	}
 
-	if err = vs.save(glads); err != nil {
+	if err = vs.save(pkgType, glads); err != nil {
 		return xerrors.Errorf("save error: %w", err)
 	}
 
 	return nil
 }
 
-func (vs VulnSrc) save(glads []Advisory) error {
-	log.Println("Saving GitLab Advisory Database")
+func (vs VulnSrc) save(pkgType packageType, glads []Advisory) error {
+	log.Printf("Saving GitLab Advisory Database %s...", pkgType)
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		return vs.commit(tx, glads)
+		return vs.commit(tx, pkgType, glads)
 	})
 	if err != nil {
-		return xerrors.Errorf("error in batch update: %w", err)
+		return xerrors.Errorf("batch update error: %w", err)
 	}
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, glads []Advisory) error {
+func (vs VulnSrc) commit(tx *bolt.Tx, pkgType packageType, glads []Advisory) error {
 	for _, glad := range glads {
 		a := types.Advisory{
 			VulnerableVersions: []string{glad.AffectedRange},
@@ -104,12 +111,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, glads []Advisory) error {
 		}
 
 		pkgName := ss[1]
-		if vs.packageType == Maven {
+		if pkgType == Maven {
 			// e.g. "maven/batik/batik-transcoder" => "maven", "batik:batik-transcoder"
 			pkgName = strings.ReplaceAll(pkgName, "/", ":")
 		}
 
-		err := vs.dbc.PutAdvisoryDetail(tx, glad.Identifier, vs.packageType.platformName(), pkgName, a)
+		err := vs.dbc.PutAdvisoryDetail(tx, glad.Identifier, pkgType.platformName(), pkgName, a)
 		if err != nil {
 			return xerrors.Errorf("failed to save GLAD advisory detail: %w", err)
 		}
@@ -124,8 +131,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, glads []Advisory) error {
 			CvssVectorV3: glad.CvssV3,
 		}
 
-		source := fmt.Sprintf(datasourceFormat, strings.ToLower(string(vs.packageType)))
-		if err = vs.dbc.PutVulnerabilityDetail(tx, glad.Identifier, source, vuln); err != nil {
+		if err = vs.dbc.PutVulnerabilityDetail(tx, glad.Identifier, vulnerability.GLAD, vuln); err != nil {
 			return xerrors.Errorf("failed to save GLAD vulnerability detail: %w", err)
 		}
 
@@ -137,7 +143,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, glads []Advisory) error {
 	return nil
 }
 
-func (pt PackageType) convertToEcosystem() string {
+func (pt packageType) convertToEcosystem() string {
 	switch pt {
 	case Npm:
 		return vulnerability.Npm
@@ -159,7 +165,7 @@ func (pt PackageType) convertToEcosystem() string {
 	return "Unknown"
 }
 
-func (pt PackageType) platformName() string {
+func (pt packageType) platformName() string {
 	return strings.Join(
 		[]string{pt.convertToEcosystem(), fmt.Sprintf(platformFormat, pt)},
 		PlatformSeperator,
