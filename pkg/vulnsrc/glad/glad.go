@@ -30,10 +30,10 @@ const (
 )
 
 var (
-	supportIDPrefixes = []string{"CVE", "OSVDB", "GMS"}
-	datasourceFormat  = "glad-%s"
-	PlatformSeperator = "::"
-	platformFormat    = "GitLab Advisory Database %s"
+	supportedIDPrefixes = []string{"CVE", "OSVDB", "GMS"}
+	datasourceFormat    = "glad-%s"
+	PlatformSeperator   = "::"
+	platformFormat      = "GitLab Advisory Database %s"
 )
 
 type PackageType int
@@ -55,15 +55,7 @@ func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", gladDir)
 
 	err := utils.FileWalk(filepath.Join(rootDir, strings.ToLower(vs.packageType.String())), func(r io.Reader, path string) error {
-		skip := true
-		for _, IDPrefix := range supportIDPrefixes {
-			_, fileName := filepath.Split(path)
-			if strings.HasPrefix(fileName, IDPrefix) {
-				skip = false
-				break
-			}
-		}
-		if skip {
+		if !supportedIDs(filepath.Base(path)) {
 			return nil
 		}
 
@@ -188,4 +180,13 @@ func (pt PackageType) platformName() string {
 		[]string{pt.ConvertToEcosystem(), fmt.Sprintf(platformFormat, pt)},
 		PlatformSeperator,
 	)
+}
+
+func supportedIDs(fileName string) bool {
+	for _, prefix := range supportedIDPrefixes {
+		if strings.HasPrefix(fileName, prefix) {
+			return true
+		}
+	}
+	return false
 }
