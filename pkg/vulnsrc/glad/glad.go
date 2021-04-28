@@ -51,7 +51,7 @@ func NewVulnSrc() VulnSrc {
 
 func (vs VulnSrc) Update(dir string) error {
 	for _, t := range supportedPkgTypes {
-		log.Printf("Update GitLab Advisory Database %s", t)
+		log.Printf("    Update GitLab Advisory Database %s...", t)
 		rootDir := filepath.Join(dir, "vuln-list", gladDir, strings.ToLower(string(t)))
 		if err := vs.update(t, rootDir); err != nil {
 			return xerrors.Errorf("update error: %w", err)
@@ -87,7 +87,7 @@ func (vs VulnSrc) update(pkgType packageType, rootDir string) error {
 }
 
 func (vs VulnSrc) save(pkgType packageType, glads []Advisory) error {
-	log.Printf("Saving GitLab Advisory Database %s...", pkgType)
+	log.Printf("    Saving GitLab Advisory Database %s...", pkgType)
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, pkgType, glads)
 	})
