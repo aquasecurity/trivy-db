@@ -1,12 +1,6 @@
 package glad
 
 type Advisory struct {
-	VulnerabilityID string   `json:",omitempty"`
-	AffectedRange   string   `json:",omitempty"`
-	PatchedVersions []string `json:",omitempty"`
-}
-
-type GladAdvisory struct {
 	Identifier       string
 	PackageSlug      string
 	Title            string

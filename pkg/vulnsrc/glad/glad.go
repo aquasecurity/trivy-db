@@ -51,7 +51,7 @@ func NewVulnSrc(packageType PackageType) VulnSrc {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	var glads []GladAdvisory
+	var glads []Advisory
 	rootDir := filepath.Join(dir, "vuln-list", gladDir)
 
 	err := utils.FileWalk(filepath.Join(rootDir, strings.ToLower(vs.packageType.String())), func(r io.Reader, path string) error {
@@ -59,7 +59,7 @@ func (vs VulnSrc) Update(dir string) error {
 			return nil
 		}
 
-		var glad GladAdvisory
+		var glad Advisory
 		if err := json.NewDecoder(r).Decode(&glad); err != nil {
 			return xerrors.Errorf("failed to decode GLAD: %w", err)
 		}
@@ -78,8 +78,8 @@ func (vs VulnSrc) Update(dir string) error {
 	return nil
 }
 
-func (vs VulnSrc) save(glads []GladAdvisory) error {
 	log.Println("Saveing GLAD DB")
+func (vs VulnSrc) save(glads []Advisory) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, glads)
 	})
@@ -89,7 +89,7 @@ func (vs VulnSrc) save(glads []GladAdvisory) error {
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, glads []GladAdvisory) error {
+func (vs VulnSrc) commit(tx *bolt.Tx, glads []Advisory) error {
 	for _, glad := range glads {
 		a := types.Advisory{
 			VulnerableVersions: []string{glad.AffectedRange},
