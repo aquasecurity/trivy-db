@@ -23,25 +23,6 @@ func TestVulnSrc_Update(t *testing.T) {
 		wantErr    string
 	}{
 		{
-			name: "happy path conan",
-			dir:  filepath.Join("testdata"),
-			wantValues: []want{
-				{
-					key:   []string{"advisory-detail", "CVE-2020-14150", "conan::GitLab Advisory Database Conan", "bison"},
-					value: `{"PatchedVersions":["3.7.1"],"VulnerableVersions":["\u003c3.5.4"]}`,
-				},
-			},
-		},
-		{
-			name: "happy path gem",
-			dir:  filepath.Join("testdata"),
-			wantValues: []want{
-				{
-					key:   []string{"advisory-detail", "OSVDB-112347", "rubygems::GitLab Advisory Database Gem", "activejob"},
-					value: `{"PatchedVersions":["4.2.0.beta2"],"VulnerableVersions":["=4.2.0.beta1"]}`},
-			},
-		},
-		{
 			name: "happy path go",
 			dir:  filepath.Join("testdata"),
 			wantValues: []want{
@@ -58,46 +39,6 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					key:   []string{"advisory-detail", "CVE-2018-1196", "maven::GitLab Advisory Database Maven", "org.springframework.boot:spring-boot"},
 					value: `{"PatchedVersions":["1.5.10.RELEASE"],"VulnerableVersions":["(,1.5.10)"]}`},
-			},
-		},
-		{
-			name: "happy path npm",
-			dir:  filepath.Join("testdata"),
-			wantValues: []want{
-				{
-					key:   []string{"advisory-detail", "CVE-2019-10742", "npm::GitLab Advisory Database Npm", "axios"},
-					value: `{"PatchedVersions":["0.18.1"],"VulnerableVersions":["\u003c=0.18.0"]}`,
-				},
-			},
-		},
-		{
-			name: "happy path nuget",
-			dir:  filepath.Join("testdata"),
-			wantValues: []want{
-				{
-					key:   []string{"advisory-detail", "CVE-2020-1108", "nuget::GitLab Advisory Database Nuget", "powershell"},
-					value: `{"PatchedVersions":["7.1.0"],"VulnerableVersions":["[7.0]"]}`,
-				},
-			},
-		},
-		{
-			name: "happy path packagist",
-			dir:  filepath.Join("testdata"),
-			wantValues: []want{
-				{
-					key:   []string{"advisory-detail", "GMS-2018-25", "composer::GitLab Advisory Database Packagist", "adodb/adodb-php"},
-					value: `{"PatchedVersions":["v5.20.11"],"VulnerableVersions":["\u003c5.20.11"]}`,
-				},
-			},
-		},
-		{
-			name: "happy path pypi",
-			dir:  filepath.Join("testdata"),
-			wantValues: []want{
-				{
-					key:   []string{"advisory-detail", "CVE-2020-13254", "pip::GitLab Advisory Database PyPI", "Django"},
-					value: `{"PatchedVersions":["2.2.13","3.0.7"],"VulnerableVersions":["\u003e=2.2,\u003c2.2.13||\u003e=3.0,\u003c3.0.7"]}`,
-				},
 			},
 		},
 	}

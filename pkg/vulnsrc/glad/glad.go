@@ -30,8 +30,8 @@ const (
 )
 
 var (
-	// TODO: support Conan and Packagist
-	supportedPkgTypes   = []packageType{Gem, Go, Maven, Npm, Nuget, PyPI}
+	// TODO: support Conan, Npm, NuGet, PyPI and Packagist
+	supportedPkgTypes   = []packageType{Go, Maven}
 	supportedIDPrefixes = []string{"CVE", "OSVDB", "GMS"}
 	PlatformSeperator   = "::"
 	platformFormat      = "GitLab Advisory Database %s"
