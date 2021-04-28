@@ -95,14 +95,17 @@ func (vs VulnSrc) commit(tx *bolt.Tx, glads []Advisory) error {
 			VulnerableVersions: []string{glad.AffectedRange},
 			PatchedVersions:    glad.FixedVersions,
 		}
-		ss := strings.Split(glad.PackageSlug, "/")
+
+		// e.g. "go/github.com/go-ldap/ldap" => "go", "github.com/go-ldap/ldap"
+		ss := strings.SplitN(glad.PackageSlug, "/", 2)
 		if len(ss) < 2 {
 			return xerrors.Errorf("failed to parse package slug: %s", glad.PackageSlug)
 		}
 
-		pkgName := strings.Join(ss[1:], "/")
+		pkgName := ss[1]
 		if vs.packageType == Maven {
-			pkgName = strings.Join(ss[1:], ":")
+			// e.g. "maven/batik/batik-transcoder" => "maven", "batik:batik-transcoder"
+			pkgName = strings.ReplaceAll(pkgName, "/", ":")
 		}
 
 		err := vs.dbc.PutAdvisoryDetail(tx, glad.Identifier, vs.packageType.platformName(), pkgName, a)
