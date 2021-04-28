@@ -78,8 +78,8 @@ func (vs VulnSrc) Update(dir string) error {
 	return nil
 }
 
-	log.Println("Saveing GLAD DB")
 func (vs VulnSrc) save(glads []Advisory) error {
+	log.Println("Saving GitLab Advisory Database")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, glads)
 	})
