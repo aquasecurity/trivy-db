@@ -1,6 +1,7 @@
 package glad_test
 
 import (
+	"io/ioutil"
 	"path/filepath"
 	"testing"
 
@@ -13,8 +14,8 @@ import (
 
 func TestVulnSrc_Update(t *testing.T) {
 	type want struct {
-		key   []string
-		value string
+		key        []string
+		goldenFile string
 	}
 	tests := []struct {
 		name       string
@@ -23,22 +24,25 @@ func TestVulnSrc_Update(t *testing.T) {
 		wantErr    string
 	}{
 		{
-			name: "happy path go",
+			name: "happy path",
 			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []want{
 				{
-					key:   []string{"advisory-detail", "CVE-2016-1905", "go::GitLab Advisory Database Go", "k8s.io/kubernetes"},
-					value: `{"PatchedVersions":["v1.2.0"],"VulnerableVersions":["\u003cv1.2.0"]}`,
+					key:        []string{"advisory-detail", "CVE-2016-1905", "go::GitLab Advisory Database", "k8s.io/kubernetes"},
+					goldenFile: filepath.Join("testdata", "golden", "advisory", "CVE-2016-1905.json"),
 				},
-			},
-		},
-		{
-			name: "happy path maven",
-			dir:  filepath.Join("testdata", "happy"),
-			wantValues: []want{
 				{
-					key:   []string{"advisory-detail", "CVE-2018-1196", "maven::GitLab Advisory Database Maven", "org.springframework.boot:spring-boot"},
-					value: `{"PatchedVersions":["1.5.10.RELEASE"],"VulnerableVersions":["(,1.5.10)"]}`},
+					key:        []string{"advisory-detail", "CVE-2018-1196", "maven::GitLab Advisory Database", "org.springframework.boot:spring-boot"},
+					goldenFile: filepath.Join("testdata", "golden", "advisory", "CVE-2018-1196.json"),
+				},
+				{
+					key:        []string{"vulnerability-detail", "CVE-2016-1905", "glad"},
+					goldenFile: filepath.Join("testdata", "golden", "vulnerability", "CVE-2016-1905.json"),
+				},
+				{
+					key:        []string{"vulnerability-detail", "CVE-2018-1196", "glad"},
+					goldenFile: filepath.Join("testdata", "golden", "vulnerability", "CVE-2018-1196.json"),
+				},
 			},
 		},
 		{
@@ -65,9 +69,10 @@ func TestVulnSrc_Update(t *testing.T) {
 			}
 
 			require.NoError(t, db.Close())
-
 			for _, want := range tt.wantValues {
-				dbtest.JSONEq(t, db.Path(tempDir), want.key, want.value)
+				expectedValue, err := ioutil.ReadFile(want.goldenFile)
+				require.NoError(t, err)
+				dbtest.JSONEq(t, db.Path(tempDir), want.key, string(expectedValue))
 			}
 		})
 	}

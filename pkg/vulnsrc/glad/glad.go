@@ -2,7 +2,6 @@ package glad
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"path/filepath"
@@ -11,6 +10,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
@@ -33,8 +33,7 @@ var (
 	// TODO: support Conan, Npm, NuGet, PyPI and Packagist
 	supportedPkgTypes   = []packageType{Go, Maven}
 	supportedIDPrefixes = []string{"CVE", "GMS"}
-	PlatformSeperator   = "::"
-	platformFormat      = "GitLab Advisory Database %s"
+	datasource          = "GitLab Advisory Database"
 )
 
 type packageType string
@@ -51,7 +50,7 @@ func NewVulnSrc() VulnSrc {
 
 func (vs VulnSrc) Update(dir string) error {
 	for _, t := range supportedPkgTypes {
-		log.Printf("    Update GitLab Advisory Database %s...", t)
+		log.Printf("    Updating GitLab Advisory Database %s...", t)
 		rootDir := filepath.Join(dir, "vuln-list", gladDir, strings.ToLower(string(t)))
 		if err := vs.update(t, rootDir); err != nil {
 			return xerrors.Errorf("update error: %w", err)
@@ -116,19 +115,22 @@ func (vs VulnSrc) commit(tx *bolt.Tx, pkgType packageType, glads []Advisory) err
 			pkgName = strings.ReplaceAll(pkgName, "/", ":")
 		}
 
-		err := vs.dbc.PutAdvisoryDetail(tx, glad.Identifier, pkgType.platformName(), pkgName, a)
+		bucketName, err := bucket.BucketName(string(pkgType), datasource)
 		if err != nil {
+			return xerrors.Errorf("failed to get bucket name with %s, %s: %w", pkgType, datasource, err)
+		}
+
+		if err = vs.dbc.PutAdvisoryDetail(tx, glad.Identifier, bucketName, pkgName, a); err != nil {
 			return xerrors.Errorf("failed to save GLAD advisory detail: %w", err)
 		}
 
+		// glad's cvss score is taken from NVD
 		vuln := types.VulnerabilityDetail{
-			ID:           glad.Identifier,
-			Severity:     types.SeverityUnknown,
-			References:   glad.Urls,
-			Title:        glad.Title,
-			Description:  glad.Description,
-			CvssVector:   glad.CvssV2,
-			CvssVectorV3: glad.CvssV3,
+			ID:          glad.Identifier,
+			Severity:    types.SeverityUnknown,
+			References:  glad.Urls,
+			Title:       glad.Title,
+			Description: glad.Description,
 		}
 
 		if err = vs.dbc.PutVulnerabilityDetail(tx, glad.Identifier, vulnerability.GLAD, vuln); err != nil {
@@ -141,35 +143,6 @@ func (vs VulnSrc) commit(tx *bolt.Tx, pkgType packageType, glads []Advisory) err
 	}
 
 	return nil
-}
-
-func (pt packageType) convertToEcosystem() string {
-	switch pt {
-	case Npm:
-		return vulnerability.Npm
-	case Packagist:
-		return vulnerability.Composer
-	case PyPI:
-		return vulnerability.Pip
-	case Gem:
-		return vulnerability.RubyGems
-	case Nuget:
-		return vulnerability.NuGet
-	case Maven:
-		return vulnerability.Maven
-	case Go:
-		return vulnerability.Go
-	case Conan:
-		return vulnerability.Conan
-	}
-	return "Unknown"
-}
-
-func (pt packageType) platformName() string {
-	return strings.Join(
-		[]string{pt.convertToEcosystem(), fmt.Sprintf(platformFormat, pt)},
-		PlatformSeperator,
-	)
 }
 
 func supportedIDs(fileName string) bool {
