@@ -24,7 +24,7 @@ func TestVulnSrc_Update(t *testing.T) {
 	}{
 		{
 			name: "happy path go",
-			dir:  filepath.Join("testdata"),
+			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []want{
 				{
 					key:   []string{"advisory-detail", "CVE-2016-1905", "go::GitLab Advisory Database Go", "k8s.io/kubernetes"},
@@ -34,12 +34,17 @@ func TestVulnSrc_Update(t *testing.T) {
 		},
 		{
 			name: "happy path maven",
-			dir:  filepath.Join("testdata"),
+			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []want{
 				{
 					key:   []string{"advisory-detail", "CVE-2018-1196", "maven::GitLab Advisory Database Maven", "org.springframework.boot:spring-boot"},
 					value: `{"PatchedVersions":["1.5.10.RELEASE"],"VulnerableVersions":["(,1.5.10)"]}`},
 			},
+		},
+		{
+			name:    "sad path",
+			dir:     filepath.Join("testdata", "sad"),
+			wantErr: "failed to decode GLAD",
 		},
 	}
 	for _, tt := range tests {
