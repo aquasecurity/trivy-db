@@ -19,14 +19,14 @@ import (
 const (
 	gladDir = "glad"
 
-	Conan PackageType = iota + 1
-	Gem
-	Go
-	Maven
-	Npm
-	Nuget
-	Packagist
-	Pypi
+	Conan     PackageType = "Conan"
+	Gem       PackageType = "Gem"
+	Go        PackageType = "Go"
+	Maven     PackageType = "Maven"
+	Npm       PackageType = "Npm"
+	Nuget     PackageType = "Nuget"
+	Packagist PackageType = "Packagist"
+	PyPI      PackageType = "PyPI"
 )
 
 var (
@@ -36,7 +36,7 @@ var (
 	platformFormat      = "GitLab Advisory Database %s"
 )
 
-type PackageType int
+type PackageType string
 
 type VulnSrc struct {
 	dbc         db.Operation
@@ -51,10 +51,11 @@ func NewVulnSrc(packageType PackageType) VulnSrc {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	var glads []Advisory
-	rootDir := filepath.Join(dir, "vuln-list", gladDir)
+	pkgType := strings.ToLower(string(vs.packageType))
+	rootDir := filepath.Join(dir, "vuln-list", gladDir, pkgType)
 
-	err := utils.FileWalk(filepath.Join(rootDir, strings.ToLower(vs.packageType.String())), func(r io.Reader, path string) error {
+	var glads []Advisory
+	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		if !supportedIDs(filepath.Base(path)) {
 			return nil
 		}
@@ -68,11 +69,11 @@ func (vs VulnSrc) Update(dir string) error {
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in GLAD walk: %w", err)
+		return xerrors.Errorf("walk error: %w", err)
 	}
 
 	if err = vs.save(glads); err != nil {
-		return xerrors.Errorf("error in GLAD save: %w", err)
+		return xerrors.Errorf("save error: %w", err)
 	}
 
 	return nil
@@ -110,7 +111,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, glads []Advisory) error {
 
 		err := vs.dbc.PutAdvisoryDetail(tx, glad.Identifier, vs.packageType.platformName(), pkgName, a)
 		if err != nil {
-			return xerrors.Errorf("failed to save GLAD: %w", err)
+			return xerrors.Errorf("failed to save GLAD advisory detail: %w", err)
 		}
 
 		vuln := types.VulnerabilityDetail{
@@ -122,11 +123,13 @@ func (vs VulnSrc) commit(tx *bolt.Tx, glads []Advisory) error {
 			CvssVector:   glad.CvssV2,
 			CvssVectorV3: glad.CvssV3,
 		}
-		if err = vs.dbc.PutVulnerabilityDetail(tx, glad.Identifier, fmt.Sprintf(datasourceFormat, strings.ToLower(vs.packageType.String())), vuln); err != nil {
+
+		source := fmt.Sprintf(datasourceFormat, strings.ToLower(string(vs.packageType)))
+		if err = vs.dbc.PutVulnerabilityDetail(tx, glad.Identifier, source, vuln); err != nil {
 			return xerrors.Errorf("failed to save GLAD vulnerability detail: %w", err)
 		}
 
-		if err := vs.dbc.PutSeverity(tx, glad.Identifier, types.SeverityUnknown); err != nil {
+		if err = vs.dbc.PutSeverity(tx, glad.Identifier, types.SeverityUnknown); err != nil {
 			return xerrors.Errorf("failed to save GLAD vulnerability severity: %w", err)
 		}
 	}
@@ -134,13 +137,13 @@ func (vs VulnSrc) commit(tx *bolt.Tx, glads []Advisory) error {
 	return nil
 }
 
-func (pt PackageType) ConvertToEcosystem() string {
+func (pt PackageType) convertToEcosystem() string {
 	switch pt {
 	case Npm:
 		return vulnerability.Npm
 	case Packagist:
 		return vulnerability.Composer
-	case Pypi:
+	case PyPI:
 		return vulnerability.Pip
 	case Gem:
 		return vulnerability.RubyGems
@@ -156,31 +159,9 @@ func (pt PackageType) ConvertToEcosystem() string {
 	return "Unknown"
 }
 
-func (e PackageType) String() string {
-	switch e {
-	case Conan:
-		return "Conan"
-	case Gem:
-		return "Gem"
-	case Go:
-		return "Go"
-	case Maven:
-		return "Maven"
-	case Npm:
-		return "Npm"
-	case Nuget:
-		return "Nuget"
-	case Packagist:
-		return "Packagist"
-	case Pypi:
-		return "Pypi"
-	}
-	return "Unknown"
-}
-
 func (pt PackageType) platformName() string {
 	return strings.Join(
-		[]string{pt.ConvertToEcosystem(), fmt.Sprintf(platformFormat, pt)},
+		[]string{pt.convertToEcosystem(), fmt.Sprintf(platformFormat, pt)},
 		PlatformSeperator,
 	)
 }
