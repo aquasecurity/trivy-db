@@ -3,9 +3,10 @@ package bucket_test
 import (
 	"testing"
 
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 )
 
 func TestBucketName(t *testing.T) {
@@ -44,7 +45,7 @@ func TestBucketName(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := bucket.BucketName(tc.ecosystem, tc.dataSource)
+			got, err := bucket.Name(tc.ecosystem, tc.dataSource)
 			if tc.wantErr != "" {
 				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tc.wantErr)

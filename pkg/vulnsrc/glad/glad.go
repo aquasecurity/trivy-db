@@ -17,6 +17,7 @@ import (
 )
 
 const (
+	// GitLab Advisory Database
 	gladDir = "glad"
 
 	Conan     packageType = "Conan"
@@ -115,7 +116,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, pkgType packageType, glads []Advisory) err
 			pkgName = strings.ReplaceAll(pkgName, "/", ":")
 		}
 
-		bucketName, err := bucket.BucketName(string(pkgType), datasource)
+		bucketName, err := bucket.Name(string(pkgType), datasource)
 		if err != nil {
 			return xerrors.Errorf("failed to get bucket name with %s, %s: %w", pkgType, datasource, err)
 		}

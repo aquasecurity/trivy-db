@@ -5,11 +5,12 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/glad"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
@@ -57,6 +58,7 @@ func TestVulnSrc_Update(t *testing.T) {
 
 			err := db.Init(tempDir)
 			require.NoError(t, err)
+			defer db.Close()
 
 			vs := glad.NewVulnSrc()
 			err = vs.Update(tt.dir)
@@ -64,15 +66,15 @@ func TestVulnSrc_Update(t *testing.T) {
 				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
 				return
-			} else {
-				require.NoError(t, err)
 			}
 
+			require.NoError(t, err)
 			require.NoError(t, db.Close())
-			for _, want := range tt.wantValues {
-				expectedValue, err := ioutil.ReadFile(want.goldenFile)
+
+			for _, wantValue := range tt.wantValues {
+				expectedValue, err := ioutil.ReadFile(wantValue.goldenFile)
 				require.NoError(t, err)
-				dbtest.JSONEq(t, db.Path(tempDir), want.key, string(expectedValue))
+				dbtest.JSONEq(t, db.Path(tempDir), wantValue.key, string(expectedValue))
 			}
 		})
 	}
