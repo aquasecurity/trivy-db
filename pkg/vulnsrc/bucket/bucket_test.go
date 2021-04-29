@@ -39,7 +39,7 @@ func TestBucketName(t *testing.T) {
 			name:       "sad path unknown",
 			ecosystem:  "unknown",
 			dataSource: "GitLab Advisory Database",
-			wantErr:    "unknown bucket error",
+			wantErr:    "unknown ecosystem",
 		},
 	}
 
