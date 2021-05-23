@@ -11,7 +11,6 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/govulndb"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
@@ -30,14 +29,14 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:  "testdata/happy",
 			want: []wantKV{
 				{
-					key: []string{"advisory-detail", "CVE-2020-29242", vulnerability.GoVulnDB, "github.com/dhowden/tag"},
+					key: []string{"advisory-detail", "CVE-2020-29242", "go::vulndb", "github.com/dhowden/tag"},
 					value: types.Advisory{
 						PatchedVersions:    []string{"v0.0.0-20201120070457-d52dcb253c63"},
 						VulnerableVersions: []string{"< v0.0.0-20201120070457-d52dcb253c63"},
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "CVE-2020-29242", vulnerability.GoVulnDB},
+					key: []string{"vulnerability-detail", "CVE-2020-29242", "go::vulndb"},
 					value: types.VulnerabilityDetail{
 						ID:          "CVE-2020-29242",
 						Description: "Due to improper bounds checking a number of methods can trigger a panic due to attempted\nout-of-bounds reads. If the package is used to parse user supplied input this may be\nused as a vector for a denial of service attack.\n",
@@ -59,14 +58,14 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:  "testdata/no-module",
 			want: []wantKV{
 				{
-					key: []string{"advisory-detail", "GO-2021-0090", vulnerability.GoVulnDB, "github.com/tendermint/tendermint/types"},
+					key: []string{"advisory-detail", "GO-2021-0090", "go::vulndb", "github.com/tendermint/tendermint/types"},
 					value: types.Advisory{
 						PatchedVersions:    []string{"v0.34.0-dev1.0.20200702134149-480b995a3172"},
 						VulnerableVersions: []string{">= v0.33.0, < v0.34.0-dev1.0.20200702134149-480b995a3172"},
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "GO-2021-0090", vulnerability.GoVulnDB},
+					key: []string{"vulnerability-detail", "GO-2021-0090", "go::vulndb"},
 					value: types.VulnerabilityDetail{
 						ID:          "GO-2021-0090",
 						Description: "Proposed commits may contain signatures for blocks not contained within the commit. Instead of skipping\nthese signatures, they cause failure during verification. A malicious proposer can use this to force\nconsensus failures.\n",
