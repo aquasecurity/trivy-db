@@ -63,7 +63,7 @@ func (vs VulnSrc) save(items []Entry) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for _, item := range items {
 			if err := vs.commit(tx, item); err != nil {
-				return xerrors.Errorf("commit error (%d): %w", item.ID, err)
+				return xerrors.Errorf("commit error (%s): %w", item.ID, err)
 			}
 		}
 		return nil
