@@ -21,6 +21,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
 	debianoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/glad"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/govulndb"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
@@ -65,6 +66,7 @@ var (
 		vulnerability.GHSANuget:             ghsa.NewVulnSrc(ghsa.Nuget),
 		vulnerability.GHSAPip:               ghsa.NewVulnSrc(ghsa.Pip),
 		vulnerability.GHSARubygems:          ghsa.NewVulnSrc(ghsa.Rubygems),
+		vulnerability.GLAD:                  glad.NewVulnSrc(),
 		vulnerability.GoVulnDB:              govulndb.NewVulnSrc(),
 	}
 )
