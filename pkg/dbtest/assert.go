@@ -1,6 +1,7 @@
 package dbtest
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -14,12 +15,16 @@ var (
 	ErrNoBucket = xerrors.New("no such bucket")
 )
 
-func JSONEq(t *testing.T, dbPath string, key []string, want string, msgAndArgs ...interface{}) {
+func JSONEq(t *testing.T, dbPath string, key []string, want interface{}, msgAndArgs ...interface{}) {
 	t.Helper()
+
+	wantByte, err := json.Marshal(want)
+	require.NoError(t, err, msgAndArgs)
 
 	got, err := get(dbPath, key)
 	require.NoError(t, err, msgAndArgs)
-	assert.JSONEq(t, want, string(got), msgAndArgs)
+
+	assert.JSONEq(t, string(wantByte), string(got), msgAndArgs)
 }
 
 type bucketer interface {
