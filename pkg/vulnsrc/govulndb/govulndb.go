@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 
 	bolt "go.etcd.io/bbolt"
-
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
@@ -43,69 +42,104 @@ func (vs VulnSrc) Update(dir string) error {
 			return xerrors.Errorf("failed to read file: %w", err)
 		}
 		if err := json.Unmarshal(buffer.Bytes(), &item); err != nil {
-			return xerrors.Errorf("failed to decode go-vulndb JSON: %w", err)
+			return xerrors.Errorf("JSON error: %w", err)
 		}
 		buffer.Reset()
 		items = append(items, item)
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in NVD walk: %w", err)
+		return xerrors.Errorf("walk error: %w", err)
 	}
 
 	if err = vs.save(items); err != nil {
-		return xerrors.Errorf("error in NVD save: %w", err)
+		return xerrors.Errorf("save error: %w", err)
 	}
 
 	return nil
 }
 
 func (vs VulnSrc) save(items []Entry) error {
-	log.Println("go-vulndb batch update")
+	log.Println("Saving The Go Vulnerability Database")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		return vs.commit(tx, items)
+		for _, item := range items {
+			if err := vs.commit(tx, item); err != nil {
+				return xerrors.Errorf("commit error (%d): %w", item.ID, err)
+			}
+		}
+		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in batch update: %w", err)
+		return xerrors.Errorf("batch update error: %w", err)
 	}
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, items []Entry) error {
-	for _, item := range items {
-		cveID := item.ID
-		var patchedVersions []string
-		for _, fixedVersions := range item.Affects.Ranges {
-			patchedVersions = append(patchedVersions, fixedVersions.Fixed)
+func (vs VulnSrc) commit(tx *bolt.Tx, item Entry) error {
+	// Aliases contain CVE-IDs
+	vulnIDs := item.Aliases
+	if len(vulnIDs) == 0 {
+		// e.g. GO-2021-0064
+		vulnIDs = []string{item.ID}
+	}
+
+	var patchedVersions, vulnerableVersions []string
+	for _, affect := range item.Affects.Ranges {
+		// patched versions
+		patchedVersions = append(patchedVersions, affect.Fixed)
+
+		if affect.Fixed == "" {
+			continue
 		}
-		a := types.Advisory{
-			PatchedVersions: patchedVersions,
+
+		// vulnerable versions
+		vulnerable := fmt.Sprintf("< %s", affect.Fixed)
+		if affect.Introduced != "" {
+			vulnerable = fmt.Sprintf(">= %s, %s", affect.Introduced, vulnerable)
 		}
-		err := vs.dbc.PutAdvisoryDetail(tx, cveID, vulnerability.GoVulnDB, item.Package.Name, a)
+
+		vulnerableVersions = append(vulnerableVersions, vulnerable)
+	}
+
+	a := types.Advisory{
+		PatchedVersions:    patchedVersions,
+		VulnerableVersions: vulnerableVersions,
+	}
+
+	pkgName := item.Module
+	if pkgName == "" {
+		pkgName = item.Package.Name
+	}
+
+	var references []string
+	for _, ref := range item.References {
+		references = append(references, ref.URL)
+	}
+	if item.Extra.Go.URL != "" {
+		references = append(references, item.Extra.Go.URL)
+	}
+
+	for _, vulnID := range vulnIDs {
+		err := vs.dbc.PutAdvisoryDetail(tx, vulnID, vulnerability.GoVulnDB, pkgName, a)
 		if err != nil {
 			return xerrors.Errorf("failed to save go-vulndb advisory: %w", err)
 		}
-		var references []string
-		for _, ref := range item.References {
-			references = append(references, ref.URL)
-		}
-		if item.Extra.Go.URL != "" {
-			references = append(references, item.Extra.Go.URL)
-		}
+
 		vuln := types.VulnerabilityDetail{
-			ID:               cveID,
-			Title:            fmt.Sprintf("vulnerability in package %v", item.Package.Name),
+			ID:               vulnID,
 			Description:      item.Details,
 			References:       references,
 			PublishedDate:    &item.Published,
 			LastModifiedDate: &item.Modified,
 		}
-		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.GoVulnDB, vuln); err != nil {
-			return err
+		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, vulnerability.GoVulnDB, vuln); err != nil {
+			return xerrors.Errorf("failed to put vulnerability detail (%s): %w", vulnID, err)
 		}
-		if err := vs.dbc.PutSeverity(tx, cveID, types.SeverityUnknown); err != nil {
+
+		if err = vs.dbc.PutSeverity(tx, vulnID, types.SeverityUnknown); err != nil {
 			return xerrors.Errorf("failed to save go-vulndb vulnerability severity: %w", err)
 		}
 	}
+
 	return nil
 }
