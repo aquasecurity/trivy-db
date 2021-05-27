@@ -1,20 +1,9 @@
 package vulnsrc
 
 import (
-	"log"
-	"path/filepath"
-	"sort"
-	"strings"
-	"time"
-
-	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
-	"k8s.io/utils/clock"
-
-	"github.com/aquasecurity/trivy-db/pkg/db"
-	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/amazon"
+	archlinux "github.com/aquasecurity/trivy-db/pkg/vulnsrc/arch-linux"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bundler"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/cargo"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/composer"
@@ -32,6 +21,18 @@ import (
 	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
 	susecvrf "github.com/aquasecurity/trivy-db/pkg/vulnsrc/suse-cvrf"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
+	"log"
+	"path/filepath"
+	"sort"
+	"strings"
+	"time"
+
+	bolt "go.etcd.io/bbolt"
+	"golang.org/x/xerrors"
+	"k8s.io/utils/clock"
+
+	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -68,12 +69,16 @@ var (
 		vulnerability.GHSARubygems:          ghsa.NewVulnSrc(ghsa.Rubygems),
 		vulnerability.GLAD:                  glad.NewVulnSrc(),
 		vulnerability.GoVulnDB:              govulndb.NewVulnSrc(),
+		vulnerability.ArchLinux:             archlinux.NewVulnSrc(),
 	}
 )
 
 func init() {
 	UpdateList = make([]string, 0, len(updateMap))
 	for distribution := range updateMap {
+		if distribution == "arch-linux"{
+				continue
+		}
 		UpdateList = append(UpdateList, distribution)
 	}
 }
@@ -85,7 +90,7 @@ type Operation interface {
 
 type Updater struct {
 	dbc            Operation
-	updateMap      map[string]VulnSrc
+	UpdateMap      map[string]VulnSrc
 	cacheDir       string
 	dbType         db.Type
 	updateInterval time.Duration
@@ -107,7 +112,7 @@ func NewUpdater(cacheDir string, light bool, interval time.Duration) Updater {
 
 	return Updater{
 		dbc:            dbConfig,
-		updateMap:      updateMap,
+		UpdateMap:      updateMap,
 		cacheDir:       cacheDir,
 		dbType:         dbType,
 		updateInterval: interval,
@@ -122,7 +127,7 @@ func (u Updater) Update(targets []string) error {
 		return strings.Compare(targets[i], targets[j]) <= 0
 	})
 	for _, distribution := range targets {
-		vulnSrc, ok := u.updateMap[distribution]
+		vulnSrc, ok := u.UpdateMap[distribution]
 		if !ok {
 			return xerrors.Errorf("%s does not supported yet", distribution)
 		}

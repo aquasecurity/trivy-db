@@ -71,7 +71,7 @@ func TestNewUpdater(t *testing.T) {
 			got := NewUpdater(tt.args.cacheDir, tt.args.light, tt.args.interval)
 
 			assert.NotNil(t, got.dbc, tt.name)
-			assert.Equal(t, updateMap, got.updateMap, tt.name)
+			assert.Equal(t, updateMap, got.UpdateMap, tt.name)
 			assert.Equal(t, tt.want.cacheDir, got.cacheDir, tt.name)
 			assert.Equal(t, tt.want.dbType, got.dbType, tt.name)
 			assert.Equal(t, tt.want.interval, got.updateInterval, tt.name)
@@ -291,7 +291,7 @@ func TestUpdater_Update(t *testing.T) {
 
 			u := Updater{
 				dbc: mockDBOperation,
-				updateMap: map[string]VulnSrc{
+				UpdateMap: map[string]VulnSrc{
 					"test": mockVulnSrc,
 				},
 				cacheDir:       tt.fields.CacheDir,

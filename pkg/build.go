@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"strings"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
@@ -17,9 +18,18 @@ func build(c *cli.Context) error {
 	targets := c.String("only-update")
 	light := c.Bool("light")
 	updateInterval := c.Duration("update-interval")
-
+	extendedDB := c.Bool("extended-db")
 	updater := vulnsrc.NewUpdater(cacheDir, light, updateInterval)
-	if err := updater.Update(strings.Split(targets, ",")); err != nil {
+	targetsList := strings.Split(targets, ",")
+	if extendedDB {
+		if !utils.StringInSlice("arch-linux", targetsList) {
+			targetsList = append(targetsList, "arch-linux")
+		}
+	} else {
+		delete(updater.UpdateMap, "arch-linux")
+	}
+
+	if err := updater.Update(targetsList); err != nil {
 		return err
 	}
 
