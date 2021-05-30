@@ -10,7 +10,7 @@ import (
 
 type rpmInfoTest struct {
 	Name           string
-	SignatureKeyID SignatureKeyID
+	SignatureKeyID signatureKeyID
 	FixedVersion   string
 	Arch           string
 }
@@ -29,7 +29,7 @@ func unmarshalJSONFile(v interface{}, fileName string) error {
 }
 
 func parseObjects(dir string) (map[string]string, error) {
-	var objects Objects
+	var objects objects
 	if err := unmarshalJSONFile(&objects, filepath.Join(dir, "objects", "objects.json")); err != nil {
 		return nil, xerrors.Errorf("failed to unmarshal objects: %w", err)
 	}
@@ -40,13 +40,13 @@ func parseObjects(dir string) (map[string]string, error) {
 	return objs, nil
 }
 
-func parseStates(dir string) (map[string]RpminfoState, error) {
-	var ss States
+func parseStates(dir string) (map[string]rpminfoState, error) {
+	var ss states
 	if err := unmarshalJSONFile(&ss, filepath.Join(dir, "states", "states.json")); err != nil {
 		return nil, xerrors.Errorf("failed to unmarshal states: %w", err)
 	}
 
-	states := map[string]RpminfoState{}
+	states := map[string]rpminfoState{}
 	for _, state := range ss.RpminfoState {
 		states[state.ID] = state
 	}
@@ -64,7 +64,7 @@ func parseTests(dir string) (map[string]rpmInfoTest, error) {
 		return nil, xerrors.Errorf("failed to parse states: %w", err)
 	}
 
-	var tt Tests
+	var tt tests
 	if err := unmarshalJSONFile(&tt, filepath.Join(dir, "tests", "tests.json")); err != nil {
 		return nil, xerrors.Errorf("failed to unmarshal states: %w", err)
 	}
@@ -85,7 +85,7 @@ func parseTests(dir string) (map[string]rpmInfoTest, error) {
 	return tests, nil
 }
 
-func followTestRefs(test RpminfoTest, objects map[string]string, states map[string]RpminfoState) (rpmInfoTest, error) {
+func followTestRefs(test rpminfoTest, objects map[string]string, states map[string]rpminfoState) (rpmInfoTest, error) {
 	var t rpmInfoTest
 
 	// Follow object ref

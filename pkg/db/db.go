@@ -52,10 +52,13 @@ type Operation interface {
 	PutVulnerability(tx *bolt.Tx, vulnerabilityID string, vulnerability types.Vulnerability) (err error)
 	GetVulnerability(vulnerabilityID string) (vulnerability types.Vulnerability, err error)
 
-	GetAdvisoryDetails(cveID string) ([]types.AdvisoryDetail, error)
-	PutAdvisoryDetail(tx *bolt.Tx, vulnerabilityID string, source string, pkgName string,
+	GetAdvisoryDetails(cveID string) (details []types.AdvisoryDetail, err error)
+	PutAdvisoryDetail(tx *bolt.Tx, vulnerabilityID, source, pkgName string,
 		advisory interface{}) (err error)
 	DeleteAdvisoryDetailBucket() error
+
+	PutRedHatCPEs(tx *bolt.Tx, repository string, cpes []string) (err error)
+	GetRedHatCPEs(repository string) (cpes []string, err error)
 }
 
 type Metadata struct {

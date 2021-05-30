@@ -1,0 +1,9 @@
+- bucket: Red Hat CPE
+  pairs:
+    - key: "rhel-8-for-x86_64-baseos-rpms"
+      value:
+        - "cpe:/o:redhat:enterprise_linux:8::baseos"
+    - key: "3scale-amp-2-rpms-for-rhel-8-x86_64-debug-rpms"
+      value:
+        - "cpe:/a:redhat:3scale_amp:2.10::el8"
+        - "cpe:/a:redhat:3scale_amp:2.8::el8"

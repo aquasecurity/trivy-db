@@ -80,6 +80,19 @@ func StringInSlice(a string, list []string) bool {
 	return false
 }
 
+func HasIntersection(list1, list2 []string) bool {
+	uniq := map[string]struct{}{}
+	for _, a := range list1 {
+		uniq[a] = struct{}{}
+	}
+	for _, b := range list2 {
+		if _, ok := uniq[b]; ok {
+			return true
+		}
+	}
+	return false
+}
+
 func Exec(command string, args []string) (string, error) {
 	cmd := exec.Command(command, args...)
 	var stdoutBuf, stderrBuf bytes.Buffer

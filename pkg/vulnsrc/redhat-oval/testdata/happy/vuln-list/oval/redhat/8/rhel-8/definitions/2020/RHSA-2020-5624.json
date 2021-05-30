@@ -27,31 +27,6 @@
         "Source": "CVE",
         "RefID": "CVE-2020-26971",
         "RefURL": "https://access.redhat.com/security/cve/CVE-2020-26971"
-      },
-      {
-        "Source": "CVE",
-        "RefID": "CVE-2020-26973",
-        "RefURL": "https://access.redhat.com/security/cve/CVE-2020-26973"
-      },
-      {
-        "Source": "CVE",
-        "RefID": "CVE-2020-26974",
-        "RefURL": "https://access.redhat.com/security/cve/CVE-2020-26974"
-      },
-      {
-        "Source": "CVE",
-        "RefID": "CVE-2020-26978",
-        "RefURL": "https://access.redhat.com/security/cve/CVE-2020-26978"
-      },
-      {
-        "Source": "CVE",
-        "RefID": "CVE-2020-35111",
-        "RefURL": "https://access.redhat.com/security/cve/CVE-2020-35111"
-      },
-      {
-        "Source": "CVE",
-        "RefID": "CVE-2020-35113",
-        "RefURL": "https://access.redhat.com/security/cve/CVE-2020-35113"
       }
     ],
     "Description": "Mozilla Thunderbird is a standalone mail and newsgroup client.\n\nThis update upgrades Thunderbird to version 78.6.0.\n\nSecurity Fix(es):\n\n* chromium-browser: Uninitialized Use in V8 (CVE-2020-16042)\n\n* Mozilla: Heap buffer overflow in WebGL (CVE-2020-26971)\n\n* Mozilla: CSS Sanitizer performed incorrect sanitization (CVE-2020-26973)\n\n* Mozilla: Incorrect cast of StyleGenericFlexBasis resulted in a heap use-after-free (CVE-2020-26974)\n\n* Mozilla: Memory safety bugs fixed in Firefox 84 and Firefox ESR 78.6 (CVE-2020-35113)\n\n* Mozilla: Internal network hosts could have been probed by a malicious webpage (CVE-2020-26978)\n\n* Mozilla: The proxy.onRequest API did not catch view-source URLs (CVE-2020-35111)\n\nFor more details about the security issue(s), including the impact, a CVSS score, acknowledgments, and other related information, refer to the CVE page(s) listed in the References section.",
@@ -78,43 +53,6 @@
           "Cwe": "CWE-120",
           "Href": "https://access.redhat.com/security/cve/CVE-2020-26971",
           "Public": "20201215"
-        },
-        {
-          "CveID": "CVE-2020-26973",
-          "Cvss3": "7.5/CVSS:3.0/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H",
-          "Cwe": "CWE-20",
-          "Href": "https://access.redhat.com/security/cve/CVE-2020-26973",
-          "Public": "20201215"
-        },
-        {
-          "CveID": "CVE-2020-26974",
-          "Cvss3": "7.5/CVSS:3.0/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H",
-          "Cwe": "CWE-416",
-          "Href": "https://access.redhat.com/security/cve/CVE-2020-26974",
-          "Public": "20201215"
-        },
-        {
-          "CveID": "CVE-2020-26978",
-          "Cvss3": "6.1/CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
-          "Cwe": "CWE-200",
-          "Impact": "moderate",
-          "Href": "https://access.redhat.com/security/cve/CVE-2020-26978",
-          "Public": "20201215"
-        },
-        {
-          "CveID": "CVE-2020-35111",
-          "Cvss3": "4.3/CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:N/A:N",
-          "Cwe": "CWE-200",
-          "Impact": "low",
-          "Href": "https://access.redhat.com/security/cve/CVE-2020-35111",
-          "Public": "20201215"
-        },
-        {
-          "CveID": "CVE-2020-35113",
-          "Cvss3": "7.5/CVSS:3.0/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H",
-          "Cwe": "CWE-120",
-          "Href": "https://access.redhat.com/security/cve/CVE-2020-35113",
-          "Public": "20201215"
         }
       ],
       "Bugzilla": [
@@ -125,26 +63,6 @@
         {
           "Href": "https://bugzilla.redhat.com/1908022",
           "ID": "1908022"
-        },
-        {
-          "Href": "https://bugzilla.redhat.com/1908023",
-          "ID": "1908023"
-        },
-        {
-          "Href": "https://bugzilla.redhat.com/1908024",
-          "ID": "1908024"
-        },
-        {
-          "Href": "https://bugzilla.redhat.com/1908025",
-          "ID": "1908025"
-        },
-        {
-          "Href": "https://bugzilla.redhat.com/1908027",
-          "ID": "1908027"
-        },
-        {
-          "Href": "https://bugzilla.redhat.com/1908029",
-          "ID": "1908029"
         }
       ],
       "AffectedCpeList": [

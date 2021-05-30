@@ -1,63 +1,65 @@
 package redhatoval
 
-type RedhatOVAL struct {
+import "github.com/aquasecurity/trivy-db/pkg/types"
+
+type redhatOVAL struct {
 	Class    string
 	ID       string
 	Version  string
-	Metadata Metadata
-	Criteria Criteria
+	Metadata ovalMetadata
+	Criteria criteria
 }
 
-type Metadata struct {
+type ovalMetadata struct {
 	Title        string
-	AffectedList []Affected
-	References   []Reference
+	AffectedList []affected
+	References   []reference
 	Description  string
-	Advisory     Advisory
+	Advisory     ovalAdvisory
 }
 
-type Advisory struct {
+type ovalAdvisory struct {
 	From            string
 	Severity        string
 	Rights          string
-	Issued          Issued
-	Updated         Updated
-	Cves            []Cve
-	Bugzilla        []Bugzilla
+	Issued          issued
+	Updated         updated
+	Cves            []cve
+	Bugzilla        []bugzilla
 	AffectedCpeList []string
 }
 
-type Criteria struct {
+type criteria struct {
 	Operator   string
-	Criterias  []Criteria
-	Criterions []Criterion
+	Criterias  []criteria
+	Criterions []criterion
 }
 
-type Criterion struct {
+type criterion struct {
 	TestRef string
 	Comment string
 }
 
-type Affected struct {
+type affected struct {
 	Family    string
 	Platforms []string
 }
 
-type Reference struct {
+type reference struct {
 	Source string
 	RefID  string
 	RefURL string
 }
 
-type Issued struct {
+type issued struct {
 	Date string
 }
 
-type Updated struct {
+type updated struct {
 	Date string
 }
 
-type Cve struct {
+type cve struct {
 	CveID  string
 	Cvss2  string
 	Cvss3  string
@@ -67,75 +69,104 @@ type Cve struct {
 	Public string
 }
 
-type Bugzilla struct {
+type bugzilla struct {
 	ID   string
 	Href string
 }
 
-type Tests struct {
-	RpminfoTests []RpminfoTest
+type tests struct {
+	RpminfoTests []rpminfoTest
 }
 
-type Objects struct {
-	RpminfoObjects []RpminfoObject
+type objects struct {
+	RpminfoObjects []rpminfoObject
 }
 
-type States struct {
-	RpminfoState []RpminfoState
+type states struct {
+	RpminfoState []rpminfoState
 }
 
-type State struct {
+type state struct {
 	Text     string
 	StateRef string
 }
 
-type Object struct {
+type object struct {
 	Text      string
 	ObjectRef string
 }
 
-type RpminfoTest struct {
+type rpminfoTest struct {
 	Check          string
 	Comment        string
 	ID             string
 	Version        string
 	CheckExistence string
-	Object         Object
-	State          State
+	Object         object
+	State          state
 }
 
-type RpminfoObject struct {
+type rpminfoObject struct {
 	ID      string
 	Version string
 	Name    string
 }
 
-type RpminfoState struct {
+type rpminfoState struct {
 	ID             string
 	Version        string
-	Arch           Arch
-	Evr            Evr
-	SignatureKeyID SignatureKeyID
+	Arch           arch
+	Evr            evr
+	SignatureKeyID signatureKeyID
 }
 
-type SignatureKeyID struct {
+type signatureKeyID struct {
 	Text      string
 	Operation string
 }
 
-type Arch struct {
-	Text      string
-	Datatype  string
-	Operation string
-}
-
-type Evr struct {
+type arch struct {
 	Text      string
 	Datatype  string
 	Operation string
 }
 
-type Package struct {
+type evr struct {
+	Text      string
+	Datatype  string
+	Operation string
+}
+
+type pkg struct {
 	Name         string
 	FixedVersion string
+}
+
+type bucket struct {
+	platform string
+	pkgName  string
+	cveID    string
+}
+
+type vulnerabilityDetail struct {
+	bucket
+	definition Definition
+	isRHEL     bool // To insert only RHEL fixed versions for backward compatibility
+}
+
+type Definition struct {
+	FixedVersion    string   `json:",omitempty"`
+	AffectedCPEList []string `json:",omitempty"`
+	AdvisoryID      string   `json:",omitempty"`
+}
+
+type advisory struct {
+	types.Advisory              // for backward compatibility and CentOS
+	Definitions    []Definition `json:",omitempty"` // RHEL uses this field
+}
+
+type repositoryToCPE struct {
+	Data map[string]struct {
+		Cpes []string `json:"cpes"`
+	} `json:"data"`
 }
