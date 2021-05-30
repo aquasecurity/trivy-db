@@ -3,11 +3,11 @@ package govulndb
 import "time"
 
 type Ecosystem string
-type AffectsRangeType int
+type AffectsRangeType string
 
 type Package struct {
-	Name      string
-	Ecosystem Ecosystem
+	Name      string    `json:"name"`
+	Ecosystem Ecosystem `json:"ecosystem"`
 }
 
 type Affects struct {
@@ -15,36 +15,34 @@ type Affects struct {
 }
 
 type AffectsRange struct {
-	Type       AffectsRangeType
-	Introduced string
-	Fixed      string
+	Type       AffectsRangeType `json:"type"`
+	Introduced string           `json:"introduced"`
+	Fixed      string           `json:"fixed"`
 }
 
 type Reference struct {
-	Type string
-	URL  string
+	Type string `json:"type"`
+	URL  string `json:"url"`
 }
 
 type GoSpecific struct {
 	Symbols []string `json:",omitempty"`
 	GOOS    []string `json:",omitempty"`
 	GOARCH  []string `json:",omitempty"`
-	URL     string
+	URL     string   `json:"url"`
 }
 
 // source: https://github.com/golang/vulndb/blob/e0c00fae09e687ec6febda47ae3bc7552fc7b988/osv/json.go#L125
 type Entry struct {
-	ID         string
-	Module     string
-	Published  time.Time
-	Modified   time.Time
-	Withdrawn  *time.Time `json:",omitempty"`
-	Aliases    []string   `json:",omitempty"`
-	Package    Package
-	Details    string
-	Affects    Affects
-	References []Reference `json:",omitempty"`
-	Extra      struct {
-		Go GoSpecific
-	}
+	ID                string      `json:"id"`
+	Module            string      `json:"module"`
+	Published         time.Time   `json:"published"`
+	Modified          time.Time   `json:"modified"`
+	Withdrawn         *time.Time  `json:"withdrawn,omitempty"`
+	Aliases           []string    `json:"aliases,omitempty"`
+	Package           Package     `json:"package"`
+	Details           string      `json:"details"`
+	Affects           Affects     `json:"affects"`
+	References        []Reference `json:"references,omitempty"`
+	EcosystemSpecific GoSpecific  `json:"ecosystem_specific"`
 }
