@@ -114,12 +114,26 @@ func (vs VulnSrc) commitFunc(tx *bolt.Tx) error {
 					references = append(references, ref.Href)
 				}
 
-				vuln := types.VulnerabilityDetail{
-					Severity:    severityFromPriority(alas.Severity),
-					References:  references,
-					Description: alas.Description,
-					Title:       "",
+				details, err := vs.dbc.GetVulnerabilityDetail(cveID)
+				if err != nil {
+					return xerrors.Errorf("failed to get Amazon vulnerability detail: %w", err)
 				}
+
+				vuln := types.VulnerabilityDetail{
+					Severity:        severityFromPriority(alas.Severity),
+					References:      references,
+					Description:     alas.Description,
+					Title:           "",
+					AdvisoryDetails: make(map[string]types.SecurityAdvisory),
+				}
+				if val, ok := details[vulnerability.Amazon]; ok {
+					vuln.AdvisoryDetails = val.AdvisoryDetails
+				}
+
+				vuln.AdvisoryDetails[alas.ID] = types.SecurityAdvisory{
+					Id: alas.ID, Severity: alas.Severity,
+				}
+
 				if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Amazon, vuln); err != nil {
 					return xerrors.Errorf("failed to save Amazon vulnerability detail: %w", err)
 				}

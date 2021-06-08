@@ -24,6 +24,12 @@ type CVSSVector struct {
 }
 
 type VendorCVSS map[string]CVSS
+type AdvisoryDetails map[string][]SecurityAdvisory
+
+type SecurityAdvisory struct {
+	Id       string `json:"Id,omitempty"`
+	Severity string `json:"Severity,omitempty"`
+}
 
 const (
 	SeverityUnknown Severity = iota
@@ -82,19 +88,20 @@ type LastUpdated struct {
 	Date time.Time
 }
 type VulnerabilityDetail struct {
-	ID               string     `json:",omitempty"` // e.g. CVE-2019-8331, OSVDB-104365
-	CvssScore        float64    `json:",omitempty"`
-	CvssVector       string     `json:",omitempty"`
-	CvssScoreV3      float64    `json:",omitempty"`
-	CvssVectorV3     string     `json:",omitempty"`
-	Severity         Severity   `json:",omitempty"`
-	SeverityV3       Severity   `json:",omitempty"`
-	CweIDs           []string   `json:",omitempty"` // e.g. CWE-78, CWE-89
-	References       []string   `json:",omitempty"`
-	Title            string     `json:",omitempty"`
-	Description      string     `json:",omitempty"`
-	PublishedDate    *time.Time `json:",omitempty"`
-	LastModifiedDate *time.Time `json:",omitempty"`
+	ID               string                     `json:",omitempty"` // e.g. CVE-2019-8331, OSVDB-104365
+	CvssScore        float64                    `json:",omitempty"`
+	CvssVector       string                     `json:",omitempty"`
+	CvssScoreV3      float64                    `json:",omitempty"`
+	CvssVectorV3     string                     `json:",omitempty"`
+	Severity         Severity                   `json:",omitempty"`
+	AdvisoryDetails  map[string]SecurityAdvisory `json:",omitempty"`
+	SeverityV3       Severity                   `json:",omitempty"`
+	CweIDs           []string                   `json:",omitempty"` // e.g. CWE-78, CWE-89
+	References       []string                   `json:",omitempty"`
+	Title            string                     `json:",omitempty"`
+	Description      string                     `json:",omitempty"`
+	PublishedDate    *time.Time                 `json:",omitempty"`
+	LastModifiedDate *time.Time                 `json:",omitempty"`
 }
 
 type AdvisoryDetail struct {
@@ -117,15 +124,16 @@ type Advisory struct {
 }
 
 type Vulnerability struct {
-	Title            string         `json:",omitempty"`
-	Description      string         `json:",omitempty"`
-	Severity         string         `json:",omitempty"` // Selected from VendorSeverity, depending on a scan target
-	CweIDs           []string       `json:",omitempty"` // e.g. CWE-78, CWE-89
-	VendorSeverity   VendorSeverity `json:",omitempty"`
-	CVSS             VendorCVSS     `json:",omitempty"`
-	References       []string       `json:",omitempty"`
-	PublishedDate    *time.Time     `json:",omitempty"`
-	LastModifiedDate *time.Time     `json:",omitempty"`
+	Title            string          `json:",omitempty"`
+	Description      string          `json:",omitempty"`
+	Severity         string          `json:",omitempty"` // Selected from VendorSeverity, depending on a scan target
+	CweIDs           []string        `json:",omitempty"` // e.g. CWE-78, CWE-89
+	VendorSeverity   VendorSeverity  `json:",omitempty"`
+	CVSS             VendorCVSS      `json:",omitempty"`
+	AdvisoryDetails  AdvisoryDetails `json:",omitempty"`
+	References       []string        `json:",omitempty"`
+	PublishedDate    *time.Time      `json:",omitempty"`
+	LastModifiedDate *time.Time      `json:",omitempty"`
 }
 
 type VulnSrc interface {
