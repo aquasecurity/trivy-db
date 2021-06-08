@@ -73,7 +73,7 @@ db-fetch-langs:
 
 .PHONY: db-build
 db-build: trivy-db
-	./trivy-db build $(DB_ARG) --cache-dir cache --update-interval 12h
+	./trivy-db build $(DB_ARG) --cache-dir cache --update-interval 6h
 
 .PHONY: db-compact
 db-compact: $(GOBIN)/bbolt cache/db/trivy.db

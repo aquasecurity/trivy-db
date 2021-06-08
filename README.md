@@ -57,3 +57,6 @@ Alternatively Docker is supported, you can run `docker build . -t trivy-db`.
 If you want to build the light DB, please run `docker build --build-arg DB_TYPE=trivy-light . -t trivy-db-light`
 
 If you want to build a trivy integration test DB, please run `make create-test-db`
+
+## Update interval
+Every 6 hours
