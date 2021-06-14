@@ -21,6 +21,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/composer"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
 	debianoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian-oval"
+	debiansalsa "github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian-salsa"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/glad"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/govulndb"
@@ -70,6 +71,7 @@ var (
 		vulnerability.GLAD:                  glad.NewVulnSrc(),
 		vulnerability.GoVulnDB:              govulndb.NewVulnSrc(),
 		vulnerability.ArchLinux:             archlinux.NewVulnSrc(),
+		vulnerability.DebianSalsa:           debiansalsa.NewVulnSrc(),
 	}
 )
 
@@ -184,6 +186,10 @@ func (o fullOptimizer) Optimize() error {
 		return xerrors.Errorf("failed to delete advisory detail bucket: %w", err)
 	}
 
+	if err := o.dbc.DeleteSecurityAdvisoryBucket(); err != nil {
+		return xerrors.Errorf("failed to delete advisory detail bucket: %w", err)
+	}
+
 	return nil
 
 }
@@ -193,12 +199,14 @@ func (o fullOptimizer) fullOptimize(tx *bolt.Tx, cveID string) error {
 	if o.vulnClient.IsRejected(details) {
 		return nil
 	}
+	// No need to check for reject here.
+	securityAdvisories := o.vulnClient.GetSecurityAdvisoryDetails(cveID)
 
 	if err := o.vulnClient.SaveAdvisoryDetails(tx, cveID); err != nil {
 		return xerrors.Errorf("failed to save advisories: %w", err)
 	}
-
 	vuln := o.vulnClient.Normalize(details)
+	vuln.AdvisoryDetails = securityAdvisories
 	if err := o.dbc.PutVulnerability(tx, cveID, vuln); err != nil {
 		return xerrors.Errorf("failed to put vulnerability: %w", err)
 	}

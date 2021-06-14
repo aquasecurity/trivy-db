@@ -55,7 +55,12 @@ type Operation interface {
 	GetAdvisoryDetails(cveID string) ([]types.AdvisoryDetail, error)
 	PutAdvisoryDetail(tx *bolt.Tx, vulnerabilityID string, source string, pkgName string,
 		advisory interface{}) (err error)
+	GetAdvisoryDetail(tx *bolt.Tx, cveID string, platformName string, pkgName string) (types.AdvisoryDetail, error)
 	DeleteAdvisoryDetailBucket() error
+
+	GetSecurityAdvisoryDetails(cveId string) (types.SecurityAdvisories, error)
+	PutSecurityAdvisoryDetails(tx *bolt.Tx, platform string, advisoryId string, securityAdvisory map[string]types.SecurityAdvisory) error
+	DeleteSecurityAdvisoryBucket() error
 }
 
 type Metadata struct {
