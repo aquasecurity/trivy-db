@@ -49,10 +49,6 @@ func (ac *AppConfig) NewApp(version string) *cli.App {
 					Value:  24 * time.Hour,
 					EnvVar: "UPDATE_INTERVAL",
 				},
-				cli.BoolFlag{
-					Name:  "extended-db",
-					Usage: "inserts other distribution data (arch-linux)",
-				},
 			},
 		},
 		{
