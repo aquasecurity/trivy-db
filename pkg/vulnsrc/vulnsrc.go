@@ -15,6 +15,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/amazon"
+	archlinux "github.com/aquasecurity/trivy-db/pkg/vulnsrc/arch-linux"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bundler"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/cargo"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/composer"
@@ -68,6 +69,7 @@ var (
 		vulnerability.GHSARubygems:          ghsa.NewVulnSrc(ghsa.Rubygems),
 		vulnerability.GLAD:                  glad.NewVulnSrc(),
 		vulnerability.GoVulnDB:              govulndb.NewVulnSrc(),
+		vulnerability.ArchLinux:             archlinux.NewVulnSrc(),
 	}
 )
 

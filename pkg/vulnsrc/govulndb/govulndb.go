@@ -35,13 +35,13 @@ func (vs VulnSrc) Update(dir string) error {
 
 	var items []Entry
 	buffer := &bytes.Buffer{}
-	err := utils.FileWalk(rootDir, func(r io.Reader, _ string) error {
+	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		item := Entry{}
 		if _, err := buffer.ReadFrom(r); err != nil {
-			return xerrors.Errorf("failed to read file: %w", err)
+			return xerrors.Errorf("failed to read file (%s): %w", path, err)
 		}
 		if err := json.Unmarshal(buffer.Bytes(), &item); err != nil {
-			return xerrors.Errorf("JSON error: %w", err)
+			return xerrors.Errorf("JSON error (%s): %w", path, err)
 		}
 		buffer.Reset()
 		items = append(items, item)
