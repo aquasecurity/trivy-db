@@ -30,18 +30,21 @@ func TestVulnSrc_Update(t *testing.T) {
 					key: []string{"advisory-detail", "CVE-2019-11479", "archlinux", "linux-lts"},
 					value: types.Advisory{
 						FixedVersion: "4.19.52-1",
+						VulnerableVersions: []string{"4.19.51-1"},
 					},
 				},
 				{
 					key: []string{"advisory-detail", "CVE-2019-11478", "archlinux", "linux-lts"},
 					value: types.Advisory{
 						FixedVersion: "4.19.52-1",
+						VulnerableVersions: []string{"4.19.51-1"},
 					},
 				},
 				{
 					key: []string{"advisory-detail", "CVE-2019-11477", "archlinux", "linux-lts"},
 					value: types.Advisory{
 						FixedVersion: "4.19.52-1",
+						VulnerableVersions: []string{"4.19.51-1"},
 					},
 				},
 			},
