@@ -1,10 +1,11 @@
 package archlinux
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/dbtest"
@@ -29,22 +30,22 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					key: []string{"advisory-detail", "CVE-2019-11479", "archlinux", "linux-lts"},
 					value: types.Advisory{
-						FixedVersion: "4.19.52-1",
-						VulnerableVersions: []string{"4.19.51-1"},
+						FixedVersion:    "4.19.52-1",
+						AffectedVersion: "4.19.51-1",
 					},
 				},
 				{
 					key: []string{"advisory-detail", "CVE-2019-11478", "archlinux", "linux-lts"},
 					value: types.Advisory{
-						FixedVersion: "4.19.52-1",
-						VulnerableVersions: []string{"4.19.51-1"},
+						FixedVersion:    "4.19.52-1",
+						AffectedVersion: "4.19.51-1",
 					},
 				},
 				{
 					key: []string{"advisory-detail", "CVE-2019-11477", "archlinux", "linux-lts"},
 					value: types.Advisory{
-						FixedVersion: "4.19.52-1",
-						VulnerableVersions: []string{"4.19.51-1"},
+						FixedVersion:    "4.19.52-1",
+						AffectedVersion: "4.19.51-1",
 					},
 				},
 			},

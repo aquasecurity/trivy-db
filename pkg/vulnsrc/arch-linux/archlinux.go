@@ -2,15 +2,17 @@ package archlinux
 
 import (
 	"encoding/json"
+	"io"
+	"path/filepath"
+	"strings"
+
+	bolt "go.etcd.io/bbolt"
+	"golang.org/x/xerrors"
+
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
-	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
-	"io"
-	"path/filepath"
-	"strings"
 )
 
 const (
@@ -36,7 +38,7 @@ func (vs VulnSrc) Update(dir string) error {
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		var avg ArchVulnGroup
 		if err := json.NewDecoder(r).Decode(&avg); err != nil {
-			return xerrors.Errorf("failed to decode arch linux json: %w %+v", err, avg)
+			return xerrors.Errorf("failed to decode arch linux json (%s): %w", path, err)
 		}
 		avgs = append(avgs, avg)
 		return nil
@@ -66,9 +68,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, avgs []ArchVulnGroup) error {
 	for _, avg := range avgs {
 		for _, cveId := range avg.Issues {
 			advisory := types.Advisory{
-				FixedVersion: avg.Fixed,
-				VulnerableVersions: []string{avg.Affected},
+				FixedVersion:    avg.Fixed,
+				AffectedVersion: avg.Affected,
 			}
+
 			for _, pkg := range avg.Packages {
 				if err := vs.dbc.PutAdvisoryDetail(tx, cveId, platformName, pkg, advisory); err != nil {
 					return xerrors.Errorf("failed to save arch linux advisory: %w", err)
@@ -95,7 +98,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, avgs []ArchVulnGroup) error {
 func (vs VulnSrc) Get(pkgName string) ([]types.Advisory, error) {
 	advisories, err := vs.dbc.GetAdvisories(platformName, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get Debian advisories: %w", err)
+		return nil, xerrors.Errorf("failed to get Arch Linux advisories: %w", err)
 	}
 	return advisories, nil
 }
