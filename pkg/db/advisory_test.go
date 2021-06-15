@@ -1,6 +1,7 @@
 package db_test
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -23,7 +24,7 @@ func TestConfig_ForEachAdvisory(t *testing.T) {
 		name     string
 		args     args
 		fixtures []string
-		want     map[string]string
+		want     map[string]types.Advisory
 		wantErr  string
 	}{
 		{
@@ -33,9 +34,15 @@ func TestConfig_ForEachAdvisory(t *testing.T) {
 				pkgName: "symfony/symfony",
 			},
 			fixtures: []string{"testdata/fixtures/single-bucket.yaml"},
-			want: map[string]string{
-				"CVE-2019-10909": `{"PatchedVersions":["4.2.7","3.4.26"],"VulnerableVersions":["\u003e= 4.2.0, \u003c 4.2.7","\u003e= 3.0.0, \u003c 3.4.26"]}`,
-				"CVE-2019-18889": `{"PatchedVersions":["4.3.8","3.4.35"],"VulnerableVersions":["\u003e= 4.3.0, \u003c 4.3.8","\u003e= 3.1.0, \u003c 3.4.35"]}`,
+			want: map[string]types.Advisory{
+				"CVE-2019-10909": {
+					PatchedVersions:    []string{"4.2.7", "3.4.26"},
+					VulnerableVersions: []string{">= 4.2.0, < 4.2.7", ">= 3.0.0, < 3.4.26"},
+				},
+				"CVE-2019-18889": {
+					PatchedVersions:    []string{"4.3.8", "3.4.35"},
+					VulnerableVersions: []string{">= 4.3.0, < 4.3.8", ">= 3.1.0, < 3.4.35"},
+				},
 			},
 		},
 		{
@@ -45,9 +52,14 @@ func TestConfig_ForEachAdvisory(t *testing.T) {
 				pkgName: "symfony/symfony",
 			},
 			fixtures: []string{"testdata/fixtures/multiple-buckets.yaml"},
-			want: map[string]string{
-				"CVE-2019-10909": `{"PatchedVersions":["4.2.7"],"VulnerableVersions":["\u003e= 4.2.0, \u003c 4.2.7"]}`,
-				"CVE-2020-5275":  `{"VulnerableVersions":["\u003e= 4.4.0, \u003c 4.4.7"]}`,
+			want: map[string]types.Advisory{
+				"CVE-2019-10909": {
+					PatchedVersions:    []string{"4.2.7"},
+					VulnerableVersions: []string{">= 4.2.0, < 4.2.7"},
+				},
+				"CVE-2020-5275": {
+					VulnerableVersions: []string{">= 4.4.0, < 4.4.7"},
+				},
 			},
 		},
 		{
@@ -57,7 +69,7 @@ func TestConfig_ForEachAdvisory(t *testing.T) {
 				pkgName: "symfony/symfony",
 			},
 			fixtures: []string{"testdata/fixtures/single-bucket.yaml"},
-			want:     map[string]string{},
+			want:     map[string]types.Advisory{},
 		},
 		{
 			name: "non-existent package",
@@ -66,7 +78,7 @@ func TestConfig_ForEachAdvisory(t *testing.T) {
 				pkgName: "non-existent",
 			},
 			fixtures: []string{"testdata/fixtures/single-bucket.yaml"},
-			want:     map[string]string{},
+			want:     map[string]types.Advisory{},
 		},
 	}
 	for _, tt := range tests {
@@ -81,22 +93,27 @@ func TestConfig_ForEachAdvisory(t *testing.T) {
 			dbc := db.Config{}
 			got, err := dbc.ForEachAdvisory(tt.args.source, tt.args.pkgName)
 
-			switch {
-			case tt.wantErr != "":
+			if tt.wantErr != "" {
 				require.NotNil(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
-			default:
-				assert.NoError(t, err)
+				return
 			}
+
+			assert.NoError(t, err)
 
 			// Compare
 			assert.Equal(t, len(tt.want), len(got))
-			for cveID, gotAdvisory := range got {
+			for cveID, g := range got {
 				wantAdvisory, ok := tt.want[cveID]
 				if !ok {
 					assert.Fail(t, "no such key", "CVE-ID", cveID)
 				}
-				assert.Equal(t, wantAdvisory, string(gotAdvisory))
+
+				var gotAdvisory types.Advisory
+				err = json.Unmarshal(g, &gotAdvisory)
+				require.NoError(t, err)
+
+				assert.Equal(t, wantAdvisory, gotAdvisory)
 			}
 		})
 	}

@@ -71,6 +71,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						Description: "Proposed commits may contain signatures for blocks not contained within the commit. Instead of skipping\nthese signatures, they cause failure during verification. A malicious proposer can use this to force\nconsensus failures.\n",
 						References: []string{
 							"https://github.com/tendermint/tendermint/pull/5426",
+							"https://go.googlesource.com/vulndb/+/refs/heads/main/reports/GO-2021-0090.toml",
 						},
 						PublishedDate:    utils.MustTimeParse("2021-04-14T12:00:00Z"),
 						LastModifiedDate: utils.MustTimeParse("2021-04-14T12:00:00Z"),

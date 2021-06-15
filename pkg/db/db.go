@@ -217,14 +217,16 @@ func (dbc Config) forEach(rootBucket, nestedBucket string) (value map[string][]b
 			// e.g. "GitHub Security Advisory Composer"
 			rootBuckets = append(rootBuckets, rootBucket)
 		}
+
 		for _, r := range rootBuckets {
 			root := tx.Bucket([]byte(r))
 			if root == nil {
-				return nil
+				continue
 			}
+
 			nested := root.Bucket([]byte(nestedBucket))
 			if nested == nil {
-				return nil
+				continue
 			}
 			err := nested.ForEach(func(k, v []byte) error {
 				value[string(k)] = v

@@ -114,8 +114,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, item Entry) error {
 	for _, ref := range item.References {
 		references = append(references, ref.URL)
 	}
-	if item.Extra.Go.URL != "" {
-		references = append(references, item.Extra.Go.URL)
+	if item.EcosystemSpecific.URL != "" {
+		references = append(references, item.EcosystemSpecific.URL)
 	}
 
 	bucketName, _ := bucket.Name(vulnerability.Go, vulnerability.GoVulnDB)
