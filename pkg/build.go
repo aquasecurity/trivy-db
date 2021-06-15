@@ -17,6 +17,7 @@ func build(c *cli.Context) error {
 	targets := c.String("only-update")
 	light := c.Bool("light")
 	updateInterval := c.Duration("update-interval")
+
 	updater := vulnsrc.NewUpdater(cacheDir, light, updateInterval)
 	if err := updater.Update(strings.Split(targets, ",")); err != nil {
 		return err
