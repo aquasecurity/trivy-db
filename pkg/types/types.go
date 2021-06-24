@@ -115,6 +115,7 @@ type Advisory struct {
 	VulnerableVersions []string `json:",omitempty"`
 	PatchedVersions    []string `json:",omitempty"`
 	UnaffectedVersions []string `json:",omitempty"`
+	Hid                int64    `json:",omitempty"`
 }
 
 type Vulnerability struct {
