@@ -109,6 +109,7 @@ type Advisory struct {
 	// Versions for os package
 	FixedVersion    string `json:",omitempty"`
 	AffectedVersion string `json:",omitempty"` // Only for Arch Linux
+	AffectedTo      string `json:",omitempty"`
 
 	// Version ranges for language-specific package
 	// Some advisories provide VulnerableVersions only, others provide PatchedVersions and UnaffectedVersions
