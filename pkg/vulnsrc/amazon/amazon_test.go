@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"golang.org/x/xerrors"
 
@@ -285,22 +286,26 @@ func TestVulnSrc_WalkFunc(t *testing.T) {
 
 func TestVulnSrc_CommitFunc(t *testing.T) {
 	testCases := []struct {
-		name                   string
-		alasList               []alas
-		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
-		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
-		putSeverity            []db.OperationPutSeverityExpectation
-		expectedError          error
+		name                       string
+		alasList                   []alas
+		putAdvisoryDetail          []db.OperationPutAdvisoryDetailExpectation
+		putVulnerabilityDetail     []db.OperationPutVulnerabilityDetailExpectation
+		putSeverity                []db.OperationPutSeverityExpectation
+		getAdvisoryDetail          db.OperationGetAdvisoryDetailExpectation
+		putSecurityAdvisoryDetails db.OperationPutSecurityAdvisoryDetailsExpectation
+		expectedError              error
 	}{
 		{
 			name: "happy path",
 			alasList: []alas{
 				{
 					Version: "123",
+
 					ALAS: amazon.ALAS{
 						ID:       "123",
 						Severity: "important",
 						CveIDs:   []string{"CVE-2020-0001"},
+						Issued:   amazon.Date{Date: "2018-04-26 17:41"},
 						References: []amazon.Reference{
 							{
 								ID:    "fooref",
@@ -326,7 +331,7 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 						Source:          "amazon linux 123",
 						PkgName:         "testpkg",
 						VulnerabilityID: "CVE-2020-0001",
-						Advisory:        types.Advisory{FixedVersion: "123:456-testing"},
+						Advisory:        types.Advisory{FixedVersion: "123:456-testing", SecurityAdvisory: []string{"456", "123"}},
 					},
 				},
 			},
@@ -336,6 +341,7 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2020-0001",
 						Source:          vulnerability.Amazon,
+
 						Vulnerability: types.VulnerabilityDetail{
 							CvssScore:   0,
 							CvssScoreV3: 0,
@@ -351,6 +357,34 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2020-0001",
 						Severity:        types.SeverityUnknown,
+					},
+				},
+			},
+			getAdvisoryDetail: db.OperationGetAdvisoryDetailExpectation{
+				Args: db.OperationGetAdvisoryDetailArgs{
+					CveID:        "CVE-2020-0001",
+					PlatformName: "amazon linux 123",
+					PkgName:      "testpkg",
+				},
+				Returns: db.OperationGetAdvisoryDetailReturns{
+					Details: types.AdvisoryDetail{
+						PlatformName: "amazon linux 123",
+						PackageName:  "testpkg",
+						AdvisoryItem: types.Advisory{FixedVersion: "123:456-testing", SecurityAdvisory: []string{"456"}},
+					},
+				},
+			},
+			putSecurityAdvisoryDetails: db.OperationPutSecurityAdvisoryDetailsExpectation{
+				Args: db.OperationPutSecurityAdvisoryDetailsArgs{
+					TxAnything: true,
+					CveID:      "CVE-2020-0001",
+					Source:     "amazon",
+					SecurityAdvisory: map[string]types.SecurityAdvisory{
+						"123": {
+							Severity:    "important",
+							Description: "",
+							PublishDate: time.Date(2018, 4, 26, 17, 41, 0, 0, time.UTC),
+						},
 					},
 				},
 			},
@@ -389,10 +423,24 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 						Source:          "amazon linux 123",
 						PkgName:         "testpkg",
 						VulnerabilityID: "CVE-2020-0001",
-						Advisory:        types.Advisory{FixedVersion: "123:456-testing"},
+						Advisory:        types.Advisory{FixedVersion: "123:456-testing", SecurityAdvisory: []string{"123"}},
 					},
 					Returns: db.OperationPutAdvisoryDetailReturns{
 						Err: errors.New("failed to put advisory"),
+					},
+				},
+			},
+			getAdvisoryDetail: db.OperationGetAdvisoryDetailExpectation{
+				Args: db.OperationGetAdvisoryDetailArgs{
+					CveID:        "CVE-2020-0001",
+					PlatformName: "amazon linux 123",
+					PkgName:      "testpkg",
+				},
+				Returns: db.OperationGetAdvisoryDetailReturns{
+					Details: types.AdvisoryDetail{
+						PlatformName: "amazon linux 123",
+						PackageName:  "testpkg",
+						AdvisoryItem: types.Advisory{FixedVersion: "123:456-testing"},
 					},
 				},
 			},
@@ -432,7 +480,7 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 						Source:          "amazon linux 123",
 						PkgName:         "testpkg",
 						VulnerabilityID: "CVE-2020-0001",
-						Advisory:        types.Advisory{FixedVersion: "123:456-testing"},
+						Advisory:        types.Advisory{FixedVersion: "123:456-testing", SecurityAdvisory: []string{"123"}},
 					},
 				},
 			},
@@ -454,6 +502,20 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 					},
 				},
 			},
+			getAdvisoryDetail: db.OperationGetAdvisoryDetailExpectation{
+				Args: db.OperationGetAdvisoryDetailArgs{
+					CveID:        "CVE-2020-0001",
+					PlatformName: "amazon linux 123",
+					PkgName:      "testpkg",
+				},
+				Returns: db.OperationGetAdvisoryDetailReturns{
+					Details: types.AdvisoryDetail{
+						PlatformName: "amazon linux 123",
+						PackageName:  "testpkg",
+						AdvisoryItem: types.Advisory{FixedVersion: "123:456-testing"},
+					},
+				},
+			},
 			expectedError: errors.New("failed to save Amazon vulnerability detail: failed to put vulnerability detail"),
 		},
 	}
@@ -464,7 +526,8 @@ func TestVulnSrc_CommitFunc(t *testing.T) {
 			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tc.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tc.putVulnerabilityDetail)
 			mockDBConfig.ApplyPutSeverityExpectations(tc.putSeverity)
-
+			mockDBConfig.ApplyGetAdvisoryDetailExpectation(tc.getAdvisoryDetail)
+			mockDBConfig.ApplyPutSecurityAdvisoryDetailsExpectation(tc.putSecurityAdvisoryDetails)
 			vs := VulnSrc{dbc: mockDBConfig, alasList: tc.alasList}
 
 			err := vs.commitFunc(&bolt.Tx{WriteFlag: 0})

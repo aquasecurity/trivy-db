@@ -858,3 +858,173 @@ func (_m *MockOperation) PutVulnerabilityDetail(tx *bbolt.Tx, vulnerabilityID st
 
 	return r0
 }
+
+type OperationDeleteSecurityAdvisoryBucketReturns struct {
+	Err error
+}
+
+type OperationDeleteSecurityAdvisoryBucketExpectation struct {
+	Returns OperationDeleteSecurityAdvisoryBucketReturns
+}
+
+func (_m *MockOperation) ApplyDeleteSecurityAdvisoryBucketExpectation(e OperationDeleteSecurityAdvisoryBucketExpectation) {
+	_m.On("DeleteSecurityAdvisoryBucket").Return(e.Returns.Err)
+}
+
+// DeleteSecurityAdvisoryBucket provides a mock function with given fields:
+func (_m *MockOperation) DeleteSecurityAdvisoryBucket() error {
+	ret := _m.Called()
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+type OperationGetSecurityAdvisoryDetailsArgs struct {
+	CveID         string
+	CveIDAnything bool
+}
+
+type OperationGetSecurityAdvisoryDetailsReturns struct {
+	Details types.SecurityAdvisories
+	Err     error
+}
+
+type OperationGetSecurityAdvisoryDetailsExpectation struct {
+	Args    OperationGetSecurityAdvisoryDetailsArgs
+	Returns OperationGetSecurityAdvisoryDetailsReturns
+}
+
+func (_m *MockOperation) ApplyGetSecurityAdvisoryDetailsExpectation(e OperationGetSecurityAdvisoryDetailsExpectation) {
+	var args []interface{}
+	if e.Args.CveIDAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.CveID)
+	}
+	_m.On("GetSecurityAdvisoryDetails", args...).Return(e.Returns.Details, e.Returns.Err)
+}
+
+// SecurityAdvisoryDetails provides a mock function with given fields: cveID
+func (_m *MockOperation) GetSecurityAdvisoryDetails(cveID string) (types.SecurityAdvisories, error) {
+	ret := _m.Called(cveID)
+
+	var r0 types.SecurityAdvisories
+	if rf, ok := ret.Get(0).(func(string) types.SecurityAdvisories); ok {
+		r0 = rf(cveID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(types.SecurityAdvisories)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(cveID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+type OperationGetAdvisoryDetailArgs struct {
+	CveID         string
+	CveIDAnything bool
+	PlatformName  string
+	PkgName       string
+}
+
+type OperationGetAdvisoryDetailReturns struct {
+	Details types.AdvisoryDetail
+	Err     error
+}
+
+type OperationGetAdvisoryDetailExpectation struct {
+	Args    OperationGetAdvisoryDetailArgs
+	Returns OperationGetAdvisoryDetailReturns
+}
+
+func (_m *MockOperation) ApplyGetAdvisoryDetailExpectation(e OperationGetAdvisoryDetailExpectation) {
+	var args []interface{}
+	if e.Args.CveIDAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.CveID, e.Args.PlatformName, e.Args.PkgName)
+	}
+	_m.On("GetAdvisoryDetail", args...).Return(e.Returns.Details, e.Returns.Err)
+}
+
+// GetAdvisoryDetail provides a mock function with given fields: cveID
+func (_m *MockOperation) GetAdvisoryDetail(tx *bbolt.Tx, cveID string, platformName string, pkgName string) (types.AdvisoryDetail, error) {
+	ret := _m.Called(cveID, platformName, pkgName)
+
+	var r0 types.AdvisoryDetail
+	if rf, ok := ret.Get(0).(func(string) types.AdvisoryDetail); ok {
+		r0 = rf(cveID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(types.AdvisoryDetail)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(cveID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+type OperationPutSecurityAdvisoryDetailsArgs struct {
+	Tx               *bbolt.Tx
+	TxAnything       bool
+	CveID            string
+	Source           string
+	SecurityAdvisory map[string]types.SecurityAdvisory
+}
+
+type OperationPutSecurityAdvisoryDetailsReturns struct {
+	Details []types.AdvisoryDetail
+	Err     error
+}
+
+type OperationPutSecurityAdvisoryDetailsExpectation struct {
+	Args    OperationPutSecurityAdvisoryDetailsArgs
+	Returns OperationPutSecurityAdvisoryDetailsReturns
+}
+
+func (_m *MockOperation) ApplyPutSecurityAdvisoryDetailsExpectation(e OperationPutSecurityAdvisoryDetailsExpectation) {
+	var args []interface{}
+
+	if e.Args.TxAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.Tx)
+	}
+
+	args = append(args, e.Args.CveID, e.Args.Source, e.Args.SecurityAdvisory)
+
+	_m.On("PutSecurityAdvisoryDetails", args...).Return(e.Returns.Err)
+}
+
+// PutSecurityAdvisoryDetails provides a mock function with given fields: tx, vulnerabilityID, source, pkgName, advisory
+func (_m *MockOperation) PutSecurityAdvisoryDetails(tx *bbolt.Tx, platform string, advisoryId string, securityAdvisory map[string]types.SecurityAdvisory) error {
+	ret := _m.Called(tx, platform, advisoryId, securityAdvisory)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*bbolt.Tx, string, string, map[string]types.SecurityAdvisory) error); ok {
+		r0 = rf(tx, platform, advisoryId, securityAdvisory)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}

@@ -7,6 +7,7 @@ import (
 	"log"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 
@@ -105,6 +106,22 @@ func (vs VulnSrc) commitFunc(tx *bolt.Tx) error {
 				advisory := types.Advisory{
 					FixedVersion: constructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 				}
+				existingAdvisory, err := vs.dbc.GetAdvisoryDetail(tx, cveID, platformName, pkg.Name)
+				if err != nil {
+					return xerrors.Errorf("failed to get Amazon advisory: %w", err)
+				}
+				if existingAdvisory.AdvisoryItem != nil {
+					existingAdvisoryDetails := existingAdvisory.AdvisoryItem.(types.Advisory)
+
+					if len(existingAdvisoryDetails.SecurityAdvisory) > 0 {
+						advisory.SecurityAdvisory = existingAdvisoryDetails.SecurityAdvisory
+					}
+				}
+
+				if !utils.StringInSlice(alas.ID, advisory.SecurityAdvisory) {
+					advisory.SecurityAdvisory = append(advisory.SecurityAdvisory, alas.ID)
+				}
+
 				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, platformName, pkg.Name, advisory); err != nil {
 					return xerrors.Errorf("failed to save Amazon advisory: %w", err)
 				}
@@ -123,7 +140,18 @@ func (vs VulnSrc) commitFunc(tx *bolt.Tx) error {
 				if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Amazon, vuln); err != nil {
 					return xerrors.Errorf("failed to save Amazon vulnerability detail: %w", err)
 				}
-
+				publishDate, err := time.Parse("2006-01-02 15:04", alas.Issued.Date)
+				if err != nil {
+					log.Println("Error in publish Date, %w", err)
+				}
+				securityAdvisory := map[string]types.SecurityAdvisory{alas.ID: types.SecurityAdvisory{
+					Severity:    alas.Severity,
+					PublishDate: publishDate,
+					Description: alas.Description,
+				}}
+				if err := vs.dbc.PutSecurityAdvisoryDetails(tx, cveID, vulnerability.Amazon, securityAdvisory); err != nil {
+					return xerrors.Errorf("failed to save Debian vulnerability: %w", err)
+				}
 				// for light DB
 				if err := vs.dbc.PutSeverity(tx, cveID, types.SeverityUnknown); err != nil {
 					return xerrors.Errorf("failed to save Amazon vulnerability severity: %w", err)

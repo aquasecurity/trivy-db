@@ -322,6 +322,7 @@ func Test_fullOptimizer_Optimize(t *testing.T) {
 		deleteSeverityBucket            db.OperationDeleteSeverityBucketExpectation
 		deleteVulnerabilityDetailBucket db.OperationDeleteVulnerabilityDetailBucketExpectation
 		deleteAdvisoryDetailBucket      db.OperationDeleteAdvisoryDetailBucketExpectation
+		deleteSecurityAdvisoryBucket    db.OperationDeleteSecurityAdvisoryBucketExpectation
 		wantErr                         string
 	}{
 		{
@@ -367,6 +368,19 @@ func Test_fullOptimizer_Optimize(t *testing.T) {
 			},
 			wantErr: "failed to delete vulnerability detail bucket",
 		},
+		{
+			name: "DeleteSecurityAdvisoryBucket returns an error",
+			forEachSeverity: db.OperationForEachSeverityExpectation{
+				Args:    db.OperationForEachSeverityArgs{FnAnything: true},
+				Returns: db.OperationForEachSeverityReturns{},
+			},
+			deleteSecurityAdvisoryBucket: db.OperationDeleteSecurityAdvisoryBucketExpectation{
+				Returns: db.OperationDeleteSecurityAdvisoryBucketReturns{
+					Err: errors.New("error"),
+				},
+			},
+			wantErr: "failed to delete security advisory bucket",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -375,6 +389,7 @@ func Test_fullOptimizer_Optimize(t *testing.T) {
 			mockDBOperation.ApplyDeleteSeverityBucketExpectation(tt.deleteSeverityBucket)
 			mockDBOperation.ApplyDeleteVulnerabilityDetailBucketExpectation(tt.deleteVulnerabilityDetailBucket)
 			mockDBOperation.ApplyDeleteAdvisoryDetailBucketExpectation(tt.deleteAdvisoryDetailBucket)
+			mockDBOperation.ApplyDeleteSecurityAdvisoryBucketExpectation(tt.deleteSecurityAdvisoryBucket)
 			o := fullOptimizer{
 				dbc: mockDBOperation,
 			}
@@ -460,7 +475,8 @@ func Test_fullOptimize(t *testing.T) {
 		putVulnerabilityExpectation       db.OperationPutVulnerabilityExpectation
 		putAdvisoryExpectations           []db.OperationPutAdvisoryExpectation
 		getVulnerabilityDetailExpectation db.OperationGetVulnerabilityDetailExpectation
-		getAdvisoryDetailExpectation      db.OperationGetAdvisoryDetailsExpectation
+		getAdvisoryDetailsExpectation     db.OperationGetAdvisoryDetailsExpectation
+		getSecurityAdvisoryDetails        db.OperationGetSecurityAdvisoryDetailsExpectation
 		wantErr                           string
 	}{
 		{
@@ -473,8 +489,9 @@ func Test_fullOptimize(t *testing.T) {
 						PkgName:         "pkg1",
 						VulnerabilityID: "CVE-2020-1234",
 						Advisory: types.Advisory{
-							VulnerabilityID: "CVE-2020-1234",
-							FixedVersion:    "v1.2.3",
+							VulnerabilityID:  "CVE-2020-1234",
+							FixedVersion:     "v1.2.3",
+							SecurityAdvisory: []string{"RHSA-2021:2777", "RHSA-2021:2888"},
 						},
 					},
 					Returns: db.OperationPutAdvisoryReturns{},
@@ -515,6 +532,20 @@ func Test_fullOptimize(t *testing.T) {
 						},
 						CweIDs:     []string{"CWE-134"},
 						References: []string{"http://example.com"},
+						AdvisoryDetails: types.SecurityAdvisories{
+							"redhat": map[string]types.SecurityAdvisory{
+								"RHSA-2021:2777": {
+									Description: "test description forRHSA-2021:2777 ",
+									PublishDate: time.Time{},
+									Severity:    "important",
+								},
+								"RHSA-2021:2888": {
+									Description: "test description fro RHSA-2021:2888",
+									PublishDate: time.Time{},
+									Severity:    "important",
+								},
+							},
+						},
 					},
 				},
 				Returns: db.OperationPutVulnerabilityReturns{},
@@ -543,7 +574,7 @@ func Test_fullOptimize(t *testing.T) {
 					},
 				},
 			},
-			getAdvisoryDetailExpectation: db.OperationGetAdvisoryDetailsExpectation{
+			getAdvisoryDetailsExpectation: db.OperationGetAdvisoryDetailsExpectation{
 				Args: db.OperationGetAdvisoryDetailsArgs{
 					CveID: "CVE-2020-1234",
 				},
@@ -553,8 +584,9 @@ func Test_fullOptimize(t *testing.T) {
 							PlatformName: "redhat",
 							PackageName:  "pkg1",
 							AdvisoryItem: types.Advisory{
-								VulnerabilityID: "CVE-2020-1234",
-								FixedVersion:    "v1.2.3",
+								VulnerabilityID:  "CVE-2020-1234",
+								FixedVersion:     "v1.2.3",
+								SecurityAdvisory: []string{"RHSA-2021:2777", "RHSA-2021:2888"},
 							},
 						},
 						{
@@ -563,6 +595,27 @@ func Test_fullOptimize(t *testing.T) {
 							AdvisoryItem: types.Advisory{
 								VulnerabilityID: "CVE-2020-1234",
 								FixedVersion:    "v2.3.4",
+							},
+						},
+					},
+				},
+			},
+			getSecurityAdvisoryDetails: db.OperationGetSecurityAdvisoryDetailsExpectation{
+				Args: db.OperationGetSecurityAdvisoryDetailsArgs{
+					CveID: "CVE-2020-1234",
+				},
+				Returns: db.OperationGetSecurityAdvisoryDetailsReturns{
+					Details: types.SecurityAdvisories{
+						"redhat": map[string]types.SecurityAdvisory{
+							"RHSA-2021:2777": {
+								Description: "test description forRHSA-2021:2777 ",
+								PublishDate: time.Time{},
+								Severity:    "important",
+							},
+							"RHSA-2021:2888": {
+								Description: "test description fro RHSA-2021:2888",
+								PublishDate: time.Time{},
+								Severity:    "important",
 							},
 						},
 					},
@@ -608,7 +661,8 @@ func Test_fullOptimize(t *testing.T) {
 						PkgName:         "test",
 						VulnerabilityID: "CVE-2020-1234",
 						Advisory: types.Advisory{
-							FixedVersion: "",
+							VulnerabilityID: "CVE-2020-1234",
+							FixedVersion:    "",
 						},
 					},
 				},
@@ -653,7 +707,7 @@ func Test_fullOptimize(t *testing.T) {
 					},
 				},
 			},
-			getAdvisoryDetailExpectation: db.OperationGetAdvisoryDetailsExpectation{
+			getAdvisoryDetailsExpectation: db.OperationGetAdvisoryDetailsExpectation{
 				Args: db.OperationGetAdvisoryDetailsArgs{
 					CveID: "CVE-2020-1234",
 				},
@@ -663,10 +717,18 @@ func Test_fullOptimize(t *testing.T) {
 							PlatformName: "redhat",
 							PackageName:  "test",
 							AdvisoryItem: types.Advisory{
-								FixedVersion: "",
+								VulnerabilityID: "CVE-2020-1234",
 							},
 						},
 					},
+				},
+			},
+			getSecurityAdvisoryDetails: db.OperationGetSecurityAdvisoryDetailsExpectation{
+				Args: db.OperationGetSecurityAdvisoryDetailsArgs{
+					CveID: "CVE-2020-1234",
+				},
+				Returns: db.OperationGetSecurityAdvisoryDetailsReturns{
+					Details: types.SecurityAdvisories{},
 				},
 			},
 		},
@@ -677,7 +739,8 @@ func Test_fullOptimize(t *testing.T) {
 			mockDBOperation.ApplyPutAdvisoryExpectations(tt.putAdvisoryExpectations)
 			mockDBOperation.ApplyPutVulnerabilityExpectation(tt.putVulnerabilityExpectation)
 			mockDBOperation.ApplyGetVulnerabilityDetailExpectation(tt.getVulnerabilityDetailExpectation)
-			mockDBOperation.ApplyGetAdvisoryDetailsExpectation(tt.getAdvisoryDetailExpectation)
+			mockDBOperation.ApplyGetAdvisoryDetailsExpectation(tt.getAdvisoryDetailsExpectation)
+			mockDBOperation.ApplyGetSecurityAdvisoryDetailsExpectation(tt.getSecurityAdvisoryDetails)
 			o := fullOptimizer{
 				dbc:        mockDBOperation,
 				vulnClient: vulnerability.New(mockDBOperation),
@@ -696,13 +759,14 @@ func Test_fullOptimize(t *testing.T) {
 
 func Test_lightOptimize(t *testing.T) {
 	tests := []struct {
-		name                              string
-		putAdvisoryExpectations           []db.OperationPutAdvisoryExpectation
-		putVulnerabilityExpectation       db.OperationPutVulnerabilityExpectation
-		putSeverityExpectation            db.OperationPutSeverityExpectation
-		getVulnerabilityDetailExpectation db.OperationGetVulnerabilityDetailExpectation
-		getAdvisoryDetailExpectation      db.OperationGetAdvisoryDetailsExpectation
-		wantErr                           string
+		name                                     string
+		putAdvisoryExpectations                  []db.OperationPutAdvisoryExpectation
+		putVulnerabilityExpectation              db.OperationPutVulnerabilityExpectation
+		putSeverityExpectation                   db.OperationPutSeverityExpectation
+		getVulnerabilityDetailExpectation        db.OperationGetVulnerabilityDetailExpectation
+		getAdvisoryDetailExpectation             db.OperationGetAdvisoryDetailsExpectation
+		getGetSecurityAdvisoryDetailsExpectation db.OperationGetSecurityAdvisoryDetailsExpectation
+		wantErr                                  string
 	}{
 		{
 			name: "happy path",

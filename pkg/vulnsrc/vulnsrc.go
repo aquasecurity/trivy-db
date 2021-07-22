@@ -184,6 +184,10 @@ func (o fullOptimizer) Optimize() error {
 		return xerrors.Errorf("failed to delete advisory detail bucket: %w", err)
 	}
 
+	if err := o.dbc.DeleteSecurityAdvisoryBucket(); err != nil {
+		return xerrors.Errorf("failed to delete security advisory bucket: %w", err)
+	}
+
 	return nil
 
 }
@@ -194,11 +198,15 @@ func (o fullOptimizer) fullOptimize(tx *bolt.Tx, cveID string) error {
 		return nil
 	}
 
+	// No need to check for reject here.
+	securityAdvisories := o.vulnClient.GetSecurityAdvisoryDetails(cveID)
+
 	if err := o.vulnClient.SaveAdvisoryDetails(tx, cveID); err != nil {
 		return xerrors.Errorf("failed to save advisories: %w", err)
 	}
 
 	vuln := o.vulnClient.Normalize(details)
+	vuln.AdvisoryDetails = securityAdvisories
 	if err := o.dbc.PutVulnerability(tx, cveID, vuln); err != nil {
 		return xerrors.Errorf("failed to put vulnerability: %w", err)
 	}
