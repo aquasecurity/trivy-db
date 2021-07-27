@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - name: Check Out Repo
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -46,7 +46,7 @@ jobs:
           password: ${{ secrets.ECR_SECRET_ACCESS_KEY }}
       - name: Get the version
         id: docker_meta
-        uses: crazy-max/ghaction-docker-meta@v3.4.1
+        uses: crazy-max/ghaction-docker-meta@v3
         with:
           images: ${{ env.REP }}
           tag-semver: |
