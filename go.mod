@@ -11,7 +11,7 @@ require (
 	github.com/google/go-github/v28 v28.1.1
 	github.com/hashicorp/go-version v1.3.0
 	github.com/knqyf263/go-rpm-version v0.0.0-20170716094938-74609b86c936
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli v1.22.5
 	go.etcd.io/bbolt v1.3.6
 	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5
