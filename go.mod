@@ -9,7 +9,7 @@ require (
 	github.com/briandowns/spinner v1.12.0
 	github.com/fatih/color v1.12.0
 	github.com/google/go-github/v28 v28.1.1
-	github.com/hashicorp/go-version v1.2.1
+	github.com/hashicorp/go-version v1.3.0
 	github.com/knqyf263/go-rpm-version v0.0.0-20170716094938-74609b86c936
 	github.com/stretchr/testify v1.6.1
 	github.com/urfave/cli v1.22.5
