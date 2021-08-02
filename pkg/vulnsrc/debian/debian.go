@@ -45,6 +45,10 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
+func (vs VulnSrc) Name() string {
+	return vulnerability.Debian
+}
+
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", debianDir)
 	var cves []DebianCVE

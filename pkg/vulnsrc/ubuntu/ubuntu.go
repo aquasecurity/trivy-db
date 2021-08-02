@@ -56,6 +56,10 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
+func (vs VulnSrc) Name() string {
+	return vulnerability.Ubuntu
+}
+
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", ubuntuDir)
 	var cves []UbuntuCVE

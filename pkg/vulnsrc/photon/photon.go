@@ -30,6 +30,10 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
+func (vs VulnSrc) Name() string {
+	return vulnerability.Photon
+}
+
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", photonDir)
 

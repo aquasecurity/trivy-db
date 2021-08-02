@@ -14,6 +14,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 const (
@@ -62,6 +63,24 @@ func NewVulnSrc(ecosystem Ecosystem) VulnSrc {
 		dbc:       db.Config{},
 		ecosystem: ecosystem,
 	}
+}
+
+func (vs VulnSrc) Name() string {
+	switch vs.ecosystem {
+	case Composer:
+		return vulnerability.GHSAComposer
+	case Maven:
+		return vulnerability.GHSAMaven
+	case Npm:
+		return vulnerability.GHSANpm
+	case Nuget:
+		return vulnerability.GHSANuget
+	case Pip:
+		return vulnerability.GHSAPip
+	case Rubygems:
+		return vulnerability.GHSARubygems
+	}
+	return ""
 }
 
 func (vs VulnSrc) Update(dir string) error {

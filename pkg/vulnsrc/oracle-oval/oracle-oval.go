@@ -35,6 +35,10 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
+func (vs VulnSrc) Name() string {
+	return vulnerability.OracleOVAL
+}
+
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", oracleDir)
 

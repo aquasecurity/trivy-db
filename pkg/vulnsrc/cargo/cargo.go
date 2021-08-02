@@ -60,6 +60,10 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
+func (vs VulnSrc) Name() string {
+	return vulnerability.Cargo
+}
+
 func (vs VulnSrc) Update(dir string) (err error) {
 	repoPath := filepath.Join(dir, cargoDir)
 	if err := vs.update(repoPath); err != nil {
