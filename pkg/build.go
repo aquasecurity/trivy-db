@@ -5,7 +5,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
-	trivydb "github.com/aquasecurity/trivy-db/pkg/trivy-db"
+	"github.com/aquasecurity/trivy-db/pkg/vulndb"
 )
 
 func build(c *cli.Context) error {
@@ -23,8 +23,8 @@ func build(c *cli.Context) error {
 		dbType = db.TypeLight
 	}
 
-	tdb := trivydb.New(dbType, cacheDir, updateInterval)
-	if err := tdb.Build(targets); err != nil {
+	vdb := vulndb.New(dbType, cacheDir, updateInterval)
+	if err := vdb.Build(targets); err != nil {
 		return xerrors.Errorf("build error: %w", err)
 	}
 
