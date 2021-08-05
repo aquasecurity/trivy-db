@@ -157,6 +157,10 @@ func (ad AdvisoryDB) UnmarshalJSON(data []byte) error {
 	return nil
 }
 func ToLowerCasePythonPackage(pkg string) string {
+	/*
+		  from https://www.python.org/dev/peps/pep-0426/#name
+			All comparisons of distribution names MUST be case insensitive, and MUST consider hyphens and underscores to be equivalent.
+	*/
 	pkg = strings.ToLower(pkg)
 	pkg = strings.ReplaceAll(pkg, "_", "-")
 	return pkg

@@ -188,6 +188,10 @@ func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
 }
 func (vs VulnSrc) ToLowerCasePackage(pkgName string) string {
 	if vs.ecosystem == Pip {
+		/*
+			  from https://www.python.org/dev/peps/pep-0426/#name
+				All comparisons of distribution names MUST be case insensitive, and MUST consider hyphens and underscores to be equivalent.
+		*/
 		pkgName = python.ToLowerCasePythonPackage(pkgName)
 	} else if vs.ecosystem != Nuget { // Nuget is case-sensitive
 		pkgName = strings.ToLower(pkgName)
