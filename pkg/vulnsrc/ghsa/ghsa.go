@@ -14,6 +14,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/python"
 )
 
 const (
@@ -135,7 +136,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 
 		// Nuget is case-sensitive
 		pkgName := ghsa.Package.Name
-		if vs.ecosystem != Nuget {
+		if vs.ecosystem == Pip {
+			pkgName = python.ToLowerCasePythonPackage(pkgName)
+		} else if vs.ecosystem != Nuget {
 			pkgName = strings.ToLower(ghsa.Package.Name)
 		}
 

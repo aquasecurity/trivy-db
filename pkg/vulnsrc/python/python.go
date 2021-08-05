@@ -97,6 +97,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, advisoryDB AdvisoryDB) error {
 
 				// to detect vulnerabilities
 				a := Advisory{Specs: advisory.Specs}
+				pkgName = ToLowerCasePythonPackage(pkgName)
 				err := vs.dbc.PutAdvisoryDetail(tx, vulnerabilityID, vulnerability.PythonSafetyDB, pkgName, a)
 				if err != nil {
 					return xerrors.Errorf("failed to save python advisory: %w", err)
@@ -153,4 +154,9 @@ func (ad AdvisoryDB) UnmarshalJSON(data []byte) error {
 		ad[k] = raw
 	}
 	return nil
+}
+func ToLowerCasePythonPackage(pkg string) string {
+	pkg = strings.ToLower(pkg)
+	pkg = strings.ReplaceAll(pkg, "_", "-")
+	return pkg
 }
