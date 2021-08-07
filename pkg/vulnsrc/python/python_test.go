@@ -135,7 +135,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		wantErr                    string
 	}{
 		{
-			name: "happy path pip",
+			name: "happy path",
 			args: args{
 				release: "python-safety-db",
 				pkgName: "django",
@@ -159,7 +159,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 		},
 		{
-			name: "happy path pip uppercase",
+			name: "happy path uppercase",
 			args: args{
 				release: "python-safety-db",
 				pkgName: "Django",
@@ -183,7 +183,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 		},
 		{
-			name: "happy path pip hyphen",
+			name: "happy path hyphen",
 			args: args{
 				release: "python-safety-db",
 				pkgName: "py_gfm",
