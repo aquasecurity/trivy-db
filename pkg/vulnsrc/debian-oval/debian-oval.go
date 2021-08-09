@@ -16,7 +16,6 @@ import (
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -24,6 +23,16 @@ var (
 	debianDir = filepath.Join("oval", "debian")
 	// e.g. debian oval 8
 	platformFormat = "debian oval %s"
+
+	DebianReleasesMapping = map[string]string{
+		// Code names
+		"squeeze": "6",
+		"wheezy":  "7",
+		"jessie":  "8",
+		"stretch": "9",
+		"buster":  "10",
+		"sid":     "unstable",
+	}
 )
 
 type VulnSrc struct {
@@ -101,7 +110,7 @@ func (vs VulnSrc) save(cves []DebianOVAL) error {
 			affectedPkgs := walkDebian(cve.Criteria, []Package{})
 			for _, affectedPkg := range affectedPkgs {
 				// stretch => 9
-				majorVersion, ok := debian.DebianReleasesMapping[cve.Release]
+				majorVersion, ok := DebianReleasesMapping[cve.Release]
 				if !ok {
 					continue
 				}

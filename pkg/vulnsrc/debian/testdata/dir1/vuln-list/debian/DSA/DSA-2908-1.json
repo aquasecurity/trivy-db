@@ -1,0 +1,28 @@
+{
+    "Header": {
+      "Original": "[17 Apr 2014] DSA-2908-1 openssl - security update",
+      "Line": 6859,
+      "ID": "DSA-2908-1",
+      "Description": "openssl - security update"
+    },
+    "Annotations": [
+      {
+        "Original": "{CVE-2010-5298 CVE-2014-0076}",
+        "Line": 6860,
+        "Type": "xref",
+        "Bugs": [
+          "CVE-2014-0076"
+        ]
+      },
+      {
+        "Original": "[bookworm] - openssl 1.0.1e-2+deb7u7",
+        "Line": 6861,
+        "Type": "package",
+        "Release": "bookworm",
+        "Package": "openssl",
+        "Kind": "fixed",
+        "Version": "1.0.1e-2+deb7u7",
+        "Severity": "low"
+      }
+    ]
+  }
