@@ -18,15 +18,16 @@ func TestVulnSrc_Update(t *testing.T) {
 		dir string
 	}
 	testCases := []struct {
-		name string
-		args args
+		name             string
+		args             args
 		expectedAdvisory []Advisory
 		expectErr        bool
+		expectPackage    string
 	}{
 		{
 			name: "happy path",
 			args: args{
-				dir: "testdata/fixtures",
+				dir: "testdata/full",
 			},
 			expectedAdvisory: []Advisory{
 				{
@@ -58,7 +59,36 @@ func TestVulnSrc_Update(t *testing.T) {
 					Specs:           []string{"<2.1.3"},
 				},
 			},
-			expectErr: false,
+			expectErr:     false,
+			expectPackage: "zulip",
+		},
+		{
+			name: "happy path uppercase kuber",
+			args: args{
+				dir: "testdata/uppercase",
+			},
+			expectedAdvisory: []Advisory{
+				{
+					VulnerabilityID: "CVE-2019-11324",
+					Specs:           []string{"<10.0.1"},
+				},
+			},
+			expectErr:     false,
+			expectPackage: "kuber",
+		},
+		{
+			name: "happy path hyphen kuber",
+			args: args{
+				dir: "testdata/hyphen",
+			},
+			expectedAdvisory: []Advisory{
+				{
+					VulnerabilityID: "CVE-2019-11324",
+					Specs:           []string{"<10.0.1"},
+				},
+			},
+			expectErr:     false,
+			expectPackage: "ku-ber",
 		},
 	}
 	for _, tc := range testCases {
@@ -74,6 +104,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				adv, err := db.Config{}.GetAdvisoryDetails(a.VulnerabilityID)
 				require.NoError(t, err)
 				for _, advis := range adv {
+					require.Equal(t, tc.expectPackage, advis.PackageName)
 					rawAdv, err := json.Marshal(advis.AdvisoryItem)
 					require.NoError(t, err)
 					var pythonAdv Advisory
@@ -90,9 +121,114 @@ func TestVulnSrc_Update(t *testing.T) {
 		})
 	}
 }
+func TestVulnSrc_Get(t *testing.T) {
+	type args struct {
+		release string
+		pkgName string
+	}
+
+	tests := []struct {
+		name                       string
+		args                       args
+		forEachAdvisoryExpectation db.OperationForEachAdvisoryExpectation
+		want                       []Advisory
+		wantErr                    string
+	}{
+		{
+			name: "happy path",
+			args: args{
+				release: "python-safety-db",
+				pkgName: "django",
+			},
+			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
+				Args: db.OperationForEachAdvisoryArgs{
+					Source:  "python-safety-db",
+					PkgName: "django",
+				},
+				Returns: db.OperationForEachAdvisoryReturns{
+					Value: map[string][]byte{
+						"GHSA-5hg3-6c2f-f3wr": []byte(`{"specs": ["<2.8.0"]}`),
+					},
+				},
+			},
+			want: []Advisory{
+				{
+					VulnerabilityID: "GHSA-5hg3-6c2f-f3wr",
+					Specs:           []string{"<2.8.0"},
+				},
+			},
+		},
+		{
+			name: "happy path uppercase",
+			args: args{
+				release: "python-safety-db",
+				pkgName: "Django",
+			},
+			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
+				Args: db.OperationForEachAdvisoryArgs{
+					Source:  "python-safety-db",
+					PkgName: "django",
+				},
+				Returns: db.OperationForEachAdvisoryReturns{
+					Value: map[string][]byte{
+						"GHSA-5hg3-6c2f-f3wr": []byte(`{"specs": ["<2.8.0"]}`),
+					},
+				},
+			},
+			want: []Advisory{
+				{
+					VulnerabilityID: "GHSA-5hg3-6c2f-f3wr",
+					Specs:           []string{"<2.8.0"},
+				},
+			},
+		},
+		{
+			name: "happy path hyphen",
+			args: args{
+				release: "python-safety-db",
+				pkgName: "py_gfm",
+			},
+			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
+				Args: db.OperationForEachAdvisoryArgs{
+					Source:  "python-safety-db",
+					PkgName: "py-gfm",
+				},
+				Returns: db.OperationForEachAdvisoryReturns{
+					Value: map[string][]byte{
+						"GHSA-5hg3-6c2f-f3wr": []byte(`{"specs": ["<2.8.0"]}`),
+					},
+				},
+			},
+			want: []Advisory{
+				{
+					VulnerabilityID: "GHSA-5hg3-6c2f-f3wr",
+					Specs:           []string{"<2.8.0"},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockDBConfig := new(db.MockOperation)
+			mockDBConfig.ApplyForEachAdvisoryExpectation(tt.forEachAdvisoryExpectation)
+
+			vs := VulnSrc{
+				dbc: mockDBConfig,
+			}
+			got, err := vs.Get(tt.args.pkgName)
+			if tt.wantErr != "" {
+				require.NotNil(t, err, tt.name)
+				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
+			} else {
+				assert.NoError(t, err, tt.name)
+			}
+			assert.Equal(t, tt.want, got, tt.name)
+		})
+	}
+}
 
 func TestAdvisoryDB_UnmarshalJSON(t *testing.T) {
-	b, err := ioutil.ReadFile("testdata/fixtures/python-safety-db/data/insecure_full.json")
+	b, err := ioutil.ReadFile("testdata/full/python-safety-db/data/insecure_full.json")
 	require.NoError(t, err)
 	advisories := AdvisoryDB{}
 	err = json.Unmarshal(b, &advisories)

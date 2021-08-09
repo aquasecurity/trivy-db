@@ -97,6 +97,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, advisoryDB AdvisoryDB) error {
 
 				// to detect vulnerabilities
 				a := Advisory{Specs: advisory.Specs}
+				pkgName = ToLowerCasePythonPackage(pkgName)
 				err := vs.dbc.PutAdvisoryDetail(tx, vulnerabilityID, vulnerability.PythonSafetyDB, pkgName, a)
 				if err != nil {
 					return xerrors.Errorf("failed to save python advisory: %w", err)
@@ -120,6 +121,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, advisoryDB AdvisoryDB) error {
 }
 
 func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
+	pkgName = ToLowerCasePythonPackage(pkgName)
 	advisories, err := vs.dbc.ForEachAdvisory(vulnerability.PythonSafetyDB, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to iterate python vulnerabilities: %w", err)
@@ -153,4 +155,13 @@ func (ad AdvisoryDB) UnmarshalJSON(data []byte) error {
 		ad[k] = raw
 	}
 	return nil
+}
+func ToLowerCasePythonPackage(pkg string) string {
+	/*
+		  from https://www.python.org/dev/peps/pep-0426/#name
+			All comparisons of distribution names MUST be case insensitive, and MUST consider hyphens and underscores to be equivalent.
+	*/
+	pkg = strings.ToLower(pkg)
+	pkg = strings.ReplaceAll(pkg, "_", "-")
+	return pkg
 }

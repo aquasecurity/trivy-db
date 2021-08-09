@@ -585,6 +585,214 @@ func TestVulnSrc_save(t *testing.T) {
 			},
 		},
 		{
+			name:      "happy path pip uppercase",
+			ecosystem: Pip,
+			args: args{
+				ghsas: []GithubSecurityAdvisory{
+					{
+						Severity:  "MODERATE",
+						UpdatedAt: "2018-10-04T18:05:59Z",
+						Package: Package{
+							Ecosystem: "PIP",
+							Name:      "Django",
+						},
+						Advisory: GhsaAdvisory{
+							DatabaseId: 663,
+							Id:         "MDE2OlNlY3VyaXR5QWR2aXNvcnlHSFNBLTVoZzMtNmMyZi1mM3dy",
+							GhsaId:     "GHSA-5hg3-6c2f-f3wr",
+							References: []Reference{
+								{
+									Url: "https://nvd.nist.gov/vuln/detail/CVE-2018-14574",
+								},
+							},
+							Identifiers: []Identifier{
+								{
+									Type:  "GHSA",
+									Value: "GHSA-5hg3-6c2f-f3wr",
+								},
+								{
+									Type:  "CVE",
+									Value: "CVE-2018-14574",
+								},
+							},
+							Description: "django.middleware.common.CommonMiddleware in Django 1.11.x before 1.11.15 and 2.0.x before 2.0.8 has an Open Redirect.",
+							Origin:      "UNSPECIFIED",
+							PublishedAt: "2018-10-04T21:58:46Z",
+							Severity:    "MODERATE",
+							Summary:     "Moderate severity vulnerability that affects django",
+							UpdatedAt:   "2019-07-03T21:02:03Z",
+							WithdrawnAt: "",
+						},
+						Versions: []Version{
+							{
+								FirstPatchedVersion: FirstPatchedVersion{
+									Identifier: "2.0.8",
+								},
+								VulnerableVersionRange: "\u003e= 2.0, \u003c 2.0.8",
+							},
+							{
+								FirstPatchedVersion: FirstPatchedVersion{
+									Identifier: "1.11.15",
+								},
+								VulnerableVersionRange: "\u003e= 1.11.0, \u003c 1.11.15",
+							},
+						},
+					},
+				},
+			},
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
+				{
+					Args: db.OperationPutAdvisoryDetailArgs{
+						TxAnything:      true,
+						Source:          "GitHub Security Advisory Pip",
+						PkgName:         "django",
+						VulnerabilityID: "CVE-2018-14574",
+						Advisory: Advisory{
+							PatchedVersions: []string{
+								"2.0.8",
+								"1.11.15",
+							},
+							VulnerableVersions: []string{
+								"\u003e= 2.0, \u003c 2.0.8",
+								"\u003e= 1.11.0, \u003c 1.11.15",
+							},
+						},
+					},
+				},
+			},
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
+				{
+					Args: db.OperationPutVulnerabilityDetailArgs{
+						TxAnything:      true,
+						Source:          vulnerability.GHSAPip,
+						VulnerabilityID: "CVE-2018-14574",
+						Vulnerability: types.VulnerabilityDetail{
+							ID:       "CVE-2018-14574",
+							Severity: types.SeverityMedium,
+							References: []string{
+								"https://nvd.nist.gov/vuln/detail/CVE-2018-14574",
+							},
+							Title:       "Moderate severity vulnerability that affects django",
+							Description: "django.middleware.common.CommonMiddleware in Django 1.11.x before 1.11.15 and 2.0.x before 2.0.8 has an Open Redirect.",
+						},
+					},
+				},
+			},
+			putSeverity: []db.OperationPutSeverityExpectation{
+				{
+					Args: db.OperationPutSeverityArgs{
+						TxAnything:      true,
+						VulnerabilityID: "CVE-2018-14574",
+						Severity:        types.SeverityUnknown,
+					},
+				},
+			},
+		},
+		{
+			name:      "happy path pip hyphen",
+			ecosystem: Pip,
+			args: args{
+				ghsas: []GithubSecurityAdvisory{
+					{
+						Severity:  "MODERATE",
+						UpdatedAt: "2018-10-04T18:05:59Z",
+						Package: Package{
+							Ecosystem: "PIP",
+							Name:      "dj_ango",
+						},
+						Advisory: GhsaAdvisory{
+							DatabaseId: 663,
+							Id:         "MDE2OlNlY3VyaXR5QWR2aXNvcnlHSFNBLTVoZzMtNmMyZi1mM3dy",
+							GhsaId:     "GHSA-5hg3-6c2f-f3wr",
+							References: []Reference{
+								{
+									Url: "https://nvd.nist.gov/vuln/detail/CVE-2018-14574",
+								},
+							},
+							Identifiers: []Identifier{
+								{
+									Type:  "GHSA",
+									Value: "GHSA-5hg3-6c2f-f3wr",
+								},
+								{
+									Type:  "CVE",
+									Value: "CVE-2018-14574",
+								},
+							},
+							Description: "django.middleware.common.CommonMiddleware in Django 1.11.x before 1.11.15 and 2.0.x before 2.0.8 has an Open Redirect.",
+							Origin:      "UNSPECIFIED",
+							PublishedAt: "2018-10-04T21:58:46Z",
+							Severity:    "MODERATE",
+							Summary:     "Moderate severity vulnerability that affects django",
+							UpdatedAt:   "2019-07-03T21:02:03Z",
+							WithdrawnAt: "",
+						},
+						Versions: []Version{
+							{
+								FirstPatchedVersion: FirstPatchedVersion{
+									Identifier: "2.0.8",
+								},
+								VulnerableVersionRange: "\u003e= 2.0, \u003c 2.0.8",
+							},
+							{
+								FirstPatchedVersion: FirstPatchedVersion{
+									Identifier: "1.11.15",
+								},
+								VulnerableVersionRange: "\u003e= 1.11.0, \u003c 1.11.15",
+							},
+						},
+					},
+				},
+			},
+			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
+				{
+					Args: db.OperationPutAdvisoryDetailArgs{
+						TxAnything:      true,
+						Source:          "GitHub Security Advisory Pip",
+						PkgName:         "dj-ango",
+						VulnerabilityID: "CVE-2018-14574",
+						Advisory: Advisory{
+							PatchedVersions: []string{
+								"2.0.8",
+								"1.11.15",
+							},
+							VulnerableVersions: []string{
+								"\u003e= 2.0, \u003c 2.0.8",
+								"\u003e= 1.11.0, \u003c 1.11.15",
+							},
+						},
+					},
+				},
+			},
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
+				{
+					Args: db.OperationPutVulnerabilityDetailArgs{
+						TxAnything:      true,
+						Source:          vulnerability.GHSAPip,
+						VulnerabilityID: "CVE-2018-14574",
+						Vulnerability: types.VulnerabilityDetail{
+							ID:       "CVE-2018-14574",
+							Severity: types.SeverityMedium,
+							References: []string{
+								"https://nvd.nist.gov/vuln/detail/CVE-2018-14574",
+							},
+							Title:       "Moderate severity vulnerability that affects django",
+							Description: "django.middleware.common.CommonMiddleware in Django 1.11.x before 1.11.15 and 2.0.x before 2.0.8 has an Open Redirect.",
+						},
+					},
+				},
+			},
+			putSeverity: []db.OperationPutSeverityExpectation{
+				{
+					Args: db.OperationPutSeverityArgs{
+						TxAnything:      true,
+						VulnerabilityID: "CVE-2018-14574",
+						Severity:        types.SeverityUnknown,
+					},
+				},
+			},
+		},
+		{
 			name:      "happy path rubygems",
 			ecosystem: Rubygems,
 			args: args{
@@ -1284,6 +1492,58 @@ func TestVulnSrc_Get(t *testing.T) {
 				Args: db.OperationForEachAdvisoryArgs{
 					Source:  "GitHub Security Advisory Pip",
 					PkgName: "django",
+				},
+				Returns: db.OperationForEachAdvisoryReturns{
+					Value: map[string][]byte{
+						"GHSA-5hg3-6c2f-f3wr": []byte(`{"VulnerableVersions": ["2.0.8", "1.11.15"], "PatchedVersions": ["\u003e= 2.0, \u003c 2.0.8", "\u003e= 1.11.0, \u003c 1.11.15"]}`),
+					},
+				},
+			},
+			want: []Advisory{
+				{
+					VulnerabilityID:    "GHSA-5hg3-6c2f-f3wr",
+					VulnerableVersions: []string{"2.0.8", "1.11.15"},
+					PatchedVersions:    []string{"\u003e= 2.0, \u003c 2.0.8", "\u003e= 1.11.0, \u003c 1.11.15"},
+				},
+			},
+		},
+		{
+			name:      "happy path pip uppercase",
+			ecosystem: Pip,
+			args: args{
+				release: "GitHub Security Advisory Pip",
+				pkgName: "Django",
+			},
+			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
+				Args: db.OperationForEachAdvisoryArgs{
+					Source:  "GitHub Security Advisory Pip",
+					PkgName: "django",
+				},
+				Returns: db.OperationForEachAdvisoryReturns{
+					Value: map[string][]byte{
+						"GHSA-5hg3-6c2f-f3wr": []byte(`{"VulnerableVersions": ["2.0.8", "1.11.15"], "PatchedVersions": ["\u003e= 2.0, \u003c 2.0.8", "\u003e= 1.11.0, \u003c 1.11.15"]}`),
+					},
+				},
+			},
+			want: []Advisory{
+				{
+					VulnerabilityID:    "GHSA-5hg3-6c2f-f3wr",
+					VulnerableVersions: []string{"2.0.8", "1.11.15"},
+					PatchedVersions:    []string{"\u003e= 2.0, \u003c 2.0.8", "\u003e= 1.11.0, \u003c 1.11.15"},
+				},
+			},
+		},
+		{
+			name:      "happy path pip hyphen",
+			ecosystem: Pip,
+			args: args{
+				release: "GitHub Security Advisory Pip",
+				pkgName: "py_gfm",
+			},
+			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
+				Args: db.OperationForEachAdvisoryArgs{
+					Source:  "GitHub Security Advisory Pip",
+					PkgName: "py-gfm",
 				},
 				Returns: db.OperationForEachAdvisoryReturns{
 					Value: map[string][]byte{
