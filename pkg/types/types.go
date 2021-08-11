@@ -10,6 +10,7 @@ import (
 type Severity int
 
 type VendorSeverity map[string]Severity
+type SecurityAdvisories map[string]map[string]SecurityAdvisory
 
 type CVSS struct {
 	V2Vector string  `json:"V2Vector,omitempty"`
@@ -82,25 +83,33 @@ type LastUpdated struct {
 	Date time.Time
 }
 type VulnerabilityDetail struct {
-	ID               string     `json:",omitempty"` // e.g. CVE-2019-8331, OSVDB-104365
-	CvssScore        float64    `json:",omitempty"`
-	CvssVector       string     `json:",omitempty"`
-	CvssScoreV3      float64    `json:",omitempty"`
-	CvssVectorV3     string     `json:",omitempty"`
-	Severity         Severity   `json:",omitempty"`
-	SeverityV3       Severity   `json:",omitempty"`
-	CweIDs           []string   `json:",omitempty"` // e.g. CWE-78, CWE-89
-	References       []string   `json:",omitempty"`
-	Title            string     `json:",omitempty"`
-	Description      string     `json:",omitempty"`
-	PublishedDate    *time.Time `json:",omitempty"`
-	LastModifiedDate *time.Time `json:",omitempty"`
+	ID               string             `json:",omitempty"` // e.g. CVE-2019-8331, OSVDB-104365
+	CvssScore        float64            `json:",omitempty"`
+	CvssVector       string             `json:",omitempty"`
+	CvssScoreV3      float64            `json:",omitempty"`
+	CvssVectorV3     string             `json:",omitempty"`
+	Severity         Severity           `json:",omitempty"`
+	SeverityV3       Severity           `json:",omitempty"`
+	AdvisoryDetails  SecurityAdvisories `json:",omitempty"`
+	CweIDs           []string           `json:",omitempty"` // e.g. CWE-78, CWE-89
+	References       []string           `json:",omitempty"`
+	Title            string             `json:",omitempty"`
+	Description      string             `json:",omitempty"`
+	PublishedDate    *time.Time         `json:",omitempty"`
+	LastModifiedDate *time.Time         `json:",omitempty"`
 }
 
 type AdvisoryDetail struct {
 	PlatformName string
 	PackageName  string
 	AdvisoryItem interface{}
+}
+
+type SecurityAdvisory struct {
+	SecurityAdvisoryId string    `json:"security_advisory_id,omitempty"`
+	Severity           string    `json:"severity,omitempty"`
+	PublishDate        time.Time `json:"publish_date,omitempty"`
+	Description        string    `json:"description,omitempty"`
 }
 
 type Advisory struct {
@@ -110,23 +119,29 @@ type Advisory struct {
 	FixedVersion    string `json:",omitempty"`
 	AffectedVersion string `json:",omitempty"` // Only for Arch Linux
 
+	WillNotFix      bool   `json:"will_not_fix,omitempty"`
+
 	// Version ranges for language-specific package
 	// Some advisories provide VulnerableVersions only, others provide PatchedVersions and UnaffectedVersions
 	VulnerableVersions []string `json:",omitempty"`
 	PatchedVersions    []string `json:",omitempty"`
 	UnaffectedVersions []string `json:",omitempty"`
+	// Security Advisories
+	SecurityAdvisory []string `json:",omitempty"`
 }
 
 type Vulnerability struct {
-	Title            string         `json:",omitempty"`
-	Description      string         `json:",omitempty"`
-	Severity         string         `json:",omitempty"` // Selected from VendorSeverity, depending on a scan target
-	CweIDs           []string       `json:",omitempty"` // e.g. CWE-78, CWE-89
-	VendorSeverity   VendorSeverity `json:",omitempty"`
-	CVSS             VendorCVSS     `json:",omitempty"`
-	References       []string       `json:",omitempty"`
-	PublishedDate    *time.Time     `json:",omitempty"`
-	LastModifiedDate *time.Time     `json:",omitempty"`
+	Title            string             `json:",omitempty"`
+	Description      string             `json:",omitempty"`
+	Severity         string             `json:",omitempty"` // Selected from VendorSeverity, depending on a scan target
+	CweIDs           []string           `json:",omitempty"` // e.g. CWE-78, CWE-89
+	VendorSeverity   VendorSeverity     `json:",omitempty"`
+	CVSS             VendorCVSS         `json:",omitempty"`
+	AdvisoryDetails  SecurityAdvisories `json:",omitempty"`
+	References       []string           `json:",omitempty"`
+	PublishedDate    *time.Time         `json:",omitempty"`
+	LastModifiedDate *time.Time         `json:",omitempty"`
+	VendorURL        string             `json:",omitempty"`
 }
 
 type VulnSrc interface {
