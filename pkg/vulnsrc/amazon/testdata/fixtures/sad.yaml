@@ -1,0 +1,6 @@
+- bucket: amazon linux 1
+  pairs:
+    - bucket: curl
+      pairs:
+        - key: CVE-2019-0001
+          value: "0.1.2"

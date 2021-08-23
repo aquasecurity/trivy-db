@@ -1,15 +1,14 @@
 package amazon_test
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/xerrors"
 
+	fixtures "github.com/aquasecurity/bolt-fixtures"
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
@@ -35,7 +34,7 @@ func TestVulnSrc_Update(t *testing.T) {
 	}{
 		{
 			name: "happy path",
-			dir:  filepath.Join("testdata"),
+			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []wantKV{
 				{
 					key: []string{"advisory-detail", "CVE-2018-17456", "amazon linux 1", "git"},
@@ -117,75 +116,73 @@ func TestVulnSrc_Update(t *testing.T) {
 }
 
 func TestVulnSrc_Get(t *testing.T) {
-	testCases := []struct {
-		name          string
-		version       string
-		pkgName       string
-		getAdvisories db.OperationGetAdvisoriesExpectation
-		expectedError error
-		expectedVulns []types.Advisory
+	tests := []struct {
+		name     string
+		fixtures []string
+		version  string
+		pkgName  string
+		want     []types.Advisory
+		wantErr  string
 	}{
 		{
-			name:    "happy path",
-			version: "1",
-			pkgName: "curl",
-			getAdvisories: db.OperationGetAdvisoriesExpectation{
-				Args: db.OperationGetAdvisoriesArgs{
-					Source:  "amazon linux 1",
-					PkgName: "curl",
-				},
-				Returns: db.OperationGetAdvisoriesReturns{
-					Advisories: []types.Advisory{
-						{VulnerabilityID: "CVE-2019-0001", FixedVersion: "0.1.2"},
-					},
-				},
-			},
-			expectedVulns: []types.Advisory{{VulnerabilityID: "CVE-2019-0001", FixedVersion: "0.1.2"}},
+			name:     "happy path",
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			version:  "1",
+			pkgName:  "curl",
+			want:     []types.Advisory{{VulnerabilityID: "CVE-2019-0001", FixedVersion: "0.1.2"}},
 		},
 		{
-			name:    "no advisories are returned",
-			version: "2",
-			pkgName: "bash",
-			getAdvisories: db.OperationGetAdvisoriesExpectation{
-				Args: db.OperationGetAdvisoriesArgs{
-					Source:  "amazon linux 2",
-					PkgName: "bash",
-				},
-				Returns: db.OperationGetAdvisoriesReturns{},
-			},
+			name:     "no advisories are returned",
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			version:  "2",
+			pkgName:  "curl",
 		},
 		{
-			name: "amazon GetAdvisories return an error",
-			getAdvisories: db.OperationGetAdvisoriesExpectation{
-				Args: db.OperationGetAdvisoriesArgs{
-					SourceAnything:  true,
-					PkgNameAnything: true,
-				},
-				Returns: db.OperationGetAdvisoriesReturns{
-					Advisories: []types.Advisory{},
-					Err:        xerrors.New("unable to get advisories"),
-				},
-			},
-			expectedError: errors.New("failed to get Amazon advisories: unable to get advisories"),
-			expectedVulns: nil,
+			name:     "GetAdvisories returns an error",
+			version:  "1",
+			pkgName:  "curl",
+			fixtures: []string{"testdata/fixtures/sad.yaml"},
+			wantErr:  "failed to unmarshal advisory JSON",
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyGetAdvisoriesExpectation(tc.getAdvisories)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := initDB(t, tt.fixtures)
+
+			// Initialize DB
+			require.NoError(t, db.Init(dir))
+			defer db.Close()
 
 			ac := amazon.NewVulnSrc()
-			vuls, err := ac.Get(tc.version, tc.pkgName)
+			vuls, err := ac.Get(tt.version, tt.pkgName)
 
-			switch {
-			case tc.expectedError != nil:
-				assert.EqualError(t, err, tc.expectedError.Error(), tc.name)
-			default:
-				assert.NoError(t, err, tc.name)
+			if tt.wantErr != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
+				return
 			}
-			assert.Equal(t, tc.expectedVulns, vuls, tc.name)
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, vuls)
 		})
 	}
+}
+
+func initDB(t *testing.T, fixtureFiles []string) string {
+	// Create a temp dir
+	dir := t.TempDir()
+
+	dbPath := db.Path(dir)
+	dbDir := filepath.Dir(dbPath)
+	err := os.MkdirAll(dbDir, 0700)
+	require.NoError(t, err)
+
+	// Load testdata into BoltDB
+	loader, err := fixtures.New(dbPath, fixtureFiles)
+	require.NoError(t, err)
+	require.NoError(t, loader.Load())
+	require.NoError(t, loader.Close())
+
+	return dir
 }
