@@ -14,6 +14,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/python"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -152,11 +153,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 			VulnerableVersions: avs,
 		}
 
-		// Nuget is case-sensitive
-		pkgName := ghsa.Package.Name
-		if vs.ecosystem != Nuget {
-			pkgName = strings.ToLower(ghsa.Package.Name)
-		}
+		pkgName := vs.ToLowerCasePackage(ghsa.Package.Name)
 
 		err := vs.dbc.PutAdvisoryDetail(tx, vulnID, platformName, pkgName, a)
 		if err != nil {
@@ -189,6 +186,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 }
 
 func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
+	pkgName = vs.ToLowerCasePackage(pkgName)
+
 	bucket := fmt.Sprintf(platformFormat, vs.ecosystem.String())
 	advisories, err := vs.dbc.ForEachAdvisory(bucket, pkgName)
 	if err != nil {
@@ -205,6 +204,18 @@ func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
 		results = append(results, advisory)
 	}
 	return results, nil
+}
+func (vs VulnSrc) ToLowerCasePackage(pkgName string) string {
+	if vs.ecosystem == Pip {
+		/*
+			  from https://www.python.org/dev/peps/pep-0426/#name
+				All comparisons of distribution names MUST be case insensitive, and MUST consider hyphens and underscores to be equivalent.
+		*/
+		pkgName = python.ToLowerCasePythonPackage(pkgName)
+	} else if vs.ecosystem != Nuget { // Nuget is case-sensitive
+		pkgName = strings.ToLower(pkgName)
+	}
+	return pkgName
 }
 
 func severityFromThreat(urgency string) types.Severity {
