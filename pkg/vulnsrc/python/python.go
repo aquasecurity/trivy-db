@@ -51,6 +51,10 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
+func (vs VulnSrc) Name() string {
+	return vulnerability.PythonSafetyDB
+}
+
 func (vs VulnSrc) Update(dir string) (err error) {
 	repoPath = filepath.Join(dir, pythonDir)
 	if err := vs.update(repoPath); err != nil {

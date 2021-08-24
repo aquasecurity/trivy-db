@@ -32,6 +32,10 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
+func (vs VulnSrc) Name() string {
+	return vulnerability.NVD
+}
+
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", nvdDir)
 
@@ -108,7 +112,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, items []Item) error {
 			LastModifiedDate: &lastModifiedDate,
 		}
 
-		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Nvd, vuln); err != nil {
+		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.NVD, vuln); err != nil {
 			return err
 		}
 	}

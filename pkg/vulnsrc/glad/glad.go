@@ -49,6 +49,10 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
+func (vs VulnSrc) Name() string {
+	return vulnerability.GLAD
+}
+
 func (vs VulnSrc) Update(dir string) error {
 	for _, t := range supportedPkgTypes {
 		log.Printf("    Updating GitLab Advisory Database %s...", t)

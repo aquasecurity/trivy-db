@@ -136,7 +136,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2017-0012",
-						Source:          vulnerability.Nvd,
+						Source:          vulnerability.NVD,
 						Vulnerability: types.VulnerabilityDetail{
 							CvssScore:        4.3,
 							CvssVector:       "AV:N/AC:M/Au:N/C:N/I:P/A:N",
@@ -204,7 +204,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 					Args: db.OperationPutVulnerabilityDetailArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2017-0012",
-						Source:          vulnerability.Nvd,
+						Source:          vulnerability.NVD,
 						Vulnerability: types.VulnerabilityDetail{
 							CvssScore:        4.3,
 							CvssVector:       "AV:N/AC:M/Au:N/C:N/I:P/A:N",

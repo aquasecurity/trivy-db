@@ -47,6 +47,17 @@ func NewVulnSrc(dist Distribution) VulnSrc {
 	}
 }
 
+func (vs VulnSrc) Name() string {
+	switch vs.dist {
+	case SUSEEnterpriseLinux:
+		return vulnerability.SuseCVRF
+	case OpenSUSE:
+		return vulnerability.OpenSuseCVRF
+	default:
+		return ""
+	}
+}
+
 func (vs VulnSrc) Update(dir string) error {
 	log.Println("Saving SUSE CVRF")
 

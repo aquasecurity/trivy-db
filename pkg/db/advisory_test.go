@@ -2,16 +2,13 @@ package db_test
 
 import (
 	"encoding/json"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"testing"
 
-	fixtures "github.com/aquasecurity/bolt-fixtures"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 )
 
@@ -83,11 +80,8 @@ func TestConfig_ForEachAdvisory(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dir := initDB(t, tt.fixtures)
-			defer os.RemoveAll(dir)
-
 			// Initialize DB
-			require.NoError(t, db.Init(dir))
+			dbtest.InitTestDB(t, tt.fixtures)
 			defer db.Close()
 
 			dbc := db.Config{}
@@ -207,11 +201,8 @@ func TestConfig_GetAdvisories(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dir := initDB(t, tt.fixtures)
-			defer os.RemoveAll(dir)
-
 			// Initialize DB
-			require.NoError(t, db.Init(dir))
+			dbtest.InitTestDB(t, tt.fixtures)
 			defer db.Close()
 
 			dbc := db.Config{}
@@ -229,23 +220,4 @@ func TestConfig_GetAdvisories(t *testing.T) {
 			assert.ElementsMatch(t, tt.want, got)
 		})
 	}
-}
-
-func initDB(t *testing.T, fixtureFiles []string) string {
-	// Create a temp dir
-	dir, err := ioutil.TempDir("", "TestAdvisory")
-	require.NoError(t, err)
-
-	dbPath := db.Path(dir)
-	dbDir := filepath.Dir(dbPath)
-	err = os.MkdirAll(dbDir, 0700)
-	require.NoError(t, err)
-
-	// Load testdata into BoltDB
-	loader, err := fixtures.New(dbPath, fixtureFiles)
-	require.NoError(t, err)
-	require.NoError(t, loader.Load())
-	require.NoError(t, loader.Close())
-
-	return dir
 }
