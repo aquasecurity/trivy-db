@@ -22,7 +22,7 @@ type VulnDB interface {
 type Core struct {
 	dbc            db.Config
 	vulnClient     vulnerability.Vulnerability
-	vulnSrcs       []vulnsrc.VulnSrc
+	vulnSrcs       map[string]vulnsrc.VulnSrc
 	cacheDir       string
 	updateInterval time.Duration
 	clock          clock.Clock
@@ -36,18 +36,23 @@ func WithClock(clock clock.Clock) Option {
 	}
 }
 
-func WithVulnSrcs(srcs []vulnsrc.VulnSrc) Option {
+func WithVulnSrcs(srcs map[string]vulnsrc.VulnSrc) Option {
 	return func(core *Core) {
 		core.vulnSrcs = srcs
 	}
 }
 
 func NewCore(cacheDir string, updateInterval time.Duration, opts ...Option) *Core {
+	vulnSrcs := map[string]vulnsrc.VulnSrc{}
+	for _, v := range vulnsrc.All {
+		vulnSrcs[v.Name()] = v
+	}
+
 	dbc := db.Config{}
 	core := &Core{
 		dbc:            dbc,
 		vulnClient:     vulnerability.New(dbc),
-		vulnSrcs:       vulnsrc.All,
+		vulnSrcs:       vulnSrcs,
 		cacheDir:       cacheDir,
 		updateInterval: updateInterval,
 		clock:          clock.RealClock{},

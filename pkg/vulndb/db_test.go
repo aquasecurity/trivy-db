@@ -88,7 +88,9 @@ func TestCore_Insert(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			vulnsrcs := []vulnsrc.VulnSrc{fakeVulnSrc{}}
+			vulnsrcs := map[string]vulnsrc.VulnSrc{
+				"fake": fakeVulnSrc{},
+			}
 			cacheDir := filepath.Join(t.TempDir(), tt.fields.cacheDir)
 
 			require.NoError(t, db.Init(cacheDir))
