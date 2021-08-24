@@ -11,6 +11,8 @@ import (
 )
 
 func InitTestDB(t *testing.T, fixtureFiles []string) string {
+	t.Helper()
+
 	// Create a temp dir
 	dir := t.TempDir()
 
@@ -25,6 +27,9 @@ func InitTestDB(t *testing.T, fixtureFiles []string) string {
 	require.NoError(t, err)
 	require.NoError(t, loader.Load())
 	require.NoError(t, loader.Close())
+
+	// Initialize DB
+	require.NoError(t, db.Init(dir))
 
 	return dir
 }

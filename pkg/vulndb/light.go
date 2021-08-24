@@ -15,17 +15,17 @@ type lightDB struct {
 func (l lightDB) Build(targets []string) error {
 	// Insert all security advisories
 	if err := l.Insert(db.TypeLight, targets); err != nil {
-		return err
+		return xerrors.Errorf("insert error: %w", err)
 	}
 
 	// Remove unnecessary details
 	if err := l.optimize(); err != nil {
-		return err
+		return xerrors.Errorf("optimize error: %w", err)
 	}
 
 	// Remove unnecessary buckets
 	if err := l.cleanup(); err != nil {
-		return err
+		return xerrors.Errorf("cleanup error: %w", err)
 	}
 
 	return nil

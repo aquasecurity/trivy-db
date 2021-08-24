@@ -92,6 +92,7 @@ func TestCore_Insert(t *testing.T) {
 			cacheDir := filepath.Join(t.TempDir(), tt.fields.cacheDir)
 
 			require.NoError(t, db.Init(cacheDir))
+			defer db.Close()
 
 			c := vulndb.NewCore(cacheDir, 12*time.Hour, vulndb.WithClock(tt.fields.clock), vulndb.WithVulnSrcs(vulnsrcs))
 			err := c.Insert(db.TypeFull, tt.args.targets)

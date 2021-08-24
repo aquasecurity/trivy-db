@@ -81,10 +81,8 @@ func TestConfig_ForEachAdvisory(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dir := dbtest.InitTestDB(t, tt.fixtures)
-
 			// Initialize DB
-			require.NoError(t, db.Init(dir))
+			dbtest.InitTestDB(t, tt.fixtures)
 			defer db.Close()
 
 			dbc := db.Config{}
@@ -204,10 +202,8 @@ func TestConfig_GetAdvisories(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dir := dbtest.InitTestDB(t, tt.fixtures)
-
 			// Initialize DB
-			require.NoError(t, db.Init(dir))
+			dbtest.InitTestDB(t, tt.fixtures)
 			defer db.Close()
 
 			dbc := db.Config{}

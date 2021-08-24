@@ -15,6 +15,23 @@ var (
 	ErrNoBucket = xerrors.New("no such bucket")
 )
 
+func NoBucket(t *testing.T, dbPath, bucket string, msgAndArgs ...interface{}) {
+	t.Helper()
+
+	db, err := bolt.Open(dbPath, 0600, &bolt.Options{ReadOnly: true})
+	require.NoError(t, err, msgAndArgs)
+	defer db.Close()
+
+	var bkt *bolt.Bucket
+	err = db.View(func(tx *bolt.Tx) error {
+		bkt = tx.Bucket([]byte(bucket))
+		return nil
+	})
+	require.NoError(t, err, msgAndArgs)
+
+	assert.Nil(t, bkt, msgAndArgs)
+}
+
 func JSONEq(t *testing.T, dbPath string, key []string, want interface{}, msgAndArgs ...interface{}) {
 	t.Helper()
 

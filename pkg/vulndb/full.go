@@ -15,17 +15,17 @@ type fullDB struct {
 func (f fullDB) Build(targets []string) error {
 	// Insert all security advisories
 	if err := f.Insert(db.TypeFull, targets); err != nil {
-		return err
+		return xerrors.Errorf("insert error: %w", err)
 	}
 
 	// Remove unnecessary details
 	if err := f.optimize(); err != nil {
-		return err
+		return xerrors.Errorf("optimize error: %w", err)
 	}
 
 	// Remove unnecessary buckets
 	if err := f.cleanup(); err != nil {
-		return err
+		return xerrors.Errorf("cleanup error: %w", err)
 	}
 
 	return nil
