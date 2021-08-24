@@ -43,6 +43,7 @@ func WithVulnSrcs(srcs map[string]vulnsrc.VulnSrc) Option {
 }
 
 func NewCore(cacheDir string, updateInterval time.Duration, opts ...Option) *Core {
+	// Initialize map
 	vulnSrcs := map[string]vulnsrc.VulnSrc{}
 	for _, v := range vulnsrc.All {
 		vulnSrcs[v.Name()] = v
@@ -67,6 +68,8 @@ func NewCore(cacheDir string, updateInterval time.Duration, opts ...Option) *Cor
 
 func (c Core) Insert(dbType db.Type, targets []string) error {
 	log.Println("Updating vulnerability database...")
+
+	// Sort targets for consistency
 	sort.Slice(targets, func(i, j int) bool {
 		return strings.Compare(targets[i], targets[j]) <= 0
 	})
