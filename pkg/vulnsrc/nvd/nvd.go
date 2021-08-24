@@ -33,7 +33,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Name() string {
-	return vulnerability.Nvd
+	return vulnerability.NVD
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -112,7 +112,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, items []Item) error {
 			LastModifiedDate: &lastModifiedDate,
 		}
 
-		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Nvd, vuln); err != nil {
+		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.NVD, vuln); err != nil {
 			return err
 		}
 	}
