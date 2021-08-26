@@ -109,6 +109,10 @@ func Close() error {
 	return nil
 }
 
+func (dbc Config) Connection() *bolt.DB {
+	return db
+}
+
 func (dbc Config) GetVersion() int {
 	metadata, err := dbc.GetMetadata()
 	if err != nil {
@@ -116,6 +120,7 @@ func (dbc Config) GetVersion() int {
 	}
 	return metadata.Version
 }
+
 func (dbc Config) GetMetadata() (Metadata, error) {
 	var metadata Metadata
 	value, err := Config{}.get("trivy", "metadata", "data")

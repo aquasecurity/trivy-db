@@ -9,14 +9,14 @@ jobs:
     name: Build DB
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go 1.15
-        uses: actions/setup-go@v1
+      - name: Set up Go
+        uses: actions/setup-go@v2
         with:
-          go-version: 1.15
+          go-version: 1.16
         id: go
 
       - name: Install bbolt
-        run: go get -v github.com/etcd-io/bbolt/cmd/bbolt
+        run: go install go.etcd.io/bbolt/cmd/bbolt@v1.3.5
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v1

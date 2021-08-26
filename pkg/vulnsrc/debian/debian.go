@@ -70,6 +70,10 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
+func (vs VulnSrc) Name() string {
+	return vulnerability.Debian
+}
+
 func (vs VulnSrc) Update(dir string) error {
 	if err := vs.parse(dir); err != nil {
 		return xerrors.Errorf("error in Debian parse: %w", err)

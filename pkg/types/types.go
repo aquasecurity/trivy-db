@@ -129,8 +129,3 @@ type Vulnerability struct {
 	PublishedDate    *time.Time     `json:",omitempty"`
 	LastModifiedDate *time.Time     `json:",omitempty"`
 }
-
-type VulnSrc interface {
-	Update(dir string) (err error)
-	Get(release string, pkgName string) (advisories []Advisory, err error)
-}

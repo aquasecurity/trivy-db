@@ -18,7 +18,10 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-const govulndbDir = "go"
+const (
+	govulndbDir = "go"
+	bucketName  = "vulndb"
+)
 
 type VulnSrc struct {
 	dbc db.Operation
@@ -28,6 +31,10 @@ func NewVulnSrc() VulnSrc {
 	return VulnSrc{
 		dbc: db.Config{},
 	}
+}
+
+func (vs VulnSrc) Name() string {
+	return vulnerability.GoVulnDB
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -118,9 +125,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, item Entry) error {
 		references = append(references, item.EcosystemSpecific.URL)
 	}
 
-	bucketName, _ := bucket.Name(vulnerability.Go, vulnerability.GoVulnDB)
+	prefixedBucketName, _ := bucket.Name(vulnerability.Go, bucketName)
 	for _, vulnID := range vulnIDs {
-		err := vs.dbc.PutAdvisoryDetail(tx, vulnID, bucketName, pkgName, a)
+		err := vs.dbc.PutAdvisoryDetail(tx, vulnID, prefixedBucketName, pkgName, a)
 		if err != nil {
 			return xerrors.Errorf("failed to save go-vulndb advisory: %w", err)
 		}
@@ -132,7 +139,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, item Entry) error {
 			PublishedDate:    &item.Published,
 			LastModifiedDate: &item.Modified,
 		}
-		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, bucketName, vuln); err != nil {
+		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, prefixedBucketName, vuln); err != nil {
 			return xerrors.Errorf("failed to put vulnerability detail (%s): %w", vulnID, err)
 		}
 

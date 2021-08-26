@@ -85,6 +85,10 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
+func (vs VulnSrc) Name() string {
+	return vulnerability.NodejsSecurityWg
+}
+
 func (vs VulnSrc) Update(dir string) (err error) {
 	repoPath = filepath.Join(dir, nodeDir)
 	if err := vs.update(repoPath); err != nil {

@@ -15,6 +15,23 @@ var (
 	ErrNoBucket = xerrors.New("no such bucket")
 )
 
+func NoBucket(t *testing.T, dbPath, bucket string, msgAndArgs ...interface{}) {
+	t.Helper()
+
+	db, err := bolt.Open(dbPath, 0600, &bolt.Options{ReadOnly: true})
+	require.NoError(t, err, msgAndArgs)
+	defer db.Close()
+
+	var bkt *bolt.Bucket
+	err = db.View(func(tx *bolt.Tx) error {
+		bkt = tx.Bucket([]byte(bucket))
+		return nil
+	})
+	require.NoError(t, err, msgAndArgs)
+
+	assert.Nil(t, bkt, msgAndArgs)
+}
+
 func JSONEq(t *testing.T, dbPath string, key []string, want interface{}, msgAndArgs ...interface{}) {
 	t.Helper()
 
@@ -22,9 +39,9 @@ func JSONEq(t *testing.T, dbPath string, key []string, want interface{}, msgAndA
 	require.NoError(t, err, msgAndArgs)
 
 	got, err := get(dbPath, key)
-	require.NoError(t, err, msgAndArgs)
+	require.NoError(t, err, msgAndArgs...)
 
-	assert.JSONEq(t, string(wantByte), string(got), msgAndArgs)
+	assert.JSONEq(t, string(wantByte), string(got), msgAndArgs...)
 }
 
 type bucketer interface {
@@ -39,6 +56,7 @@ func get(dbPath string, keys []string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer db.Close()
 
 	var b []byte
 	err = db.View(func(tx *bolt.Tx) error {
@@ -55,7 +73,11 @@ func get(dbPath string, keys []string) ([]byte, error) {
 		if !ok {
 			return xerrors.Errorf("bucket error %v: %w", keys, ErrNoBucket)
 		}
-		b = bkt.Get([]byte(key))
+		res := bkt.Get([]byte(key))
+
+		// Copy the returned value
+		b = make([]byte, len(res))
+		copy(b, res)
 		return nil
 	})
 	return b, err
