@@ -104,13 +104,14 @@ type AdvisoryDetail struct {
 }
 
 type Advisory struct {
-	VulnerabilityID string `json:",omitempty"`
+	VulnerabilityID string   `json:",omitempty"`
+	VendorIDs       []string `json:",omitempty"`
 
 	// Versions for os package
 	FixedVersion    string `json:",omitempty"`
 	AffectedVersion string `json:",omitempty"` // Only for Arch Linux
 
-	// Version ranges for language-specific package
+	// MajorVersion ranges for language-specific package
 	// Some advisories provide VulnerableVersions only, others provide PatchedVersions and UnaffectedVersions
 	VulnerableVersions []string `json:",omitempty"`
 	PatchedVersions    []string `json:",omitempty"`

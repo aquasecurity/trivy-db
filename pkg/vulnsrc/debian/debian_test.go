@@ -151,7 +151,7 @@ func TestVulnSrc_parseDebianFiles(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ac := NewVulnSrc()
-			buckets, err := ac.parseDebianFiles(tt.dir)
+			buckets, err := ac.parse(tt.dir)
 
 			assert.Equal(t, tt.buckets, buckets)
 			switch {
