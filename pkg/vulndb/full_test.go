@@ -107,9 +107,9 @@ func Test_fullDB_Build(t *testing.T) {
 			}
 
 			// Ensure that temporal buckets are removed
-			dbtest.NoBucket(t, dbPath, "advisory-detail")
-			dbtest.NoBucket(t, dbPath, "vulnerability-detail")
-			dbtest.NoBucket(t, dbPath, "severity")
+			dbtest.NoBucket(t, dbPath, []string{"advisory-detail"})
+			dbtest.NoBucket(t, dbPath, []string{"vulnerability-detail"})
+			dbtest.NoBucket(t, dbPath, []string{"severity"})
 		})
 	}
 }
