@@ -22,7 +22,7 @@ const (
 )
 
 var (
-	targetStatus          = []string{"needed", "deferred", "released"}
+	targetStatuses        = []string{"needed", "deferred", "released"}
 	UbuntuReleasesMapping = map[string]string{
 		"precise": "12.04",
 		"quantal": "12.10",
@@ -46,14 +46,30 @@ var (
 	}
 )
 
-type VulnSrc struct {
-	dbc db.Operation
+type Option func(src *VulnSrc)
+
+func WithStatuses(statuses []string) Option {
+	return func(src *VulnSrc) {
+		src.statuses = statuses
+	}
 }
 
-func NewVulnSrc() VulnSrc {
-	return VulnSrc{
-		dbc: db.Config{},
+type VulnSrc struct {
+	statuses []string
+	dbc      db.Operation
+}
+
+func NewVulnSrc(opts ...Option) VulnSrc {
+	src := VulnSrc{
+		statuses: targetStatuses,
+		dbc:      db.Config{},
 	}
+
+	for _, o := range opts {
+		o(&src)
+	}
+
+	return src
 }
 
 func (vs VulnSrc) Name() string {
@@ -102,7 +118,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []UbuntuCVE) error {
 		for packageName, patch := range cve.Patches {
 			pkgName := string(packageName)
 			for release, status := range patch {
-				if !utils.StringInSlice(status.Status, targetStatus) {
+				if !utils.StringInSlice(status.Status, vs.statuses) {
 					continue
 				}
 				osVersion, ok := UbuntuReleasesMapping[string(release)]
@@ -122,8 +138,6 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []UbuntuCVE) error {
 					Severity:    severityFromPriority(cve.Priority),
 					References:  cve.References,
 					Description: cve.Description,
-					// TODO
-					Title: "",
 				}
 				if err := vs.dbc.PutVulnerabilityDetail(tx, cve.Candidate, vulnerability.Ubuntu, vuln); err != nil {
 					return xerrors.Errorf("failed to save Ubuntu vulnerability: %w", err)
