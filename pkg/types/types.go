@@ -130,5 +130,7 @@ type Vulnerability struct {
 	References       []string       `json:",omitempty"`
 	PublishedDate    *time.Time     `json:",omitempty"`
 	LastModifiedDate *time.Time     `json:",omitempty"`
-	CustomVulnData   interface{}    `json:",omitempty"` // CustomVulnData is basically for extensibility and is not supposed to be used in OSS
+	
+	// CustomVulnData is basically for extensibility and is not supposed to be used in OSS
+	CustomVulnData   interface{}    `json:",omitempty"` 
 }
