@@ -26,12 +26,13 @@ var (
 	platformFormat        = "debian %s"
 	DebianReleasesMapping = map[string]string{
 		// Code names
-		"squeeze": "6",
-		"wheezy":  "7",
-		"jessie":  "8",
-		"stretch": "9",
-		"buster":  "10",
-		"sid":     "unstable",
+		"squeeze":  "6",
+		"wheezy":   "7",
+		"jessie":   "8",
+		"stretch":  "9",
+		"buster":   "10",
+		"bullseye": "11",
+		"sid":      "unstable",
 	}
 )
 
