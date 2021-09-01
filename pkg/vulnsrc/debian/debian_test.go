@@ -1,164 +1,103 @@
-package debian
+package debian_test
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/aquasecurity/trivy-db/pkg/db"
-	"github.com/aquasecurity/trivy-db/pkg/types"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
-	"github.com/knqyf263/nested"
 	"github.com/stretchr/testify/assert"
-	bolt "go.etcd.io/bbolt"
+	"github.com/stretchr/testify/require"
+
+	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/dbtest"
+	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
 )
 
-func TestVulnSrc_commit(t *testing.T) {
+func TestVulnSrc_Update(t *testing.T) {
+	type wantKV struct {
+		key   []string
+		value interface{}
+	}
 	tests := []struct {
-		name                   string
-		expectedErrorMsg       string
-		buckets                nested.Nested
-		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
-		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
-		putSeverity            []db.OperationPutSeverityExpectation
+		name       string
+		dir        string
+		wantValues []wantKV
+		wantErr    string
 	}{
 		{
 			name: "happy path",
-			buckets: map[string]interface{}{
-				"debian 10": map[string]interface{}{
-					"test package": map[string]interface{}{
-						"CVE-2020-123": VulnDetail{
-							FixedVersion: "1.3.5-6",
-							State:        "fixed",
-							Description:  "test description",
-							Severity:     types.SeverityLow,
-						},
+			dir:  filepath.Join("testdata", "happy"),
+			wantValues: []wantKV{
+				// Ref. https://security-tracker.debian.org/tracker/CVE-2021-33560
+				{
+					key: []string{"advisory-detail", "CVE-2021-33560", "debian 9", "libgcrypt20"},
+					value: types.Advisory{
+						VendorIDs:    []string{"DLA-2691-1"},
+						FixedVersion: "1.7.6-2+deb9u4",
 					},
 				},
-			},
-			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:      true,
-						Source:          "debian 10",
-						PkgName:         "test package",
-						VulnerabilityID: "CVE-2020-123",
-						Advisory: VulnDetail{
-							FixedVersion: "1.3.5-6",
-							State:        "fixed",
-							Description:  "test description",
-							Severity:     types.SeverityLow,
-						},
+					key: []string{"advisory-detail", "CVE-2021-33560", "debian 10", "libgcrypt20"},
+					value: types.Advisory{
+						FixedVersion: "1.8.4-5+deb10u1",
 					},
 				},
-			},
-			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.OperationPutVulnerabilityDetailArgs{
-						TxAnything:      true,
-						VulnerabilityID: "CVE-2020-123",
-						Source:          vulnerability.Debian,
-						Vulnerability: types.VulnerabilityDetail{
-							Severity:    types.SeverityLow,
-							Description: "test description",
-						},
+					key: []string{"advisory-detail", "CVE-2021-33560", "debian 11", "libgcrypt20"},
+					value: types.Advisory{
+						FixedVersion: "1.8.7-6",
 					},
 				},
-			},
-			putSeverity: []db.OperationPutSeverityExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
-						TxAnything:      true,
-						VulnerabilityID: "CVE-2020-123",
-						Severity:        types.SeverityUnknown,
+					key: []string{"advisory-detail", "CVE-2021-33560", "debian 11", "libgcrypt20"},
+					value: types.Advisory{
+						FixedVersion: "1.8.7-6",
+					},
+				},
+				{
+					key: []string{"advisory-detail", "DSA-3714-1", "debian 8", "akonadi"},
+					value: types.Advisory{
+						VendorIDs:    []string{"DSA-3714-1"},
+						FixedVersion: "1.13.0-2+deb8u2",
 					},
 				},
 			},
 		},
-
-		// TODO: Add other test cases for failing paths
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tx := &bolt.Tx{}
-			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tt.putAdvisoryDetail)
-			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tt.putVulnerabilityDetail)
-			mockDBConfig.ApplyPutSeverityExpectations(tt.putSeverity)
-
-			ac := VulnSrc{dbc: mockDBConfig}
-			err := ac.commit(tx, tt.buckets)
-			switch {
-			case tt.expectedErrorMsg != "":
-				assert.Contains(t, err.Error(), tt.expectedErrorMsg, tt.name)
-			default:
-				assert.NoError(t, err, tt.name)
-			}
-			mockDBConfig.AssertExpectations(t)
-		})
-	}
-}
-
-func TestVulnSrc_parseDebianFiles(t *testing.T) {
-	rootdir, _ := os.Getwd()
-
-	tests := []struct {
-		name             string
-		expectedErrorMsg string
-		dir              string
-		buckets          nested.Nested
-	}{
 		{
-			name: "end to end",
-			dir:  filepath.Join(rootdir, "testdata/dir1"),
-			buckets: map[string]interface{}{
-				"debian 12": map[string]interface{}{
-					"openssl": map[string]interface{}{
-						"CVE-2014-0076": VulnDetail{
-							FixedVersion: "0.9.8o-4squeeze15",
-							State:        "fixed",
-							Description:  "(The Montgomery ladder implementation in OpenSSL through 1.0.0l does no ...)",
-							VendorIds:    []string{"DLA-0003-1"},
-						},
-						"DLA-0003-1": VulnDetail{
-							FixedVersion: "0.9.8o-4squeeze15",
-							State:        "fixed",
-							Description:  "openssl - security update",
-							Severity:     types.SeverityUnknown,
-						},
-						"DSA-2908-1": VulnDetail{
-							FixedVersion: "1.0.1e-2+deb7u7",
-							State:        "fixed",
-							Description:  "openssl - security update",
-							Severity:     types.SeverityLow,
-						},
-					},
-				},
-				"debian unstable": map[string]interface{}{
-					"openssl": map[string]interface{}{
-						"CVE-2014-0076": VulnDetail{
-							FixedVersion: "1.0.1g-1",
-							State:        "fixed",
-							Description:  "(The Montgomery ladder implementation in OpenSSL through 1.0.0l does no ...)",
-							Severity:     types.SeverityUnknown,
-						},
-					},
-				},
-			},
+			name:    "sad broken distributions",
+			dir:     filepath.Join("testdata", "broken-distributions"),
+			wantErr: "failed to decode Debian distribution JSON",
+		},
+		{
+			name:    "sad broken packages",
+			dir:     filepath.Join("testdata", "broken-packages"),
+			wantErr: "failed to decode testdata/broken-packages/",
+		},
+		{
+			name:    "sad broken CVE",
+			dir:     filepath.Join("testdata", "broken-cve"),
+			wantErr: "json decode error",
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ac := NewVulnSrc()
-			buckets, err := ac.parse(tt.dir)
+			tmpDir := dbtest.InitTestDB(t, nil)
+			dbPath := db.Path(tmpDir)
 
-			assert.Equal(t, tt.buckets, buckets)
-			switch {
-			case tt.expectedErrorMsg != "":
-				assert.Contains(t, err.Error(), tt.expectedErrorMsg, tt.name)
-			default:
-				assert.NoError(t, err, tt.name)
+			vs := debian.NewVulnSrc()
+
+			err := vs.Update(tt.dir)
+			if tt.wantErr != "" {
+				require.NotNil(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
+				return
+			}
+
+			require.NoError(t, err)
+			require.NoError(t, db.Close())
+
+			for _, want := range tt.wantValues {
+				dbtest.JSONEq(t, dbPath, want.key, want.value)
 			}
 		})
 	}

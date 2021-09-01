@@ -15,6 +15,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 const (
@@ -25,7 +26,7 @@ const (
 	xrefType    = "xref"
 
 	// File or directory to parse
-	distributionsFile = "parseDistributions.json"
+	distributionsFile = "distributions.json"
 	packageDir        = "Packages"
 	cveDir            = "CVE"
 	dlaDir            = "DLA"
@@ -76,7 +77,7 @@ func (vs VulnSrc) Name() string {
 
 func (vs VulnSrc) Update(dir string) error {
 	if err := vs.parse(dir); err != nil {
-		return xerrors.Errorf("error in Debian parse: %w", err)
+		return xerrors.Errorf("parse error: %w", err)
 	}
 
 	if err := vs.save(); err != nil {
@@ -100,17 +101,17 @@ func (vs VulnSrc) parse(dir string) error {
 	}
 
 	// Parse CVE/*.json
-	if err := vs.parseCVE(dir); err != nil {
+	if err := vs.parseCVE(rootDir); err != nil {
 		return xerrors.Errorf("CVE error: %w", err)
 	}
 
 	// Parse DLA/*.json
-	if err := vs.parseDLA(dir); err != nil {
+	if err := vs.parseDLA(rootDir); err != nil {
 		return xerrors.Errorf("DLA error: %w", err)
 	}
 
 	// Parse DSA/*.json
-	if err := vs.parseDSA(dir); err != nil {
+	if err := vs.parseDSA(rootDir); err != nil {
 		return xerrors.Errorf("DSA error: %w", err)
 	}
 
@@ -137,6 +138,7 @@ func (vs VulnSrc) parseBug(dir string, fn func(Bug) error) error {
 }
 
 func (vs VulnSrc) parseCVE(dir string) error {
+	log.Println("  Parsing CVE JSON files...")
 	err := vs.parseBug(filepath.Join(dir, cveDir), func(bug Bug) error {
 		cveID := bug.Header.ID
 		for _, ann := range bug.Annotations {
@@ -150,16 +152,18 @@ func (vs VulnSrc) parseCVE(dir string) error {
 			if ann.Release == "" {
 				vs.sidFixedVersions[bucket{
 					pkgName: ann.Package,
-					cveID:   cveID,
+					vulnID:  cveID,
 				}] = ann.Version // it will be empty for unfixed vulnerabilities
 			} else if ann.Release != "" {
 				advisory := types.Advisory{
-					FixedVersion: ann.Version, // this is supposed to be empty
+					FixedVersion: ann.Version, // It might be empty because of no-dsa.
 				}
+
+				// This advisory might be overwritten by DLA/DSA.
 				vs.bktAdvisories[bucket{
 					codeName: ann.Release,
 					pkgName:  ann.Package,
-					cveID:    cveID,
+					vulnID:   cveID,
 				}] = advisory
 			}
 		}
@@ -167,12 +171,13 @@ func (vs VulnSrc) parseCVE(dir string) error {
 		return nil
 	})
 	if err != nil {
-		return err
+		return xerrors.Errorf("CVE parse error: %w", err)
 	}
 	return nil
 }
 
 func (vs VulnSrc) parseDLA(dir string) error {
+	log.Println("  Parsing DLA JSON files...")
 	if err := vs.parseAdvisory(filepath.Join(dir, dlaDir)); err != nil {
 		return xerrors.Errorf("DLA parse error: %w", err)
 	}
@@ -180,6 +185,7 @@ func (vs VulnSrc) parseDLA(dir string) error {
 }
 
 func (vs VulnSrc) parseDSA(dir string) error {
+	log.Println("  Parsing DSA JSON files...")
 	if err := vs.parseAdvisory(filepath.Join(dir, dsaDir)); err != nil {
 		return xerrors.Errorf("DSA parse error: %w", err)
 	}
@@ -202,22 +208,32 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 				continue
 			}
 
-			for _, cveID := range cveIDs {
+			// Some advisories don't have any CVE-IDs
+			// e.g. https://security-tracker.debian.org/tracker/DSA-3714-1
+			vulnIDs := cveIDs
+			if len(vulnIDs) == 0 {
+				// Use DLA-ID or DSA-ID instead of CVE-ID
+				vulnIDs = []string{advisoryID}
+			}
+
+			for _, vulnID := range vulnIDs {
 				bkt := bucket{
 					codeName: ann.Release,
 					pkgName:  ann.Package,
-					cveID:    cveID,
+					vulnID:   vulnID,
 				}
 
 				adv, ok := vs.bktAdvisories[bkt]
 				if ok {
+					// If some advisories fix the same CVE-ID, the latest version will be taken.
+					// We assume that the first fix was insufficient and the next advisory fixed it correctly.
 					res, err := compareVersions(ann.Version, adv.FixedVersion)
 					if err != nil {
-						return xerrors.Errorf("version error: %w", err)
+						return xerrors.Errorf("version error %s: %w", advisoryID, err)
 					}
-					// TODO: fix
-					if res != 0 {
-						log.Println(advisoryID)
+
+					// Replace the fixed version with the newer version.
+					if res > 0 {
 						adv.FixedVersion = ann.Version
 					}
 					adv.VendorIDs = append(adv.VendorIDs, advisoryID)
@@ -242,7 +258,7 @@ func (vs VulnSrc) save() error {
 		return vs.commit(tx)
 	})
 	if err != nil {
-		return xerrors.Errorf("error in batch update: %w", err)
+		return xerrors.Errorf("batch update error: %w", err)
 	}
 	log.Println("Saved Debian DB")
 	return nil
@@ -252,22 +268,19 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 	// Iterate all pairs of package name and CVE-ID in sid
 	for sidBkt, sidVer := range vs.sidFixedVersions {
 		pkgName := sidBkt.pkgName
-		cveID := sidBkt.cveID
+		cveID := sidBkt.vulnID
 
 		// Iterate all codenames, e.g. buster
 		for code := range vs.distributions {
 			bkt := bucket{
 				codeName: code,
 				pkgName:  pkgName,
-				cveID:    cveID,
+				vulnID:   cveID,
 			}
 
 			// Check if the advisory already exists for the codename
-			// If yes, it will be inserted into DB
-			if adv, ok := vs.bktAdvisories[bkt]; ok {
-				if err := vs.put(tx, bkt, adv); err != nil {
-					return xerrors.Errorf("put error: %w", err)
-				}
+			// If yes, it will be inserted into DB later.
+			if _, ok := vs.bktAdvisories[bkt]; ok {
 				continue
 			}
 
@@ -295,13 +308,19 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 				adv.FixedVersion = sidVer
 			}
 
-			bkt.cveID = cveID
+			bkt.vulnID = cveID
 			if err = vs.put(tx, bkt, adv); err != nil {
 				return xerrors.Errorf("put error: %w", err)
 			}
 		}
 	}
 
+	// All advisories with codename and fixed version are inserted into DB here.
+	for bkt, advisory := range vs.bktAdvisories {
+		if err := vs.put(tx, bkt, advisory); err != nil {
+			return xerrors.Errorf("put error: %w", err)
+		}
+	}
 	return nil
 }
 
@@ -317,12 +336,12 @@ func (vs VulnSrc) put(tx *bolt.Tx, bkt bucket, advisory types.Advisory) error {
 	// e.g. "10" => "debian 10"
 	platform := fmt.Sprintf(platformFormat, majorVersion)
 
-	if err := vs.dbc.PutAdvisoryDetail(tx, bkt.cveID, platform, bkt.pkgName, advisory); err != nil {
+	if err := vs.dbc.PutAdvisoryDetail(tx, bkt.vulnID, platform, bkt.pkgName, advisory); err != nil {
 		return xerrors.Errorf("failed to save Debian advisory: %w", err)
 	}
 
 	// for light DB
-	if err := vs.dbc.PutSeverity(tx, bkt.cveID, types.SeverityUnknown); err != nil {
+	if err := vs.dbc.PutSeverity(tx, bkt.vulnID, types.SeverityUnknown); err != nil {
 		return xerrors.Errorf("failed to save Debian vulnerability severity: %w", err)
 	}
 
@@ -330,8 +349,8 @@ func (vs VulnSrc) put(tx *bolt.Tx, bkt bucket, advisory types.Advisory) error {
 }
 
 func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
-	bucket := fmt.Sprintf(platformFormat, release)
-	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
+	bkt := fmt.Sprintf(platformFormat, release)
+	advisories, err := vs.dbc.GetAdvisories(bkt, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get Debian advisories: %w", err)
 	}
@@ -357,6 +376,7 @@ func severityFromUrgency(urgency string) types.Severity {
 }
 
 func (vs VulnSrc) parseDistributions(rootDir string) error {
+	log.Println("  Parsing distributions...")
 	f, err := os.Open(filepath.Join(rootDir, distributionsFile))
 	if err != nil {
 		return xerrors.Errorf("failed to open file: %w", err)
@@ -384,6 +404,11 @@ func (vs VulnSrc) parseDistributions(rootDir string) error {
 func (vs VulnSrc) parsePackages(rootDir string) error {
 	for code := range vs.distributions {
 		codePath := filepath.Join(rootDir, packageDir, code)
+		if ok, _ := utils.Exists(codePath); !ok {
+			continue
+		}
+
+		log.Printf("  Parsing %s packages...", code)
 		err := utils.FileWalk(codePath, func(r io.Reader, path string) error {
 			// To parse Packages.json
 			var pkgs []struct {
@@ -449,7 +474,7 @@ func hasFixedVersion(sidVer, codeVer string) (bool, error) {
 
 	res, err := compareVersions(codeVer, sidVer)
 	if err != nil {
-		return false, err
+		return false, xerrors.Errorf("version comparison error")
 	}
 
 	// Greater than or equal
@@ -457,14 +482,24 @@ func hasFixedVersion(sidVer, codeVer string) (bool, error) {
 }
 
 func compareVersions(v1, v2 string) (int, error) {
+	// v1 or v2 might be empty.
+	switch {
+	case v1 == "" && v2 == "":
+		return 0, nil
+	case v1 == "":
+		return -1, nil
+	case v2 == "":
+		return 1, nil
+	}
+
 	ver1, err := version.NewVersion(v1)
 	if err != nil {
-		return 0, err
+		return 0, xerrors.Errorf("version error: %w", err)
 	}
 
 	ver2, err := version.NewVersion(v2)
 	if err != nil {
-		return 0, err
+		return 0, xerrors.Errorf("version error: %w", err)
 	}
 
 	return ver1.Compare(ver2), nil

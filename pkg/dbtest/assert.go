@@ -72,6 +72,8 @@ func get(dbPath string, keys []string) ([]byte, error) {
 		bkt, ok := bucket.(*bolt.Bucket)
 		if !ok {
 			return xerrors.Errorf("bucket error %v: %w", keys, ErrNoBucket)
+		} else if bkt == nil {
+			return xerrors.Errorf("empty bucket %v: %w", keys, ErrNoBucket)
 		}
 		res := bkt.Get([]byte(key))
 

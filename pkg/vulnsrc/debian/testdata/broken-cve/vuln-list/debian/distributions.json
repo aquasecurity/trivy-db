@@ -1,0 +1,7 @@
+{
+  "bullseye": {
+    "major-version": "11",
+    "support": "security",
+    "contact": "team@security.debian.org"
+  }
+}

@@ -3,7 +3,7 @@ package debian
 type bucket struct {
 	codeName string
 	pkgName  string
-	cveID    string
+	vulnID   string // CVE-ID, DLA-ID or DSA-ID
 }
 
 type header struct {
@@ -12,17 +12,17 @@ type header struct {
 }
 
 type annotation struct {
-	Type        string   `json:"Type"`
-	Release     string   `json:"Release,omitempty"`
-	Package     string   `json:"Package"`
-	Kind        string   `json:"Kind"`
-	Version     string   `json:"MajorVersion"`
-	Description string   `json:"Description,omitempty"`
-	Severity    string   `json:"Severity,omitempty"`
-	Bugs        []string `json:"Bugs"`
+	Type        string
+	Release     string
+	Package     string
+	Kind        string
+	Version     string
+	Description string
+	Severity    string
+	Bugs        []string
 }
 
 type Bug struct {
-	Header      header       `json:"Header"`
-	Annotations []annotation `json:"Annotations"`
+	Header      header
+	Annotations []annotation
 }
