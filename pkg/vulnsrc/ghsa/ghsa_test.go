@@ -96,6 +96,63 @@ func TestVulnSrc_save(t *testing.T) {
 		wantErr                string
 	}{
 		{
+			name:      "ignore withdrawn advisory",
+			ecosystem: Composer,
+			args: args{
+				ghsas: []GithubSecurityAdvisory{
+					{
+						Severity:  "MODERATE",
+						UpdatedAt: "2021-02-10T18:26:25Z",
+						Package: Package{
+							Ecosystem: "COMPOSER",
+							Name:      "adminer",
+						},
+						Advisory: GhsaAdvisory{
+							DatabaseId: 3338,
+							Id:         "MDE2OlNlY3VyaXR5QWR2aXNvcnlHSFNBLW01NmctM2c4di0ycnh3",
+							GhsaId:     "GHSA-m56g-3g8v-2rxw",
+							References: []Reference{
+								{
+									Url: "https://nvd.nist.gov/vuln/detail/CVE-2020-35572",
+								},
+								{
+									Url: "https://github.com/advisories/GHSA-m56g-3g8v-2rxw",
+								},
+							},
+							Identifiers: []Identifier{
+								{
+									Type:  "GHSA",
+									Value: "GHSA-m56g-3g8v-2rxw",
+								},
+								{
+									Type:  "CVE",
+									Value: "CVE-2020-35572",
+								},
+							},
+							Description: "**Withdrawn:** Duplicate of GHSA-9pgx-gcph-mpqr.\n\nAdminer before 4.7.9 allows XSS via the history parameter to the default URI. ",
+							Origin:      "UNSPECIFIED",
+							PublishedAt: "2021-02-11T20:46:53Z",
+							Severity:    "MODERATE",
+							Summary:     "XSS in Adminer",
+							UpdatedAt:   "2021-02-11T20:46:56Z",
+							WithdrawnAt: "2021-02-11T20:46:56Z",
+						},
+						Versions: []Version{
+							{
+								FirstPatchedVersion: FirstPatchedVersion{
+									Identifier: "4.7.9",
+								},
+								VulnerableVersionRange: "\u003c 4.7.9",
+							},
+						},
+					},
+				},
+			},
+			putAdvisoryDetail:      []db.OperationPutAdvisoryDetailExpectation{},
+			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{},
+			putSeverity:            []db.OperationPutSeverityExpectation{},
+		},
+		{
 			name:      "happy path composer",
 			ecosystem: Composer,
 			args: args{
