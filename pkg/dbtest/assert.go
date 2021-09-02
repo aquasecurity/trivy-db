@@ -15,20 +15,32 @@ var (
 	ErrNoBucket = xerrors.New("no such bucket")
 )
 
+func NoKey(t *testing.T, dbPath string, keys []string, msgAndArgs ...interface{}) {
+	t.Helper()
+
+	value := get(t, dbPath, keys)
+	assert.Nil(t, value, msgAndArgs...)
+}
+
 func NoBucket(t *testing.T, dbPath string, buckets []string, msgAndArgs ...interface{}) {
 	t.Helper()
 
 	db := open(t, dbPath)
 	defer db.Close()
 
-	var bkt *bolt.Bucket
 	err := db.View(func(tx *bolt.Tx) error {
-		bkt = nestedBuckets(t, tx, buckets)
+		bkt, err := nestedBuckets(tx, buckets)
+		if err != nil {
+			return err
+		}
+
+		// The specified bucket must not exist.
+		assert.Nil(t, bkt, msgAndArgs...)
+
 		return nil
 	})
 
 	require.NoError(t, err, msgAndArgs...)
-	assert.Nil(t, bkt, msgAndArgs...)
 }
 
 func JSONEq(t *testing.T, dbPath string, key []string, want interface{}, msgAndArgs ...interface{}) {
@@ -70,6 +82,9 @@ func get(t *testing.T, dbPath string, keys []string) []byte {
 			return xerrors.Errorf("empty bucket %v: %w", keys, ErrNoBucket)
 		}
 		res := bkt.Get([]byte(key))
+		if res == nil {
+			return nil
+		}
 
 		// Copy the returned value
 		b = make([]byte, len(res))
@@ -88,18 +103,17 @@ func open(t *testing.T, dbPath string) *bolt.DB {
 	return db
 }
 
-func nestedBuckets(t *testing.T, start bucketer, buckets []string) *bolt.Bucket {
-	t.Helper()
+func nestedBuckets(start bucketer, buckets []string) (*bolt.Bucket, error) {
 	bucket := start
 	for _, k := range buckets {
 		if reflect.ValueOf(bucket).IsNil() {
-			require.Failf(t, "bucket error %v: %w", "", buckets, ErrNoBucket)
+			return nil, xerrors.Errorf("bucket error %v: %w", buckets, ErrNoBucket)
 		}
 		bucket = bucket.Bucket([]byte(k))
 	}
 	bkt, ok := bucket.(*bolt.Bucket)
 	if !ok {
-		require.Failf(t, "bucket error %v: %w", "", buckets, ErrNoBucket)
+		return nil, xerrors.Errorf("bucket error %v: %w", buckets, ErrNoBucket)
 	}
-	return bkt
+	return bkt, nil
 }

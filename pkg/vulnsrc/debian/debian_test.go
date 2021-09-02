@@ -22,6 +22,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		name       string
 		dir        string
 		wantValues []wantKV
+		noKeys     [][]string
 		wantErr    string
 	}{
 		{
@@ -62,6 +63,9 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 			},
+			noKeys: [][]string{
+				{"advisory-detail", "CVE-2021-29629", "debian 9", "dacs"}, // not-affected
+			},
 		},
 		{
 			name:    "sad broken distributions",
@@ -98,6 +102,10 @@ func TestVulnSrc_Update(t *testing.T) {
 
 			for _, want := range tt.wantValues {
 				dbtest.JSONEq(t, dbPath, want.key, want.value)
+			}
+
+			for _, noBucket := range tt.noKeys {
+				dbtest.NoKey(t, dbPath, noBucket)
 			}
 		})
 	}
