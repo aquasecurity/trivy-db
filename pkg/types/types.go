@@ -105,7 +105,17 @@ type AdvisoryDetail struct {
 
 type Advisory struct {
 	VulnerabilityID string   `json:",omitempty"`
-	VendorIDs       []string `json:",omitempty"`
+	VendorIDs       []string `json:",omitempty"` // e.g. RHSA-ID and DSA-ID
+
+	// It is filled only when FixedVersion is empty since it is obvious the state is "Fixed" when FixedVersion is not empty.
+	// e.g. Will not fix and Affected
+	State string `json:",omitempty"`
+
+	// Trivy DB has "vulnerability" bucket and severities are usually stored in the bucket per a vulnerability ID.
+	// In some cases, the advisory may have multiple severities depending on the packages.
+	// For example, CVE-2015-2328 in Debian has "unimportant" for mongodb and "low" for pcre3.
+	// e.g. https://security-tracker.debian.org/tracker/CVE-2015-2328
+	Severity Severity `json:",omitempty"`
 
 	// Versions for os package
 	FixedVersion    string `json:",omitempty"`

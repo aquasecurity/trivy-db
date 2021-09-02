@@ -22,7 +22,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		name       string
 		dir        string
 		wantValues []wantKV
-		noKeys     [][]string
+		noBuckets  [][]string
 		wantErr    string
 	}{
 		{
@@ -56,6 +56,13 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
+					key: []string{"advisory-detail", "CVE-2021-29629", "debian 10", "dacs"},
+					value: types.Advisory{
+						State:    "ignored",
+						Severity: types.SeverityLow,
+					},
+				},
+				{
 					key: []string{"advisory-detail", "DSA-3714-1", "debian 8", "akonadi"},
 					value: types.Advisory{
 						VendorIDs:    []string{"DSA-3714-1"},
@@ -63,8 +70,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 			},
-			noKeys: [][]string{
-				{"advisory-detail", "CVE-2021-29629", "debian 9", "dacs"}, // not-affected
+			noBuckets: [][]string{
+				{"advisory-detail", "CVE-2021-29629", "debian 9"}, // not-affected
 			},
 		},
 		{
@@ -101,11 +108,11 @@ func TestVulnSrc_Update(t *testing.T) {
 			require.NoError(t, db.Close())
 
 			for _, want := range tt.wantValues {
-				dbtest.JSONEq(t, dbPath, want.key, want.value)
+				dbtest.JSONEq(t, dbPath, want.key, want.value, want.key)
 			}
 
-			for _, noBucket := range tt.noKeys {
-				dbtest.NoKey(t, dbPath, noBucket)
+			for _, noBucket := range tt.noBuckets {
+				dbtest.NoBucket(t, dbPath, noBucket, noBucket)
 			}
 		})
 	}

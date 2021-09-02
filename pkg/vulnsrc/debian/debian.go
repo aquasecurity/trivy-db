@@ -37,17 +37,19 @@ const (
 )
 
 var (
-	skipStatuses = []string{"not-affected", "removed", "undetermined"}
+	// NOTE: "removed" should not be marked as "not-affected".
+	// ref. https://security-team.debian.org/security_tracker.html#removed-packages
+	skipStatuses = []string{"not-affected", "undetermined"}
 )
 
 type VulnSrc struct {
 	dbc db.Operation
 
-	// Hold a map of codenames and major versions
+	// Hold a map of codenames and major versions from distributions.json
 	// e.g. "buster" => "10"
 	distributions map[string]string
 
-	// Hold the latest versions of each codename
+	// Hold the latest versions of each codename in Packages.json
 	// e.g. {"buster", "bash"} => "5.0-4"
 	pkgVersions map[bucket]string
 
@@ -59,6 +61,10 @@ type VulnSrc struct {
 	// Hold debian advisories
 	// e.g. {"buster", "connman", "CVE-2021-33833"} => {"FixedVersion": 1.36-2.1~deb10u2, ...}
 	bktAdvisories map[bucket]types.Advisory
+
+	// Hold not-affected versions
+	// e.g. {"buster", "linux", "CVE-2021-3739"} => {}
+	notAffected map[bucket]struct{}
 }
 
 func NewVulnSrc() VulnSrc {
@@ -68,6 +74,7 @@ func NewVulnSrc() VulnSrc {
 		pkgVersions:      map[bucket]string{},
 		sidFixedVersions: map[bucket]string{},
 		bktAdvisories:    map[bucket]types.Advisory{},
+		notAffected:      map[bucket]struct{}{},
 	}
 }
 
@@ -140,11 +147,12 @@ func (vs VulnSrc) parseBug(dir string, fn func(Bug) error) error {
 func (vs VulnSrc) parseCVE(dir string) error {
 	log.Println("  Parsing CVE JSON files...")
 	err := vs.parseBug(filepath.Join(dir, cveDir), func(bug Bug) error {
+		// Hold severities per the packages
+		severities := map[string]types.Severity{}
 		cveID := bug.Header.ID
+
 		for _, ann := range bug.Annotations {
 			if ann.Type != packageType {
-				continue
-			} else if utils.StringInSlice(ann.Kind, skipStatuses) {
 				continue
 			}
 
@@ -153,19 +161,41 @@ func (vs VulnSrc) parseCVE(dir string) error {
 				vs.sidFixedVersions[bucket{
 					pkgName: ann.Package,
 					vulnID:  cveID,
-				}] = ann.Version // it will be empty for unfixed vulnerabilities
-			} else if ann.Release != "" {
-				advisory := types.Advisory{
-					FixedVersion: ann.Version, // It might be empty because of no-dsa.
+				}] = ann.Version // it may be empty for unfixed vulnerabilities
+
+				if ann.Severity != "" {
+					severities[ann.Package] = severityFromUrgency(ann.Severity)
 				}
 
-				// This advisory might be overwritten by DLA/DSA.
-				vs.bktAdvisories[bucket{
-					codeName: ann.Release,
-					pkgName:  ann.Package,
-					vulnID:   cveID,
-				}] = advisory
+				continue
 			}
+
+			// For distributions with a major version
+			bkt := bucket{
+				codeName: ann.Release,
+				pkgName:  ann.Package,
+				vulnID:   cveID,
+			}
+
+			// Skip not-affected, removed or undetermined advisories
+			if utils.StringInSlice(ann.Kind, skipStatuses) {
+				vs.notAffected[bkt] = struct{}{}
+				continue
+			}
+
+			advisory := types.Advisory{
+				FixedVersion: ann.Version, // It might be empty because of no-dsa.
+				Severity:     severities[ann.Package],
+			}
+
+			if ann.Version == "" {
+				// Populate State only when FixedVersion is empty.
+				// e.g. no-dsa
+				advisory.State = ann.Kind
+			}
+
+			// This advisory might be overwritten by DLA/DSA.
+			vs.bktAdvisories[bkt] = advisory
 		}
 
 		return nil
@@ -204,8 +234,6 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 				continue
 			} else if ann.Type != packageType {
 				continue
-			} else if utils.StringInSlice(ann.Kind, skipStatuses) {
-				continue
 			}
 
 			// Some advisories don't have any CVE-IDs
@@ -223,6 +251,12 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 					vulnID:   vulnID,
 				}
 
+				// Skip not-affected, removed or undetermined advisories
+				if utils.StringInSlice(ann.Kind, skipStatuses) {
+					vs.notAffected[bkt] = struct{}{}
+					continue
+				}
+
 				adv, ok := vs.bktAdvisories[bkt]
 				if ok {
 					// If some advisories fix the same CVE-ID, the latest version will be taken.
@@ -235,6 +269,7 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 					// Replace the fixed version with the newer version.
 					if res > 0 {
 						adv.FixedVersion = ann.Version
+						adv.State = "" // State should be empty because this advisory has fixed version actually.
 					}
 					adv.VendorIDs = append(adv.VendorIDs, advisoryID)
 				} else {
@@ -278,6 +313,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 				vulnID:   cveID,
 			}
 
+			// Skip if the advisory is stated as "not-affected".
+			if _, ok := vs.notAffected[bkt]; ok {
+				continue
+			}
+
 			// Check if the advisory already exists for the codename
 			// If yes, it will be inserted into DB later.
 			if _, ok := vs.bktAdvisories[bkt]; ok {
@@ -303,7 +343,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 				return err
 			}
 
-			adv := types.Advisory{}
+			var adv types.Advisory
 			if fixed {
 				adv.FixedVersion = sidVer
 			}
@@ -329,7 +369,8 @@ func (vs VulnSrc) put(tx *bolt.Tx, bkt bucket, advisory types.Advisory) error {
 	// e.g. "buster" => "10"
 	majorVersion, ok := vs.distributions[bkt.codeName]
 	if !ok {
-		return xerrors.Errorf("unknown codename: %s", bkt.codeName)
+		// Stale codename such as squeeze and sarge
+		return nil
 	}
 
 	// Convert major version to bucket name

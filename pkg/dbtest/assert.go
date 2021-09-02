@@ -71,7 +71,7 @@ func get(t *testing.T, dbPath string, keys []string) []byte {
 		var bucket bucketer = tx
 		for _, k := range bkts {
 			if reflect.ValueOf(bucket).IsNil() {
-				return xerrors.Errorf("bucket error %v: %w", keys, ErrNoBucket)
+				return xerrors.Errorf("bucket error %s: %w", k, ErrNoBucket)
 			}
 			bucket = bucket.Bucket([]byte(k))
 		}
