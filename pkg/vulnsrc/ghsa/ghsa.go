@@ -121,6 +121,9 @@ func (vs VulnSrc) save(ghsas []GithubSecurityAdvisory) error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 	for _, ghsa := range ghsas {
+		if ghsa.Advisory.WithdrawnAt != "" {
+			continue
+		}
 		platformName := fmt.Sprintf(platformFormat, vs.ecosystem)
 		var pvs, avs []string
 		for _, va := range ghsa.Versions {
