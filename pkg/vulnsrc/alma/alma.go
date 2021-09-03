@@ -109,9 +109,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, version string, errata []erratum) error {
 					return xerrors.Errorf("failed to save AlmaLinux advisory: %w", err)
 				}
 
-				severity, _ := types.NewSeverity(strings.ToUpper(erratum.Severity))
 				vuln := types.VulnerabilityDetail{
-					Severity:         severity,
+					Severity:         severityFromPriority(strings.ToLower(erratum.Severity)),
 					References:       references,
 					Title:            erratum.Title,
 					Description:      erratum.Description,
@@ -139,6 +138,21 @@ func (vs VulnSrc) Get(release, pkgName string) ([]types.Advisory, error) {
 		return nil, xerrors.Errorf("failed to get Alma advisories: %w", err)
 	}
 	return advisories, nil
+}
+
+func severityFromPriority(priority string) types.Severity {
+	switch priority {
+	case "low":
+		return types.SeverityLow
+	case "medium":
+		return types.SeverityMedium
+	case "important":
+		return types.SeverityHigh
+	case "critical":
+		return types.SeverityCritical
+	default:
+		return types.SeverityUnknown
+	}
 }
 
 func constructVersion(epoch, version, release string) string {
