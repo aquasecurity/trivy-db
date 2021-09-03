@@ -110,7 +110,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, version string, errata []erratum) error {
 				}
 
 				vuln := types.VulnerabilityDetail{
-					Severity:         severityFromPriority(strings.ToLower(erratum.Severity)),
+					Severity:         generalizeSeverity(erratum.Severity),
 					References:       references,
 					Title:            erratum.Title,
 					Description:      erratum.Description,
@@ -140,19 +140,18 @@ func (vs VulnSrc) Get(release, pkgName string) ([]types.Advisory, error) {
 	return advisories, nil
 }
 
-func severityFromPriority(priority string) types.Severity {
-	switch priority {
+func generalizeSeverity(severity string) types.Severity {
+	switch strings.ToLower(severity) {
 	case "low":
 		return types.SeverityLow
-	case "medium":
+	case "moderate":
 		return types.SeverityMedium
 	case "important":
 		return types.SeverityHigh
 	case "critical":
 		return types.SeverityCritical
-	default:
-		return types.SeverityUnknown
 	}
+	return types.SeverityUnknown
 }
 
 func constructVersion(epoch, version, release string) string {
