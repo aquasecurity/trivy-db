@@ -106,7 +106,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, version string, errata []erratum) error {
 					FixedVersion: constructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 				}
 				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, platformName, pkg.Name, advisory); err != nil {
-					return xerrors.Errorf("failed to save AlmaLinux advisory: %w", err)
+					return xerrors.Errorf("failed to save Alma advisory: %w", err)
 				}
 
 				vuln := types.VulnerabilityDetail{
@@ -118,12 +118,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, version string, errata []erratum) error {
 					LastModifiedDate: utils.MustTimeParse(time.UnixMilli(erratum.UpdatedDate.Date).Format(time.RFC3339)),
 				}
 				if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Alma, vuln); err != nil {
-					return xerrors.Errorf("failed to save AlmaLinux vulnerability: %w", err)
+					return xerrors.Errorf("failed to save Alma vulnerability: %w", err)
 				}
 
 				// for light DB
 				if err := vs.dbc.PutSeverity(tx, cveID, types.SeverityUnknown); err != nil {
-					return xerrors.Errorf("failed to save AlmaLinux vulnerability severity for light: %w", err)
+					return xerrors.Errorf("failed to save Alma vulnerability severity for light: %w", err)
 				}
 			}
 		}
