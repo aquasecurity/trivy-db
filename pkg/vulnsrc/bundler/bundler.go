@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
@@ -108,12 +109,13 @@ func (vs VulnSrc) walkFunc(err error, info os.FileInfo, path string, tx *bolt.Tx
 	if err != nil {
 		return xerrors.Errorf("failed to unmarshal YAML: %w", err)
 	}
+	if advisory.Osvdb != "" || strings.Contains(advisory.Url, "osvdb.org") {
+		return nil
+	}
 
 	var vulnerabilityID string
 	if advisory.Cve != "" {
 		vulnerabilityID = fmt.Sprintf("CVE-%s", advisory.Cve)
-	} else if advisory.Osvdb != "" {
-		return nil
 	} else if advisory.Ghsa != "" {
 		vulnerabilityID = fmt.Sprintf("GHSA-%s", advisory.Ghsa)
 	} else {
