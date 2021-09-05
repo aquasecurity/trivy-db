@@ -1,21 +1,19 @@
-package amazon
+package amazon_test
 
 import (
-	"errors"
-	"io"
 	"os"
-	"strings"
+	"path/filepath"
 	"testing"
 
-	"golang.org/x/xerrors"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
+	fixtures "github.com/aquasecurity/bolt-fixtures"
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
-	"github.com/aquasecurity/vuln-list-update/amazon"
-	"github.com/stretchr/testify/assert"
-	bolt "go.etcd.io/bbolt"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/amazon"
 )
 
 func TestMain(m *testing.M) {
@@ -24,456 +22,167 @@ func TestMain(m *testing.M) {
 }
 
 func TestVulnSrc_Update(t *testing.T) {
-	testCases := []struct {
-		name          string
-		cacheDir      string
-		batchUpdate   db.OperationBatchUpdateExpectation
-		expectedError error
-		expectedVulns []types.Advisory
+	type wantKV struct {
+		key   []string
+		value interface{}
+	}
+	tests := []struct {
+		name       string
+		dir        string
+		wantValues []wantKV
+		wantErr    string
 	}{
 		{
-			name:     "happy path",
-			cacheDir: "testdata",
-			batchUpdate: db.OperationBatchUpdateExpectation{
-				Args: db.OperationBatchUpdateArgs{FnAnything: true},
-			},
-		},
-		{
-			name:     "cache dir doesnt exist",
-			cacheDir: "badpathdoesnotexist",
-			batchUpdate: db.OperationBatchUpdateExpectation{
-				Args: db.OperationBatchUpdateArgs{FnAnything: true},
-			},
-			expectedError: errors.New("error in Amazon walk: error in file walk: lstat badpathdoesnotexist/vuln-list/amazon: no such file or directory"),
-		},
-		{
-			name:     "unable to save amazon defintions",
-			cacheDir: "testdata",
-			batchUpdate: db.OperationBatchUpdateExpectation{
-				Args: db.OperationBatchUpdateArgs{FnAnything: true},
-				Returns: db.OperationBatchUpdateReturns{
-					Err: errors.New("unable to batch update"),
+			name: "happy path",
+			dir:  filepath.Join("testdata", "happy"),
+			wantValues: []wantKV{
+				{
+					key: []string{"advisory-detail", "CVE-2018-17456", "amazon linux 1", "git"},
+					value: types.Advisory{
+						FixedVersion: "2.14.5-1.59.amzn1",
+					},
+				},
+				{
+					key: []string{"advisory-detail", "CVE-2018-17456", "amazon linux 1", "git-debuginfo"},
+					value: types.Advisory{
+						FixedVersion: "1:2.14.5-1.59.amzn1",
+					},
+				},
+				{
+					key: []string{"advisory-detail", "CVE-2021-22543", "amazon linux 2", "kernel"},
+					value: types.Advisory{
+						FixedVersion: "4.14.243-185.433.amzn2",
+					},
+				},
+				{
+					key: []string{"advisory-detail", "CVE-2021-22543", "amazon linux 2", "kernel-headers"},
+					value: types.Advisory{
+						FixedVersion: "4.14.243-185.433.amzn2",
+					},
+				},
+				{
+					key: []string{"vulnerability-detail", "CVE-2018-17456", "amazon"},
+					value: types.VulnerabilityDetail{
+						Severity:    3,
+						Description: "Package updates are available for Amazon Linux AMI that fix the following vulnerabilities:\nCVE-2018-17456:\n\tGit before 2.14.5, 2.15.x before 2.15.3, 2.16.x before 2.16.5, 2.17.x before 2.17.2, 2.18.x before 2.18.1, and 2.19.x before 2.19.1 allows remote code execution during processing of a recursive &quot;git clone&quot; of a superproject if a .gitmodules file has a URL field beginning with a &#039;-&#039; character.\n1636619: \nCVE-2018-17456 git: arbitrary code execution via .gitmodules\n",
+						References:  []string{"http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-17456"},
+					},
+				},
+				{
+					key: []string{"vulnerability-detail", "CVE-2021-22543", "amazon"},
+					value: types.VulnerabilityDetail{
+						Severity:    1,
+						Description: "Package updates are available for Amazon Linux 2 that fix the following vulnerabilities:\nCVE-2021-22543:\n\tA flaw was found in the Linux kernel's KVM implementation, where improper handing of the VM_IO|VM_PFNMAP VMAs in KVM bypasses RO checks and leads to pages being freed while still accessible by the VMM and guest. This flaw allows users who can start and control a VM to read/write random pages of memory, resulting in local privilege escalation. The highest threat from this vulnerability is to confidentiality, integrity, and system availability.\n1965461: CVE-2021-22543 kernel: Improper handling of VM_IO|VM_PFNMAP vmas in KVM can bypass RO checks\n",
+						References:  []string{"http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-22543"},
+					},
 				},
 			},
-			expectedError: errors.New("error in Amazon save: error in batch update: unable to batch update"),
+		},
+		{
+			name:    "sad path",
+			dir:     filepath.Join("testdata", "sad"),
+			wantErr: "failed to decode Amazon JSON",
+		},
+		{
+			name:    "no such directory",
+			dir:     filepath.Join("testdata", "nosuch"),
+			wantErr: "no such file or directory",
 		},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tempDir := t.TempDir()
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyBatchUpdateExpectation(tc.batchUpdate)
-			ac := VulnSrc{dbc: mockDBConfig}
+			err := db.Init(tempDir)
+			require.NoError(t, err)
+			defer db.Close()
 
-			err := ac.Update(tc.cacheDir)
-			switch {
-			case tc.expectedError != nil:
-				assert.EqualError(t, err, tc.expectedError.Error(), tc.name)
-			default:
-				assert.NoError(t, err, tc.name)
+			vs := amazon.NewVulnSrc()
+			err = vs.Update(tt.dir)
+			if tt.wantErr != "" {
+				require.NotNil(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
+				return
+			}
+
+			require.NoError(t, err)
+			require.NoError(t, db.Close())
+
+			for _, want := range tt.wantValues {
+				dbtest.JSONEq(t, db.Path(tempDir), want.key, want.value)
 			}
 		})
 	}
 }
 
 func TestVulnSrc_Get(t *testing.T) {
-	testCases := []struct {
-		name          string
-		version       string
-		pkgName       string
-		getAdvisories db.OperationGetAdvisoriesExpectation
-		expectedError error
-		expectedVulns []types.Advisory
+	tests := []struct {
+		name     string
+		fixtures []string
+		version  string
+		pkgName  string
+		want     []types.Advisory
+		wantErr  string
 	}{
 		{
-			name:    "happy path",
-			version: "1",
-			pkgName: "curl",
-			getAdvisories: db.OperationGetAdvisoriesExpectation{
-				Args: db.OperationGetAdvisoriesArgs{
-					Source:  "amazon linux 1",
-					PkgName: "curl",
-				},
-				Returns: db.OperationGetAdvisoriesReturns{
-					Advisories: []types.Advisory{
-						{VulnerabilityID: "CVE-2019-0001", FixedVersion: "0.1.2"},
-					},
-				},
-			},
-			expectedVulns: []types.Advisory{{VulnerabilityID: "CVE-2019-0001", FixedVersion: "0.1.2"}},
+			name:     "happy path",
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			version:  "1",
+			pkgName:  "curl",
+			want:     []types.Advisory{{VulnerabilityID: "CVE-2019-0001", FixedVersion: "0.1.2"}},
 		},
 		{
-			name:    "no advisories are returned",
-			version: "2",
-			pkgName: "bash",
-			getAdvisories: db.OperationGetAdvisoriesExpectation{
-				Args: db.OperationGetAdvisoriesArgs{
-					Source:  "amazon linux 2",
-					PkgName: "bash",
-				},
-				Returns: db.OperationGetAdvisoriesReturns{},
-			},
+			name:     "no advisories are returned",
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			version:  "2",
+			pkgName:  "curl",
 		},
 		{
-			name: "amazon GetAdvisories return an error",
-			getAdvisories: db.OperationGetAdvisoriesExpectation{
-				Args: db.OperationGetAdvisoriesArgs{
-					SourceAnything:  true,
-					PkgNameAnything: true,
-				},
-				Returns: db.OperationGetAdvisoriesReturns{
-					Advisories: []types.Advisory{},
-					Err:        xerrors.New("unable to get advisories"),
-				},
-			},
-			expectedError: errors.New("failed to get Amazon advisories: unable to get advisories"),
-			expectedVulns: nil,
+			name:     "GetAdvisories returns an error",
+			version:  "1",
+			pkgName:  "curl",
+			fixtures: []string{"testdata/fixtures/sad.yaml"},
+			wantErr:  "failed to unmarshal advisory JSON",
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyGetAdvisoriesExpectation(tc.getAdvisories)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := initDB(t, tt.fixtures)
 
-			ac := VulnSrc{dbc: mockDBConfig}
-			vuls, err := ac.Get(tc.version, tc.pkgName)
+			// Initialize DB
+			require.NoError(t, db.Init(dir))
+			defer db.Close()
 
-			switch {
-			case tc.expectedError != nil:
-				assert.EqualError(t, err, tc.expectedError.Error(), tc.name)
-			default:
-				assert.NoError(t, err, tc.name)
+			ac := amazon.NewVulnSrc()
+			vuls, err := ac.Get(tt.version, tt.pkgName)
+
+			if tt.wantErr != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
+				return
 			}
-			assert.Equal(t, tc.expectedVulns, vuls, tc.name)
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, vuls)
 		})
 	}
 }
 
-func TestSeverityFromPriority(t *testing.T) {
-	testCases := map[string]types.Severity{
-		"low":       types.SeverityLow,
-		"medium":    types.SeverityMedium,
-		"important": types.SeverityHigh,
-		"critical":  types.SeverityCritical,
-		"unknown":   types.SeverityUnknown,
-	}
-	for k, v := range testCases {
-		assert.Equal(t, v, severityFromPriority(k))
-	}
-}
+func initDB(t *testing.T, fixtureFiles []string) string {
+	// Create a temp dir
+	dir := t.TempDir()
 
-func TestConstructVersion(t *testing.T) {
-	type inputCombination struct {
-		epoch   string
-		version string
-		release string
-	}
+	dbPath := db.Path(dir)
+	dbDir := filepath.Dir(dbPath)
+	err := os.MkdirAll(dbDir, 0700)
+	require.NoError(t, err)
 
-	testCases := []struct {
-		name            string
-		inc             inputCombination
-		expectedVersion string
-	}{
-		{
-			name: "happy path",
-			inc: inputCombination{
-				epoch:   "2",
-				version: "3",
-				release: "master",
-			},
-			expectedVersion: "2:3-master",
-		},
-		{
-			name: "no epoch",
-			inc: inputCombination{
-				version: "2",
-				release: "master",
-			},
-			expectedVersion: "2-master",
-		},
-		{
-			name: "no release",
-			inc: inputCombination{
-				epoch:   "",
-				version: "2",
-			},
-			expectedVersion: "2",
-		},
-		{
-			name: "no epoch and release",
-			inc: inputCombination{
-				version: "2",
-			},
-			expectedVersion: "2",
-		},
-		{
-			name:            "no epoch release or version",
-			inc:             inputCombination{},
-			expectedVersion: "",
-		},
-	}
+	// Load testdata into BoltDB
+	loader, err := fixtures.New(dbPath, fixtureFiles)
+	require.NoError(t, err)
+	require.NoError(t, loader.Load())
+	require.NoError(t, loader.Close())
 
-	for _, tc := range testCases {
-		assert.Equal(t, tc.expectedVersion, constructVersion(tc.inc.epoch, tc.inc.version, tc.inc.release), tc.name)
-	}
-}
-
-func TestVulnSrc_WalkFunc(t *testing.T) {
-	testCases := []struct {
-		name             string
-		ioReader         io.Reader
-		inputPath        string
-		expectedALASList []alas
-		expectedError    error
-		expectedLogs     []string
-	}{
-		{
-			name: "happy path",
-			ioReader: strings.NewReader(`{
-"id":"123",
-"severity":"high"
-}`),
-			inputPath: "1/2/1",
-			expectedALASList: []alas{
-				{
-					Version: "2",
-					ALAS: amazon.ALAS{
-						ID:       "123",
-						Severity: "high",
-					},
-				},
-			},
-			expectedError: nil,
-		},
-		{
-			name:             "amazon returns invalid json",
-			ioReader:         strings.NewReader(`invalidjson`),
-			inputPath:        "1/2/1",
-			expectedALASList: []alas(nil),
-			expectedError:    errors.New("failed to decode Amazon JSON: invalid character 'i' looking for beginning of value"),
-		},
-		{
-			name:          "unsupported amazon version",
-			inputPath:     "foo/bar/baz",
-			expectedError: nil,
-			expectedLogs:  []string{"unsupported amazon version: bar"},
-		},
-		{
-			name:          "empty path",
-			inputPath:     "",
-			expectedError: nil,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			ac := VulnSrc{}
-
-			err := ac.walkFunc(tc.ioReader, tc.inputPath)
-			switch {
-			case tc.expectedError != nil:
-				assert.EqualError(t, err, tc.expectedError.Error(), tc.name)
-			default:
-				assert.NoError(t, err, tc.name)
-			}
-
-			assert.Equal(t, tc.expectedALASList, ac.alasList, tc.name)
-		})
-	}
-}
-
-func TestVulnSrc_CommitFunc(t *testing.T) {
-	testCases := []struct {
-		name                   string
-		alasList               []alas
-		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
-		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
-		putSeverity            []db.OperationPutSeverityExpectation
-		expectedError          error
-	}{
-		{
-			name: "happy path",
-			alasList: []alas{
-				{
-					Version: "123",
-					ALAS: amazon.ALAS{
-						ID:       "123",
-						Severity: "important",
-						CveIDs:   []string{"CVE-2020-0001"},
-						References: []amazon.Reference{
-							{
-								ID:    "fooref",
-								Href:  "http://foo.bar/baz",
-								Title: "bartitle",
-							},
-						},
-						Packages: []amazon.Package{
-							{
-								Name:    "testpkg",
-								Epoch:   "123",
-								Version: "456",
-								Release: "testing",
-							},
-						},
-					},
-				},
-			},
-			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
-				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:      true,
-						Source:          "amazon linux 123",
-						PkgName:         "testpkg",
-						VulnerabilityID: "CVE-2020-0001",
-						Advisory:        types.Advisory{FixedVersion: "123:456-testing"},
-					},
-				},
-			},
-			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
-				{
-					Args: db.OperationPutVulnerabilityDetailArgs{
-						TxAnything:      true,
-						VulnerabilityID: "CVE-2020-0001",
-						Source:          vulnerability.Amazon,
-						Vulnerability: types.VulnerabilityDetail{
-							CvssScore:   0,
-							CvssScoreV3: 0,
-							Severity:    types.SeverityHigh,
-							References:  []string{"http://foo.bar/baz"},
-						},
-					},
-				},
-			},
-			putSeverity: []db.OperationPutSeverityExpectation{
-				{
-					Args: db.OperationPutSeverityArgs{
-						TxAnything:      true,
-						VulnerabilityID: "CVE-2020-0001",
-						Severity:        types.SeverityUnknown,
-					},
-				},
-			},
-		},
-		{
-			name: "failed to save Amazon advisory, PutAdvisory() return an error",
-			alasList: []alas{
-				{
-					Version: "123",
-					ALAS: amazon.ALAS{
-						ID:       "123",
-						Severity: "high",
-						CveIDs:   []string{"CVE-2020-0001"},
-						References: []amazon.Reference{
-							{
-								ID:    "fooref",
-								Href:  "http://foo.bar/baz",
-								Title: "bartitle",
-							},
-						},
-						Packages: []amazon.Package{
-							{
-								Name:    "testpkg",
-								Epoch:   "123",
-								Version: "456",
-								Release: "testing",
-							},
-						},
-					},
-				},
-			},
-			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
-				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:      true,
-						Source:          "amazon linux 123",
-						PkgName:         "testpkg",
-						VulnerabilityID: "CVE-2020-0001",
-						Advisory:        types.Advisory{FixedVersion: "123:456-testing"},
-					},
-					Returns: db.OperationPutAdvisoryDetailReturns{
-						Err: errors.New("failed to put advisory"),
-					},
-				},
-			},
-			expectedError: errors.New("failed to save Amazon advisory: failed to put advisory"),
-		},
-		{
-			name: "failed to save Amazon advisory, PutVulnerabilityDetail() returns an error",
-			alasList: []alas{
-				{
-					Version: "123",
-					ALAS: amazon.ALAS{
-						ID:       "123",
-						Severity: "important",
-						CveIDs:   []string{"CVE-2020-0001"},
-						References: []amazon.Reference{
-							{
-								ID:    "fooref",
-								Href:  "http://foo.bar/baz",
-								Title: "bartitle",
-							},
-						},
-						Packages: []amazon.Package{
-							{
-								Name:    "testpkg",
-								Epoch:   "123",
-								Version: "456",
-								Release: "testing",
-							},
-						},
-					},
-				},
-			},
-			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
-				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:      true,
-						Source:          "amazon linux 123",
-						PkgName:         "testpkg",
-						VulnerabilityID: "CVE-2020-0001",
-						Advisory:        types.Advisory{FixedVersion: "123:456-testing"},
-					},
-				},
-			},
-			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
-				{
-					Args: db.OperationPutVulnerabilityDetailArgs{
-						TxAnything:      true,
-						VulnerabilityID: "CVE-2020-0001",
-						Source:          vulnerability.Amazon,
-						Vulnerability: types.VulnerabilityDetail{
-							CvssScore:   0,
-							CvssScoreV3: 0,
-							Severity:    types.SeverityHigh,
-							References:  []string{"http://foo.bar/baz"},
-						},
-					},
-					Returns: db.OperationPutVulnerabilityDetailReturns{
-						Err: errors.New("failed to put vulnerability detail"),
-					},
-				},
-			},
-			expectedError: errors.New("failed to save Amazon vulnerability detail: failed to put vulnerability detail"),
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tc.putAdvisoryDetail)
-			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tc.putVulnerabilityDetail)
-			mockDBConfig.ApplyPutSeverityExpectations(tc.putSeverity)
-
-			vs := VulnSrc{dbc: mockDBConfig, alasList: tc.alasList}
-
-			err := vs.commitFunc(&bolt.Tx{WriteFlag: 0})
-			switch {
-			case tc.expectedError != nil:
-				assert.EqualError(t, err, tc.expectedError.Error(), tc.name)
-			default:
-				assert.NoError(t, err, tc.name)
-			}
-		})
-	}
+	return dir
 }
