@@ -12,7 +12,6 @@ require (
 	github.com/hashicorp/go-version v1.2.1
 	github.com/knqyf263/go-deb-version v0.0.0-20190517075300-09fca494f03d
 	github.com/knqyf263/go-rpm-version v0.0.0-20170716094938-74609b86c936
-	github.com/knqyf263/nested v0.0.1
 	github.com/stretchr/testify v1.6.1
 	github.com/urfave/cli v1.22.5
 	go.etcd.io/bbolt v1.3.5
