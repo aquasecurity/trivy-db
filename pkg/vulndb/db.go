@@ -3,8 +3,6 @@ package vulndb
 import (
 	"log"
 	"path/filepath"
-	"sort"
-	"strings"
 	"time"
 
 	"golang.org/x/xerrors"
@@ -68,12 +66,6 @@ func NewCore(cacheDir string, updateInterval time.Duration, opts ...Option) *Cor
 
 func (c Core) Insert(dbType db.Type, targets []string) error {
 	log.Println("Updating vulnerability database...")
-
-	// Sort targets for consistency
-	sort.Slice(targets, func(i, j int) bool {
-		return strings.Compare(targets[i], targets[j]) <= 0
-	})
-
 	for _, target := range targets {
 		src, ok := c.vulnSrc(target)
 		if !ok {
