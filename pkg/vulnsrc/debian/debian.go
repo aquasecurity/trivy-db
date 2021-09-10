@@ -27,7 +27,7 @@ const (
 
 	// File or directory to parse
 	distributionsFile = "distributions.json"
-	packageDir        = "Packages"
+	sourcesDir        = "Sources"
 	cveDir            = "CVE"
 	dlaDir            = "DLA"
 	dsaDir            = "DSA"
@@ -49,7 +49,7 @@ type VulnSrc struct {
 	// e.g. "buster" => "10"
 	distributions map[string]string
 
-	// Hold the latest versions of each codename in Packages.json
+	// Hold the latest versions of each codename in Sources.json
 	// e.g. {"buster", "bash"} => "5.0-4"
 	pkgVersions map[bucket]string
 
@@ -102,9 +102,9 @@ func (vs VulnSrc) parse(dir string) error {
 		return xerrors.Errorf("distributions error: %w", err)
 	}
 
-	// Parse Packages/**.json
-	if err := vs.parsePackages(rootDir); err != nil {
-		return xerrors.Errorf("packages walking: %w", err)
+	// Parse Sources/**.json
+	if err := vs.parseSources(rootDir); err != nil {
+		return xerrors.Errorf("sources walking: %w", err)
 	}
 
 	// Parse CVE/*.json
@@ -442,16 +442,16 @@ func (vs VulnSrc) parseDistributions(rootDir string) error {
 	return nil
 }
 
-func (vs VulnSrc) parsePackages(rootDir string) error {
+func (vs VulnSrc) parseSources(rootDir string) error {
 	for code := range vs.distributions {
-		codePath := filepath.Join(rootDir, packageDir, code)
+		codePath := filepath.Join(rootDir, sourcesDir, code)
 		if ok, _ := utils.Exists(codePath); !ok {
 			continue
 		}
 
-		log.Printf("  Parsing %s packages...", code)
+		log.Printf("  Parsing %s sources...", code)
 		err := utils.FileWalk(codePath, func(r io.Reader, path string) error {
-			// To parse Packages.json
+			// To parse Sources.json
 			var pkgs []struct {
 				Package []string
 				Version []string
