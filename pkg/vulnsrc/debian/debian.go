@@ -27,7 +27,8 @@ const (
 
 	// File or directory to parse
 	distributionsFile = "distributions.json"
-	sourcesDir        = "Sources"
+	sourcesDir        = "source"
+	updateSourcesDir  = "updates-source"
 	cveDir            = "CVE"
 	dlaDir            = "DLA"
 	dsaDir            = "DSA"
@@ -102,9 +103,14 @@ func (vs VulnSrc) parse(dir string) error {
 		return xerrors.Errorf("distributions error: %w", err)
 	}
 
-	// Parse Sources/**.json
-	if err := vs.parseSources(rootDir); err != nil {
-		return xerrors.Errorf("sources walking: %w", err)
+	// Parse source/**.json
+	if err := vs.parseSources(filepath.Join(rootDir, sourcesDir)); err != nil {
+		return xerrors.Errorf("source parse error: %w", err)
+	}
+
+	// Parse updates-source/**.json
+	if err := vs.parseSources(filepath.Join(rootDir, updateSourcesDir)); err != nil {
+		return xerrors.Errorf("updates-source parse error: %w", err)
 	}
 
 	// Parse CVE/*.json
@@ -442,9 +448,9 @@ func (vs VulnSrc) parseDistributions(rootDir string) error {
 	return nil
 }
 
-func (vs VulnSrc) parseSources(rootDir string) error {
+func (vs VulnSrc) parseSources(dir string) error {
 	for code := range vs.distributions {
-		codePath := filepath.Join(rootDir, sourcesDir, code)
+		codePath := filepath.Join(dir, code)
 		if ok, _ := utils.Exists(codePath); !ok {
 			continue
 		}
@@ -465,11 +471,27 @@ func (vs VulnSrc) parseSources(rootDir string) error {
 					continue
 				}
 
-				// Store package name and version per codename
-				vs.pkgVersions[bucket{
+				bkt := bucket{
 					codeName: code,
 					pkgName:  pkg.Package[0],
-				}] = pkg.Version[0]
+				}
+
+				version := pkg.Version[0]
+
+				// Skip the update when the stored version is greater than the processing version.
+				if v, ok := vs.pkgVersions[bkt]; ok {
+					res, err := compareVersions(v, version)
+					if err != nil {
+						return xerrors.Errorf("version comparison error: %w", err)
+					}
+
+					if res >= 0 {
+						continue
+					}
+				}
+
+				// Store package name and version per codename
+				vs.pkgVersions[bkt] = version
 			}
 
 			return nil
