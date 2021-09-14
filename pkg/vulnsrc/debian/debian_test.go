@@ -63,6 +63,13 @@ func TestVulnSrc_Update(t *testing.T) {
 						FixedVersion: "1.13.0-2+deb8u2",
 					},
 				},
+				{
+					// wrong no-dsa
+					key: []string{"advisory-detail", "CVE-2020-8631", "debian 11", "cloud-init"},
+					value: types.Advisory{
+						FixedVersion: "19.4-2",
+					},
+				},
 			},
 			noBuckets: [][]string{
 				{"advisory-detail", "CVE-2021-29629", "debian 9"}, // not-affected

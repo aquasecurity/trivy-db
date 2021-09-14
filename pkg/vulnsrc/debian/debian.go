@@ -326,19 +326,24 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 
 			// Check if the advisory already exists for the codename
 			// If yes, it will be inserted into DB later.
-			if _, ok := vs.bktAdvisories[bkt]; ok {
+			adv, ok := vs.bktAdvisories[bkt]
+			if ok && adv.State == "" {
+				// "no-dsa" or "postponed" might be wrong, and it may have a fixed version.
+				// e.g.
+				//  - https://security-tracker.debian.org/tracker/CVE-2020-8631 (buster no-dsa is wrong)
+				//  - https://security-tracker.debian.org/tracker/CVE-2020-25670 (bullseye postponed is wrong)
 				continue
 			}
 
 			// If no, the fixed version needs to be determined by comparing with the fixed version in sid.
-			bkt = bucket{
+			pkgBkt := bucket{
 				codeName: code,
 				pkgName:  pkgName,
 			}
 
 			// Get the latest version in the release
 			// e.g. {"buster", "bash"} => "5.0-4"
-			codeVer, ok := vs.pkgVersions[bkt]
+			codeVer, ok := vs.pkgVersions[pkgBkt]
 			if !ok {
 				continue
 			}
@@ -346,12 +351,13 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 			// Check if the release has the fixed version
 			fixed, err := hasFixedVersion(sidVer, codeVer)
 			if err != nil {
-				return err
+				return xerrors.Errorf("version error: %w", err)
 			}
 
-			var adv types.Advisory
 			if fixed {
 				adv.FixedVersion = sidVer
+				adv.State = "" // Overwrite state such as "no-dsa" and "postponed" because it is wrong.
+				delete(vs.bktAdvisories, bkt)
 			}
 
 			bkt.vulnID = cveID
