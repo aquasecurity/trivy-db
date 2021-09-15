@@ -170,14 +170,17 @@ func (vs VulnSrc) parseCVE(dir string) error {
 
 			// For sid
 			if ann.Release == "" {
-				vs.sidFixedVersions[bucket{
+				bkt := bucket{
 					pkgName: ann.Package,
 					vulnID:  cveID,
-				}] = ann.Version // it may be empty for unfixed vulnerabilities
-
-				if ann.Severity != "" {
-					severities[ann.Package] = severityFromUrgency(ann.Severity)
 				}
+				if ann.Severity != "" {
+					severity := severityFromUrgency(ann.Severity)
+					severities[ann.Package] = severity
+					bkt.severity = severity
+				}
+
+				vs.sidFixedVersions[bkt] = ann.Version // it may be empty for unfixed vulnerabilities
 
 				continue
 			}
@@ -365,6 +368,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 				adv.State = "" // Overwrite state such as "no-dsa" and "postponed" because it is wrong.
 				delete(vs.bktAdvisories, bkt)
 			}
+
+			// Add severity
+			adv.Severity = sidBkt.severity
 
 			bkt.vulnID = cveID
 			if err = vs.put(tx, bkt, adv); err != nil {

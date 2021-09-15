@@ -1,9 +1,12 @@
 package debian
 
+import "github.com/aquasecurity/trivy-db/pkg/types"
+
 type bucket struct {
 	codeName string
 	pkgName  string
 	vulnID   string // CVE-ID, DLA-ID or DSA-ID
+	severity types.Severity
 }
 
 type header struct {
