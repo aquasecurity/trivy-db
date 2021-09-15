@@ -33,8 +33,14 @@ const (
 	dlaDir            = "DLA"
 	dsaDir            = "DSA"
 
+	// This bucket stores unfixed vulnerabilities only.
 	// e.g. debian 8
 	platformFormat = "debian %s"
+
+	// The security advisories are not from OVAL, but we have to keep this bucket for backward compatibility.
+	// This bucket stores fixed vulnerabilities only.
+	// e.g. debian oval 8
+	ovalPlatformFormat = "debian oval %s"
 )
 
 var (
@@ -385,9 +391,17 @@ func (vs VulnSrc) put(tx *bolt.Tx, bkt bucket, advisory types.Advisory) error {
 		return nil
 	}
 
-	// Convert major version to bucket name
-	// e.g. "10" => "debian 10"
-	platform := fmt.Sprintf(platformFormat, majorVersion)
+	var platform string
+	if advisory.FixedVersion == "" {
+		// Convert major version to bucket name for unfixed vulnerabilities
+		// e.g. "10" => "debian 10"
+		platform = fmt.Sprintf(platformFormat, majorVersion)
+
+	} else {
+		// Convert major version to bucket name for fixed vulnerabilities
+		// e.g. "10" => "debian oval 10"
+		platform = fmt.Sprintf(ovalPlatformFormat, majorVersion)
+	}
 
 	if err := vs.dbc.PutAdvisoryDetail(tx, bkt.vulnID, platform, bkt.pkgName, advisory); err != nil {
 		return xerrors.Errorf("failed to save Debian advisory: %w", err)
@@ -402,12 +416,20 @@ func (vs VulnSrc) put(tx *bolt.Tx, bkt bucket, advisory types.Advisory) error {
 }
 
 func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
+	// For unfixed vulnerabilities
 	bkt := fmt.Sprintf(platformFormat, release)
-	advisories, err := vs.dbc.GetAdvisories(bkt, pkgName)
+	unfixedAdvs, err := vs.dbc.GetAdvisories(bkt, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get Debian advisories: %w", err)
 	}
-	return advisories, nil
+
+	// For fixed vulnerabilities
+	ovalBkt := fmt.Sprintf(ovalPlatformFormat, release)
+	fixedAdvs, err := vs.dbc.GetAdvisories(ovalBkt, pkgName)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to get Debian OVAL advisories: %w", err)
+	}
+	return append(fixedAdvs, unfixedAdvs...), nil
 }
 
 func severityFromUrgency(urgency string) types.Severity {

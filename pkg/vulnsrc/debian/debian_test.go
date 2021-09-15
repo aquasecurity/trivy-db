@@ -2,6 +2,7 @@ package debian_test
 
 import (
 	"path/filepath"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -31,20 +32,20 @@ func TestVulnSrc_Update(t *testing.T) {
 			wantValues: []wantKV{
 				// Ref. https://security-tracker.debian.org/tracker/CVE-2021-33560
 				{
-					key: []string{"advisory-detail", "CVE-2021-33560", "debian 9", "libgcrypt20"},
+					key: []string{"advisory-detail", "CVE-2021-33560", "debian oval 9", "libgcrypt20"},
 					value: types.Advisory{
 						VendorIDs:    []string{"DLA-2691-1"},
 						FixedVersion: "1.7.6-2+deb9u4",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2021-33560", "debian 10", "libgcrypt20"},
+					key: []string{"advisory-detail", "CVE-2021-33560", "debian oval 10", "libgcrypt20"},
 					value: types.Advisory{
 						FixedVersion: "1.8.4-5+deb10u1",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2021-33560", "debian 11", "libgcrypt20"},
+					key: []string{"advisory-detail", "CVE-2021-33560", "debian oval 11", "libgcrypt20"},
 					value: types.Advisory{
 						FixedVersion: "1.8.7-6",
 					},
@@ -57,7 +58,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key: []string{"advisory-detail", "DSA-3714-1", "debian 8", "akonadi"},
+					key: []string{"advisory-detail", "DSA-3714-1", "debian oval 8", "akonadi"},
 					value: types.Advisory{
 						VendorIDs:    []string{"DSA-3714-1"},
 						FixedVersion: "1.13.0-2+deb8u2",
@@ -65,7 +66,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					// wrong no-dsa
-					key: []string{"advisory-detail", "CVE-2020-8631", "debian 11", "cloud-init"},
+					key: []string{"advisory-detail", "CVE-2020-8631", "debian oval 11", "cloud-init"},
 					value: types.Advisory{
 						FixedVersion: "19.4-2",
 					},
@@ -115,6 +116,67 @@ func TestVulnSrc_Update(t *testing.T) {
 			for _, noBucket := range tt.noBuckets {
 				dbtest.NoBucket(t, dbPath, noBucket, noBucket)
 			}
+		})
+	}
+}
+
+func TestVulnSrc_Get(t *testing.T) {
+	type args struct {
+		release string
+		pkgName string
+	}
+	tests := []struct {
+		name     string
+		fixtures []string
+		args     args
+		want     []types.Advisory
+		wantErr  string
+	}{
+		{
+			name:     "happy path",
+			fixtures: []string{"testdata/fixtures/debian.yaml"},
+			args: args{
+				release: "10",
+				pkgName: "alpine",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2008-5514",
+					FixedVersion:    "2.02-3.1",
+				},
+				{
+					VulnerabilityID: "CVE-2021-38370",
+					State:           "no-dsa",
+				},
+			},
+		},
+		{
+			name:     "broken bucket",
+			fixtures: []string{"testdata/fixtures/broken.yaml"},
+			args: args{
+				release: "10",
+				pkgName: "alpine",
+			},
+			wantErr: "failed to get Debian advisories",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_ = dbtest.InitTestDB(t, tt.fixtures)
+			defer db.Close()
+
+			vs := debian.NewVulnSrc()
+			got, err := vs.Get(tt.args.release, tt.args.pkgName)
+			if tt.wantErr != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
+				return
+			}
+			sort.Slice(got, func(i, j int) bool {
+				return got[i].VulnerabilityID < got[j].VulnerabilityID
+			})
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
