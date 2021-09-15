@@ -1,0 +1,27 @@
+{
+  "Header": {
+    "Original": "[25 Jun 2021] DLA-2691-1 libgcrypt20 - security update",
+    "Line": 86,
+    "ID": "DLA-2691-1",
+    "Description": "libgcrypt20 - security update"
+  },
+  "Annotations": [
+    {
+      "Original": "{CVE-2021-33560}",
+      "Line": 87,
+      "Type": "xref",
+      "Bugs": [
+        "CVE-2021-33560"
+      ]
+    },
+    {
+      "Original": "[stretch] - libgcrypt20 1.7.6-2+deb9u4",
+      "Line": 88,
+      "Type": "package",
+      "Release": "stretch",
+      "Package": "libgcrypt20",
+      "Kind": "fixed",
+      "Version": "1.7.6-2+deb9u4"
+    }
+  ]
+}

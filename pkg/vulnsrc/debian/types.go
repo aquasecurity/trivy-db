@@ -1,15 +1,31 @@
 package debian
 
-type DebianCVE struct {
-	Description     string             `json:"description"`
-	Releases        map[string]Release `json:"releases"`
-	Scope           string             `json:"scope"`
-	Package         string
-	VulnerabilityID string
+import "github.com/aquasecurity/trivy-db/pkg/types"
+
+type bucket struct {
+	codeName string
+	pkgName  string
+	vulnID   string // CVE-ID, DLA-ID or DSA-ID
+	severity types.Severity
 }
 
-type Release struct {
-	Repositories map[string]string `json:"repositories"`
-	Status       string            `json:"status"`
-	Urgency      string            `json:"urgency"`
+type header struct {
+	ID          string `json:"ID"`
+	Description string `json:"Description"`
+}
+
+type annotation struct {
+	Type        string
+	Release     string
+	Package     string
+	Kind        string
+	Version     string
+	Description string
+	Severity    string
+	Bugs        []string
+}
+
+type Bug struct {
+	Header      header
+	Annotations []annotation
 }
