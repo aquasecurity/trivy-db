@@ -168,26 +168,8 @@ func (vs VulnSrc) parseCVE(dir string) error {
 				continue
 			}
 
-			// For sid
-			if ann.Release == "" {
-				bkt := bucket{
-					pkgName: ann.Package,
-					vulnID:  cveID,
-				}
-				if ann.Severity != "" {
-					severity := severityFromUrgency(ann.Severity)
-					severities[ann.Package] = severity
-					bkt.severity = severity
-				}
-
-				vs.sidFixedVersions[bkt] = ann.Version // it may be empty for unfixed vulnerabilities
-
-				continue
-			}
-
-			// For distributions with a major version
 			bkt := bucket{
-				codeName: ann.Release,
+				codeName: ann.Release, // It will be empty in the case of sid.
 				pkgName:  ann.Package,
 				vulnID:   cveID,
 			}
@@ -195,6 +177,23 @@ func (vs VulnSrc) parseCVE(dir string) error {
 			// Skip not-affected, removed or undetermined advisories
 			if utils.StringInSlice(ann.Kind, skipStatuses) {
 				vs.notAffected[bkt] = struct{}{}
+				continue
+			}
+
+			// For sid
+			if ann.Release == "" {
+				sidBkt := bucket{
+					pkgName: ann.Package,
+					vulnID:  cveID,
+				}
+				if ann.Severity != "" {
+					severity := severityFromUrgency(ann.Severity)
+					severities[ann.Package] = severity
+					sidBkt.severity = severity
+				}
+
+				vs.sidFixedVersions[sidBkt] = ann.Version // it may be empty for unfixed vulnerabilities
+
 				continue
 			}
 
@@ -320,6 +319,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 		pkgName := sidBkt.pkgName
 		cveID := sidBkt.vulnID
 
+		// Skip if the advisory is stated as "not-affected" for all distributions.
+		if _, ok := vs.notAffected[bucket{pkgName: pkgName, vulnID: cveID}]; ok {
+			continue
+		}
+
 		// Iterate all codenames, e.g. buster
 		for code := range vs.distributions {
 			bkt := bucket{
@@ -328,7 +332,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 				vulnID:   cveID,
 			}
 
-			// Skip if the advisory is stated as "not-affected".
+			// Skip if the advisory is stated as "not-affected" for the specific distribution.
 			if _, ok := vs.notAffected[bkt]; ok {
 				continue
 			}
