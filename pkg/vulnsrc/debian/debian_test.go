@@ -73,7 +73,8 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 			},
 			noBuckets: [][]string{
-				{"advisory-detail", "CVE-2021-29629", "debian 9"}, // not-affected
+				{"advisory-detail", "CVE-2021-29629", "debian 9"}, // not-affected in debian stretch
+				{"advisory-detail", "CVE-2016-4606"},              // not-affected in sid
 			},
 		},
 		{
