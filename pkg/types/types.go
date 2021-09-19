@@ -93,8 +93,8 @@ type VulnerabilityDetail struct {
 	References       []string   `json:",omitempty"`
 	Title            string     `json:",omitempty"`
 	Description      string     `json:",omitempty"`
-	PublishedDate    *time.Time `json:",omitempty"`
-	LastModifiedDate *time.Time `json:",omitempty"`
+	PublishedDate    *time.Time `json:",omitempty"` // Take from NVD
+	LastModifiedDate *time.Time `json:",omitempty"` // Take from NVD
 }
 
 type AdvisoryDetail struct {
@@ -128,8 +128,8 @@ type Vulnerability struct {
 	VendorSeverity   VendorSeverity `json:",omitempty"`
 	CVSS             VendorCVSS     `json:",omitempty"`
 	References       []string       `json:",omitempty"`
-	PublishedDate    *time.Time     `json:",omitempty"`
-	LastModifiedDate *time.Time     `json:",omitempty"`
+	PublishedDate    *time.Time     `json:",omitempty"` // Take from NVD
+	LastModifiedDate *time.Time     `json:",omitempty"` // Take from NVD
 
 	// Custom is basically for extensibility and is not supposed to be used in OSS
 	Custom interface{} `json:",omitempty"`

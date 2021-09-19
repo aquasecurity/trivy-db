@@ -7,7 +7,6 @@ import (
 	"log"
 	"path/filepath"
 	"strings"
-	"time"
 
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
@@ -114,12 +113,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, version string, errata []erratum) error {
 				}
 
 				vuln := types.VulnerabilityDetail{
-					Severity:         generalizeSeverity(erratum.Severity),
-					References:       references,
-					Title:            erratum.Title,
-					Description:      erratum.Description,
-					PublishedDate:    utils.MustTimeParse(time.UnixMilli(erratum.IssuedDate.Date).Format(time.RFC3339)),
-					LastModifiedDate: utils.MustTimeParse(time.UnixMilli(erratum.UpdatedDate.Date).Format(time.RFC3339)),
+					Severity:    generalizeSeverity(erratum.Severity),
+					References:  references,
+					Title:       erratum.Title,
+					Description: erratum.Description,
 				}
 				if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Alma, vuln); err != nil {
 					return xerrors.Errorf("failed to save Alma vulnerability: %w", err)
