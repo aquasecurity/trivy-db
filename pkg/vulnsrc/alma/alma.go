@@ -102,6 +102,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, version string, errata []erratum) error {
 
 			cveID := ref.Title
 			for _, pkg := range erratum.Pkglist.Packages {
+				if pkg.Arch != "noarch" && pkg.Arch != "x86_64" {
+					continue
+				}
+
 				advisory := types.Advisory{
 					FixedVersion: constructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 				}
