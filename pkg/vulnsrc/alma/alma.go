@@ -105,10 +105,15 @@ func (vs VulnSrc) commit(tx *bolt.Tx, version string, errata []erratum) error {
 					continue
 				}
 
+				pkgName := pkg.Name
+				if erratum.Pkglist.Module.Name != "" && erratum.Pkglist.Module.Stream != "" {
+					pkgName = fmt.Sprintf("%s:%s::%s", erratum.Pkglist.Module.Name, erratum.Pkglist.Module.Stream, pkg.Name)
+				}
+
 				advisory := types.Advisory{
 					FixedVersion: constructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 				}
-				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, platformName, pkg.Name, advisory); err != nil {
+				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, platformName, pkgName, advisory); err != nil {
 					return xerrors.Errorf("failed to save Alma advisory: %w", err)
 				}
 
