@@ -95,9 +95,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, advisoryDB AdvisoryDB) error {
 			cveIDs := strings.Split(advisory.Cve, ",")
 			for _, cveID := range cveIDs {
 				vulnerabilityID := strings.TrimSpace(cveID)
-				if strings.HasPrefix(vulnerabilityID, "PVE-") {
-					continue
-				} else if vulnerabilityID == "" {
+				if strings.HasPrefix(vulnerabilityID, "PVE-") || vulnerabilityID == "" {
 					vulnerabilityID = advisory.ID
 				}
 
