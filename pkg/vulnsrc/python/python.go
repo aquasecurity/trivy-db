@@ -92,10 +92,10 @@ func (vs VulnSrc) update(repoPath string) error {
 func (vs VulnSrc) commit(tx *bolt.Tx, advisoryDB AdvisoryDB) error {
 	for pkgName, advisories := range advisoryDB {
 		for _, advisory := range advisories {
-			vulnerabilityIDs := strings.Split(advisory.Cve, ",")
-			for _, vulnerabilityID := range vulnerabilityIDs {
-				vulnerabilityID := strings.TrimSpace(vulnerabilityID)
-				if vulnerabilityID == "" {
+			cveIDs := strings.Split(advisory.Cve, ",")
+			for _, cveID := range cveIDs {
+				vulnerabilityID := strings.TrimSpace(cveID)
+				if strings.HasPrefix(vulnerabilityID, "PVE-") || vulnerabilityID == "" {
 					vulnerabilityID = advisory.ID
 				}
 
