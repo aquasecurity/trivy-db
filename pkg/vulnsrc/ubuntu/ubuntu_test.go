@@ -46,40 +46,12 @@ func TestVulnSrc_Update(t *testing.T) {
 				{"advisory-detail", "CVE-2020-1234", "ubuntu 20.04"},
 			},
 		},
-		{
-			name:     "custom statuses",
-			statuses: []string{"released", "needs-triage"},
-			wantValues: []wantKV{
-				{
-					key: []string{"advisory-detail", "CVE-2020-1234", "ubuntu 18.04", "xen"},
-					value: types.Advisory{
-						FixedVersion: "1.2.3",
-					},
-				},
-				{
-					key:   []string{"advisory-detail", "CVE-2020-1234", "ubuntu 20.04", "xen"},
-					value: types.Advisory{},
-				},
-				{
-					key: []string{"vulnerability-detail", "CVE-2020-1234", "ubuntu"},
-					value: types.VulnerabilityDetail{
-						Description: "Observable response discrepancy in some Intel(R) Processors may allow an authorized user to potentially enable information disclosure via local access.",
-						Severity:    2,
-						References:  []string{"https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-0089"},
-					},
-				},
-			},
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cacheDir := dbtest.InitTestDB(t, nil)
 
-			var options []ubuntu.Option
-			if len(tt.statuses) != 0 {
-				options = append(options, ubuntu.WithStatuses(tt.statuses))
-			}
-			src := ubuntu.NewVulnSrc(options...)
+			src := ubuntu.NewVulnSrc()
 			err := src.Update("testdata")
 			if tt.wantErr != "" {
 				require.Error(t, err)
