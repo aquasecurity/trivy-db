@@ -16,6 +16,8 @@ import (
 	"golang.org/x/xerrors"
 )
 
+type CustomPut func(dbc Operation, tx *bolt.Tx, adv interface{}) error
+
 type Type int
 
 const (
