@@ -49,7 +49,23 @@ var (
 	skipStatuses = []string{"not-affected", "undetermined"}
 )
 
+type CustomPut func(dbc db.Operation, tx *bolt.Tx, adv interface{}) error
+
+type options struct {
+	put CustomPut
+}
+
+type option func(*options)
+
+func WithCustomPut(put CustomPut) option {
+	return func(opts *options) {
+		opts.put = put
+	}
+}
+
 type VulnSrc struct {
+	*options
+
 	dbc db.Operation
 
 	// Hold a map of codenames and major versions from distributions.json
@@ -67,20 +83,29 @@ type VulnSrc struct {
 
 	// Hold debian advisories
 	// e.g. {"buster", "connman", "CVE-2021-33833"} => {"FixedVersion": 1.36-2.1~deb10u2, ...}
-	bktAdvisories map[bucket]types.Advisory
+	bktAdvisories map[bucket]Advisory
 
 	// Hold not-affected versions
 	// e.g. {"buster", "linux", "CVE-2021-3739"} => {}
 	notAffected map[bucket]struct{}
 }
 
-func NewVulnSrc() VulnSrc {
+func NewVulnSrc(opts ...option) VulnSrc {
+	o := &options{
+		put: put,
+	}
+
+	for _, opt := range opts {
+		opt(o)
+	}
+
 	return VulnSrc{
+		options:          o,
 		dbc:              db.Config{},
 		distributions:    map[string]string{},
 		pkgVersions:      map[bucket]string{},
 		sidFixedVersions: map[bucket]string{},
-		bktAdvisories:    map[bucket]types.Advisory{},
+		bktAdvisories:    map[bucket]Advisory{},
 		notAffected:      map[bucket]struct{}{},
 	}
 }
@@ -137,14 +162,14 @@ func (vs VulnSrc) parse(dir string) error {
 	return nil
 }
 
-func (vs VulnSrc) parseBug(dir string, fn func(Bug) error) error {
+func (vs VulnSrc) parseBug(dir string, fn func(bug) error) error {
 	err := utils.FileWalk(dir, func(r io.Reader, path string) error {
-		var bug Bug
-		if err := json.NewDecoder(r).Decode(&bug); err != nil {
+		var bg bug
+		if err := json.NewDecoder(r).Decode(&bg); err != nil {
 			return xerrors.Errorf("json decode error: %w", err)
 		}
 
-		if err := fn(bug); err != nil {
+		if err := fn(bg); err != nil {
 			return xerrors.Errorf("parse debian bug error: %w", err)
 		}
 		return nil
@@ -158,9 +183,9 @@ func (vs VulnSrc) parseBug(dir string, fn func(Bug) error) error {
 
 func (vs VulnSrc) parseCVE(dir string) error {
 	log.Println("  Parsing CVE JSON files...")
-	err := vs.parseBug(filepath.Join(dir, cveDir), func(bug Bug) error {
+	err := vs.parseBug(filepath.Join(dir, cveDir), func(bug bug) error {
 		// Hold severities per the packages
-		severities := map[string]types.Severity{}
+		severities := map[string]string{}
 		cveID := bug.Header.ID
 
 		for _, ann := range bug.Annotations {
@@ -187,9 +212,8 @@ func (vs VulnSrc) parseCVE(dir string) error {
 					vulnID:  cveID,
 				}
 				if ann.Severity != "" {
-					severity := severityFromUrgency(ann.Severity)
-					severities[ann.Package] = severity
-					sidBkt.severity = severity
+					severities[ann.Package] = ann.Severity
+					sidBkt.severity = ann.Severity
 				}
 
 				vs.sidFixedVersions[sidBkt] = ann.Version // it may be empty for unfixed vulnerabilities
@@ -197,7 +221,7 @@ func (vs VulnSrc) parseCVE(dir string) error {
 				continue
 			}
 
-			advisory := types.Advisory{
+			advisory := Advisory{
 				FixedVersion: ann.Version, // It might be empty because of no-dsa.
 				Severity:     severities[ann.Package],
 			}
@@ -237,7 +261,7 @@ func (vs VulnSrc) parseDSA(dir string) error {
 }
 
 func (vs VulnSrc) parseAdvisory(dir string) error {
-	return vs.parseBug(dir, func(bug Bug) error {
+	return vs.parseBug(dir, func(bug bug) error {
 		var cveIDs []string
 		advisoryID := bug.Header.ID
 		for _, ann := range bug.Annotations {
@@ -287,7 +311,7 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 					}
 					adv.VendorIDs = append(adv.VendorIDs, advisoryID)
 				} else {
-					adv = types.Advisory{
+					adv = Advisory{
 						FixedVersion: ann.Version,
 						VendorIDs:    []string{advisoryID},
 					}
@@ -377,22 +401,22 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 			adv.Severity = sidBkt.severity
 
 			bkt.vulnID = cveID
-			if err = vs.put(tx, bkt, adv); err != nil {
-				return xerrors.Errorf("put error: %w", err)
+			if err = vs.putAdvisory(tx, bkt, adv); err != nil {
+				return xerrors.Errorf("put advisory error: %w", err)
 			}
 		}
 	}
 
 	// All advisories with codename and fixed version are inserted into DB here.
 	for bkt, advisory := range vs.bktAdvisories {
-		if err := vs.put(tx, bkt, advisory); err != nil {
-			return xerrors.Errorf("put error: %w", err)
+		if err := vs.putAdvisory(tx, bkt, advisory); err != nil {
+			return xerrors.Errorf("put advisory error: %w", err)
 		}
 	}
 	return nil
 }
 
-func (vs VulnSrc) put(tx *bolt.Tx, bkt bucket, advisory types.Advisory) error {
+func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt bucket, advisory Advisory) error {
 	// Convert codename to major version
 	// e.g. "buster" => "10"
 	majorVersion, ok := vs.distributions[bkt.codeName]
@@ -413,12 +437,38 @@ func (vs VulnSrc) put(tx *bolt.Tx, bkt bucket, advisory types.Advisory) error {
 		platform = fmt.Sprintf(ovalPlatformFormat, majorVersion)
 	}
 
-	if err := vs.dbc.PutAdvisoryDetail(tx, bkt.vulnID, platform, bkt.pkgName, advisory); err != nil {
+	// Fill information for the buckets.
+	advisory.VulnerabilityID = bkt.vulnID
+	advisory.PkgName = bkt.pkgName
+	advisory.Platform = platform
+
+	if err := vs.put(vs.dbc, tx, advisory); err != nil {
+		return xerrors.Errorf("put error: %w", err)
+	}
+
+	return nil
+}
+
+// put puts the advisory into Trivy DB, but it can be overwritten.
+func put(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
+	adv, ok := advisory.(Advisory)
+	if !ok {
+		return xerrors.New("unknown type")
+	}
+
+	detail := types.Advisory{
+		VendorIDs:    adv.VendorIDs,
+		State:        adv.State,
+		Severity:     severityFromUrgency(adv.Severity),
+		FixedVersion: adv.FixedVersion,
+	}
+
+	if err := dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.Platform, adv.PkgName, detail); err != nil {
 		return xerrors.Errorf("failed to save Debian advisory: %w", err)
 	}
 
 	// for light DB
-	if err := vs.dbc.PutSeverity(tx, bkt.vulnID, types.SeverityUnknown); err != nil {
+	if err := dbc.PutSeverity(tx, adv.VulnerabilityID, types.SeverityUnknown); err != nil {
 		return xerrors.Errorf("failed to save Debian vulnerability severity: %w", err)
 	}
 
