@@ -49,23 +49,16 @@ var (
 	skipStatuses = []string{"not-affected", "undetermined"}
 )
 
-type CustomPut func(dbc db.Operation, tx *bolt.Tx, adv interface{}) error
+type Option func(src *VulnSrc)
 
-type options struct {
-	put CustomPut
-}
-
-type option func(*options)
-
-func WithCustomPut(put CustomPut) option {
-	return func(opts *options) {
-		opts.put = put
+func WithCustomPut(put db.CustomPut) Option {
+	return func(src *VulnSrc) {
+		src.put = put
 	}
 }
 
 type VulnSrc struct {
-	*options
-
+	put db.CustomPut
 	dbc db.Operation
 
 	// Hold a map of codenames and major versions from distributions.json
@@ -90,17 +83,9 @@ type VulnSrc struct {
 	notAffected map[bucket]struct{}
 }
 
-func NewVulnSrc(opts ...option) VulnSrc {
-	o := &options{
-		put: put,
-	}
-
-	for _, opt := range opts {
-		opt(o)
-	}
-
-	return VulnSrc{
-		options:          o,
+func NewVulnSrc(opts ...Option) VulnSrc {
+	src := VulnSrc{
+		put:              defaultPut,
 		dbc:              db.Config{},
 		distributions:    map[string]string{},
 		pkgVersions:      map[bucket]string{},
@@ -108,6 +93,12 @@ func NewVulnSrc(opts ...option) VulnSrc {
 		bktAdvisories:    map[bucket]Advisory{},
 		notAffected:      map[bucket]struct{}{},
 	}
+
+	for _, opt := range opts {
+		opt(&src)
+	}
+
+	return src
 }
 
 func (vs VulnSrc) Name() string {
@@ -449,8 +440,8 @@ func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt bucket, advisory Advisory) error 
 	return nil
 }
 
-// put puts the advisory into Trivy DB, but it can be overwritten.
-func put(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
+// defaultPut puts the advisory into Trivy DB, but it can be overwritten.
+func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 	adv, ok := advisory.(Advisory)
 	if !ok {
 		return xerrors.New("unknown type")

@@ -48,21 +48,21 @@ var (
 
 type Option func(src *VulnSrc)
 
-func WithStatuses(statuses []string) Option {
+func WithCustomPut(put db.CustomPut) Option {
 	return func(src *VulnSrc) {
-		src.statuses = statuses
+		src.put = put
 	}
 }
 
 type VulnSrc struct {
-	statuses []string
-	dbc      db.Operation
+	put db.CustomPut
+	dbc db.Operation
 }
 
 func NewVulnSrc(opts ...Option) VulnSrc {
 	src := VulnSrc{
-		statuses: targetStatuses,
-		dbc:      db.Config{},
+		put: defaultPut,
+		dbc: db.Config{},
 	}
 
 	for _, o := range opts {
@@ -115,39 +115,8 @@ func (vs VulnSrc) save(cves []UbuntuCVE) error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx, cves []UbuntuCVE) error {
 	for _, cve := range cves {
-		for packageName, patch := range cve.Patches {
-			pkgName := string(packageName)
-			for release, status := range patch {
-				if !utils.StringInSlice(status.Status, vs.statuses) {
-					continue
-				}
-				osVersion, ok := UbuntuReleasesMapping[string(release)]
-				if !ok {
-					continue
-				}
-				platformName := fmt.Sprintf(platformFormat, osVersion)
-				advisory := types.Advisory{}
-				if status.Status == "released" {
-					advisory.FixedVersion = status.Note
-				}
-				if err := vs.dbc.PutAdvisoryDetail(tx, cve.Candidate, platformName, pkgName, advisory); err != nil {
-					return xerrors.Errorf("failed to save Ubuntu advisory: %w", err)
-				}
-
-				vuln := types.VulnerabilityDetail{
-					Severity:    severityFromPriority(cve.Priority),
-					References:  cve.References,
-					Description: cve.Description,
-				}
-				if err := vs.dbc.PutVulnerabilityDetail(tx, cve.Candidate, vulnerability.Ubuntu, vuln); err != nil {
-					return xerrors.Errorf("failed to save Ubuntu vulnerability: %w", err)
-				}
-
-				// for light DB
-				if err := vs.dbc.PutSeverity(tx, cve.Candidate, types.SeverityUnknown); err != nil {
-					return xerrors.Errorf("failed to save Ubuntu vulnerability severity: %w", err)
-				}
-			}
+		if err := vs.put(vs.dbc, tx, cve); err != nil {
+			return xerrors.Errorf("put error: %w", err)
 		}
 	}
 	return nil
@@ -162,7 +131,52 @@ func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) 
 	return advisories, nil
 }
 
-func severityFromPriority(priority string) types.Severity {
+func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
+	cve, ok := advisory.(UbuntuCVE)
+	if !ok {
+		return xerrors.New("unknown type")
+	}
+
+	for packageName, patch := range cve.Patches {
+		pkgName := string(packageName)
+		for release, status := range patch {
+			if !utils.StringInSlice(status.Status, targetStatuses) {
+				continue
+			}
+			osVersion, ok := UbuntuReleasesMapping[string(release)]
+			if !ok {
+				continue
+			}
+			platformName := fmt.Sprintf(platformFormat, osVersion)
+			adv := types.Advisory{}
+			if status.Status == "released" {
+				adv.FixedVersion = status.Note
+			}
+			if err := dbc.PutAdvisoryDetail(tx, cve.Candidate, platformName, pkgName, adv); err != nil {
+				return xerrors.Errorf("failed to save Ubuntu advisory: %w", err)
+			}
+
+			vuln := types.VulnerabilityDetail{
+				Severity:    SeverityFromPriority(cve.Priority),
+				References:  cve.References,
+				Description: cve.Description,
+			}
+			if err := dbc.PutVulnerabilityDetail(tx, cve.Candidate, vulnerability.Ubuntu, vuln); err != nil {
+				return xerrors.Errorf("failed to save Ubuntu vulnerability: %w", err)
+			}
+
+			// for light DB
+			if err := dbc.PutSeverity(tx, cve.Candidate, types.SeverityUnknown); err != nil {
+				return xerrors.Errorf("failed to save Ubuntu vulnerability severity: %w", err)
+			}
+		}
+	}
+
+	return nil
+}
+
+// SeverityFromPriority converts Ubuntu priority into Trivy severity
+func SeverityFromPriority(priority string) types.Severity {
 	switch priority {
 	case "untriaged":
 		return types.SeverityUnknown
