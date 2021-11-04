@@ -51,8 +51,9 @@ jobs:
 
       - name: Upload assets to GHCR
         run: |
-          oras push ghcr.io/${{ github.repository }}:${{ env.VERSION }} \
-            --manifest-config /dev/null:application/vnd.aquasec.trivy.config.v1+json \
-            db.tar.gz:application/vnd.aquasec.trivy.db.layer.v1.tar+gzip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tags=(latest ${{ env.VERSION }})
+          for tag in ${tags[@]}; do
+            oras push ghcr.io/${{ github.repository }}:${tag} \
+              --manifest-config /dev/null:application/vnd.aquasec.trivy.config.v1+json \
+              db.tar.gz:application/vnd.aquasec.trivy.db.layer.v1.tar+gzip
+          done
