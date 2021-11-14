@@ -27,10 +27,6 @@ func (ac *AppConfig) NewApp(version string) *cli.App {
 			Usage:  "build a database file",
 			Action: build,
 			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  "light",
-					Usage: "insert only CVE-ID and severity",
-				},
 				cli.StringSliceFlag{
 					Name:  "only-update",
 					Usage: "update db only specified distribution",
