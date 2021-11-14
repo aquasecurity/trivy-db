@@ -51,8 +51,7 @@ trivy-db:
 
 .PHONY: db-all
 db-all:
-	#make build db-fetch-langs db-fetch-vuln-list-main
-	make build
+	make build db-fetch-langs db-fetch-vuln-list-main
 	make db-build
 	make db-compact
 	make db-compress

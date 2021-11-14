@@ -155,7 +155,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, f *os.File) error {
 	}
 	for _, vulnID := range vulnerabilityIDs {
 		// for detecting vulnerabilities
-		err := vs.dbc.PutAdvisoryDetail(tx, vulnID, vulnerability.NodejsSecurityWg, advisory.ModuleName, a)
+		err = vs.dbc.PutAdvisoryDetail(tx, vulnID, vulnerability.NodejsSecurityWg, advisory.ModuleName, a)
 		if err != nil {
 			return xerrors.Errorf("failed to save node advisory: %w", err)
 		}
@@ -178,8 +178,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, f *os.File) error {
 			return xerrors.Errorf("failed to save node vulnerability detail: %w", err)
 		}
 
-		if err := vs.dbc.PutSeverity(tx, vulnID, types.SeverityUnknown); err != nil {
-			return xerrors.Errorf("failed to save node vulnerability severity: %w", err)
+		// for optimization
+		if err = vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
+			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 		}
 	}
 

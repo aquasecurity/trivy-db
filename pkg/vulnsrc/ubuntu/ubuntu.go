@@ -166,9 +166,9 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 				return xerrors.Errorf("failed to save Ubuntu vulnerability: %w", err)
 			}
 
-			// for light DB
-			if err := dbc.PutSeverity(tx, cve.Candidate, types.SeverityUnknown); err != nil {
-				return xerrors.Errorf("failed to save Ubuntu vulnerability severity: %w", err)
+			// for optimization
+			if err := dbc.PutVulnerabilityID(tx, cve.Candidate); err != nil {
+				return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 			}
 		}
 	}

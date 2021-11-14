@@ -127,6 +127,9 @@ func (t TrivyDB) vulnSrc(target string) (vulnsrc.VulnSrc, bool) {
 }
 
 func (t TrivyDB) optimize() error {
+	// NVD also contains many vulnerabilities that are not related to OS packages or language-specific packages.
+	// Trivy DB will not store them so that it could reduce the database size.
+	// This bucket has only vulnerability IDs provided by vendors. They must be stored.
 	err := t.dbc.ForEachVulnerabilityID(func(tx *bolt.Tx, cveID string) error {
 		details := t.vulnClient.GetDetails(cveID)
 		if t.vulnClient.IsRejected(details) {

@@ -143,8 +143,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, item Entry) error {
 			return xerrors.Errorf("failed to put vulnerability detail (%s): %w", vulnID, err)
 		}
 
-		if err = vs.dbc.PutSeverity(tx, vulnID, types.SeverityUnknown); err != nil {
-			return xerrors.Errorf("failed to save go-vulndb vulnerability severity: %w", err)
+		// for optimization
+		if err = vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
+			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 		}
 	}
 

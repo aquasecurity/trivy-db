@@ -1,4 +1,0 @@
-- bucket: severity
-  pairs:
-    - key: CVE-2019-10906
-      value: BROKEN
