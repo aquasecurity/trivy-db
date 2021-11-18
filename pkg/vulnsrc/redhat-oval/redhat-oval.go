@@ -11,13 +11,13 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/aquasecurity/trivy-db/pkg/types"
-
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 const (
@@ -61,6 +61,10 @@ func NewVulnSrc(opts ...Option) VulnSrc {
 	}
 
 	return *vs
+}
+
+func (vs VulnSrc) Name() string {
+	return vulnerability.RedHatOVAL
 }
 
 func (vs VulnSrc) Update(dir string) error {

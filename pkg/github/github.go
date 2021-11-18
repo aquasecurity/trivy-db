@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/go-github/v28/github"
+	"github.com/google/go-github/v38/github"
 	"golang.org/x/oauth2"
 	"golang.org/x/xerrors"
 	"k8s.io/utils/clock"

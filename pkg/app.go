@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"strings"
 	"time"
 
 	"github.com/aquasecurity/trivy-db/pkg/github"
@@ -20,7 +19,6 @@ func (ac *AppConfig) NewApp(version string) *cli.App {
 	app := cli.NewApp()
 	app.Name = "trivy-db"
 	app.Version = version
-	app.ArgsUsage = "image_name"
 	app.Usage = "Trivy DB builder"
 
 	app.Commands = []cli.Command{
@@ -33,10 +31,16 @@ func (ac *AppConfig) NewApp(version string) *cli.App {
 					Name:  "light",
 					Usage: "insert only CVE-ID and severity",
 				},
-				cli.StringFlag{
+				cli.StringSliceFlag{
 					Name:  "only-update",
-					Usage: "update db only specified distribution (comma separated)",
-					Value: strings.Join(vulnsrc.UpdateList, ","),
+					Usage: "update db only specified distribution",
+					Value: func() *cli.StringSlice {
+						var targets cli.StringSlice
+						for _, v := range vulnsrc.All {
+							targets = append(targets, v.Name())
+						}
+						return &targets
+					}(),
 				},
 				cli.StringFlag{
 					Name:  "cache-dir",
@@ -59,7 +63,6 @@ func (ac *AppConfig) NewApp(version string) *cli.App {
 				cli.StringFlag{
 					Name:  "dir",
 					Usage: "dir",
-					Value: strings.Join(vulnsrc.UpdateList, ","),
 				},
 			},
 		},

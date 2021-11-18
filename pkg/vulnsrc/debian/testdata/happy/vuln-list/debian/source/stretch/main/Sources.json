@@ -1,0 +1,49 @@
+[
+  {
+    "Architecture": [
+      "amd64"
+    ],
+    "Description": [
+      "Distributed Access Control System (DACS)"
+    ],
+    "Description-Md5": [
+      "d03fa5ebcb31807b49bdb832788db0bb"
+    ],
+    "Filename": [
+      "pool/main/d/dacs/dacs_1.4.38a-2_amd64.deb"
+    ],
+    "Homepage": [
+      "https://dacs.dss.ca/"
+    ],
+    "Installed-Size": [
+      "4287"
+    ],
+    "Maintainer": [
+      "Christoph Berg \u003cchristoph.berg@credativ.de\u003e"
+    ],
+    "Md5sum": [
+      "e5694ddb2a3112194424b29402ba1fa8"
+    ],
+    "Package": [
+      "dacs"
+    ],
+    "Priority": [
+      "optional"
+    ],
+    "Section": [
+      "web"
+    ],
+    "Sha256": [
+      "e1a5ca486a2ec2cb25c0b3cbf8fa94fde40cc4daae3108ea30ce8694a877b70b"
+    ],
+    "Size": [
+      "1207098"
+    ],
+    "Suggests": [
+      "libapache2-mod-dacs"
+    ],
+    "Version": [
+      "1.4.38a-2"
+    ]
+  }
+]

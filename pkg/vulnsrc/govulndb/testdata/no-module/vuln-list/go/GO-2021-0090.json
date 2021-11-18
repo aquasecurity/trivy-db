@@ -1,0 +1,31 @@
+{
+  "id": "GO-2021-0090",
+  "published": "2021-04-14T12:00:00Z",
+  "modified": "2021-04-14T12:00:00Z",
+  "package": {
+    "name": "github.com/tendermint/tendermint/types",
+    "ecosystem": "Go"
+  },
+  "details": "Proposed commits may contain signatures for blocks not contained within the commit. Instead of skipping\nthese signatures, they cause failure during verification. A malicious proposer can use this to force\nconsensus failures.\n",
+  "affects": {
+    "Ranges": [
+      {
+        "type": "SEMVER",
+        "introduced": "v0.33.0",
+        "fixed": "v0.34.0-dev1.0.20200702134149-480b995a3172"
+      }
+    ]
+  },
+  "references": [
+    {
+      "type": "FIX",
+      "url": "https://github.com/tendermint/tendermint/pull/5426"
+    }
+  ],
+  "ecosystem_specific": {
+    "Symbols": [
+      "VoteSet.MakeCommit"
+    ],
+    "url": "https://go.googlesource.com/vulndb/+/refs/heads/main/reports/GO-2021-0090.toml"
+  }
+}

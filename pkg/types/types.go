@@ -104,17 +104,31 @@ type AdvisoryDetail struct {
 }
 
 type Advisory struct {
-	VulnerabilityID string `json:",omitempty"`
-	VendorID        string `json:",omitempty"`
+	VulnerabilityID string   `json:",omitempty"`
+	VendorIDs       []string `json:",omitempty"` // e.g. RHSA-ID and DSA-ID
 
-	// for os package
-	FixedVersion string `json:",omitempty"`
+	// It is filled only when FixedVersion is empty since it is obvious the state is "Fixed" when FixedVersion is not empty.
+	// e.g. Will not fix and Affected
+	State string `json:",omitempty"`
 
-	// for library
+	// Trivy DB has "vulnerability" bucket and severities are usually stored in the bucket per a vulnerability ID.
+	// In some cases, the advisory may have multiple severities depending on the packages.
+	// For example, CVE-2015-2328 in Debian has "unimportant" for mongodb and "low" for pcre3.
+	// e.g. https://security-tracker.debian.org/tracker/CVE-2015-2328
+	Severity Severity `json:",omitempty"`
+
+	// Versions for os package
+	FixedVersion    string `json:",omitempty"`
+	AffectedVersion string `json:",omitempty"` // Only for Arch Linux
+
+	// MajorVersion ranges for language-specific package
 	// Some advisories provide VulnerableVersions only, others provide PatchedVersions and UnaffectedVersions
 	VulnerableVersions []string `json:",omitempty"`
 	PatchedVersions    []string `json:",omitempty"`
 	UnaffectedVersions []string `json:",omitempty"`
+
+	// Custom is basically for extensibility and is not supposed to be used in OSS
+	Custom interface{} `json:",omitempty"`
 }
 
 type Vulnerability struct {
@@ -127,9 +141,7 @@ type Vulnerability struct {
 	References       []string       `json:",omitempty"`
 	PublishedDate    *time.Time     `json:",omitempty"`
 	LastModifiedDate *time.Time     `json:",omitempty"`
-}
 
-type VulnSrc interface {
-	Update(dir string) (err error)
-	Get(release string, pkgName string) (advisories []Advisory, err error)
+	// Custom is basically for extensibility and is not supposed to be used in OSS
+	Custom interface{} `json:",omitempty"`
 }

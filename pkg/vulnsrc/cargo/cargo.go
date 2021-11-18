@@ -60,6 +60,10 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
+func (vs VulnSrc) Name() string {
+	return vulnerability.Cargo
+}
+
 func (vs VulnSrc) Update(dir string) (err error) {
 	repoPath := filepath.Join(dir, cargoDir)
 	if err := vs.update(repoPath); err != nil {
@@ -92,10 +96,13 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		if info.IsDir() {
 			return nil
 		}
+
 		f, err := os.Open(path)
 		if err != nil {
 			return xerrors.Errorf("failed to open a file (%s): %w", path, err)
 		}
+		defer f.Close()
+
 		codeBlock, title, description, err := parseAdvisoryMarkdown(f)
 		if err != nil {
 			return xerrors.Errorf("failed to parse markdown: %w", err)
@@ -128,7 +135,7 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 			return xerrors.Errorf("failed to save rust vulnerability detail: %w", err)
 		}
 
-		if err := vs.dbc.PutSeverity(tx, advisory.Id, types.SeverityUnknown); err != nil {
+		if err = vs.dbc.PutSeverity(tx, advisory.Id, types.SeverityUnknown); err != nil {
 			return xerrors.Errorf("failed to save rust vulnerability severity: %w", err)
 		}
 

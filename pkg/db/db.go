@@ -16,6 +16,8 @@ import (
 	"golang.org/x/xerrors"
 )
 
+type CustomPut func(dbc Operation, tx *bolt.Tx, adv interface{}) error
+
 type Type int
 
 const (
@@ -112,6 +114,10 @@ func Close() error {
 	return nil
 }
 
+func (dbc Config) Connection() *bolt.DB {
+	return db
+}
+
 func (dbc Config) GetVersion() int {
 	metadata, err := dbc.GetMetadata()
 	if err != nil {
@@ -119,6 +125,7 @@ func (dbc Config) GetVersion() int {
 	}
 	return metadata.Version
 }
+
 func (dbc Config) GetMetadata() (Metadata, error) {
 	var metadata Metadata
 	value, err := Config{}.get("trivy", "metadata", "data")
@@ -220,14 +227,16 @@ func (dbc Config) forEach(rootBucket, nestedBucket string) (value map[string][]b
 			// e.g. "GitHub Security Advisory Composer"
 			rootBuckets = append(rootBuckets, rootBucket)
 		}
+
 		for _, r := range rootBuckets {
 			root := tx.Bucket([]byte(r))
 			if root == nil {
-				return nil
+				continue
 			}
+
 			nested := root.Bucket([]byte(nestedBucket))
 			if nested == nil {
-				return nil
+				continue
 			}
 			err := nested.ForEach(func(k, v []byte) error {
 				value[string(k)] = v

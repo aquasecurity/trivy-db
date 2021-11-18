@@ -1,0 +1,9 @@
+- bucket: debian 10
+  pairs:
+    - bucket: alpine
+      pairs:
+        - key: CVE-2020-8177
+          value:
+            FixedVersion:
+              - foo
+              - bar

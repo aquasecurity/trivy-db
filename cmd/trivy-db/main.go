@@ -23,6 +23,6 @@ func main() {
 	app := ac.NewApp(version)
 	err := app.Run(os.Args)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("%+v", err)
 	}
 }

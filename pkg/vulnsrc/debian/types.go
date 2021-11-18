@@ -1,15 +1,40 @@
 package debian
 
-type DebianCVE struct {
-	Description     string             `json:"description"`
-	Releases        map[string]Release `json:"releases"`
-	Scope           string             `json:"scope"`
-	Package         string
+type Advisory struct {
 	VulnerabilityID string
+	Platform        string
+	PkgName         string
+
+	VendorIDs    []string
+	State        string
+	Severity     string
+	FixedVersion string
 }
 
-type Release struct {
-	Repositories map[string]string `json:"repositories"`
-	Status       string            `json:"status"`
-	Urgency      string            `json:"urgency"`
+type bucket struct {
+	codeName string
+	pkgName  string
+	vulnID   string // CVE-ID, DLA-ID or DSA-ID
+	severity string
+}
+
+type header struct {
+	ID          string `json:"ID"`
+	Description string `json:"Description"`
+}
+
+type annotation struct {
+	Type        string
+	Release     string
+	Package     string
+	Kind        string
+	Version     string
+	Description string
+	Severity    string
+	Bugs        []string
+}
+
+type bug struct {
+	Header      header
+	Annotations []annotation
 }

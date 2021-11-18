@@ -1,0 +1,25 @@
+{
+  "Header": {
+    "Original": "[15 Nov 2016] DSA-3714-1 akonadi - update",
+    "Line": 4131,
+    "ID": "DSA-3714-1",
+    "Description": "akonadi - update"
+  },
+  "Annotations": [
+    {
+      "Original": "NOTE: Compatibility update for mysql 5.5.53",
+      "Line": 4132,
+      "Type": "NOTE",
+      "Description": "Compatibility update for mysql 5.5.53"
+    },
+    {
+      "Original": "[jessie] - akonadi 1.13.0-2+deb8u2",
+      "Line": 4133,
+      "Type": "package",
+      "Release": "jessie",
+      "Package": "akonadi",
+      "Kind": "fixed",
+      "Version": "1.13.0-2+deb8u2"
+    }
+  ]
+}

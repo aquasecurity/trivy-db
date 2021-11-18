@@ -49,6 +49,10 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
+func (vs VulnSrc) Name() string {
+	return vulnerability.PhpSecurityAdvisories
+}
+
 func (vs VulnSrc) Update(dir string) (err error) {
 	repoPath := filepath.Join(dir, composerDir)
 	if err := vs.update(repoPath); err != nil {

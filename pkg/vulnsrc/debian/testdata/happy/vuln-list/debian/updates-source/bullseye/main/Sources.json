@@ -1,0 +1,176 @@
+[
+  {
+    "Architecture": [
+      "amd64"
+    ],
+    "Depends": [
+      "libc6 (\u003e= 2.15), libssl1.1 (\u003e= 1.1.1)"
+    ],
+    "Description": [
+      "Secure Sockets Layer toolkit - cryptographic utility"
+    ],
+    "Description-Md5": [
+      "9b6de2bb6e1d9016aeb0f00bcf6617bd"
+    ],
+    "Filename": [
+      "pool/main/o/openssl/openssl_1.1.1k-1_amd64.deb"
+    ],
+    "Homepage": [
+      "https://www.openssl.org/"
+    ],
+    "Installed-Size": [
+      "1465"
+    ],
+    "Maintainer": [
+      "Debian OpenSSL Team \u003cpkg-openssl-devel@lists.alioth.debian.org\u003e"
+    ],
+    "Md5sum": [
+      "4b70fa6b44966c82c70267fc3f222c56"
+    ],
+    "Multi-Arch": [
+      "foreign"
+    ],
+    "Package": [
+      "openssl"
+    ],
+    "Priority": [
+      "optional"
+    ],
+    "Section": [
+      "utils"
+    ],
+    "Sha256": [
+      "a5eed50b8df5840a1d8adbf9087dcdbd01be7c2e2038c741dd50c207ef5cffa1"
+    ],
+    "Size": [
+      "850368"
+    ],
+    "Suggests": [
+      "ca-certificates"
+    ],
+    "Tag": [
+      "implemented-in::c, interface::commandline, protocol::ssl, role::program, scope::utility, security::cryptography, security::integrity, use::checking"
+    ],
+    "Version": [
+      "1.1.1k-1"
+    ]
+  },
+  {
+    "Architecture": [
+      "amd64"
+    ],
+    "Depends": [
+      "libc6 (\u003e= 2.15), libgpg-error0 (\u003e= 1.25)"
+    ],
+    "Description": [
+      "LGPL Crypto library - runtime library"
+    ],
+    "Description-Md5": [
+      "e8ab63c6be1944ea9efde5248663f053"
+    ],
+    "Filename": [
+      "pool/main/libg/libgcrypt20/libgcrypt20_1.8.7-6_amd64.deb"
+    ],
+    "Homepage": [
+      "https://directory.fsf.org/project/libgcrypt/"
+    ],
+    "Installed-Size": [
+      "1355"
+    ],
+    "Maintainer": [
+      "Debian GnuTLS Maintainers \u003cpkg-gnutls-maint@lists.alioth.debian.org\u003e"
+    ],
+    "Md5sum": [
+      "1d331cdb7b2cbf6a5738f4d3c0d38ac6"
+    ],
+    "Multi-Arch": [
+      "same"
+    ],
+    "Package": [
+      "libgcrypt20"
+    ],
+    "Priority": [
+      "optional"
+    ],
+    "Section": [
+      "libs"
+    ],
+    "Sha256": [
+      "7a2e0eef8e0c37f03f3a5fcf7102a2e3dc70ba987f696ab71949f9abf36f35ef"
+    ],
+    "Size": [
+      "563136"
+    ],
+    "Suggests": [
+      "rng-tools"
+    ],
+    "Tag": [
+      "role::shared-lib"
+    ],
+    "Version": [
+      "1.8.7-5"
+    ]
+  },
+  {
+    "Architecture": [
+      "amd64"
+    ],
+    "Depends": [
+      "libc6 (\u003e= 2.15), libgpg-error0 (\u003e= 1.25)"
+    ],
+    "Description": [
+      "LGPL Crypto library - runtime library"
+    ],
+    "Description-Md5": [
+      "e8ab63c6be1944ea9efde5248663f053"
+    ],
+    "Filename": [
+      "pool/main/libg/libgcrypt20/libgcrypt20_1.8.7-6_amd64.deb"
+    ],
+    "Homepage": [
+      "https://directory.fsf.org/project/libgcrypt/"
+    ],
+    "Installed-Size": [
+      "1355"
+    ],
+    "Maintainer": [
+      "Debian GnuTLS Maintainers \u003cpkg-gnutls-maint@lists.alioth.debian.org\u003e"
+    ],
+    "Md5sum": [
+      "1d331cdb7b2cbf6a5738f4d3c0d38ac6"
+    ],
+    "Multi-Arch": [
+      "same"
+    ],
+    "Package": [
+      "libgcrypt20"
+    ],
+    "Priority": [
+      "optional"
+    ],
+    "Section": [
+      "libs"
+    ],
+    "Sha256": [
+      "7a2e0eef8e0c37f03f3a5fcf7102a2e3dc70ba987f696ab71949f9abf36f35ef"
+    ],
+    "Size": [
+      "563136"
+    ],
+    "Suggests": [
+      "rng-tools"
+    ],
+    "Tag": [
+      "role::shared-lib"
+    ],
+    "Version": [
+      "1.8.7-6"
+    ]
+  },
+  {
+    "Package": [
+      "dummy"
+    ],
+    "Version": []
+  }
+]

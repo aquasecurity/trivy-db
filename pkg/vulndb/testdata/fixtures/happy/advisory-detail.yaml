@@ -1,0 +1,9 @@
+- bucket: advisory-detail
+  pairs:
+    - bucket: CVE-2019-10906
+      pairs:
+        - bucket: "Red Hat Enterprise Linux 8"
+          pairs:
+            - key: python-jinja2
+              value:
+                FixedVersion: 2.10.1-2.el8_0

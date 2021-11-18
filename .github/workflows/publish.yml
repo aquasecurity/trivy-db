@@ -5,7 +5,8 @@ on:
     - cron: '0 */12 * * *'
   workflow_dispatch:
 env:
-  ALIAS: aquasecurity
+  ALIAS_AWS: aquasecurity
+  ALIAS_DOCKER: aquasec
   REP: trivy-db
 jobs:
   publish:
@@ -60,10 +61,10 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USER }}/${{ env.REP }}:${{ steps.date_version.outputs.version }}
-            public.ecr.aws/${{ env.ALIAS }}/${{ env.REP }}:${{ steps.date_version.outputs.version }}
-            ${{ secrets.DOCKERHUB_USER }}/${{ env.REP }}:latest
-            public.ecr.aws/${{ env.ALIAS }}/${{ env.REP }}:latest
+            ${{ env.ALIAS_DOCKER }}/${{ env.REP }}:${{ steps.date_version.outputs.version }}
+            public.ecr.aws/${{ env.ALIAS_AWS }}/${{ env.REP }}:${{ steps.date_version.outputs.version }}
+            ${{ env.ALIAS_DOCKER }}/${{ env.REP }}:latest
+            public.ecr.aws/${{ env.ALIAS_AWS }}/${{ env.REP }}:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 

@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/google/go-github/v28/github"
+	"github.com/google/go-github/v38/github"
 	"k8s.io/utils/clock"
 	ct "k8s.io/utils/clock/testing"
 

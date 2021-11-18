@@ -1,11 +1,11 @@
 package pkg
 
 import (
-	"strings"
+	"github.com/urfave/cli"
+	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc"
-	"github.com/urfave/cli"
+	"github.com/aquasecurity/trivy-db/pkg/vulndb"
 )
 
 func build(c *cli.Context) error {
@@ -14,13 +14,18 @@ func build(c *cli.Context) error {
 		return err
 	}
 
-	targets := c.String("only-update")
+	targets := c.StringSlice("only-update")
 	light := c.Bool("light")
 	updateInterval := c.Duration("update-interval")
 
-	updater := vulnsrc.NewUpdater(cacheDir, light, updateInterval)
-	if err := updater.Update(strings.Split(targets, ",")); err != nil {
-		return err
+	dbType := db.TypeFull
+	if light {
+		dbType = db.TypeLight
+	}
+
+	vdb := vulndb.New(dbType, cacheDir, updateInterval)
+	if err := vdb.Build(targets); err != nil {
+		return xerrors.Errorf("build error: %w", err)
 	}
 
 	return nil
