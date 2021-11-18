@@ -121,16 +121,16 @@ func (vs VulnSrc) storeRepositoryCPEMapping() error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return xerrors.Errorf("the API (%s) returns %d", mappingURL, resp.StatusCode)
+		return xerrors.Errorf("Red Hat API (%s) returns %d", mappingURL, resp.StatusCode)
 	}
 
-	var repositoryToCPE repositoryToCPE
-	if err = json.NewDecoder(resp.Body).Decode(&repositoryToCPE); err != nil {
+	var repoToCPE repositoryToCPE
+	if err = json.NewDecoder(resp.Body).Decode(&repoToCPE); err != nil {
 		return xerrors.Errorf("JSON parse error: %w", err)
 	}
 
 	return vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		for repo, cpes := range repositoryToCPE.Data {
+		for repo, cpes := range repoToCPE.Data {
 			if err = vs.dbc.PutRedHatCPEs(tx, repo, cpes.Cpes); err != nil {
 				return err
 			}
@@ -239,7 +239,7 @@ func filterAdvisoriesByCPEs(vulnID string, raw []byte, cpes []string) ([]types.A
 		if utils.HasIntersection(cpes, def.AffectedCPEList) {
 			advisories = append(advisories, types.Advisory{
 				VulnerabilityID: vulnID,
-				VendorID:        def.AdvisoryID,
+				VendorIDs:       []string{def.AdvisoryID},
 				FixedVersion:    def.FixedVersion,
 			})
 		}

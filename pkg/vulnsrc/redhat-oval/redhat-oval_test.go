@@ -1,7 +1,6 @@
 package redhatoval
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -234,10 +233,7 @@ func TestVulnSrc_Update(t *testing.T) {
 
 			assert.NoError(t, err)
 			for _, w := range tc.wants {
-				b, err := json.Marshal(w.value)
-				require.NoError(t, err)
-
-				dbtest.JSONEq(t, db.Path(dir), w.key, string(b))
+				dbtest.JSONEq(t, db.Path(dir), w.key, w.value)
 			}
 		})
 	}
@@ -267,7 +263,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			want: []types.Advisory{
 				{
 					VulnerabilityID: "CVE-2020-8624",
-					VendorID:        "RHSA-2020:4500",
+					VendorIDs:       []string{"RHSA-2020:4500"},
 					FixedVersion:    "32:9.11.20-5.el8",
 				},
 			},
@@ -337,8 +333,7 @@ func TestVulnSrc_Get(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dir := dbtest.InitDB(t, tt.fixtureFiles)
-			require.NoError(t, db.Init(dir))
+			_ = dbtest.InitDB(t, tt.fixtureFiles)
 			defer db.Close()
 
 			vs := NewVulnSrc()
