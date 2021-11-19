@@ -14,6 +14,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/photon"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/python"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat"
@@ -60,5 +61,8 @@ var (
 		ghsa.NewVulnSrc(ghsa.Rubygems),
 		glad.NewVulnSrc(),
 		govulndb.NewVulnSrc(),
+		osv.NewVulnSrc(osv.Python),
+		osv.NewVulnSrc(osv.Go),
+		osv.NewVulnSrc(osv.Rust),
 	}
 )
