@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
-	"strings"
 	"time"
 
 	bolt "go.etcd.io/bbolt"
@@ -19,9 +18,8 @@ import (
 )
 
 const (
-	osvDir           = "osv"
-	datasourceFormat = "osv-%s"
-	platformFormat   = "Osv Security Advisories %s"
+	osvDir         = "osv"
+	platformFormat = "Osv Security Advisories %s"
 
 	//ecosystem names
 	Python = "PyPI"
@@ -29,15 +27,15 @@ const (
 	Rust   = "crates.io"
 )
 
-var defaultEcosystem = []ecosystem{
-	{name: Python, dir: "python", eventType: "ECOSYSTEM", firstVersion: "0"},
-	{name: Go, dir: "go", eventType: "SEMVER", firstVersion: "0"},
-	{name: Rust, dir: "rust", eventType: "SEMVER", firstVersion: "0.0.0-0"},
+var defaultEcosystems = map[string]ecosystem{
+	Python: {dir: "python", dataSource: vulnerability.OsvPyPI, eventType: "ECOSYSTEM", firstVersion: "0"},
+	Go:     {dir: "go", dataSource: vulnerability.OsvGo, eventType: "SEMVER", firstVersion: "0"},
+	Rust:   {dir: "rust", dataSource: vulnerability.OsvCratesio, eventType: "SEMVER", firstVersion: "0.0.0-0"},
 }
 
 type ecosystem struct {
-	name         string
 	dir          string
+	dataSource   string
 	eventType    string
 	firstVersion string
 }
@@ -48,7 +46,7 @@ type VulnSrc struct {
 }
 
 func NewVulnSrc(ecosystemName string) VulnSrc {
-	ecosystem := getEcoSystem(ecosystemName)
+	ecosystem := defaultEcosystems[ecosystemName]
 	return VulnSrc{
 		ecosystem: ecosystem,
 		dbc:       db.Config{},
@@ -56,13 +54,10 @@ func NewVulnSrc(ecosystemName string) VulnSrc {
 }
 
 func (vs VulnSrc) Name() string {
-	switch vs.ecosystem.name {
-	case "PyPI":
-		return vulnerability.OsvPyPI
-	case "Go":
-		return vulnerability.OsvGo
-	case "crates.io":
-		return vulnerability.OsvCratesio
+	for name, ecosystem := range defaultEcosystems {
+		if ecosystem.dataSource == vs.ecosystem.dataSource {
+			return name
+		}
 	}
 	return ""
 }
@@ -147,7 +142,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, osvs []vtypes.OsvJson) error {
 				PatchedVersions:    patchedVersions,
 			}
 
-			if err := vs.dbc.PutAdvisoryDetail(tx, vulnId, fmt.Sprintf(platformFormat, vs.ecosystem.name), affected.Package.Name, advisory); err != nil {
+			if err := vs.dbc.PutAdvisoryDetail(tx, vulnId, fmt.Sprintf(platformFormat, vs.Name()), affected.Package.Name, advisory); err != nil {
 				return xerrors.Errorf("failed to save osv advisory: %w", err)
 			}
 
@@ -159,13 +154,13 @@ func (vs VulnSrc) commit(tx *bolt.Tx, osvs []vtypes.OsvJson) error {
 			vuln := types.VulnerabilityDetail{
 				ID:               vulnId,
 				Description:      osv.Details,
-				PublishedDate:    MustParse(time.RFC3339, osv.Published),
-				LastModifiedDate: MustParse(time.RFC3339Nano, osv.Modified),
+				PublishedDate:    mustParse(time.RFC3339, osv.Published),
+				LastModifiedDate: mustParse(time.RFC3339Nano, osv.Modified),
 				Title:            osv.Id,
 				References:       references,
 			}
 
-			if err := vs.dbc.PutVulnerabilityDetail(tx, vulnId, fmt.Sprintf(datasourceFormat, strings.ToLower(vs.ecosystem.name)), vuln); err != nil {
+			if err := vs.dbc.PutVulnerabilityDetail(tx, vulnId, vs.ecosystem.dataSource, vuln); err != nil {
 				return xerrors.Errorf("failed to save osv vulnerability: %w", err)
 			}
 
@@ -178,32 +173,14 @@ func (vs VulnSrc) commit(tx *bolt.Tx, osvs []vtypes.OsvJson) error {
 	return nil
 }
 
-func getEcoSystem(ecosystemName string) ecosystem {
-	for _, system := range defaultEcosystem {
-		if system.name == ecosystemName {
-			return system
-		}
-	}
-	return ecosystem{}
-}
-
 func (vs VulnSrc) Get(pkgName string) ([]types.Advisory, error) {
-	bucket := fmt.Sprintf(platformFormat, vs.ecosystem.name)
-	advisories, err := vs.dbc.ForEachAdvisory(bucket, pkgName)
+	bucket := fmt.Sprintf(platformFormat, vs.Name())
+	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to iterate Osv: %w", err)
+		return nil, xerrors.Errorf("failed to get Osv advisories: %w", err)
 	}
+	return advisories, nil
 
-	var results []types.Advisory
-	for vulnID, a := range advisories {
-		var advisory types.Advisory
-		if err = json.Unmarshal(a, &advisory); err != nil {
-			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
-		}
-		advisory.VulnerabilityID = vulnID
-		results = append(results, advisory)
-	}
-	return results, nil
 }
 
 func getVulnId(osv *vtypes.OsvJson) string {
@@ -214,7 +191,7 @@ func getVulnId(osv *vtypes.OsvJson) string {
 	}
 }
 
-func MustParse(layout, value string) *time.Time {
+func mustParse(layout, value string) *time.Time {
 	t, err := time.Parse(layout, value)
 	if err != nil {
 		return nil

@@ -1,7 +1,6 @@
 package osv
 
 import (
-	"errors"
 	"path/filepath"
 	"testing"
 	"time"
@@ -27,7 +26,7 @@ func TestOsv(t *testing.T) {
 		wantErr   string
 	}{
 		{
-			name:      "single range version and references PyPI",
+			name:      `"versions" and "references" have single range (PyPI)`,
 			ecosystem: "PyPI",
 			dir:       filepath.Join("testdata", "singlerange"),
 			wantValue: []want{
@@ -43,8 +42,8 @@ func TestOsv(t *testing.T) {
 					valueVulnerability: types.VulnerabilityDetail{
 						ID:               "CVE-2018-10895",
 						Description:      "qutebrowser before version 1.4.1 is vulnerable to a cross-site request forgery flaw that allows websites to access 'qute://*' URLs. A malicious website could exploit this to load a 'qute://settings/set' URL, which then sets 'editor.command' to a bash script, resulting in arbitrary code execution.",
-						PublishedDate:    MustParse(time.RFC3339, "2018-07-12T12:29:00Z"),
-						LastModifiedDate: MustParse(time.RFC3339Nano, "2021-06-10T06:51:37.378319Z"),
+						PublishedDate:    mustParse(time.RFC3339, "2018-07-12T12:29:00Z"),
+						LastModifiedDate: mustParse(time.RFC3339Nano, "2021-06-10T06:51:37.378319Z"),
 						Title:            "PYSEC-2018-27",
 						References:       []string{"https://github.com/qutebrowser/qutebrowser/commit/43e58ac865ff862c2008c510fc5f7627e10b4660"},
 					},
@@ -52,7 +51,7 @@ func TestOsv(t *testing.T) {
 			},
 		},
 		{
-			name:      "single range version and references Go",
+			name:      `"versions" and "references" have single range (Go)`,
 			ecosystem: "Go",
 			dir:       filepath.Join("testdata", "singlerange"),
 			wantValue: []want{
@@ -68,8 +67,8 @@ func TestOsv(t *testing.T) {
 					valueVulnerability: types.VulnerabilityDetail{
 						ID:               "CVE-2017-18367",
 						Description:      "Filters containing rules with multiple syscall arguments are improperly\nconstructed, such that all arguments are required to match rather than\nany of the arguments (AND is used rather than OR). These filters can be\nbypassed by only specifying a subset of the arguments due to this\nbehavior.\n",
-						PublishedDate:    MustParse(time.RFC3339, "2021-04-14T12:00:00Z"),
-						LastModifiedDate: MustParse(time.RFC3339Nano, "2021-04-14T12:00:00Z"),
+						PublishedDate:    mustParse(time.RFC3339, "2021-04-14T12:00:00Z"),
+						LastModifiedDate: mustParse(time.RFC3339Nano, "2021-04-14T12:00:00Z"),
 						Title:            "GO-2020-0007",
 						References:       []string{"https://github.com/seccomp/libseccomp-golang/commit/06e7a29f36a34b8cf419aeb87b979ee508e58f9e"},
 					},
@@ -77,7 +76,7 @@ func TestOsv(t *testing.T) {
 			},
 		},
 		{
-			name:      "single range version and references crates.io",
+			name:      `"versions" and "references" have single range (crates.io)`,
 			ecosystem: "crates.io",
 			dir:       filepath.Join("testdata", "singlerange"),
 			wantValue: []want{
@@ -93,8 +92,8 @@ func TestOsv(t *testing.T) {
 					valueVulnerability: types.VulnerabilityDetail{
 						ID:               "CVE-2020-36214",
 						Description:      "Affected versions of this crate unconditionally implemented `Send` for types used in queue implementations (`InnerSend\u003cRW, T\u003e`, `InnerRecv\u003cRW, T\u003e`, `FutInnerSend\u003cRW, T\u003e`, `FutInnerRecv\u003cRW, T\u003e`).\n\nThis allows users to send non-Send types to other threads, which can lead to data race bugs or other undefined behavior.\n\nThe flaw was corrected in v0.1.7 by adding `T: Send` bound to to the `Send` impl of four data types explained above.",
-						PublishedDate:    MustParse(time.RFC3339, "2020-12-19T12:00:00Z"),
-						LastModifiedDate: MustParse(time.RFC3339Nano, "2021-10-19T22:14:35Z"),
+						PublishedDate:    mustParse(time.RFC3339, "2020-12-19T12:00:00Z"),
+						LastModifiedDate: mustParse(time.RFC3339Nano, "2021-10-19T22:14:35Z"),
 						Title:            "RUSTSEC-2020-0106",
 						References:       []string{"https://crates.io/crates/multiqueue2"},
 					},
@@ -102,7 +101,7 @@ func TestOsv(t *testing.T) {
 			},
 		},
 		{
-			name:      "no introduced, have versions PyPI",
+			name:      `"introduced" is empty, "versions" is full (PyPI)"`,
 			ecosystem: "PyPI",
 			dir:       filepath.Join("testdata", "nointroduced"),
 			wantValue: []want{
@@ -116,7 +115,7 @@ func TestOsv(t *testing.T) {
 			},
 		},
 		{
-			name:      "no introduced, no versions crates.io",
+			name:      `"introduced" is empty, "versions" is empty (crates.io)"`,
 			ecosystem: "crates.io",
 			dir:       filepath.Join("testdata", "nointroduced"),
 			wantValue: []want{
@@ -130,7 +129,7 @@ func TestOsv(t *testing.T) {
 			},
 		},
 		{
-			name:      "multi range version and references PyPI",
+			name:      `"versions" and "references" have multiply ranges (PyPI)`,
 			ecosystem: "PyPI",
 			dir:       filepath.Join("testdata", "multirange"),
 			wantValue: []want{
@@ -146,8 +145,8 @@ func TestOsv(t *testing.T) {
 					valueVulnerability: types.VulnerabilityDetail{
 						ID:               "CVE-2021-33571",
 						Description:      "In Django 2.2 before 2.2.24, 3.x before 3.1.12, and 3.2 before 3.2.4, URLValidator, validate_ipv4_address, and validate_ipv46_address do not prohibit leading zero characters in octal literals. This may allow a bypass of access control that is based on IP addresses. (validate_ipv4_address and validate_ipv46_address are unaffected with Python 3.9.5+..) .",
-						PublishedDate:    MustParse(time.RFC3339, "2021-06-08T18:15:00Z"),
-						LastModifiedDate: MustParse(time.RFC3339Nano, "2021-06-22T04:54:55.488063Z"),
+						PublishedDate:    mustParse(time.RFC3339, "2021-06-08T18:15:00Z"),
+						LastModifiedDate: mustParse(time.RFC3339Nano, "2021-06-22T04:54:55.488063Z"),
 						Title:            "PYSEC-2021-99",
 						References: []string{
 							"https://groups.google.com/g/django-announce/c/sPyjSKMi8Eo",
@@ -159,7 +158,7 @@ func TestOsv(t *testing.T) {
 			},
 		},
 		{
-			name:      "multi range version and references Go",
+			name:      `"versions" and "references" have multi ranges (Go)`,
 			ecosystem: "Go",
 			dir:       filepath.Join("testdata", "multirange"),
 			wantValue: []want{
@@ -175,8 +174,8 @@ func TestOsv(t *testing.T) {
 					valueVulnerability: types.VulnerabilityDetail{
 						ID:               "CVE-2020-28362",
 						Description:      "A number of math/big.Int methods can panic when provided large inputs due\nto a flawed division method.\n",
-						PublishedDate:    MustParse(time.RFC3339, "2021-04-14T12:00:00Z"),
-						LastModifiedDate: MustParse(time.RFC3339Nano, "2021-04-14T12:00:00Z"),
+						PublishedDate:    mustParse(time.RFC3339, "2021-04-14T12:00:00Z"),
+						LastModifiedDate: mustParse(time.RFC3339Nano, "2021-04-14T12:00:00Z"),
 						Title:            "GO-2021-0069",
 						References: []string{
 							"https://go-review.googlesource.com/c/go/+/269657",
@@ -188,7 +187,7 @@ func TestOsv(t *testing.T) {
 			},
 		},
 		{
-			name:      "multi range version and references crates.io",
+			name:      `"versions" and "references" have multi ranges (crates.io)`,
 			ecosystem: "crates.io",
 			dir:       filepath.Join("testdata", "multirange"),
 			wantValue: []want{
@@ -204,8 +203,8 @@ func TestOsv(t *testing.T) {
 					valueVulnerability: types.VulnerabilityDetail{
 						ID:               "CVE-2017-18587",
 						Description:      "Serializing of headers to the socket did not filter the values for newline bytes (`\\r` or `\\n`),\nwhich allowed for header values to split a request or response. People would not likely include\nnewlines in the headers in their own applications, so the way for most people to exploit this\nis if an application constructs headers based on unsanitized user input.\n\nThis issue was fixed by replacing all newline characters with a space during serialization of\na header value.",
-						PublishedDate:    MustParse(time.RFC3339, "2017-01-23T12:00:00Z"),
-						LastModifiedDate: MustParse(time.RFC3339Nano, "2021-10-19T22:14:35Z"),
+						PublishedDate:    mustParse(time.RFC3339, "2017-01-23T12:00:00Z"),
+						LastModifiedDate: mustParse(time.RFC3339Nano, "2021-10-19T22:14:35Z"),
 						Title:            "RUSTSEC-2017-0002",
 						References: []string{
 							"https://crates.io/crates/hyper",
@@ -217,7 +216,7 @@ func TestOsv(t *testing.T) {
 			},
 		},
 		{
-			name:      "some fixed successively Go",
+			name:      `some "fixed" successively (Go)`,
 			ecosystem: "Go",
 			dir:       filepath.Join("testdata", "somefixedsuccessively"),
 			wantValue: []want{
@@ -231,7 +230,7 @@ func TestOsv(t *testing.T) {
 			},
 		},
 		{
-			name:      "some package in file",
+			name:      `some "package" in file (Go)`,
 			ecosystem: "Go",
 			dir:       filepath.Join("testdata", "somepackages"),
 			wantValue: []want{
@@ -254,8 +253,8 @@ func TestOsv(t *testing.T) {
 					valueVulnerability: types.VulnerabilityDetail{
 						ID:               "GO-2020-0024",
 						Description:      "The RemoteAddr and LocalAddr methods on the returned net.Conn may\ncall themselves, leading to an infinite loop which will crash the\nprogram due to a stack overflow.\n",
-						PublishedDate:    MustParse(time.RFC3339, "2021-04-14T12:00:00Z"),
-						LastModifiedDate: MustParse(time.RFC3339Nano, "2021-04-14T12:00:00Z"),
+						PublishedDate:    mustParse(time.RFC3339, "2021-04-14T12:00:00Z"),
+						LastModifiedDate: mustParse(time.RFC3339Nano, "2021-04-14T12:00:00Z"),
 						Title:            "GO-2020-0024",
 						References: []string{
 							"https://github.com/btcsuite/go-socks/commit/233bccbb1abe02f05750f7ace66f5bffdb13defc",
@@ -327,126 +326,89 @@ func TestOsv(t *testing.T) {
 		})
 	}
 }
-
 func TestGetVuln(t *testing.T) {
 	type args struct {
-		release string
-		pkgName string
+		ecosystemName string
+		pkgName       string
 	}
 	tests := []struct {
-		name                       string
-		args                       args
-		ecosystem                  ecosystem
-		forEachAdvisoryExpectation db.OperationForEachAdvisoryExpectation
-		want                       []types.Advisory
-		wantErr                    string
+		name     string
+		fixtures []string
+		args     args
+		want     []types.Advisory
+		wantErr  string
 	}{
 		{
-			name:      "happy path PyPI",
-			ecosystem: getEcoSystem(Python),
+			name:     "happy path (PyPI)",
+			fixtures: []string{"testdata/fixtures/osv.yaml"},
 			args: args{
-				release: "Osv Security Advisories PyPI",
-				pkgName: "qutebrowser",
-			},
-			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
-				Args: db.OperationForEachAdvisoryArgs{
-					Source:  "Osv Security Advisories PyPI",
-					PkgName: "qutebrowser",
-				},
-				Returns: db.OperationForEachAdvisoryReturns{
-					Value: map[string][]byte{
-						"CVE-2018-10895": []byte(`{"VulnerableVersions": ["\u003e=0 \u003c1.4.1"], "PatchedVersions": ["1.4.1"]}`),
-					},
-				},
+				ecosystemName: Python,
+				pkgName:       "bikeshed",
 			},
 			want: []types.Advisory{
 				{
-					VulnerabilityID:    "CVE-2018-10895",
-					PatchedVersions:    []string{"1.4.1"},
-					VulnerableVersions: []string{"\u003e=0 \u003c1.4.1"},
+					VulnerabilityID:    "CVE-2021-23422",
+					PatchedVersions:    []string{"3.0.0"},
+					VulnerableVersions: []string{">=0 <3.0.0"},
 				},
 			},
 		},
 		{
-			name:      "happy path Go",
-			ecosystem: getEcoSystem(Go),
+			name:     "happy path (Go)",
+			fixtures: []string{"testdata/fixtures/osv.yaml"},
 			args: args{
-				release: "Osv Security Advisories Go",
-				pkgName: "math/big",
-			},
-			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
-				Args: db.OperationForEachAdvisoryArgs{
-					Source:  "Osv Security Advisories Go",
-					PkgName: "math/big",
-				},
-				Returns: db.OperationForEachAdvisoryReturns{
-					Value: map[string][]byte{
-						"CVE-2020-28362": []byte(`{"VulnerableVersions": ["\u003e=1.14 \u003c1.14.12", "\u003e=1.15 \u003c1.15.5"], "PatchedVersions": ["1.14.12", "1.15.5"]}`),
-					},
-				},
+				ecosystemName: Go,
+				pkgName:       "github.com/evanphx/json-patch",
 			},
 			want: []types.Advisory{
 				{
-					VulnerabilityID:    "CVE-2020-28362",
-					PatchedVersions:    []string{"1.14.12", "1.15.5"},
-					VulnerableVersions: []string{"\u003e=1.14 \u003c1.14.12", "\u003e=1.15 \u003c1.15.5"},
+					VulnerabilityID:    "CVE-2018-14632",
+					PatchedVersions:    []string{"0.5.2"},
+					VulnerableVersions: []string{">=0 <0.5.2"},
 				},
 			},
 		},
 		{
-			name:      "happy path crates.io",
-			ecosystem: getEcoSystem(Rust),
+			name:     "happy path (crates.io)",
+			fixtures: []string{"testdata/fixtures/osv.yaml"},
 			args: args{
-				release: "Osv Security Advisories crates.io",
-				pkgName: "multiqueue2",
-			},
-			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
-				Args: db.OperationForEachAdvisoryArgs{
-					Source:  "Osv Security Advisories crates.io",
-					PkgName: "multiqueue2",
-				},
-				Returns: db.OperationForEachAdvisoryReturns{
-					Value: map[string][]byte{
-						"CVE-2020-36214": []byte(`{"VulnerableVersions": ["\u003e=0.0.0-0 \u003c0.1.7"], "PatchedVersions": ["0.1.7"]}`),
-					},
-				},
+				ecosystemName: Rust,
+				pkgName:       "internment",
 			},
 			want: []types.Advisory{
 				{
-					VulnerabilityID:    "CVE-2020-36214",
-					PatchedVersions:    []string{"0.1.7"},
-					VulnerableVersions: []string{"\u003e=0.0.0-0 \u003c0.1.7"},
+					VulnerabilityID:    "CVE-2020-35874",
+					PatchedVersions:    []string{"0.4.0"},
+					VulnerableVersions: []string{">=0.3.12 <0.4.0"},
 				},
 			},
 		},
 		{
-			name:      "GetAdvisories returns an error",
-			ecosystem: getEcoSystem(Python),
+			name:     "miss path",
+			fixtures: []string{"testdata/fixtures/osv.yaml"},
 			args: args{
-				release: "qutebrowser",
-				pkgName: "1.4.1",
+				ecosystemName: Python,
+				pkgName:       "internment",
 			},
-			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
-				Args: db.OperationForEachAdvisoryArgs{
-					Source:  "Osv Security Advisories PyPI",
-					PkgName: "1.4.1",
-				},
-				Returns: db.OperationForEachAdvisoryReturns{
-					Err: errors.New("error"),
-				},
+			want: nil,
+		},
+		{
+			name:     "broken bucket",
+			fixtures: []string{"testdata/fixtures/invalid-type.yaml"},
+			args: args{
+				ecosystemName: Python,
+				pkgName:       "bikeshed",
 			},
-			wantErr: "failed to iterate Osv",
+			wantErr: "failed to get Osv advisories",
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyForEachAdvisoryExpectation(tt.forEachAdvisoryExpectation)
+			_ = dbtest.InitTestDB(t, tt.fixtures)
+			defer db.Close()
 
-			vs := VulnSrc{
-				dbc:       mockDBConfig,
-				ecosystem: tt.ecosystem,
-			}
+			vs := NewVulnSrc(tt.args.ecosystemName)
 			got, err := vs.Get(tt.args.pkgName)
 			if tt.wantErr != "" {
 				require.NotNil(t, err, tt.name)
