@@ -19,7 +19,7 @@ import (
 
 const (
 	osvDir         = "osv"
-	platformFormat = "Osv Security Advisories %s"
+	platformFormat = "%s::Osv Security Advisories"
 
 	//ecosystem names
 	Python = "PyPI"
@@ -28,9 +28,9 @@ const (
 )
 
 var defaultEcosystems = map[string]ecosystem{
-	Python: {dir: "python", dataSource: vulnerability.OsvPyPI, eventType: "ECOSYSTEM", firstVersion: "0"},
-	Go:     {dir: "go", dataSource: vulnerability.OsvGo, eventType: "SEMVER", firstVersion: "0"},
-	Rust:   {dir: "rust", dataSource: vulnerability.OsvCratesio, eventType: "SEMVER", firstVersion: "0.0.0-0"},
+	Python: {dir: "python", dataSource: vulnerability.Pip, eventType: "ECOSYSTEM", firstVersion: "0"},
+	Go:     {dir: "go", dataSource: vulnerability.Go, eventType: "SEMVER", firstVersion: "0"},
+	Rust:   {dir: "rust", dataSource: vulnerability.Cargo, eventType: "SEMVER", firstVersion: "0.0.0-0"},
 }
 
 type ecosystem struct {
@@ -112,14 +112,16 @@ func (vs VulnSrc) commit(tx *bolt.Tx, osvs []vtypes.OsvJson) error {
 			for _, rng := range affected.Ranges {
 				if rng.Type == vs.ecosystem.eventType {
 					var vulnerableVersion string
+					writeVuln := false //flag for write vuln in array
 
 					for _, event := range rng.Events {
 						if event.Fixed != "" && event.Introduced != "" { //fixed and introduced in 1 struct
 							patchedVersions = append(patchedVersions, event.Fixed)
 							vulnerableVersions = append(vulnerableVersions, fmt.Sprintf(">=%s <%s", event.Introduced, event.Fixed))
 						} else if event.Introduced != "" {
-							if vulnerableVersion != "" {
+							if vulnerableVersion != "" && writeVuln {
 								vulnerableVersions = append(vulnerableVersions, vulnerableVersion)
+								writeVuln = false
 							}
 							vulnerableVersion = fmt.Sprintf(">=%s", event.Introduced)
 						} else if event.Fixed != "" {
@@ -129,9 +131,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, osvs []vtypes.OsvJson) error {
 								vulnerableVersion = fmt.Sprintf(">=%s <%s", firstVersion, event.Fixed)
 							}
 							patchedVersions = append(patchedVersions, event.Fixed)
+							writeVuln = true
 						}
 					}
-					if vulnerableVersion != "" {
+					if vulnerableVersion != "" && writeVuln {
 						vulnerableVersions = append(vulnerableVersions, vulnerableVersion)
 					}
 				}
@@ -142,7 +145,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, osvs []vtypes.OsvJson) error {
 				PatchedVersions:    patchedVersions,
 			}
 
-			if err := vs.dbc.PutAdvisoryDetail(tx, vulnId, fmt.Sprintf(platformFormat, vs.Name()), affected.Package.Name, advisory); err != nil {
+			if err := vs.dbc.PutAdvisoryDetail(tx, vulnId, fmt.Sprintf(platformFormat, vs.ecosystem.dataSource), affected.Package.Name, advisory); err != nil {
 				return xerrors.Errorf("failed to save osv advisory: %w", err)
 			}
 
@@ -180,7 +183,6 @@ func (vs VulnSrc) Get(pkgName string) ([]types.Advisory, error) {
 		return nil, xerrors.Errorf("failed to get Osv advisories: %w", err)
 	}
 	return advisories, nil
-
 }
 
 func getVulnId(osv *vtypes.OsvJson) string {

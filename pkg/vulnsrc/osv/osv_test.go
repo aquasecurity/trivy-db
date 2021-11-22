@@ -31,14 +31,14 @@ func TestOsv(t *testing.T) {
 			dir:       filepath.Join("testdata", "singlerange"),
 			wantValue: []want{
 				{
-					key: []string{"advisory-detail", "CVE-2018-10895", "Osv Security Advisories PyPI", "qutebrowser"},
+					key: []string{"advisory-detail", "CVE-2018-10895", "pip::Osv Security Advisories", "qutebrowser"},
 					valueAdvisory: types.Advisory{
 						VulnerableVersions: []string{">=0 <1.4.1"},
 						PatchedVersions:    []string{"1.4.1"},
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "CVE-2018-10895", "osv-pypi"},
+					key: []string{"vulnerability-detail", "CVE-2018-10895", "pip"},
 					valueVulnerability: types.VulnerabilityDetail{
 						ID:               "CVE-2018-10895",
 						Description:      "qutebrowser before version 1.4.1 is vulnerable to a cross-site request forgery flaw that allows websites to access 'qute://*' URLs. A malicious website could exploit this to load a 'qute://settings/set' URL, which then sets 'editor.command' to a bash script, resulting in arbitrary code execution.",
@@ -56,14 +56,14 @@ func TestOsv(t *testing.T) {
 			dir:       filepath.Join("testdata", "singlerange"),
 			wantValue: []want{
 				{
-					key: []string{"advisory-detail", "CVE-2017-18367", "Osv Security Advisories Go", "github.com/seccomp/libseccomp-golang"},
+					key: []string{"advisory-detail", "CVE-2017-18367", "go::Osv Security Advisories", "github.com/seccomp/libseccomp-golang"},
 					valueAdvisory: types.Advisory{
 						VulnerableVersions: []string{">=0 <0.9.1-0.20170424173420-06e7a29f36a3"},
 						PatchedVersions:    []string{"0.9.1-0.20170424173420-06e7a29f36a3"},
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "CVE-2017-18367", "osv-go"},
+					key: []string{"vulnerability-detail", "CVE-2017-18367", "go"},
 					valueVulnerability: types.VulnerabilityDetail{
 						ID:               "CVE-2017-18367",
 						Description:      "Filters containing rules with multiple syscall arguments are improperly\nconstructed, such that all arguments are required to match rather than\nany of the arguments (AND is used rather than OR). These filters can be\nbypassed by only specifying a subset of the arguments due to this\nbehavior.\n",
@@ -81,14 +81,14 @@ func TestOsv(t *testing.T) {
 			dir:       filepath.Join("testdata", "singlerange"),
 			wantValue: []want{
 				{
-					key: []string{"advisory-detail", "CVE-2020-36214", "Osv Security Advisories crates.io", "multiqueue2"},
+					key: []string{"advisory-detail", "CVE-2020-36214", "cargo::Osv Security Advisories", "multiqueue2"},
 					valueAdvisory: types.Advisory{
 						VulnerableVersions: []string{">=0.0.0-0 <0.1.7"},
 						PatchedVersions:    []string{"0.1.7"},
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "CVE-2020-36214", "osv-crates.io"},
+					key: []string{"vulnerability-detail", "CVE-2020-36214", "cargo"},
 					valueVulnerability: types.VulnerabilityDetail{
 						ID:               "CVE-2020-36214",
 						Description:      "Affected versions of this crate unconditionally implemented `Send` for types used in queue implementations (`InnerSend\u003cRW, T\u003e`, `InnerRecv\u003cRW, T\u003e`, `FutInnerSend\u003cRW, T\u003e`, `FutInnerRecv\u003cRW, T\u003e`).\n\nThis allows users to send non-Send types to other threads, which can lead to data race bugs or other undefined behavior.\n\nThe flaw was corrected in v0.1.7 by adding `T: Send` bound to to the `Send` impl of four data types explained above.",
@@ -106,7 +106,7 @@ func TestOsv(t *testing.T) {
 			dir:       filepath.Join("testdata", "nointroduced"),
 			wantValue: []want{
 				{
-					key: []string{"advisory-detail", "CVE-2010-2970", "Osv Security Advisories PyPI", "moin"},
+					key: []string{"advisory-detail", "CVE-2010-2970", "pip::Osv Security Advisories", "moin"},
 					valueAdvisory: types.Advisory{
 						VulnerableVersions: []string{">=1.9.0 <1.9.3"},
 						PatchedVersions:    []string{"1.9.3"},
@@ -120,7 +120,7 @@ func TestOsv(t *testing.T) {
 			dir:       filepath.Join("testdata", "nointroduced"),
 			wantValue: []want{
 				{
-					key: []string{"advisory-detail", "CVE-2019-15554", "Osv Security Advisories crates.io", "smallvec"},
+					key: []string{"advisory-detail", "CVE-2019-15554", "cargo::Osv Security Advisories", "smallvec"},
 					valueAdvisory: types.Advisory{
 						VulnerableVersions: []string{">=0.0.0-0 <0.6.10"},
 						PatchedVersions:    []string{"0.6.10"},
@@ -134,14 +134,14 @@ func TestOsv(t *testing.T) {
 			dir:       filepath.Join("testdata", "multirange"),
 			wantValue: []want{
 				{
-					key: []string{"advisory-detail", "CVE-2021-33571", "Osv Security Advisories PyPI", "django"},
+					key: []string{"advisory-detail", "CVE-2021-33571", "pip::Osv Security Advisories", "django"},
 					valueAdvisory: types.Advisory{
 						VulnerableVersions: []string{">=2.2 <2.2.24", ">=3.0 <3.1.12", ">=3.2 <3.2.4"},
 						PatchedVersions:    []string{"2.2.24", "3.1.12", "3.2.4"},
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "CVE-2021-33571", "osv-pypi"},
+					key: []string{"vulnerability-detail", "CVE-2021-33571", "pip"},
 					valueVulnerability: types.VulnerabilityDetail{
 						ID:               "CVE-2021-33571",
 						Description:      "In Django 2.2 before 2.2.24, 3.x before 3.1.12, and 3.2 before 3.2.4, URLValidator, validate_ipv4_address, and validate_ipv46_address do not prohibit leading zero characters in octal literals. This may allow a bypass of access control that is based on IP addresses. (validate_ipv4_address and validate_ipv46_address are unaffected with Python 3.9.5+..) .",
@@ -163,14 +163,14 @@ func TestOsv(t *testing.T) {
 			dir:       filepath.Join("testdata", "multirange"),
 			wantValue: []want{
 				{
-					key: []string{"advisory-detail", "CVE-2020-28362", "Osv Security Advisories Go", "math/big"},
+					key: []string{"advisory-detail", "CVE-2020-28362", "go::Osv Security Advisories", "math/big"},
 					valueAdvisory: types.Advisory{
 						VulnerableVersions: []string{">=1.14 <1.14.12", ">=1.15 <1.15.5"},
 						PatchedVersions:    []string{"1.14.12", "1.15.5"},
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "CVE-2020-28362", "osv-go"},
+					key: []string{"vulnerability-detail", "CVE-2020-28362", "go"},
 					valueVulnerability: types.VulnerabilityDetail{
 						ID:               "CVE-2020-28362",
 						Description:      "A number of math/big.Int methods can panic when provided large inputs due\nto a flawed division method.\n",
@@ -192,14 +192,14 @@ func TestOsv(t *testing.T) {
 			dir:       filepath.Join("testdata", "multirange"),
 			wantValue: []want{
 				{
-					key: []string{"advisory-detail", "CVE-2017-18587", "Osv Security Advisories crates.io", "hyper"},
+					key: []string{"advisory-detail", "CVE-2017-18587", "cargo::Osv Security Advisories", "hyper"},
 					valueAdvisory: types.Advisory{
 						VulnerableVersions: []string{">=0.0.0-0 <0.9.18", ">=0.10.0 <0.10.2"},
 						PatchedVersions:    []string{"0.9.18", "0.10.2"},
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "CVE-2017-18587", "osv-crates.io"},
+					key: []string{"vulnerability-detail", "CVE-2017-18587", "cargo"},
 					valueVulnerability: types.VulnerabilityDetail{
 						ID:               "CVE-2017-18587",
 						Description:      "Serializing of headers to the socket did not filter the values for newline bytes (`\\r` or `\\n`),\nwhich allowed for header values to split a request or response. People would not likely include\nnewlines in the headers in their own applications, so the way for most people to exploit this\nis if an application constructs headers based on unsanitized user input.\n\nThis issue was fixed by replacing all newline characters with a space during serialization of\na header value.",
@@ -221,7 +221,7 @@ func TestOsv(t *testing.T) {
 			dir:       filepath.Join("testdata", "somefixedsuccessively"),
 			wantValue: []want{
 				{
-					key: []string{"advisory-detail", "CVE-2021-3115", "Osv Security Advisories Go", "cmd/go"},
+					key: []string{"advisory-detail", "CVE-2021-3115", "go::Osv Security Advisories", "cmd/go"},
 					valueAdvisory: types.Advisory{
 						VulnerableVersions: []string{">=0 <1.14.14 <1.15.7"},
 						PatchedVersions:    []string{"1.14.14", "1.15.7"},
@@ -235,21 +235,21 @@ func TestOsv(t *testing.T) {
 			dir:       filepath.Join("testdata", "somepackages"),
 			wantValue: []want{
 				{
-					key: []string{"advisory-detail", "GO-2020-0024", "Osv Security Advisories Go", "github.com/btcsuite/go-socks/socks"},
+					key: []string{"advisory-detail", "GO-2020-0024", "go::Osv Security Advisories", "github.com/btcsuite/go-socks/socks"},
 					valueAdvisory: types.Advisory{
 						VulnerableVersions: []string{">=0 <0.0.0-20130808000456-233bccbb1abe"},
 						PatchedVersions:    []string{"0.0.0-20130808000456-233bccbb1abe"},
 					},
 				},
 				{
-					key: []string{"advisory-detail", "GO-2020-0024", "Osv Security Advisories Go", "github.com/btcsuitereleases/go-socks/socks"},
+					key: []string{"advisory-detail", "GO-2020-0024", "go::Osv Security Advisories", "github.com/btcsuitereleases/go-socks/socks"},
 					valueAdvisory: types.Advisory{
 						VulnerableVersions: []string{">=0 <0.0.0-20130808000456-233bccbb1abe"},
 						PatchedVersions:    []string{"0.0.0-20130808000456-233bccbb1abe"},
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "GO-2020-0024", "osv-go"},
+					key: []string{"vulnerability-detail", "GO-2020-0024", "go"},
 					valueVulnerability: types.VulnerabilityDetail{
 						ID:               "GO-2020-0024",
 						Description:      "The RemoteAddr and LocalAddr methods on the returned net.Conn may\ncall themselves, leading to an infinite loop which will crash the\nprogram due to a stack overflow.\n",
@@ -269,14 +269,14 @@ func TestOsv(t *testing.T) {
 			dir:       filepath.Join("testdata", "somefiles"),
 			wantValue: []want{
 				{
-					key: []string{"advisory-detail", "CVE-2020-8564", "Osv Security Advisories Go", "k8s.io/kubernetes/pkg/credentialprovider"},
+					key: []string{"advisory-detail", "CVE-2020-8564", "go::Osv Security Advisories", "k8s.io/kubernetes/pkg/credentialprovider"},
 					valueAdvisory: types.Advisory{
 						VulnerableVersions: []string{">=0 <1.20.0-alpha.1"},
 						PatchedVersions:    []string{"1.20.0-alpha.1"},
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2018-16886", "Osv Security Advisories Go", "go.etcd.io/etcd/auth"},
+					key: []string{"advisory-detail", "CVE-2018-16886", "go::Osv Security Advisories", "go.etcd.io/etcd/auth"},
 					valueAdvisory: types.Advisory{
 						VulnerableVersions: []string{">=0 <0.5.0-alpha.5.0.20190108173120-83c051b701d3"},
 						PatchedVersions:    []string{"0.5.0-alpha.5.0.20190108173120-83c051b701d3"},
