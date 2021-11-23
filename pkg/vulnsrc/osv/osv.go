@@ -41,14 +41,14 @@ type ecosystem struct {
 }
 
 type VulnSrc struct {
-	ecosystem ecosystem
+	ecosystem *ecosystem
 	dbc       db.Operation
 }
 
 func NewVulnSrc(ecosystemName string) VulnSrc {
 	ecosystem := defaultEcosystems[ecosystemName]
 	return VulnSrc{
-		ecosystem: ecosystem,
+		ecosystem: &ecosystem,
 		dbc:       db.Config{},
 	}
 }
@@ -174,15 +174,6 @@ func (vs VulnSrc) commit(tx *bolt.Tx, osvs []vtypes.OsvJson) error {
 		}
 	}
 	return nil
-}
-
-func (vs VulnSrc) Get(pkgName string) ([]types.Advisory, error) {
-	bucket := fmt.Sprintf(platformFormat, vs.Name())
-	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to get Osv advisories: %w", err)
-	}
-	return advisories, nil
 }
 
 func getVulnId(osv *vtypes.OsvJson) string {
