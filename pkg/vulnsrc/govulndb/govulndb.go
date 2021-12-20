@@ -1,14 +1,15 @@
 package govulndb
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"path/filepath"
+	"strings"
 
 	bolt "go.etcd.io/bbolt"
+	"golang.org/x/vuln/osv"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
@@ -41,16 +42,16 @@ func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", govulndbDir)
 
 	var items []Entry
-	buffer := &bytes.Buffer{}
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-		item := Entry{}
-		if _, err := buffer.ReadFrom(r); err != nil {
-			return xerrors.Errorf("failed to read file (%s): %w", path, err)
+		var item Entry
+		if err := json.NewDecoder(r).Decode(&item); err != nil {
+			return xerrors.Errorf("JSON decode error (%s): %w", path, err)
 		}
-		if err := json.Unmarshal(buffer.Bytes(), &item); err != nil {
-			return xerrors.Errorf("JSON error (%s): %w", path, err)
+
+		// Standard libraries are not listed in go.sum, etc.
+		if item.Module == "stdlib" {
+			return nil
 		}
-		buffer.Reset()
 		items = append(items, item)
 		return nil
 	})
@@ -89,22 +90,43 @@ func (vs VulnSrc) commit(tx *bolt.Tx, item Entry) error {
 		vulnIDs = []string{item.ID}
 	}
 
-	var patchedVersions, vulnerableVersions []string
-	for _, affect := range item.Affects.Ranges {
-		// patched versions
-		patchedVersions = append(patchedVersions, affect.Fixed)
+	// Take a single affected entry
+	affected := findAffected(item.Module, item.Affected)
+	if len(affected.Ranges) == 0 {
+		return xerrors.Errorf("invalid entry: %s %s", item.ID, item.Module)
+	}
 
-		if affect.Fixed == "" {
-			continue
+	var patchedVersions, vulnerableVersions, references []string
+	for _, affects := range affected.Ranges {
+		var vulnerable string
+		for _, event := range affects.Events {
+			switch {
+			case event.Introduced != "":
+				// e.g. {"introduced": "1.2.0}, {"introduced": "2.2.0}
+				if vulnerable != "" {
+					vulnerableVersions = append(vulnerableVersions, vulnerable)
+				}
+				vulnerable = fmt.Sprintf(">=%s", event.Introduced)
+			case event.Fixed != "":
+				// patched versions
+				patchedVersions = append(patchedVersions, event.Fixed)
+
+				// e.g. {"introduced": "1.2.0}, {"fixed": "1.2.5}
+				vulnerable = fmt.Sprintf("%s, <%s", vulnerable, event.Fixed)
+			}
 		}
-
-		// vulnerable versions
-		vulnerable := fmt.Sprintf("< %s", affect.Fixed)
-		if affect.Introduced != "" {
-			vulnerable = fmt.Sprintf(">= %s, %s", affect.Introduced, vulnerable)
+		if vulnerable != "" {
+			vulnerableVersions = append(vulnerableVersions, vulnerable)
 		}
+	}
 
-		vulnerableVersions = append(vulnerableVersions, vulnerable)
+	if affected.DatabaseSpecific.URL != "" {
+		references = append(references, affected.DatabaseSpecific.URL)
+	}
+
+	// Update references
+	for _, ref := range item.References {
+		references = append(references, ref.URL)
 	}
 
 	a := types.Advisory{
@@ -112,18 +134,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, item Entry) error {
 		VulnerableVersions: vulnerableVersions,
 	}
 
+	// A module name must be filled.
 	pkgName := item.Module
-	if pkgName == "" {
-		pkgName = item.Package.Name
-	}
-
-	var references []string
-	for _, ref := range item.References {
-		references = append(references, ref.URL)
-	}
-	if item.EcosystemSpecific.URL != "" {
-		references = append(references, item.EcosystemSpecific.URL)
-	}
 
 	prefixedBucketName, _ := bucket.Name(vulnerability.Go, bucketName)
 	for _, vulnID := range vulnIDs {
@@ -133,11 +145,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, item Entry) error {
 		}
 
 		vuln := types.VulnerabilityDetail{
-			ID:               vulnID,
-			Description:      item.Details,
-			References:       references,
-			PublishedDate:    &item.Published,
-			LastModifiedDate: &item.Modified,
+			Description: item.Details,
+			References:  references,
 		}
 		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, prefixedBucketName, vuln); err != nil {
 			return xerrors.Errorf("failed to put vulnerability detail (%s): %w", vulnID, err)
@@ -149,4 +158,34 @@ func (vs VulnSrc) commit(tx *bolt.Tx, item Entry) error {
 	}
 
 	return nil
+}
+
+func findAffected(module string, affectedList []osv.Affected) osv.Affected {
+	// Multiple packages may be included in "affected".
+	// We have to select the appropriate package matching the module name
+	// because those packages may have different versioning.
+	//
+	// e.g. GO-2020-0017
+	//   module   => github.com/dgrijalva/jwt-go/v4
+	//   packages => github.com/dgrijalva/jwt-go and github.com/dgrijalva/jwt-go/v4
+	//
+	// We should ignore "github.com/dgrijalva/jwt-go" in the above case.
+	for _, a := range affectedList {
+		if a.Package.Name == module {
+			return a
+		}
+	}
+
+	// If there is no package that exactly matches the module name,
+	// we'll choose a package that contains the module name.
+	// e.g. GO-2021-0101
+	//   module  => github.com/apache/thrift
+	//   package => github.com/apache/thrift/lib/go/thrift
+	for _, a := range affectedList {
+		if strings.HasPrefix(a.Package.Name, module) {
+			return a
+		}
+	}
+
+	return osv.Affected{}
 }
