@@ -13,13 +13,13 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
-	vtypes "github.com/aquasecurity/vuln-list-update/osv"
 )
 
 const (
-	osvDir         = "osv"
-	platformFormat = "%s::Osv Security Advisories"
+	osvDir     = "osv"
+	dataSource = "Osv Security Advisories"
 
 	//ecosystem names
 	Python = "PyPI"
@@ -28,14 +28,14 @@ const (
 )
 
 var defaultEcosystems = map[string]ecosystem{
-	Python: {dir: "python", dataSource: vulnerability.Pip, eventType: "ECOSYSTEM", firstVersion: "0"},
-	Go:     {dir: "go", dataSource: vulnerability.Go, eventType: "SEMVER", firstVersion: "0"},
-	Rust:   {dir: "rust", dataSource: vulnerability.Cargo, eventType: "SEMVER", firstVersion: "0.0.0-0"},
+	Python: {dir: "python", packageType: vulnerability.Pip, eventType: "ECOSYSTEM", firstVersion: "0"},
+	Go:     {dir: "go", packageType: vulnerability.Go, eventType: "SEMVER", firstVersion: "0"},
+	Rust:   {dir: "rust", packageType: vulnerability.Cargo, eventType: "SEMVER", firstVersion: "0.0.0-0"},
 }
 
 type ecosystem struct {
 	dir          string
-	dataSource   string
+	packageType  string
 	eventType    string
 	firstVersion string
 }
@@ -55,7 +55,7 @@ func NewVulnSrc(ecosystemName string) VulnSrc {
 
 func (vs VulnSrc) Name() string {
 	for name, ecosystem := range defaultEcosystems {
-		if ecosystem.dataSource == vs.ecosystem.dataSource {
+		if ecosystem.packageType == vs.ecosystem.packageType {
 			return name
 		}
 	}
@@ -65,10 +65,10 @@ func (vs VulnSrc) Name() string {
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", osvDir, vs.ecosystem.dir)
 
-	var osvs []vtypes.OsvJson
+	var osvs []OSV
 
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-		var osv vtypes.OsvJson
+		var osv OSV
 		if err := json.NewDecoder(r).Decode(&osv); err != nil {
 			return xerrors.Errorf("failed to decode osv json (%s): %w", path, err)
 		}
@@ -86,7 +86,7 @@ func (vs VulnSrc) Update(dir string) error {
 	return nil
 }
 
-func (vs VulnSrc) save(osvs []vtypes.OsvJson) error {
+func (vs VulnSrc) save(osvs []OSV) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, osvs)
 	})
@@ -96,7 +96,7 @@ func (vs VulnSrc) save(osvs []vtypes.OsvJson) error {
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, osvs []vtypes.OsvJson) error {
+func (vs VulnSrc) commit(tx *bolt.Tx, osvs []OSV) error {
 	for _, osv := range osvs {
 		vulnId := getVulnId(&osv)
 
@@ -144,8 +144,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, osvs []vtypes.OsvJson) error {
 				VulnerableVersions: vulnerableVersions,
 				PatchedVersions:    patchedVersions,
 			}
-
-			if err := vs.dbc.PutAdvisoryDetail(tx, vulnId, fmt.Sprintf(platformFormat, vs.ecosystem.dataSource), affected.Package.Name, advisory); err != nil {
+			source, err := bucket.Name(vs.ecosystem.packageType, dataSource)
+			if err != nil {
+				return err
+			}
+			if err := vs.dbc.PutAdvisoryDetail(tx, vulnId, source, affected.Package.Name, advisory); err != nil {
 				return xerrors.Errorf("failed to save osv advisory: %w", err)
 			}
 
@@ -159,11 +162,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, osvs []vtypes.OsvJson) error {
 				Description:      osv.Details,
 				PublishedDate:    mustParse(time.RFC3339, osv.Published),
 				LastModifiedDate: mustParse(time.RFC3339Nano, osv.Modified),
-				Title:            osv.Id,
+				Title:            osv.ID,
 				References:       references,
 			}
 
-			if err := vs.dbc.PutVulnerabilityDetail(tx, vulnId, vs.ecosystem.dataSource, vuln); err != nil {
+			if err := vs.dbc.PutVulnerabilityDetail(tx, vulnId, vs.ecosystem.packageType, vuln); err != nil {
 				return xerrors.Errorf("failed to save osv vulnerability: %w", err)
 			}
 
@@ -176,9 +179,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, osvs []vtypes.OsvJson) error {
 	return nil
 }
 
-func getVulnId(osv *vtypes.OsvJson) string {
+func getVulnId(osv *OSV) string {
 	if len(osv.Aliases) == 0 {
-		return osv.Id
+		return osv.ID
 	} else {
 		return osv.Aliases[0] //CVE Id
 	}
