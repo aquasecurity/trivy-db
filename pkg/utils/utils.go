@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"io"
+	"io/fs"
 	"log"
 	"os"
 	"os/exec"
@@ -22,12 +23,16 @@ func CacheDir() string {
 }
 
 func FileWalk(root string, walkFn func(r io.Reader, path string) error) error {
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
-		}
-		if info.IsDir() {
+		} else if d.IsDir() {
 			return nil
+		}
+
+		info, err := d.Info()
+		if err != nil {
+			return xerrors.Errorf("file info error: %w", err)
 		}
 
 		if info.Size() == 0 {
