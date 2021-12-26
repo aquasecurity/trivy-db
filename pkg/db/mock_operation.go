@@ -535,16 +535,16 @@ func (_m *MockOperation) GetVulnerabilityDetail(cveID string) (map[string]types.
 }
 
 type OperationPutAdvisoryDetailArgs struct {
-	Tx                      *bbolt.Tx
-	TxAnything              bool
-	VulnerabilityID         string
-	VulnerabilityIDAnything bool
-	Source                  string
-	SourceAnything          bool
-	PkgName                 string
-	PkgNameAnything         bool
-	Advisory                interface{}
-	AdvisoryAnything        bool
+	Tx                     *bbolt.Tx
+	TxAnything             bool
+	VulnID                 string
+	VulnIDAnything         bool
+	PkgName                string
+	PkgNameAnything        bool
+	NestedBktNames         []string
+	NestedBktNamesAnything bool
+	Advisory               interface{}
+	AdvisoryAnything       bool
 }
 
 type OperationPutAdvisoryDetailReturns struct {
@@ -563,20 +563,20 @@ func (_m *MockOperation) ApplyPutAdvisoryDetailExpectation(e OperationPutAdvisor
 	} else {
 		args = append(args, e.Args.Tx)
 	}
-	if e.Args.VulnerabilityIDAnything {
+	if e.Args.VulnIDAnything {
 		args = append(args, mock.Anything)
 	} else {
-		args = append(args, e.Args.VulnerabilityID)
-	}
-	if e.Args.SourceAnything {
-		args = append(args, mock.Anything)
-	} else {
-		args = append(args, e.Args.Source)
+		args = append(args, e.Args.VulnID)
 	}
 	if e.Args.PkgNameAnything {
 		args = append(args, mock.Anything)
 	} else {
 		args = append(args, e.Args.PkgName)
+	}
+	if e.Args.NestedBktNamesAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.NestedBktNames)
 	}
 	if e.Args.AdvisoryAnything {
 		args = append(args, mock.Anything)
@@ -592,13 +592,13 @@ func (_m *MockOperation) ApplyPutAdvisoryDetailExpectations(expectations []Opera
 	}
 }
 
-// PutAdvisoryDetail provides a mock function with given fields: tx, vulnerabilityID, source, pkgName, advisory
-func (_m *MockOperation) PutAdvisoryDetail(tx *bbolt.Tx, vulnerabilityID string, source string, pkgName string, advisory interface{}) error {
-	ret := _m.Called(tx, vulnerabilityID, source, pkgName, advisory)
+// PutAdvisoryDetail provides a mock function with given fields: tx, vulnID, pkgName, nestedBktNames, advisory
+func (_m *MockOperation) PutAdvisoryDetail(tx *bbolt.Tx, vulnID string, pkgName string, nestedBktNames []string, advisory interface{}) error {
+	ret := _m.Called(tx, vulnID, pkgName, nestedBktNames, advisory)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*bbolt.Tx, string, string, string, interface{}) error); ok {
-		r0 = rf(tx, vulnerabilityID, source, pkgName, advisory)
+	if rf, ok := ret.Get(0).(func(*bbolt.Tx, string, string, []string, interface{}) error); ok {
+		r0 = rf(tx, vulnID, pkgName, nestedBktNames, advisory)
 	} else {
 		r0 = ret.Error(0)
 	}

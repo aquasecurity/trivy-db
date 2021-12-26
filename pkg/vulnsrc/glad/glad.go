@@ -125,7 +125,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, pkgType packageType, glads []Advisory) err
 			return xerrors.Errorf("failed to get bucket name with %s, %s: %w", pkgType, datasource, err)
 		}
 
-		if err = vs.dbc.PutAdvisoryDetail(tx, glad.Identifier, bucketName, pkgName, a); err != nil {
+		if err = vs.dbc.PutAdvisoryDetail(tx, glad.Identifier, pkgName, []string{bucketName}, a); err != nil {
 			return xerrors.Errorf("failed to save GLAD advisory detail: %w", err)
 		}
 

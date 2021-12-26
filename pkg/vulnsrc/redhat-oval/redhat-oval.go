@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -72,23 +72,27 @@ func (vs VulnSrc) Update(dir string) error {
 		return xerrors.Errorf("unable to store the mapping between repositories and CPE names: %w", err)
 	}
 
+	// List version directories
 	rootDir := filepath.Join(dir, "vuln-list", redhatDir)
+	versions, err := os.ReadDir(rootDir)
+	if err != nil {
+		return xerrors.Errorf("unable to list directory entries (%s): %w", rootDir, err)
+	}
 
-	for _, majorVersion := range supportedVersions {
-		versionDir := filepath.Join(rootDir, majorVersion)
-		files, err := ioutil.ReadDir(versionDir)
+	for _, ver := range versions {
+		versionDir := filepath.Join(rootDir, ver.Name())
+		streams, err := os.ReadDir(versionDir)
 		if err != nil {
 			return xerrors.Errorf("unable to get a list of directory entries (%s): %w", versionDir, err)
 		}
 
 		var details []vulnerabilityDetail
-		for _, f := range files {
+		for _, f := range streams {
 			if !f.IsDir() {
 				continue
 			}
 
-			// Skip unpatched vulnerabilities until OVAL v2 includes necessary information
-			if strings.Contains(f.Name(), "-including-unpatched") {
+			if !strings.Contains(f.Name(), "-including-unpatched") {
 				continue
 			}
 
@@ -97,11 +101,6 @@ func (vs VulnSrc) Update(dir string) error {
 				return xerrors.Errorf("failed to parse OVAL stream: %w", err)
 			}
 
-			if f.Name() == fmt.Sprintf(rhelFileFormat, majorVersion) {
-				for i := range parsedDetails {
-					parsedDetails[i].isRHEL = true
-				}
-			}
 			details = append(details, parsedDetails...)
 		}
 
@@ -171,14 +170,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, details []vulnerabilityDetail) error {
 			}
 		}
 
-		if detail.isRHEL {
-			adv.Advisory.FixedVersion = detail.definition.FixedVersion
-		}
 		advisories[detail.bucket] = adv
 	}
 
 	for bkt, advisory := range advisories {
-		if err := vs.dbc.PutAdvisoryDetail(tx, bkt.cveID, bkt.platform, bkt.pkgName, advisory); err != nil {
+		if err := vs.dbc.PutAdvisoryDetail(tx, bkt.cveID, bkt.pkgName, []string{bkt.platform}, advisory); err != nil {
 			return xerrors.Errorf("failed to save Red Hat CVE-ID: %w", err)
 		}
 	}
@@ -260,10 +256,11 @@ func isUniqAdvisory(def Definition, defs []Definition) bool {
 
 func parseOVALStream(dir string) ([]vulnerabilityDetail, error) {
 	log.Printf("    Parsing %s", dir)
+
 	// Parse tests
 	tests, err := parseTests(dir)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to parse tests: %w", err)
+		return nil, xerrors.Errorf("failed to parse ovalTests: %w", err)
 	}
 
 	var advisories []redhatOVAL
@@ -273,11 +270,11 @@ func parseOVALStream(dir string) ([]vulnerabilityDetail, error) {
 	}
 
 	err = utils.FileWalk(definitionsDir, func(r io.Reader, path string) error {
-		var advisory redhatOVAL
-		if err := json.NewDecoder(r).Decode(&advisory); err != nil {
+		var definition redhatOVAL
+		if err := json.NewDecoder(r).Decode(&definition); err != nil {
 			return xerrors.Errorf("failed to decode Red Hat OVAL JSON: %w", err)
 		}
-		advisories = append(advisories, advisory)
+		advisories = append(advisories, definition)
 		return nil
 	})
 
@@ -296,7 +293,7 @@ func parseAdvisories(advisories []redhatOVAL, tests map[string]rpmInfoTest) []vu
 			continue
 		}
 
-		// Insert advisories
+		// Parse criteria
 		platformName, moduleName, affectedPkgs := walkCriterion(advisory.Criteria, tests)
 		for _, affectedPkg := range affectedPkgs {
 			// OVAL v2 is missing some unpatched vulnerabilities.
@@ -392,7 +389,7 @@ func parseReferences(refs []reference) (string, []string) {
 	var rhsaID string
 	for _, ref := range refs {
 		switch ref.Source {
-		case "RHSA":
+		case "RHSA", "RHBA":
 			rhsaID = ref.RefID
 		case "CVE":
 			cveIDs = append(cveIDs, ref.RefID)

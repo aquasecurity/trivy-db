@@ -156,7 +156,7 @@ func (vs VulnSrc) putAdvisoryDetail(tx *bolt.Tx, cve RedhatCVE) error {
 			// It means this vulnerability affects all versions
 			FixedVersion: "",
 		}
-		if err := vs.dbc.PutAdvisoryDetail(tx, cve.Name, platformName, pkgName, advisory); err != nil {
+		if err := vs.dbc.PutAdvisoryDetail(tx, cve.Name, pkgName, []string{platformName}, advisory); err != nil {
 			return xerrors.Errorf("failed to save Red Hat advisory: %w", err)
 		}
 	}

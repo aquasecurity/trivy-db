@@ -158,7 +158,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 
 		pkgName := vs.ToLowerCasePackage(ghsa.Package.Name)
 
-		err := vs.dbc.PutAdvisoryDetail(tx, vulnID, platformName, pkgName, a)
+		err := vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{platformName}, a)
 		if err != nil {
 			return xerrors.Errorf("failed to save GHSA: %w", err)
 		}

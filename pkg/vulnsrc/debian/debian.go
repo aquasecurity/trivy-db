@@ -454,7 +454,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 		FixedVersion: adv.FixedVersion,
 	}
 
-	if err := dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.Platform, adv.PkgName, detail); err != nil {
+	if err := dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.PkgName, []string{adv.Platform}, detail); err != nil {
 		return xerrors.Errorf("failed to save Debian advisory: %w", err)
 	}
 

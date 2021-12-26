@@ -93,29 +93,29 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		}
 
 		// for detecting vulnerabilities
-		vulnerabilityID := advisory.Cve
-		if vulnerabilityID == "" {
+		vulnID := advisory.Cve
+		if vulnID == "" {
 			// e.g. CVE-2019-12139.yaml => CVE-2019-12139
-			vulnerabilityID = strings.TrimSuffix(info.Name(), ".yaml")
+			vulnID = strings.TrimSuffix(info.Name(), ".yaml")
 		}
 
 		a := Advisory{Branches: advisory.Branches}
-		err = vs.dbc.PutAdvisoryDetail(tx, vulnerabilityID, vulnerability.PhpSecurityAdvisories, advisory.Reference, a)
+		err = vs.dbc.PutAdvisoryDetail(tx, vulnID, advisory.Reference, []string{vulnerability.PhpSecurityAdvisories}, a)
 		if err != nil {
 			return xerrors.Errorf("failed to save php advisory: %w", err)
 		}
 
 		// for displaying vulnerability detail
 		vuln := types.VulnerabilityDetail{
-			ID:         vulnerabilityID,
+			ID:         vulnID,
 			References: []string{advisory.Link},
 			Title:      advisory.Title,
 		}
-		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnerabilityID, vulnerability.PhpSecurityAdvisories, vuln); err != nil {
+		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, vulnerability.PhpSecurityAdvisories, vuln); err != nil {
 			return xerrors.Errorf("failed to save php vulnerability detail: %w", err)
 		}
 
-		if err := vs.dbc.PutSeverity(tx, vulnerabilityID, types.SeverityUnknown); err != nil {
+		if err := vs.dbc.PutSeverity(tx, vulnID, types.SeverityUnknown); err != nil {
 			return xerrors.Errorf("failed to save php vulnerability severity: %w", err)
 		}
 		return nil

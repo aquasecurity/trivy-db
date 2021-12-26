@@ -131,7 +131,7 @@ func (vs VulnSrc) walkFunc(err error, info os.FileInfo, path string, tx *bolt.Tx
 		PatchedVersions:    advisory.PatchedVersions,
 		UnaffectedVersions: advisory.UnaffectedVersions,
 	}
-	err = vs.dbc.PutAdvisoryDetail(tx, vulnerabilityID, vulnerability.RubySec, advisory.Gem, a)
+	err = vs.dbc.PutAdvisoryDetail(tx, vulnerabilityID, advisory.Gem, []string{vulnerability.RubySec}, a)
 	if err != nil {
 		return xerrors.Errorf("failed to save ruby advisory: %w", err)
 	}

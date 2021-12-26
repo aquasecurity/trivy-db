@@ -104,7 +104,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			}
 
 			for _, vulnID := range vulnIDs {
-				if err := vs.dbc.PutAdvisoryDetail(tx, vulnID, platformName, affectedPkg.Package.Name, advisory); err != nil {
+				if err := vs.dbc.PutAdvisoryDetail(tx, vulnID, affectedPkg.Package.Name, []string{platformName}, advisory); err != nil {
 					return xerrors.Errorf("failed to save Oracle Linux OVAL: %w", err)
 				}
 			}

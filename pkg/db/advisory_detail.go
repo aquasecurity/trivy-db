@@ -12,8 +12,8 @@ const (
 	advisoryDetailBucket = "advisory-detail"
 )
 
-func (dbc Config) PutAdvisoryDetail(tx *bolt.Tx, vulnID, source, pkgName string, advisory interface{}) error {
-	bktNames := []string{advisoryDetailBucket, vulnID, source}
+func (dbc Config) PutAdvisoryDetail(tx *bolt.Tx, vulnID, pkgName string, nestedBktNames []string, advisory interface{}) error {
+	bktNames := append([]string{advisoryDetailBucket, vulnID}, nestedBktNames...)
 	if err := dbc.put(tx, bktNames, pkgName, advisory); err != nil {
 		return xerrors.Errorf("failed to put advisory detail: %w", err)
 	}

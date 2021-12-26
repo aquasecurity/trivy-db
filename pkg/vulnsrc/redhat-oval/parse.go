@@ -22,14 +22,14 @@ func unmarshalJSONFile(v interface{}, fileName string) error {
 	}
 	defer f.Close()
 
-	if err := json.NewDecoder(f).Decode(v); err != nil {
+	if err = json.NewDecoder(f).Decode(v); err != nil {
 		return xerrors.Errorf("failed to decode Red Hat OVAL JSON: %w", err)
 	}
 	return nil
 }
 
 func parseObjects(dir string) (map[string]string, error) {
-	var objects objects
+	var objects ovalObjects
 	if err := unmarshalJSONFile(&objects, filepath.Join(dir, "objects", "objects.json")); err != nil {
 		return nil, xerrors.Errorf("failed to unmarshal objects: %w", err)
 	}
@@ -41,7 +41,7 @@ func parseObjects(dir string) (map[string]string, error) {
 }
 
 func parseStates(dir string) (map[string]rpminfoState, error) {
-	var ss states
+	var ss ovalStates
 	if err := unmarshalJSONFile(&ss, filepath.Join(dir, "states", "states.json")); err != nil {
 		return nil, xerrors.Errorf("failed to unmarshal states: %w", err)
 	}
@@ -64,7 +64,7 @@ func parseTests(dir string) (map[string]rpmInfoTest, error) {
 		return nil, xerrors.Errorf("failed to parse states: %w", err)
 	}
 
-	var tt tests
+	var tt ovalTests
 	if err := unmarshalJSONFile(&tt, filepath.Join(dir, "tests", "tests.json")); err != nil {
 		return nil, xerrors.Errorf("failed to unmarshal states: %w", err)
 	}
@@ -107,7 +107,7 @@ func followTestRefs(test rpminfoTest, objects map[string]string, states map[stri
 
 	state, ok := states[test.State.StateRef]
 	if !ok {
-		return t, xerrors.Errorf("invalid tests data, can't find state ref %s, test ref: %s",
+		return t, xerrors.Errorf("invalid tests data, can't find ovalstate ref %s, test ref: %s",
 			test.State.StateRef, test.ID)
 	}
 

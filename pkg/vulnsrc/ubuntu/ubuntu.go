@@ -153,7 +153,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 			if status.Status == "released" {
 				adv.FixedVersion = status.Note
 			}
-			if err := dbc.PutAdvisoryDetail(tx, cve.Candidate, platformName, pkgName, adv); err != nil {
+			if err := dbc.PutAdvisoryDetail(tx, cve.Candidate, pkgName, []string{platformName}, adv); err != nil {
 				return xerrors.Errorf("failed to save Ubuntu advisory: %w", err)
 			}
 

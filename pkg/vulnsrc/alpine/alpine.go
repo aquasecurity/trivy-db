@@ -91,7 +91,7 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 				if !strings.HasPrefix(cveID, "CVE-") {
 					continue
 				}
-				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, platform, pkgName, advisory); err != nil {
+				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkgName, []string{platform}, advisory); err != nil {
 					return xerrors.Errorf("failed to save Alpine advisory: %w", err)
 				}
 

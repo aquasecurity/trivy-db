@@ -77,7 +77,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, avgs []ArchVulnGroup) error {
 			}
 
 			for _, pkg := range avg.Packages {
-				if err := vs.dbc.PutAdvisoryDetail(tx, cveId, platformName, pkg, advisory); err != nil {
+				if err := vs.dbc.PutAdvisoryDetail(tx, cveId, pkg, []string{platformName}, advisory); err != nil {
 					return xerrors.Errorf("failed to save arch linux advisory: %w", err)
 				}
 

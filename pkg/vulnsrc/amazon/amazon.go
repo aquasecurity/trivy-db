@@ -122,7 +122,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 					advisory := types.Advisory{
 						FixedVersion: constructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 					}
-					if err := vs.dbc.PutAdvisoryDetail(tx, cveID, platformName, pkg.Name, advisory); err != nil {
+					if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkg.Name, []string{platformName}, advisory); err != nil {
 						return xerrors.Errorf("failed to save Amazon advisory: %w", err)
 					}
 

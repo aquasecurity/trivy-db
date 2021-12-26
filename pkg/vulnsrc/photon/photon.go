@@ -76,7 +76,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []PhotonCVE) error {
 		advisory := types.Advisory{
 			FixedVersion: cve.ResVer,
 		}
-		if err := vs.dbc.PutAdvisoryDetail(tx, cve.CveID, platformName, cve.Pkg, advisory); err != nil {
+		if err := vs.dbc.PutAdvisoryDetail(tx, cve.CveID, cve.Pkg, []string{platformName}, advisory); err != nil {
 			return xerrors.Errorf("failed to save Photon advisory: %w", err)
 		}
 

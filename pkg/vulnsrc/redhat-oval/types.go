@@ -74,24 +74,24 @@ type bugzilla struct {
 	Href string
 }
 
-type tests struct {
+type ovalTests struct {
 	RpminfoTests []rpminfoTest
 }
 
-type objects struct {
+type ovalObjects struct {
 	RpminfoObjects []rpminfoObject
 }
 
-type states struct {
+type ovalStates struct {
 	RpminfoState []rpminfoState
 }
 
-type state struct {
+type ovalstate struct {
 	Text     string
 	StateRef string
 }
 
-type object struct {
+type ovalObject struct {
 	Text      string
 	ObjectRef string
 }
@@ -102,8 +102,8 @@ type rpminfoTest struct {
 	ID             string
 	Version        string
 	CheckExistence string
-	Object         object
-	State          state
+	Object         ovalObject
+	State          ovalstate
 }
 
 type rpminfoObject struct {
@@ -151,7 +151,6 @@ type bucket struct {
 type vulnerabilityDetail struct {
 	bucket
 	definition Definition
-	isRHEL     bool // To insert only RHEL fixed versions for backward compatibility
 }
 
 type Definition struct {
