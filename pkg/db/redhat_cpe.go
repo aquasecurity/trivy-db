@@ -12,42 +12,24 @@ const (
 )
 
 func (dbc Config) PutRedHatCPEs(tx *bolt.Tx, repository string, cpes []string) error {
-	bucket, err := tx.CreateBucketIfNotExists([]byte(redhatCPEBucket))
-	if err != nil {
-		return xerrors.Errorf("failed to create a bucket (%s): %w", redhatCPEBucket, err)
-	}
-
-	b, err := json.MarshalIndent(cpes, "", "  ")
-	if err != nil {
-		return xerrors.Errorf("JSON parse error: %w", err)
-	}
-	if err = bucket.Put([]byte(repository), b); err != nil {
-		return xerrors.Errorf("failed to put a mapping: %w", err)
+	if err := dbc.put(tx, []string{redhatCPEBucket}, repository, cpes); err != nil {
+		return xerrors.Errorf("Red Hat CPE error: %w", err)
 	}
 
 	return nil
 }
 
 func (dbc Config) GetRedHatCPEs(repository string) ([]string, error) {
-	var cpes []string
-	err := db.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte(redhatCPEBucket))
-		if bucket == nil {
-			return nil
-		}
-
-		b := bucket.Get([]byte(repository))
-		if len(b) == 0 {
-			return nil
-		}
-		if err := json.Unmarshal(b, &cpes); err != nil {
-			return err
-		}
-		return nil
-	})
+	value, err := dbc.get([]string{redhatCPEBucket}, repository)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("unable to get '%s': %w", repository, err)
+	} else if len(value) == 0 {
+		return nil, nil
 	}
 
+	var cpes []string
+	if err = json.Unmarshal(value, &cpes); err != nil {
+		return nil, xerrors.Errorf("JSON unmarshal error: %w", err)
+	}
 	return cpes, nil
 }

@@ -38,7 +38,7 @@ func (f fullDB) optimize() error {
 			return nil
 		}
 
-		if err := f.vulnClient.SaveAdvisoryDetails(tx, cveID); err != nil {
+		if err := f.dbc.SaveAdvisoryDetails(tx, cveID); err != nil {
 			return xerrors.Errorf("failed to save advisories: %w", err)
 		}
 

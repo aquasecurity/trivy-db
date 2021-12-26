@@ -101,11 +101,11 @@ func TestVulnSrc_Update(t *testing.T) {
 			require.NoError(t, err, tc.name)
 			var advisories []Advisory
 			for _, a := range tc.expectedAdvisory {
-				adv, err := db.Config{}.GetAdvisoryDetails(a.VulnerabilityID)
+				adv, err := db.Config{}.SaveAdvisoryDetails(a.VulnerabilityID)
 				require.NoError(t, err)
 				for _, advis := range adv {
 					require.Equal(t, tc.expectPackage, advis.PackageName)
-					rawAdv, err := json.Marshal(advis.AdvisoryItem)
+					rawAdv, err := json.Marshal(advis.Value)
 					require.NoError(t, err)
 					var pythonAdv Advisory
 					err = json.Unmarshal(rawAdv, &pythonAdv)

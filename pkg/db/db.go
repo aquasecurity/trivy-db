@@ -40,8 +40,6 @@ type Operation interface {
 		vulnerability types.VulnerabilityDetail) (err error)
 	DeleteVulnerabilityDetailBucket() (err error)
 
-	PutAdvisory(tx *bolt.Tx, source string, pkgName string, vulnerabilityID string,
-		advisory interface{}) (err error)
 	ForEachAdvisory(source string, pkgName string) (value map[string][]byte, err error)
 	GetAdvisories(source string, pkgName string) (advisories []types.Advisory, err error)
 
@@ -54,7 +52,7 @@ type Operation interface {
 	PutVulnerability(tx *bolt.Tx, vulnerabilityID string, vulnerability types.Vulnerability) (err error)
 	GetVulnerability(vulnerabilityID string) (vulnerability types.Vulnerability, err error)
 
-	GetAdvisoryDetails(cveID string) (details []types.AdvisoryDetail, err error)
+	SaveAdvisoryDetails(tx *bolt.Tx, cveID string) (err error)
 	PutAdvisoryDetail(tx *bolt.Tx, vulnerabilityID, source, pkgName string,
 		advisory interface{}) (err error)
 	DeleteAdvisoryDetailBucket() error
@@ -127,13 +125,14 @@ func (dbc Config) GetVersion() int {
 }
 
 func (dbc Config) GetMetadata() (Metadata, error) {
-	var metadata Metadata
-	value, err := Config{}.get("trivy", "metadata", "data")
+	value, err := dbc.get([]string{"trivy", "metadata"}, "data")
 	if err != nil {
 		return Metadata{}, err
 	}
+
+	var metadata Metadata
 	if err = json.Unmarshal(value, &metadata); err != nil {
-		return Metadata{}, err
+		return Metadata{}, xerrors.Errorf("JSON unmarshal error: %w", err)
 	}
 	return metadata, nil
 }
@@ -164,45 +163,55 @@ func (dbc Config) BatchUpdate(fn func(tx *bolt.Tx) error) error {
 
 func (dbc Config) update(rootBucket, nestedBucket, key string, value interface{}) error {
 	err := db.Update(func(tx *bolt.Tx) error {
-		return dbc.putNestedBucket(tx, rootBucket, nestedBucket, key, value)
+		return dbc.put(tx, []string{rootBucket, nestedBucket}, key, value)
 	})
 	if err != nil {
-		return xerrors.Errorf("error in db update: %w", err)
+		return xerrors.Errorf("database update error: %w", err)
 	}
 	return err
 }
 
-func (dbc Config) putNestedBucket(tx *bolt.Tx, rootBucket, nestedBucket, key string, value interface{}) error {
-	root, err := tx.CreateBucketIfNotExists([]byte(rootBucket))
-	if err != nil {
-		return xerrors.Errorf("failed to create a bucket: %w", err)
+func (dbc Config) put(tx *bolt.Tx, bktNames []string, key string, value interface{}) error {
+	if len(bktNames) == 0 {
+		return xerrors.Errorf("empty bucket name")
 	}
-	return dbc.put(root, nestedBucket, key, value)
-}
 
-func (dbc Config) put(root *bolt.Bucket, nestedBucket, key string, value interface{}) error {
-	nested, err := root.CreateBucketIfNotExists([]byte(nestedBucket))
+	bkt, err := tx.CreateBucketIfNotExists([]byte(bktNames[0]))
 	if err != nil {
-		return xerrors.Errorf("failed to create a bucket: %w", err)
+		return xerrors.Errorf("failed to create '%s' bucket: %w", bktNames[0], err)
+	}
+
+	for _, bktName := range bktNames[1:] {
+		bkt, err = bkt.CreateBucketIfNotExists([]byte(bktName))
+		if err != nil {
+			return xerrors.Errorf("failed to create a bucket: %w", err)
+		}
 	}
 	v, err := json.Marshal(value)
 	if err != nil {
 		return xerrors.Errorf("failed to unmarshal JSON: %w", err)
 	}
-	return nested.Put([]byte(key), v)
+
+	return bkt.Put([]byte(key), v)
 }
 
-func (dbc Config) get(rootBucket, nestedBucket, key string) (value []byte, err error) {
+func (dbc Config) get(bktNames []string, key string) (value []byte, err error) {
 	err = db.View(func(tx *bolt.Tx) error {
-		root := tx.Bucket([]byte(rootBucket))
-		if root == nil {
+		if len(bktNames) == 0 {
+			return xerrors.Errorf("empty bucket name")
+		}
+
+		bkt := tx.Bucket([]byte(bktNames[0]))
+		if bkt == nil {
 			return nil
 		}
-		nested := root.Bucket([]byte(nestedBucket))
-		if nested == nil {
-			return nil
+		for _, bktName := range bktNames[1:] {
+			bkt = bkt.Bucket([]byte(bktName))
+			if bkt == nil {
+				return nil
+			}
 		}
-		value = nested.Get([]byte(key))
+		value = bkt.Get([]byte(key))
 		return nil
 	})
 	if err != nil {

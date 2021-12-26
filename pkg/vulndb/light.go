@@ -39,7 +39,7 @@ func (l lightDB) optimize() error {
 			return nil
 		}
 
-		if err := l.vulnClient.SaveAdvisoryDetails(tx, cveID); err != nil {
+		if err := l.dbc.SaveAdvisoryDetails(tx, cveID); err != nil {
 			return xerrors.Errorf("failed to save advisories: %w", err)
 		}
 

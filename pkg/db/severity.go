@@ -11,11 +11,15 @@ const (
 )
 
 func (dbc Config) PutSeverity(tx *bolt.Tx, cveID string, severity types.Severity) error {
-	bucket, err := tx.CreateBucketIfNotExists([]byte(severityBucket))
+	bkt, err := tx.CreateBucketIfNotExists([]byte(severityBucket))
 	if err != nil {
-		return xerrors.Errorf("failed to create a bucket: %w", err)
+		return xerrors.Errorf("unable to create '%s' bucket: %w", severityBucket, err)
 	}
-	return bucket.Put([]byte(cveID), []byte(severity.String()))
+
+	if err = bkt.Put([]byte(cveID), []byte(severity.String())); err != nil {
+		return xerrors.Errorf("severity put error: %w", err)
+	}
+	return nil
 }
 
 func (dbc Config) GetSeverity(cveID string) (severity types.Severity, err error) {
@@ -51,7 +55,7 @@ func (dbc Config) ForEachSeverity(f func(tx *bolt.Tx, cveID string, severity typ
 			return nil
 		})
 		if err != nil {
-			return xerrors.Errorf("error in for each: %w", err)
+			return xerrors.Errorf("severity for each error: %w", err)
 		}
 		return nil
 	})
