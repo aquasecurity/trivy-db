@@ -13,6 +13,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	version "github.com/knqyf263/go-rpm-version"
 	"golang.org/x/xerrors"
@@ -95,7 +96,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			}
 
 			platformName := fmt.Sprintf(platformFormat, affectedPkg.OSVer)
-			if !utils.StringInSlice(platformName, targetPlatforms) {
+			if !ustrings.InSlice(platformName, targetPlatforms) {
 				continue
 			}
 
@@ -181,7 +182,7 @@ func referencesFromContains(sources []string, matches []string) []string {
 			}
 		}
 	}
-	return utils.Uniq(references)
+	return ustrings.Unique(references)
 }
 
 func severityFromThreat(sev string) types.Severity {

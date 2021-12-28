@@ -143,7 +143,7 @@ func (vs VulnSrc) putVulnerabilityDetail(tx *bolt.Tx, cve RedhatCVE) error {
 		Severity:     severityFromThreat(cve.ThreatSeverity),
 		References:   references,
 		Title:        strings.TrimSpace(title),
-		Description:  strings.TrimSpace(strings.Join(cve.Details, " ")),
+		Description:  strings.TrimSpace(strings.Join(cve.Details, "")),
 	}
 	if err := vs.dbc.PutVulnerabilityDetail(tx, cve.Name, vulnerability.RedHat, vuln); err != nil {
 		return xerrors.Errorf("failed to save Red Hat vulnerability: %w", err)

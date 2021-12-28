@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func touch(t *testing.T, name string) {
@@ -77,89 +75,5 @@ func TestFileWalk(t *testing.T) {
 	}
 	if string(contentFoo3) != "foo3" {
 		t.Error("The file content is wrong")
-	}
-}
-
-func TestUniq(t *testing.T) {
-	testCases := []struct {
-		name       string
-		inputData  []string
-		expectData []string
-	}{
-		{
-
-			name: "positive test",
-			inputData: []string{
-				"test string 1",
-				"test string 3",
-				"test string 2",
-				"test string 1",
-				"test string 2",
-				"test string 3",
-			},
-			expectData: []string{
-				"test string 1",
-				"test string 2",
-				"test string 3",
-			},
-		},
-		{
-			name:       "positive test input empty",
-			inputData:  []string{},
-			expectData: []string{},
-		},
-		{
-			name: "positive test input uniq",
-			inputData: []string{
-				"test string 1",
-				"test string 3",
-				"test string 2",
-			},
-			expectData: []string{
-				"test string 1",
-				"test string 2",
-				"test string 3",
-			},
-		},
-	}
-	for _, testCase := range testCases {
-		actualData := Uniq(testCase.inputData)
-		assert.Equal(t, actualData, testCase.expectData, testCase.name)
-	}
-
-}
-
-func TestHasIntersection(t *testing.T) {
-	type args struct {
-		list1 []string
-		list2 []string
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{
-			name: "happy path",
-			args: args{
-				list1: []string{"a", "b", "c"},
-				list2: []string{"d", "b", "f", "g"},
-			},
-			want: true,
-		},
-		{
-			name: "sad path",
-			args: args{
-				list1: []string{"a", "b", "c"},
-				list2: []string{"d", "f", "g"},
-			},
-			want: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := HasIntersection(tt.args.list1, tt.args.list2)
-			assert.Equal(t, tt.want, got)
-		})
 	}
 }
