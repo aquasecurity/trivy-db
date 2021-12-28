@@ -51,7 +51,7 @@ func (dbc Config) RedHatNVRToCPEs(repository string) ([]int, error) {
 }
 
 func (dbc Config) getCPEs(bucket, key string) ([]int, error) {
-	value, err := dbc.get([]string{redhatCPEBucket, bucket}, key)
+	value, err := dbc.get([]string{redhatCPERootBucket, bucket}, key)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to get '%s': %w", key, err)
 	} else if len(value) == 0 {

@@ -346,28 +346,6 @@ func TestVulnSrc_Commit(t *testing.T) {
 			},
 		},
 		{
-			name: "PutAdvisoryDetail returns an error",
-			cves: []RedhatCVE{
-				{
-					Name: "CVE-2019-0160",
-					PackageState: []RedhatPackageState{
-						{
-							PackageName: "package",
-							ProductName: "Red Hat Enterprise Linux 6",
-							FixState:    "Will not fix",
-						},
-					},
-					Cvss:           RedhatCvss{CvssBaseScore: "7.2"},
-					Cvss3:          RedhatCvss3{Cvss3BaseScore: "4.0"},
-					ThreatSeverity: "Moderate",
-					References:     []string{"https://example.com"},
-					Bugzilla:       RedhatBugzilla{Description: "CVE-2019-0160 package: title   "},
-					Details:        []string{"detail1\n", "detail2"},
-				},
-			},
-			expectedErrorMsg: "failed to put advisory",
-		},
-		{
 			name: "PutVulnerabilityDetail returns an error",
 			cves: []RedhatCVE{
 				{

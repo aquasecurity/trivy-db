@@ -1,7 +1,7 @@
 {
   "Class": "patch",
   "ID": "oval:com.redhat.rhsa:def:20205624",
-  "Version": "633",
+  "Version": "635",
   "Metadata": {
     "Title": "RHSA-2020:5624: thunderbird security update (Important)",
     "AffectedList": [
@@ -43,14 +43,16 @@
       "Cves": [
         {
           "CveID": "CVE-2020-16042",
-          "Cvss3": "8.8/CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+          "Cvss3": "6.5/CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:N/A:N",
+          "Impact": "important",
           "Href": "https://access.redhat.com/security/cve/CVE-2020-16042",
           "Public": "20201202"
         },
         {
           "CveID": "CVE-2020-26971",
-          "Cvss3": "7.5/CVSS:3.0/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H",
+          "Cvss3": "8.8/CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
           "Cwe": "CWE-120",
+          "Impact": "important",
           "Href": "https://access.redhat.com/security/cve/CVE-2020-26971",
           "Public": "20201215"
         }
@@ -63,11 +65,32 @@
         {
           "Href": "https://bugzilla.redhat.com/1908022",
           "ID": "1908022"
+        },
+        {
+          "Href": "https://bugzilla.redhat.com/1908023",
+          "ID": "1908023"
+        },
+        {
+          "Href": "https://bugzilla.redhat.com/1908024",
+          "ID": "1908024"
+        },
+        {
+          "Href": "https://bugzilla.redhat.com/1908025",
+          "ID": "1908025"
+        },
+        {
+          "Href": "https://bugzilla.redhat.com/1908027",
+          "ID": "1908027"
+        },
+        {
+          "Href": "https://bugzilla.redhat.com/1908029",
+          "ID": "1908029"
         }
       ],
       "AffectedCpeList": [
         "cpe:/a:redhat:enterprise_linux:8",
-        "cpe:/a:redhat:enterprise_linux:8::appstream"
+        "cpe:/a:redhat:enterprise_linux:8::appstream",
+        "cpe:/o:redhat:enterprise_linux:8::baseos"
       ]
     }
   },
@@ -76,7 +99,7 @@
     "Criterions": [
       {
         "Comment": "Red Hat Enterprise Linux must be installed",
-        "TestRef": "oval:com.redhat.cve:tst:20137488004"
+        "TestRef": "oval:com.redhat.cve:tst:20052541004"
       }
     ],
     "Criterias": [
@@ -84,39 +107,33 @@
         "Operator": "AND",
         "Criterions": [
           {
-            "Comment": "Red Hat Enterprise Linux 8 is installed",
-            "TestRef": "oval:com.redhat.cve:tst:20137488003"
+            "Comment": "thunderbird is earlier than 0:78.6.0-1.el8_3",
+            "TestRef": "oval:com.redhat.rhsa:tst:20205624001"
+          },
+          {
+            "Comment": "thunderbird is signed with Red Hat redhatrelease2 key",
+            "TestRef": "oval:com.redhat.rhsa:tst:20191144002"
+          },
+          {
+            "Comment": "thunderbird-debugsource is earlier than 0:78.6.0-1.el8_3",
+            "TestRef": "oval:com.redhat.rhsa:tst:20205624003"
+          },
+          {
+            "Comment": "thunderbird-debugsource is signed with Red Hat redhatrelease2 key",
+            "TestRef": "oval:com.redhat.rhsa:tst:201812383004"
           }
         ],
         "Criterias": [
           {
             "Operator": "OR",
-            "Criterias": [
+            "Criterions": [
               {
-                "Operator": "AND",
-                "Criterions": [
-                  {
-                    "Comment": "thunderbird is earlier than 0:78.6.0-1.el8_3",
-                    "TestRef": "oval:com.redhat.rhsa:tst:20205624001"
-                  },
-                  {
-                    "Comment": "thunderbird is signed with Red Hat redhatrelease2 key",
-                    "TestRef": "oval:com.redhat.cve:tst:201812383006"
-                  }
-                ]
+                "Comment": "Red Hat Enterprise Linux 8 is installed",
+                "TestRef": "oval:com.redhat.cve:tst:20052541003"
               },
               {
-                "Operator": "AND",
-                "Criterions": [
-                  {
-                    "Comment": "thunderbird-debugsource is earlier than 0:78.6.0-1.el8_3",
-                    "TestRef": "oval:com.redhat.rhsa:tst:20205624003"
-                  },
-                  {
-                    "Comment": "thunderbird-debugsource is signed with Red Hat redhatrelease2 key",
-                    "TestRef": "oval:com.redhat.cve:tst:201812383004"
-                  }
-                ]
+                "Comment": "Red Hat CoreOS 4 is installed",
+                "TestRef": "oval:com.redhat.rhba:tst:20191992004"
               }
             ]
           }

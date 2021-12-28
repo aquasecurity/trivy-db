@@ -45,6 +45,7 @@
           "CveID": "CVE-2020-26971",
           "Cvss3": "7.5/CVSS:3.0/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H",
           "Cwe": "CWE-120",
+          "Impact": "critical",
           "Href": "https://access.redhat.com/security/cve/CVE-2020-26971",
           "Public": "20201215"
         },
@@ -52,6 +53,7 @@
           "CveID": "CVE-2020-26972",
           "Cvss3": "7.5/CVSS:3.0/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H",
           "Cwe": "CWE-120",
+          "Impact": "moderate",
           "Href": "https://access.redhat.com/security/cve/CVE-2020-26972",
           "Public": "20201215"
         }
@@ -67,8 +69,7 @@
         }
       ],
       "AffectedCpeList": [
-        "cpe:/a:redhat:rhel_eus:8.1",
-        "cpe:/a:redhat:rhel_eus:8.1::appstream"
+        "cpe:/a:redhat:rhel_eus:8.1"
       ]
     }
   },

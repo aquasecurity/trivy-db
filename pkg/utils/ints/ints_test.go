@@ -42,3 +42,28 @@ func TestHasIntersection(t *testing.T) {
 		})
 	}
 }
+
+func TestUnique(t *testing.T) {
+	tests := []struct {
+		name string
+		ints []int
+		want []int
+	}{
+		{
+			name: "happy path",
+			ints: []int{1, 3, 1, 2, 3},
+			want: []int{1, 2, 3},
+		},
+		{
+			name: "length 1",
+			ints: []int{1},
+			want: []int{1},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ints.Unique(tt.ints)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}

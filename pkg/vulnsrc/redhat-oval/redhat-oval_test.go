@@ -1,9 +1,6 @@
-package redhatoval
+package redhatoval_test
 
 import (
-	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
@@ -15,6 +12,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	redhat "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
 )
 
 func TestMain(m *testing.M) {
@@ -28,158 +26,198 @@ func TestVulnSrc_Update(t *testing.T) {
 		value interface{}
 	}
 
-	testCases := []struct {
-		name            string
-		cacheDir        string
-		repositoryToCPE string
-		wants           []want
-		wantErr         string
+	tests := []struct {
+		name     string
+		cacheDir string
+		wants    []want
+		wantErr  string
 	}{
 		{
 			name:     "happy path",
 			cacheDir: filepath.Join("testdata", "happy"),
-			repositoryToCPE: `
-				{
-				  "data": {
-				    "rhel-8-for-x86_64-baseos-rpms": {
-				      "cpes": ["cpe:/o:redhat:enterprise_linux:8::baseos"]
-				    }
-				  }
-				}`,
 			wants: []want{
 				{
-					key:   []string{"Red Hat CPE", "rhel-8-for-x86_64-baseos-rpms"},
-					value: []string{"cpe:/o:redhat:enterprise_linux:8::baseos"},
+					key:   []string{"Red Hat CPE", "cpe", "0"},
+					value: "cpe:/a:redhat:enterprise_linux:7",
 				},
 				{
-					key: []string{"advisory-detail", "RHSA-2020:5624", "Red Hat",
-						"cpe:/a:redhat:enterprise_linux:8", "thunderbird"},
-					value: types.Advisory{
-						FixedVersion: "0:78.6.0-1.el8_3",
-						CveIDs:       []string{"CVE-2020-16042", "CVE-2020-26971"},
+					key:   []string{"Red Hat CPE", "cpe", "1"},
+					value: "cpe:/a:redhat:enterprise_linux:8",
+				},
+				{
+					key:   []string{"Red Hat CPE", "cpe", "2"},
+					value: "cpe:/a:redhat:enterprise_linux:8::appstream",
+				},
+				{
+					key:   []string{"Red Hat CPE", "cpe", "3"},
+					value: "cpe:/a:redhat:enterprise_linux:8::crb",
+				},
+				{
+					key:   []string{"Red Hat CPE", "cpe", "4"},
+					value: "cpe:/a:redhat:rhel_eus:8.1",
+				},
+				{
+					key:   []string{"Red Hat CPE", "cpe", "5"},
+					value: "cpe:/o:redhat:enterprise_linux:7::server",
+				},
+				{
+					key:   []string{"Red Hat CPE", "cpe", "6"},
+					value: "cpe:/o:redhat:enterprise_linux:8::baseos",
+				},
+				{
+					key:   []string{"Red Hat CPE", "repository", "rhel-8-for-x86_64-baseos-rpms"},
+					value: []int{6},
+				},
+				{
+					key:   []string{"Red Hat CPE", "nvr", "3scale-amp-apicast-gateway-container-1.11-1-x86_64"},
+					value: []int{5},
+				},
+				{
+					key: []string{"advisory-detail", "RHSA-2020:5624", "Red Hat", "thunderbird"},
+					value: redhat.Advisory{
+						Entries: []redhat.Entry{
+							{
+								FixedVersion:       "0:78.6.0-1.el8_3",
+								AffectedCPEIndices: []int{1, 2, 6},
+								Cves: []redhat.CveEntry{
+									{
+										ID:       "CVE-2020-16042",
+										Severity: types.SeverityHigh,
+									},
+									{
+										ID:       "CVE-2020-26971",
+										Severity: types.SeverityHigh,
+									},
+								},
+							},
+						},
 					},
 				},
 				{
-					key: []string{"advisory-detail", "RHSA-2020:5624", "Red Hat",
-						"cpe:/a:redhat:enterprise_linux:8::appstream", "thunderbird"},
-					value: types.Advisory{
-						FixedVersion: "0:78.6.0-1.el8_3",
-						CveIDs:       []string{"CVE-2020-16042", "CVE-2020-26971"},
+					key: []string{"advisory-detail", "RHSA-2020:5624", "Red Hat", "thunderbird-debugsource"},
+					value: redhat.Advisory{
+						Entries: []redhat.Entry{
+							{
+								FixedVersion:       "0:78.6.0-1.el8_3",
+								AffectedCPEIndices: []int{1, 2, 6},
+								Cves: []redhat.CveEntry{
+									{
+										ID:       "CVE-2020-16042",
+										Severity: types.SeverityHigh,
+									},
+									{
+										ID:       "CVE-2020-26971",
+										Severity: types.SeverityHigh,
+									},
+								},
+							},
+						},
 					},
 				},
 				{
-					key: []string{"advisory-detail", "RHSA-2020:5624", "Red Hat",
-						"cpe:/a:redhat:enterprise_linux:8", "thunderbird-debugsource"},
-					value: types.Advisory{
-						FixedVersion: "0:78.6.0-1.el8_3",
-						CveIDs:       []string{"CVE-2020-16042", "CVE-2020-26971"},
+					key: []string{"advisory-detail", "RHSA-2020:4751", "Red Hat", "httpd:2.4::httpd"},
+					value: redhat.Advisory{
+						Entries: []redhat.Entry{
+							{
+								FixedVersion:       "0:2.4.37-30.module+el7.3.0+7001+0766b9e7",
+								AffectedCPEIndices: []int{0, 5},
+								Cves: []redhat.CveEntry{
+									{
+										ID:       "CVE-2018-17189",
+										Severity: types.SeverityCritical,
+									},
+								},
+							},
+							{
+								FixedVersion:       "0:2.4.37-30.module+el8.3.0+7001+0766b9e7",
+								AffectedCPEIndices: []int{1, 2},
+								Cves: []redhat.CveEntry{
+									{
+										ID:       "CVE-2018-17189",
+										Severity: types.SeverityLow,
+									},
+								},
+							},
+						},
 					},
 				},
 				{
-					key: []string{"advisory-detail", "RHSA-2020:5624", "Red Hat",
-						"cpe:/a:redhat:enterprise_linux:8::appstream", "thunderbird-debugsource"},
-					value: types.Advisory{
-						FixedVersion: "0:78.6.0-1.el8_3",
-						CveIDs:       []string{"CVE-2020-16042", "CVE-2020-26971"},
+					key: []string{"advisory-detail", "CVE-2020-14342", "Red Hat", "cifs-utils"},
+					value: redhat.Advisory{
+						Entries: []redhat.Entry{
+							{
+								FixedVersion:       "",
+								AffectedCPEIndices: []int{3, 5},
+								Cves: []redhat.CveEntry{
+									{
+										Severity: types.SeverityLow,
+									},
+								},
+							},
+						},
 					},
 				},
 				{
-					key: []string{"advisory-detail", "RHSA-2020:9999", "Red Hat",
-						"cpe:/a:redhat:rhel_eus:8.1", "thunderbird"},
-					value: types.Advisory{
-						FixedVersion: "0:78.6.0-1.el8_3",
-						CveIDs:       []string{"CVE-2020-26971", "CVE-2020-26972"},
-					},
-				},
-				{
-					key: []string{"advisory-detail", "RHSA-2020:9999", "Red Hat",
-						"cpe:/a:redhat:rhel_eus:8.1::appstream", "thunderbird"},
-					value: types.Advisory{
-						FixedVersion: "0:78.6.0-1.el8_3",
-						CveIDs:       []string{"CVE-2020-26971", "CVE-2020-26972"},
-					},
-				},
-				{
-					key: []string{"advisory-detail", "RHSA-2020:4751", "Red Hat",
-						"cpe:/a:redhat:enterprise_linux:8", "httpd:2.4::httpd"},
-					value: types.Advisory{
-						FixedVersion: "0:2.4.37-30.module+el8.3.0+7001+0766b9e7",
-						CveIDs:       []string{"CVE-2018-17189"},
-					},
-				},
-				{
-					key: []string{"advisory-detail", "RHSA-2020:4751", "Red Hat",
-						"cpe:/a:redhat:enterprise_linux:8::appstream", "httpd:2.4::httpd"},
-					value: types.Advisory{
-						FixedVersion: "0:2.4.37-30.module+el8.3.0+7001+0766b9e7",
-						CveIDs:       []string{"CVE-2018-17189"},
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2020-14342", "Red Hat",
-						"cpe:/a:redhat:enterprise_linux:8::crb", "cifs-utils"},
-					value: types.Advisory{
-						FixedVersion: "",
+					key: []string{"advisory-detail", "RHSA-2020:9999", "Red Hat", "thunderbird"},
+					value: redhat.Advisory{
+						Entries: []redhat.Entry{
+							{
+								FixedVersion:       "0:999.el8_3",
+								AffectedCPEIndices: []int{4},
+								Cves: []redhat.CveEntry{
+									{
+										ID:       "CVE-2020-26971",
+										Severity: types.SeverityCritical,
+									},
+									{
+										ID:       "CVE-2020-26972",
+										Severity: types.SeverityMedium,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
 		},
 		{
-			name:            "no definitions dir",
-			cacheDir:        filepath.Join("testdata", "no-definitions"),
-			repositoryToCPE: `{"data": {}}`,
+			name:     "no definitions dir",
+			cacheDir: filepath.Join("testdata", "no-definitions"),
 		},
 		{
-			name:            "repository-to-cpe is unavailable",
-			cacheDir:        filepath.Join("testdata", "happy"),
-			repositoryToCPE: ``,
-			wantErr:         "returns 503",
+			name:     "repository-to-cpe is unavailable",
+			cacheDir: filepath.Join("testdata", "no-repo-to-cpe"),
+			wantErr:  "no such file or directory",
 		},
 		{
-			name:            "broken mapping",
-			cacheDir:        filepath.Join("testdata", "happy"),
-			repositoryToCPE: `{"data": "broken"}`,
-			wantErr:         "JSON parse error",
+			name:     "broken repo-to-cpe",
+			cacheDir: filepath.Join("testdata", "broken-repo-to-cpe"),
+			wantErr:  "JSON parse error",
 		},
 		{
-			name:            "broken JSON",
-			cacheDir:        filepath.Join("testdata", "sad"),
-			repositoryToCPE: `{"data": {}}`,
-			wantErr:         "failed to decode Red Hat OVAL JSON",
-		},
-		{
-			name:            "no version dir",
-			cacheDir:        filepath.Join("testdata", "no-version"),
-			repositoryToCPE: `{"data": {}}`,
-			wantErr:         "no such file or directory",
+			name:     "broken JSON",
+			cacheDir: filepath.Join("testdata", "sad"),
+			wantErr:  "failed to decode",
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			dir := t.TempDir()
 			require.NoError(t, db.Init(dir))
 
-			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if tc.repositoryToCPE == "" {
-					http.Error(w, "We'll be back soon", http.StatusServiceUnavailable)
-					return
-				}
-				_, _ = fmt.Fprintln(w, tc.repositoryToCPE)
-			}))
-			defer ts.Close()
-
-			vs := NewVulnSrc(WithMappingURL(ts.URL))
-			err := vs.Update(tc.cacheDir)
-			if tc.wantErr != "" {
+			vs := redhat.NewVulnSrc()
+			err := vs.Update(tt.cacheDir)
+			if tt.wantErr != "" {
 				require.NotNil(t, err)
-				assert.Contains(t, err.Error(), tc.wantErr, tc.name)
+				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
 				return
 			}
-			db.Close()
 
-			assert.NoError(t, err)
-			for _, w := range tc.wants {
+			require.NoError(t, err)
+			require.NoError(t, db.Close())
+
+			for _, w := range tt.wants {
 				dbtest.JSONEq(t, db.Path(dir), w.key, w.value, w.key)
 			}
 		})
@@ -188,103 +226,118 @@ func TestVulnSrc_Update(t *testing.T) {
 
 func TestVulnSrc_Get(t *testing.T) {
 	type args struct {
-		release      string
 		pkgName      string
 		repositories []string
+		nvrs         []string
 	}
 	tests := []struct {
-		name         string
-		args         args
-		fixtureFiles []string
-		want         []types.Advisory
-		wantErr      string
+		name     string
+		args     args
+		fixtures []string
+		want     []types.Advisory
+		wantErr  string
 	}{
 		{
-			name: "happy path",
+			name: "repository",
 			args: args{
-				release:      "8",
 				pkgName:      "bind",
 				repositories: []string{"rhel-8-for-x86_64-baseos-rpms"},
 			},
-			fixtureFiles: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/cpe.yaml"},
+			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/cpe.yaml"},
 			want: []types.Advisory{
 				{
-					VulnerabilityID: "CVE-2020-8624",
-					VendorIDs:       []string{"RHSA-2020:4500"},
-					FixedVersion:    "32:9.11.20-5.el8",
+					VulnerabilityID: "CVE-2020-8625",
+					Severity:        types.SeverityLow,
+				},
+				{
+					VulnerabilityID: "CVE-2017-3145",
+					VendorIDs:       []string{"RHSA-2018:0488"},
+					Severity:        types.SeverityHigh,
+					FixedVersion:    "32:9.9.4-29.el7_2.8",
 				},
 			},
 		},
 		{
-			name: "CPE doesn't match",
+			name: "nvr",
 			args: args{
-				release:      "8",
+				pkgName: "bind",
+				nvrs:    []string{"ubi8-init-container-8.0-7-x86_64"},
+			},
+			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/cpe.yaml"},
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2020-8625",
+					Severity:        types.SeverityLow,
+				},
+				{
+					VulnerabilityID: "CVE-2017-3145",
+					VendorIDs:       []string{"RHSA-2018:0488"},
+					Severity:        types.SeverityHigh,
+					FixedVersion:    "32:9.9.4-29.el7_2.8",
+				},
+				{
+					VulnerabilityID: "CVE-2017-3145",
+					VendorIDs:       []string{"RHSA-2018:0488"},
+					Severity:        types.SeverityMedium,
+					FixedVersion:    "32:9.9.4-50.el7_3.3",
+				},
+			},
+		},
+		{
+			name: "no CPE match",
+			args: args{
 				pkgName:      "bind",
 				repositories: []string{"3scale-amp-2-rpms-for-rhel-8-x86_64-debug-rpms"},
 			},
-			fixtureFiles: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/cpe.yaml"},
-			want:         []types.Advisory(nil),
+			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/cpe.yaml"},
+			want:     []types.Advisory(nil),
 		},
 		{
-			//This should not be happened
+			// This case should not be happened
 			name: "unknown repository",
 			args: args{
-				release:      "8",
 				pkgName:      "bind",
 				repositories: []string{"unknown"},
 			},
-			fixtureFiles: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/cpe.yaml"},
-			want: []types.Advisory{
-				{
-					VulnerabilityID: "CVE-2020-8624",
-					FixedVersion:    "32:9.11.20-5.el8",
-				},
-			},
+			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/cpe.yaml"},
+			want:     []types.Advisory(nil),
 		},
 		{
 			name: "no advisory bucket",
 			args: args{
-				release:      "8",
 				pkgName:      "bind",
 				repositories: []string{"rhel-8-for-x86_64-baseos-rpms"},
 			},
-			fixtureFiles: []string{"testdata/fixtures/cpe.yaml"},
-			want:         []types.Advisory(nil),
+			fixtures: []string{"testdata/fixtures/cpe.yaml"},
+			want:     []types.Advisory(nil),
 		},
 		{
 			name: "no CPE bucket",
 			args: args{
-				release:      "8",
 				pkgName:      "bind",
 				repositories: []string{"rhel-8-for-x86_64-baseos-rpms"},
 			},
-			fixtureFiles: []string{"testdata/fixtures/happy.yaml"},
-			want: []types.Advisory{
-				{
-					VulnerabilityID: "CVE-2020-8624",
-					FixedVersion:    "32:9.11.20-5.el8",
-				},
-			},
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			want:     []types.Advisory(nil),
 		},
 		{
 			name: "broken JSON",
 			args: args{
-				release:      "8",
 				pkgName:      "bind",
 				repositories: []string{"rhel-8-for-x86_64-baseos-rpms"},
 			},
-			fixtureFiles: []string{"testdata/fixtures/broken.yaml", "testdata/fixtures/cpe.yaml"},
-			want:         []types.Advisory(nil),
-			wantErr:      "failed to unmarshal advisory JSON",
+			fixtures: []string{"testdata/fixtures/broken.yaml", "testdata/fixtures/cpe.yaml"},
+			want:     []types.Advisory(nil),
+			wantErr:  "failed to unmarshal advisory JSON",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_ = dbtest.InitDB(t, tt.fixtureFiles)
+			_ = dbtest.InitDB(t, tt.fixtures)
 			defer db.Close()
 
-			vs := NewVulnSrc()
-			got, err := vs.Get(tt.args.pkgName, tt.args.repositories)
+			vs := redhat.NewVulnSrc()
+			got, err := vs.Get(tt.args.pkgName, tt.args.repositories, tt.args.nvrs)
 
 			if tt.wantErr != "" {
 				require.NotNil(t, err)

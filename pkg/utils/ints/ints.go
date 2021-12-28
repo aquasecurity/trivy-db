@@ -7,8 +7,8 @@ func Unique(ints []int) []int {
 
 	var ret []int
 	var pre int
-	for _, num := range ints {
-		if pre != num {
+	for i, num := range ints {
+		if i == 0 || pre != num {
 			ret = append(ret, num)
 		}
 		pre = num

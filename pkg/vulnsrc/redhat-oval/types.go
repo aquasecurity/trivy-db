@@ -147,12 +147,6 @@ type bucket struct {
 	vulnID  string
 }
 
-type repositoryToCPE struct {
-	Data map[string]struct {
-		Cpes []string `json:"cpes"`
-	} `json:"data"`
-}
-
 type Advisory struct {
 	Entries []Entry `json:",omitempty"`
 }
@@ -173,7 +167,7 @@ type Entry struct {
 }
 
 type CveEntry struct {
-	ID string
+	ID string `json:",omitempty"`
 
 	// Severity may differ depending on platform even though the advisories resolve the same CVE-ID.
 	Severity types.Severity `json:",omitempty"`

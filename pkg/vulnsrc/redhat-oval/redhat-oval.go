@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -24,8 +23,6 @@ import (
 )
 
 const (
-	mappingURL = "https://www.redhat.com/security/data/metrics/repository-to-cpe.json"
-
 	rootBucket = "Red Hat"
 )
 
@@ -36,28 +33,13 @@ var (
 )
 
 type VulnSrc struct {
-	dbc        db.Operation
-	mappingURL string
+	dbc db.Operation
 }
 
-type Option func(c *VulnSrc)
-
-func WithMappingURL(url string) Option {
-	return func(vs *VulnSrc) {
-		vs.mappingURL = url
+func NewVulnSrc() VulnSrc {
+	return VulnSrc{
+		dbc: db.Config{},
 	}
-}
-
-func NewVulnSrc(opts ...Option) VulnSrc {
-	vs := &VulnSrc{
-		dbc:        db.Config{},
-		mappingURL: mappingURL,
-	}
-	for _, opt := range opts {
-		opt(vs)
-	}
-
-	return *vs
 }
 
 func (vs VulnSrc) Name() string {
@@ -67,12 +49,12 @@ func (vs VulnSrc) Name() string {
 func (vs VulnSrc) Update(dir string) error {
 	uniqCPEs := CPEMap{}
 
-	repoToCPE, err := vs.parseRepositoryCpeMapping(uniqCPEs)
+	repoToCPE, err := vs.parseRepositoryCpeMapping(dir, uniqCPEs)
 	if err != nil {
 		return xerrors.Errorf("unable to store the mapping between repositories and CPE names: %w", err)
 	}
 
-	nvrToCPE, err := vs.parseNvrCpeMapping(uniqCPEs)
+	nvrToCPE, err := vs.parseNvrCpeMapping(dir, uniqCPEs)
 	if err != nil {
 		return xerrors.Errorf("unable to store the mapping between NVR and CPE names: %w", err)
 	}
@@ -114,33 +96,31 @@ func (vs VulnSrc) Update(dir string) error {
 	return nil
 }
 
-func (vs VulnSrc) parseRepositoryCpeMapping(uniqCPEs CPEMap) (repositoryToCPE, error) {
-	resp, err := http.Get(vs.mappingURL)
+func (vs VulnSrc) parseRepositoryCpeMapping(dir string, uniqCPEs CPEMap) (map[string][]string, error) {
+	filePath := filepath.Join(dir, "vuln-list", "redhat-cpe", "repository-to-cpe.json")
+	f, err := os.Open(filePath)
 	if err != nil {
-		return repositoryToCPE{}, xerrors.Errorf("failed to get %s: %w", mappingURL, err)
+		return nil, xerrors.Errorf("file open error: %w", err)
 	}
-	defer resp.Body.Close()
+	defer f.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return repositoryToCPE{}, xerrors.Errorf("Red Hat API (%s) returns %d", mappingURL, resp.StatusCode)
-	}
-
-	var repoToCPE repositoryToCPE
-	if err = json.NewDecoder(resp.Body).Decode(&repoToCPE); err != nil {
-		return repositoryToCPE{}, xerrors.Errorf("JSON parse error: %w", err)
+	var repoToCPE map[string][]string
+	if err = json.NewDecoder(f).Decode(&repoToCPE); err != nil {
+		return nil, xerrors.Errorf("JSON parse error: %w", err)
 	}
 
-	for _, cpes := range repoToCPE.Data {
-		updateCPEs(cpes.Cpes, uniqCPEs)
+	for _, cpes := range repoToCPE {
+		updateCPEs(cpes, uniqCPEs)
 	}
 
 	return repoToCPE, nil
 }
 
-func (vs VulnSrc) parseNvrCpeMapping(uniqCPEs CPEMap) (map[string][]string, error) {
-	f, err := os.Open("mapping.json")
+func (vs VulnSrc) parseNvrCpeMapping(dir string, uniqCPEs CPEMap) (map[string][]string, error) {
+	filePath := filepath.Join(dir, "vuln-list", "redhat-cpe", "nvr-to-cpe.json")
+	f, err := os.Open(filePath)
 	if err != nil {
-		return nil, err
+		return nil, xerrors.Errorf("file open error: %w", err)
 	}
 	defer f.Close()
 
@@ -180,12 +160,12 @@ func (vs VulnSrc) mergeAdvisories(advisories map[bucket]Advisory, defs map[bucke
 	return advisories
 }
 
-func (vs VulnSrc) save(repoToCpe repositoryToCPE, nvrToCpe map[string][]string, advisories map[bucket]Advisory, uniqCPEs CPEMap) error {
+func (vs VulnSrc) save(repoToCpe, nvrToCpe map[string][]string, advisories map[bucket]Advisory, uniqCPEs CPEMap) error {
 	cpeList := uniqCPEs.List()
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		// Store the mapping between repository and CPE names
-		for repo, cpes := range repoToCpe.Data {
-			if err := vs.dbc.PutRedHatRepositories(tx, repo, cpeList.Indices(cpes.Cpes)); err != nil {
+		for repo, cpes := range repoToCpe {
+			if err := vs.dbc.PutRedHatRepositories(tx, repo, cpeList.Indices(cpes)); err != nil {
 				return xerrors.Errorf("repository put error: %w", err)
 			}
 		}

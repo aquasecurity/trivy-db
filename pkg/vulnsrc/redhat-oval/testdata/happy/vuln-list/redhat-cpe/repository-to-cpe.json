@@ -1,0 +1,3 @@
+{
+  "rhel-8-for-x86_64-baseos-rpms": ["cpe:/o:redhat:enterprise_linux:8::baseos"]
+}
