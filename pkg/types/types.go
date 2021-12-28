@@ -98,7 +98,7 @@ type VulnerabilityDetail struct {
 }
 
 type Advisory struct {
-	VulnerabilityID string   `json:",omitempty"`
+	VulnerabilityID string   `json:",omitempty"` // CVE-ID or vendor ID
 	VendorIDs       []string `json:",omitempty"` // e.g. RHSA-ID and DSA-ID
 
 	// It is filled only when FixedVersion is empty since it is obvious the state is "Fixed" when FixedVersion is not empty.

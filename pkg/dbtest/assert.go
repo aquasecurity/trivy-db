@@ -47,9 +47,9 @@ func JSONEq(t *testing.T, dbPath string, key []string, want interface{}, msgAndA
 	t.Helper()
 
 	wantByte, err := json.Marshal(want)
-	require.NoError(t, err, msgAndArgs)
+	require.NoError(t, err, msgAndArgs...)
 
-	got := get(t, dbPath, key)
+	got := get(t, dbPath, key, msgAndArgs...)
 	assert.JSONEq(t, string(wantByte), string(got), msgAndArgs...)
 }
 
@@ -57,7 +57,7 @@ type bucketer interface {
 	Bucket(name []byte) *bolt.Bucket
 }
 
-func get(t *testing.T, dbPath string, keys []string) []byte {
+func get(t *testing.T, dbPath string, keys []string, msgAndArgs ...interface{}) []byte {
 	if len(keys) < 2 {
 		require.Failf(t, "malformed keys: %v", "", keys)
 	}
@@ -91,7 +91,7 @@ func get(t *testing.T, dbPath string, keys []string) []byte {
 		copy(b, res)
 		return nil
 	})
-	require.NoError(t, err)
+	require.NoError(t, err, msgAndArgs...)
 
 	return b
 }
