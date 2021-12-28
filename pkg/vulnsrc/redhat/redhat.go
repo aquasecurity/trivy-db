@@ -20,16 +20,9 @@ import (
 )
 
 const (
-	redhatDir      = "redhat"
-	platformFormat = "Red Hat Enterprise Linux %s"
+	redhatDir = "redhat"
 
 	resourceURL = "https://access.redhat.com/security/cve/%s"
-)
-
-var (
-	targetPlatforms = []string{"Red Hat Enterprise Linux 5", "Red Hat Enterprise Linux 6",
-		"Red Hat Enterprise Linux 7", "Red Hat Enterprise Linux 8"}
-	targetStatus = []string{"Affected", "Fix deferred", "Will not fix", "Out of support scope"}
 )
 
 type VulnSrc struct {
