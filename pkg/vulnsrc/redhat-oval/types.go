@@ -24,7 +24,7 @@ type ovalAdvisory struct {
 	Rights          string
 	Issued          issued
 	Updated         updated
-	Cves            []cve
+	Cves            []ovalCVE
 	Bugzilla        []bugzilla
 	AffectedCpeList []string
 }
@@ -59,7 +59,7 @@ type updated struct {
 	Date string
 }
 
-type cve struct {
+type ovalCVE struct {
 	CveID  string
 	Cvss2  string
 	Cvss3  string
@@ -143,29 +143,38 @@ type pkg struct {
 }
 
 type bucket struct {
-	platform string
-	pkgName  string
-	cveID    string
-}
-
-type vulnerabilityDetail struct {
-	bucket
-	definition Definition
-}
-
-type Definition struct {
-	FixedVersion    string   `json:",omitempty"`
-	AffectedCPEList []string `json:",omitempty"`
-	AdvisoryID      string   `json:",omitempty"`
-}
-
-type advisory struct {
-	types.Advisory              // for backward compatibility and CentOS
-	Definitions    []Definition `json:",omitempty"` // RHEL uses this field
+	pkgName string
+	vulnID  string
 }
 
 type repositoryToCPE struct {
 	Data map[string]struct {
 		Cpes []string `json:"cpes"`
 	} `json:"data"`
+}
+
+type Advisory struct {
+	Entries []Entry `json:",omitempty"`
+}
+
+type Definition struct {
+	Entry Entry `json:",omitempty"`
+}
+
+// Entry holds the unique advisory information per platform.
+type Entry struct {
+	FixedVersion string `json:",omitempty"`
+	Cves         []CveEntry
+
+	// For DB size optimization, CPE names will not be stored.
+	// CPE indices are stored instead.
+	AffectedCPEList    []string `json:"-"`
+	AffectedCPEIndices []int    `json:"Affected,omitempty"`
+}
+
+type CveEntry struct {
+	ID string
+
+	// Severity may differ depending on platform even though the advisories resolve the same CVE-ID.
+	Severity types.Severity `json:",omitempty"`
 }

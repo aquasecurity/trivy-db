@@ -15,17 +15,14 @@ func TestConfig_GetRedHatCPEs(t *testing.T) {
 		name       string
 		fixtures   []string
 		repository string
-		want       []string
+		want       []int
 		wantErr    string
 	}{
 		{
 			name:       "happy path",
 			fixtures:   []string{"testdata/fixtures/redhat-cpe.yaml"},
 			repository: "rhel-lb-for-rhel-6-server-eus-debug-rpms",
-			want: []string{
-				"cpe:/o:redhat:enterprise_linux:6::server",
-				"cpe:/o:redhat:rhel_eus:6.7::server",
-			},
+			want:       []int{1, 2},
 		},
 		{
 			name:       "unknown cpe",
@@ -47,7 +44,7 @@ func TestConfig_GetRedHatCPEs(t *testing.T) {
 			defer db.Close()
 
 			dbc := db.Config{}
-			got, err := dbc.GetRedHatCPEs(tt.repository)
+			got, err := dbc.RedHatRepoToCPEs(tt.repository)
 
 			if tt.wantErr != "" {
 				require.NotNil(t, err)

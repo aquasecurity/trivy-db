@@ -56,8 +56,11 @@ type Operation interface {
 	PutAdvisoryDetail(tx *bolt.Tx, vulnerabilityID, pkgName string, nestedBktNames []string, advisory interface{}) (err error)
 	DeleteAdvisoryDetailBucket() error
 
-	PutRedHatCPEs(tx *bolt.Tx, repository string, cpes []string) (err error)
-	GetRedHatCPEs(repository string) (cpes []string, err error)
+	PutRedHatRepositories(tx *bolt.Tx, repository string, cpeIndices []int) (err error)
+	PutRedHatNVRs(tx *bolt.Tx, nvr string, cpeIndices []int) (err error)
+	PutRedHatCPEs(tx *bolt.Tx, cpeIndex int, cpe string) (err error)
+	RedHatRepoToCPEs(repository string) (cpeIndices []int, err error)
+	RedHatNVRToCPEs(nvr string) (cpeIndices []int, err error)
 }
 
 type Metadata struct {

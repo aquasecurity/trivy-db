@@ -11,31 +11,28 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/aquasecurity/trivy-db/pkg/utils/ints"
+
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 const (
 	mappingURL = "https://www.redhat.com/security/data/metrics/repository-to-cpe.json"
 
-	// the same bucket name as Red Hat Security Data API
-	platformFormat = "Red Hat Enterprise Linux %s"
-
-	rhelFileFormat = "rhel-%s"
+	rootBucket = "Red Hat"
 )
 
 var (
 	redhatDir = filepath.Join("oval", "redhat")
 
-	supportedVersions = []string{"5", "6", "7", "8"}
-
-	platformRegexp = regexp.MustCompile(`(Red Hat Enterprise Linux \d) is installed`)
-	moduleRegexp   = regexp.MustCompile(`Module\s+(.*)\s+is enabled`)
+	moduleRegexp = regexp.MustCompile(`Module\s+(.*)\s+is enabled`)
 )
 
 type VulnSrc struct {
@@ -68,8 +65,16 @@ func (vs VulnSrc) Name() string {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	if err := vs.storeRepositoryCPEMapping(); err != nil {
+	uniqCPEs := CPEMap{}
+
+	repoToCPE, err := vs.parseRepositoryCpeMapping(uniqCPEs)
+	if err != nil {
 		return xerrors.Errorf("unable to store the mapping between repositories and CPE names: %w", err)
+	}
+
+	nvrToCPE, err := vs.parseNvrCpeMapping(uniqCPEs)
+	if err != nil {
+		return xerrors.Errorf("unable to store the mapping between NVR and CPE names: %w", err)
 	}
 
 	// List version directories
@@ -79,6 +84,7 @@ func (vs VulnSrc) Update(dir string) error {
 		return xerrors.Errorf("unable to list directory entries (%s): %w", rootDir, err)
 	}
 
+	advisories := map[bucket]Advisory{}
 	for _, ver := range versions {
 		versionDir := filepath.Join(rootDir, ver.Name())
 		streams, err := os.ReadDir(versionDir)
@@ -86,116 +92,172 @@ func (vs VulnSrc) Update(dir string) error {
 			return xerrors.Errorf("unable to get a list of directory entries (%s): %w", versionDir, err)
 		}
 
-		var details []vulnerabilityDetail
 		for _, f := range streams {
 			if !f.IsDir() {
 				continue
 			}
 
-			if !strings.Contains(f.Name(), "-including-unpatched") {
-				continue
-			}
-
-			parsedDetails, err := parseOVALStream(filepath.Join(versionDir, f.Name()))
+			definitions, err := parseOVALStream(filepath.Join(versionDir, f.Name()), uniqCPEs)
 			if err != nil {
 				return xerrors.Errorf("failed to parse OVAL stream: %w", err)
 			}
 
-			details = append(details, parsedDetails...)
-		}
+			advisories = vs.mergeAdvisories(advisories, definitions)
 
-		if err = vs.save(details); err != nil {
-			return xerrors.Errorf("save error: %w", err)
 		}
+	}
+
+	if err = vs.save(repoToCPE, nvrToCPE, advisories, uniqCPEs); err != nil {
+		return xerrors.Errorf("save error: %w", err)
 	}
 
 	return nil
 }
 
-func (vs VulnSrc) storeRepositoryCPEMapping() error {
+func (vs VulnSrc) parseRepositoryCpeMapping(uniqCPEs CPEMap) (repositoryToCPE, error) {
 	resp, err := http.Get(vs.mappingURL)
 	if err != nil {
-		return xerrors.Errorf("failed to get %s: %w", mappingURL, err)
+		return repositoryToCPE{}, xerrors.Errorf("failed to get %s: %w", mappingURL, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return xerrors.Errorf("Red Hat API (%s) returns %d", mappingURL, resp.StatusCode)
+		return repositoryToCPE{}, xerrors.Errorf("Red Hat API (%s) returns %d", mappingURL, resp.StatusCode)
 	}
 
 	var repoToCPE repositoryToCPE
 	if err = json.NewDecoder(resp.Body).Decode(&repoToCPE); err != nil {
-		return xerrors.Errorf("JSON parse error: %w", err)
+		return repositoryToCPE{}, xerrors.Errorf("JSON parse error: %w", err)
 	}
 
-	return vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		for repo, cpes := range repoToCPE.Data {
-			if err = vs.dbc.PutRedHatCPEs(tx, repo, cpes.Cpes); err != nil {
-				return err
+	for _, cpes := range repoToCPE.Data {
+		updateCPEs(cpes.Cpes, uniqCPEs)
+	}
+
+	return repoToCPE, nil
+}
+
+func (vs VulnSrc) parseNvrCpeMapping(uniqCPEs CPEMap) (map[string][]string, error) {
+	f, err := os.Open("mapping.json")
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	nvrToCpe := map[string][]string{}
+	if err = json.NewDecoder(f).Decode(&nvrToCpe); err != nil {
+		return nil, xerrors.Errorf("JSON parse error: %w", err)
+	}
+
+	for _, cpes := range nvrToCpe {
+		updateCPEs(cpes, uniqCPEs)
+	}
+	return nvrToCpe, nil
+}
+
+func (vs VulnSrc) mergeAdvisories(advisories map[bucket]Advisory, defs map[bucket]Definition) map[bucket]Advisory {
+	for bkt, def := range defs {
+		if old, ok := advisories[bkt]; ok {
+			found := false
+			for i := range old.Entries {
+				// New advisory should contain a single fixed version.
+				if old.Entries[i].FixedVersion == def.Entry.FixedVersion {
+					found = true
+					old.Entries[i].AffectedCPEList = ustrings.Merge(old.Entries[i].AffectedCPEList, def.Entry.AffectedCPEList)
+				}
+			}
+			if !found {
+				old.Entries = append(old.Entries, def.Entry)
+			}
+			advisories[bkt] = old
+		} else {
+			advisories[bkt] = Advisory{
+				Entries: []Entry{def.Entry},
 			}
 		}
+	}
+
+	return advisories
+}
+
+func (vs VulnSrc) save(repoToCpe repositoryToCPE, nvrToCpe map[string][]string, advisories map[bucket]Advisory, uniqCPEs CPEMap) error {
+	cpeList := uniqCPEs.List()
+	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
+		// Store the mapping between repository and CPE names
+		for repo, cpes := range repoToCpe.Data {
+			if err := vs.dbc.PutRedHatRepositories(tx, repo, cpeList.Indices(cpes.Cpes)); err != nil {
+				return xerrors.Errorf("repository put error: %w", err)
+			}
+		}
+
+		// Store the mapping between NVR and CPE names
+		for nvr, cpes := range nvrToCpe {
+			if err := vs.dbc.PutRedHatNVRs(tx, nvr, cpeList.Indices(cpes)); err != nil {
+				return xerrors.Errorf("NVR put error: %w", err)
+			}
+		}
+
+		//  Store advisories
+		for bkt, advisory := range advisories {
+			for i := range advisory.Entries {
+				// Convert CPE names to indices.
+				advisory.Entries[i].AffectedCPEIndices = cpeList.Indices(advisory.Entries[i].AffectedCPEList)
+			}
+
+			if err := vs.dbc.PutAdvisoryDetail(tx, bkt.vulnID, bkt.pkgName, []string{rootBucket}, advisory); err != nil {
+				return xerrors.Errorf("failed to save Red Hat OVAL advisory: %w", err)
+			}
+
+			if err := vs.dbc.PutSeverity(tx, bkt.vulnID, types.SeverityUnknown); err != nil {
+				return xerrors.Errorf("failed to put severity: %w", err)
+			}
+		}
+
+		// Store CPE indices for debug information
+		for i, cpe := range cpeList {
+			if err := vs.dbc.PutRedHatCPEs(tx, i, cpe); err != nil {
+				return xerrors.Errorf("CPE put error: %w", err)
+			}
+		}
+
 		return nil
 	})
-}
-
-func (vs VulnSrc) save(details []vulnerabilityDetail) error {
-	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		return vs.commit(tx, details)
-	})
 	if err != nil {
-		return xerrors.Errorf("failed batch update: %w", err)
+		return xerrors.Errorf("batch update error: %w", err)
 	}
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, details []vulnerabilityDetail) error {
-	advisories := map[bucket]advisory{}
-	for _, detail := range details {
-		var adv advisory
-		if v, ok := advisories[detail.bucket]; ok {
-			if !isUniqAdvisory(detail.definition, v.Definitions) {
-				continue
-			}
-			v.Definitions = append(v.Definitions, detail.definition)
-			adv = v
-		} else {
-			adv = advisory{
-				Advisory: types.Advisory{
-					// FixedVersion is kept for backward compatibility.
-					// By default, FixedVersion should be 0 so that this vulnerability can not detected.
-					// The value is replaced by a fixed version of RHEL if it exists.
-					FixedVersion: "0",
-				},
-				Definitions: []Definition{detail.definition},
-			}
-		}
-
-		advisories[detail.bucket] = adv
-	}
-
-	for bkt, advisory := range advisories {
-		if err := vs.dbc.PutAdvisoryDetail(tx, bkt.cveID, bkt.pkgName, []string{bkt.platform}, advisory); err != nil {
-			return xerrors.Errorf("failed to save Red Hat CVE-ID: %w", err)
-		}
-	}
-
-	return nil
-}
-
-func (vs VulnSrc) Get(release, pkgName string, repositories []string) ([]types.Advisory, error) {
-	bucket := fmt.Sprintf(platformFormat, release)
-	rawAdvisories, err := vs.dbc.ForEachAdvisory(bucket, pkgName)
-	if err != nil {
-		return nil, xerrors.Errorf("unable to iterate advisories: %w", err)
-	}
-
-	var cpes []string
+func (vs VulnSrc) cpeIndices(repositories, nvrs []string) ([]int, error) {
+	var cpeIndices []int
 	for _, repo := range repositories {
-		res, err := vs.dbc.GetRedHatCPEs(repo)
+		results, err := vs.dbc.RedHatRepoToCPEs(repo)
 		if err != nil {
 			return nil, xerrors.Errorf("unable to convert repositories to CPEs: %w", err)
 		}
-		cpes = append(cpes, res...)
+		cpeIndices = append(cpeIndices, results...)
+	}
+
+	for _, nvr := range nvrs {
+		results, err := vs.dbc.RedHatNVRToCPEs(nvr)
+		if err != nil {
+			return nil, xerrors.Errorf("unable to convert repositories to CPEs: %w", err)
+		}
+		cpeIndices = append(cpeIndices, results...)
+	}
+
+	return ints.Unique(cpeIndices), nil
+}
+
+func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advisory, error) {
+	cpeIndices, err := vs.cpeIndices(repositories, nvrs)
+	if err != nil {
+		return nil, xerrors.Errorf("CPE convert error: %w", err)
+	}
+
+	rawAdvisories, err := vs.dbc.ForEachAdvisory([]string{rootBucket}, pkgName)
+	if err != nil {
+		return nil, xerrors.Errorf("unable to iterate advisories: %w", err)
 	}
 
 	var advisories []types.Advisory
@@ -204,57 +266,38 @@ func (vs VulnSrc) Get(release, pkgName string, repositories []string) ([]types.A
 			continue
 		}
 
-		advs, err := filterAdvisoriesByCPEs(vulnID, v, cpes)
-		if err != nil {
-			return nil, err
+		var adv Advisory
+		if err = json.Unmarshal(v, &adv); err != nil {
+			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
 		}
-		advisories = append(advisories, advs...)
-	}
-	return advisories, nil
-}
 
-func filterAdvisoriesByCPEs(vulnID string, raw []byte, cpes []string) ([]types.Advisory, error) {
-	var adv advisory
-	if err := json.Unmarshal(raw, &adv); err != nil {
-		return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
-	}
+		for _, entry := range adv.Entries {
+			if !ints.HasIntersection(cpeIndices, entry.AffectedCPEIndices) {
+				continue
+			}
 
-	var advisories []types.Advisory
+			for _, cve := range entry.Cves {
+				advisory := types.Advisory{
+					Severity:     cve.Severity,
+					FixedVersion: entry.FixedVersion,
+				}
 
-	// CentOS has no CPE information in a container image.
-	if len(cpes) == 0 && adv.FixedVersion != "0" {
-		advisories = append(advisories, types.Advisory{
-			VulnerabilityID: vulnID,
-			FixedVersion:    adv.FixedVersion,
-		})
-	}
+				if strings.HasPrefix(vulnID, "CVE-") {
+					advisory.VulnerabilityID = vulnID
+				} else {
+					advisory.VulnerabilityID = cve.ID
+					advisory.VendorIDs = []string{vulnID}
+				}
 
-	for _, def := range adv.Definitions {
-		// When CPE names of the package are included in the affected CPE list of RHSA,
-		// the RHSA should be used.
-		if utils.HasIntersection(cpes, def.AffectedCPEList) {
-			advisories = append(advisories, types.Advisory{
-				VulnerabilityID: vulnID,
-				VendorIDs:       []string{def.AdvisoryID},
-				FixedVersion:    def.FixedVersion,
-			})
+				advisories = append(advisories, advisory)
+			}
 		}
 	}
 
 	return advisories, nil
-
 }
 
-func isUniqAdvisory(def Definition, defs []Definition) bool {
-	for _, d := range defs {
-		if d.AdvisoryID == def.AdvisoryID {
-			return false
-		}
-	}
-	return true
-}
-
-func parseOVALStream(dir string) ([]vulnerabilityDetail, error) {
+func parseOVALStream(dir string, uniqCPEs CPEMap) (map[bucket]Definition, error) {
 	log.Printf("    Parsing %s", dir)
 
 	// Parse tests
@@ -272,21 +315,22 @@ func parseOVALStream(dir string) ([]vulnerabilityDetail, error) {
 	err = utils.FileWalk(definitionsDir, func(r io.Reader, path string) error {
 		var definition redhatOVAL
 		if err := json.NewDecoder(r).Decode(&definition); err != nil {
-			return xerrors.Errorf("failed to decode Red Hat OVAL JSON: %w", err)
+			return xerrors.Errorf("failed to decode %s: %w", path, err)
 		}
 		advisories = append(advisories, definition)
 		return nil
 	})
 
 	if err != nil {
-		return nil, xerrors.Errorf("error in Red Hat OVAL walk: %w", err)
+		return nil, xerrors.Errorf("Red Hat OVAL walk error: %w", err)
 	}
 
-	return parseAdvisories(advisories, tests), nil
+	return parseDefinitions(advisories, tests, uniqCPEs), nil
 }
 
-func parseAdvisories(advisories []redhatOVAL, tests map[string]rpmInfoTest) []vulnerabilityDetail {
-	var details []vulnerabilityDetail
+func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uniqCPEs CPEMap) map[bucket]Definition {
+	defs := map[bucket]Definition{}
+
 	for _, advisory := range advisories {
 		// Skip unaffected vulnerabilities
 		if strings.Contains(advisory.ID, "unaffected") {
@@ -294,13 +338,8 @@ func parseAdvisories(advisories []redhatOVAL, tests map[string]rpmInfoTest) []vu
 		}
 
 		// Parse criteria
-		platformName, moduleName, affectedPkgs := walkCriterion(advisory.Criteria, tests)
+		moduleName, affectedPkgs := walkCriterion(advisory.Criteria, tests)
 		for _, affectedPkg := range affectedPkgs {
-			// OVAL v2 is missing some unpatched vulnerabilities.
-			// They should be fetched from Security Data API unless the issue is addressed.
-			if affectedPkg.FixedVersion == "" {
-				continue
-			}
 			pkgName := affectedPkg.Name
 			if moduleName != "" {
 				// Add modular namespace
@@ -308,29 +347,56 @@ func parseAdvisories(advisories []redhatOVAL, tests map[string]rpmInfoTest) []vu
 				pkgName = fmt.Sprintf("%s::%s", moduleName, pkgName)
 			}
 
-			rhsaID, cveIDs := parseReferences(advisory.Metadata.References)
+			rhsaID := vendorID(advisory.Metadata.References)
 
-			for _, cveID := range cveIDs {
-				details = append(details, vulnerabilityDetail{
-					bucket: bucket{
-						cveID:    cveID,
-						platform: platformName,
-						pkgName:  pkgName,
-					},
-					definition: Definition{
-						FixedVersion:    affectedPkg.FixedVersion,
-						AffectedCPEList: advisory.Metadata.Advisory.AffectedCpeList,
-						AdvisoryID:      rhsaID,
-					},
+			var cveEntries []CveEntry
+			for _, cve := range advisory.Metadata.Advisory.Cves {
+				cveEntries = append(cveEntries, CveEntry{
+					ID:       cve.CveID,
+					Severity: severityFromImpact(cve.Impact),
 				})
 			}
+
+			if rhsaID != "" { // For patched vulnerabilities
+				bkt := bucket{
+					pkgName: pkgName,
+					vulnID:  rhsaID,
+				}
+				defs[bkt] = Definition{
+					Entry: Entry{
+						Cves:            cveEntries,
+						FixedVersion:    affectedPkg.FixedVersion,
+						AffectedCPEList: advisory.Metadata.Advisory.AffectedCpeList,
+					},
+				}
+			} else { // For unpatched vulnerabilities
+				for _, cve := range cveEntries {
+					bkt := bucket{
+						pkgName: pkgName,
+						vulnID:  cve.ID,
+					}
+					defs[bkt] = Definition{
+						Entry: Entry{
+							Cves: []CveEntry{
+								{
+									Severity: cve.Severity,
+								},
+							},
+							FixedVersion:    affectedPkg.FixedVersion,
+							AffectedCPEList: advisory.Metadata.Advisory.AffectedCpeList,
+						},
+					}
+				}
+			}
 		}
+
+		updateCPEs(advisory.Metadata.Advisory.AffectedCpeList, uniqCPEs)
 	}
-	return details
+
+	return defs
 }
 
-func walkCriterion(cri criteria, tests map[string]rpmInfoTest) (string, string, []pkg) {
-	var platform string
+func walkCriterion(cri criteria, tests map[string]rpmInfoTest) (string, []pkg) {
 	var moduleName string
 	var packages []pkg
 
@@ -339,13 +405,6 @@ func walkCriterion(cri criteria, tests map[string]rpmInfoTest) (string, string, 
 		m := moduleRegexp.FindStringSubmatch(c.Comment)
 		if len(m) > 1 && m[1] != "" {
 			moduleName = m[1]
-			continue
-		}
-
-		// Parse platform name
-		m = platformRegexp.FindStringSubmatch(c.Comment)
-		if len(m) > 1 && m[1] != "" {
-			platform = m[1]
 			continue
 		}
 
@@ -366,14 +425,11 @@ func walkCriterion(cri criteria, tests map[string]rpmInfoTest) (string, string, 
 	}
 
 	if len(cri.Criterias) == 0 {
-		return platform, moduleName, packages
+		return moduleName, packages
 	}
 
 	for _, c := range cri.Criterias {
-		p, m, pkgs := walkCriterion(c, tests)
-		if p != "" {
-			platform = p
-		}
+		m, pkgs := walkCriterion(c, tests)
 		if m != "" {
 			moduleName = m
 		}
@@ -381,19 +437,39 @@ func walkCriterion(cri criteria, tests map[string]rpmInfoTest) (string, string, 
 			packages = append(packages, pkgs...)
 		}
 	}
-	return platform, moduleName, packages
+	return moduleName, packages
 }
 
-func parseReferences(refs []reference) (string, []string) {
-	var cveIDs []string
-	var rhsaID string
+func updateCPEs(cpes []string, uniqCPEs CPEMap) {
+	for _, cpe := range cpes {
+		cpe = strings.TrimSpace(cpe)
+		if cpe == "" {
+			continue
+		}
+		uniqCPEs.Add(cpe)
+	}
+}
+
+func vendorID(refs []reference) string {
 	for _, ref := range refs {
 		switch ref.Source {
 		case "RHSA", "RHBA":
-			rhsaID = ref.RefID
-		case "CVE":
-			cveIDs = append(cveIDs, ref.RefID)
+			return ref.RefID
 		}
 	}
-	return rhsaID, cveIDs
+	return ""
+}
+
+func severityFromImpact(sev string) types.Severity {
+	switch strings.ToLower(sev) {
+	case "low":
+		return types.SeverityLow
+	case "moderate":
+		return types.SeverityMedium
+	case "important":
+		return types.SeverityHigh
+	case "critical":
+		return types.SeverityCritical
+	}
+	return types.SeverityUnknown
 }

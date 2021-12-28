@@ -52,127 +52,74 @@ func TestVulnSrc_Update(t *testing.T) {
 					value: []string{"cpe:/o:redhat:enterprise_linux:8::baseos"},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2020-16042", "Red Hat Enterprise Linux 8", "thunderbird"},
-					value: advisory{
-						Advisory: types.Advisory{
-							FixedVersion: "0:78.6.0-1.el8_3",
-						},
-						Definitions: []Definition{
-							{
-								FixedVersion: "0:78.6.0-1.el8_3",
-								AffectedCPEList: []string{
-									"cpe:/a:redhat:enterprise_linux:8",
-									"cpe:/a:redhat:enterprise_linux:8::appstream",
-								},
-								AdvisoryID: "RHSA-2020:5624",
-							},
-						},
+					key: []string{"advisory-detail", "RHSA-2020:5624", "Red Hat",
+						"cpe:/a:redhat:enterprise_linux:8", "thunderbird"},
+					value: types.Advisory{
+						FixedVersion: "0:78.6.0-1.el8_3",
+						CveIDs:       []string{"CVE-2020-16042", "CVE-2020-26971"},
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2020-16042", "Red Hat Enterprise Linux 8", "thunderbird-debugsource"},
-					value: advisory{
-						Advisory: types.Advisory{
-							FixedVersion: "0:78.6.0-1.el8_3",
-						},
-						Definitions: []Definition{
-							{
-								FixedVersion: "0:78.6.0-1.el8_3",
-								AffectedCPEList: []string{
-									"cpe:/a:redhat:enterprise_linux:8",
-									"cpe:/a:redhat:enterprise_linux:8::appstream",
-								},
-								AdvisoryID: "RHSA-2020:5624",
-							},
-						},
+					key: []string{"advisory-detail", "RHSA-2020:5624", "Red Hat",
+						"cpe:/a:redhat:enterprise_linux:8::appstream", "thunderbird"},
+					value: types.Advisory{
+						FixedVersion: "0:78.6.0-1.el8_3",
+						CveIDs:       []string{"CVE-2020-16042", "CVE-2020-26971"},
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2020-26971", "Red Hat Enterprise Linux 8", "thunderbird"},
-					value: advisory{
-						Advisory: types.Advisory{
-							FixedVersion: "0:78.6.0-1.el8_3",
-						},
-						Definitions: []Definition{
-							{
-								FixedVersion: "0:78.6.0-1.el8_3",
-								AffectedCPEList: []string{
-									"cpe:/a:redhat:enterprise_linux:8",
-									"cpe:/a:redhat:enterprise_linux:8::appstream",
-								},
-								AdvisoryID: "RHSA-2020:5624",
-							},
-							{
-								FixedVersion: "0:999.el8_3",
-								AffectedCPEList: []string{
-									"cpe:/a:redhat:rhel_eus:8.1",
-									"cpe:/a:redhat:rhel_eus:8.1::appstream",
-								},
-								AdvisoryID: "RHSA-2020:9999",
-							},
-						},
+					key: []string{"advisory-detail", "RHSA-2020:5624", "Red Hat",
+						"cpe:/a:redhat:enterprise_linux:8", "thunderbird-debugsource"},
+					value: types.Advisory{
+						FixedVersion: "0:78.6.0-1.el8_3",
+						CveIDs:       []string{"CVE-2020-16042", "CVE-2020-26971"},
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2020-26971", "Red Hat Enterprise Linux 8", "thunderbird"},
-					value: advisory{
-						Advisory: types.Advisory{
-							FixedVersion: "0:78.6.0-1.el8_3",
-						},
-						Definitions: []Definition{
-							{
-								FixedVersion: "0:78.6.0-1.el8_3",
-								AffectedCPEList: []string{
-									"cpe:/a:redhat:enterprise_linux:8",
-									"cpe:/a:redhat:enterprise_linux:8::appstream",
-								},
-								AdvisoryID: "RHSA-2020:5624",
-							},
-							{
-								FixedVersion: "0:999.el8_3",
-								AffectedCPEList: []string{
-									"cpe:/a:redhat:rhel_eus:8.1",
-									"cpe:/a:redhat:rhel_eus:8.1::appstream",
-								},
-								AdvisoryID: "RHSA-2020:9999",
-							},
-						},
+					key: []string{"advisory-detail", "RHSA-2020:5624", "Red Hat",
+						"cpe:/a:redhat:enterprise_linux:8::appstream", "thunderbird-debugsource"},
+					value: types.Advisory{
+						FixedVersion: "0:78.6.0-1.el8_3",
+						CveIDs:       []string{"CVE-2020-16042", "CVE-2020-26971"},
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2020-26972", "Red Hat Enterprise Linux 8", "thunderbird"},
-					value: advisory{
-						Advisory: types.Advisory{
-							FixedVersion: "0",
-						},
-						Definitions: []Definition{
-							{
-								FixedVersion: "0:999.el8_3",
-								AffectedCPEList: []string{
-									"cpe:/a:redhat:rhel_eus:8.1",
-									"cpe:/a:redhat:rhel_eus:8.1::appstream",
-								},
-								AdvisoryID: "RHSA-2020:9999",
-							},
-						},
+					key: []string{"advisory-detail", "RHSA-2020:9999", "Red Hat",
+						"cpe:/a:redhat:rhel_eus:8.1", "thunderbird"},
+					value: types.Advisory{
+						FixedVersion: "0:78.6.0-1.el8_3",
+						CveIDs:       []string{"CVE-2020-26971", "CVE-2020-26972"},
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2018-17189", "Red Hat Enterprise Linux 8", "httpd:2.4::httpd"},
-					value: advisory{
-						Advisory: types.Advisory{
-							FixedVersion: "0:2.4.37-30.module+el8.3.0+7001+0766b9e7",
-						},
-						Definitions: []Definition{
-							{
-								FixedVersion: "0:2.4.37-30.module+el8.3.0+7001+0766b9e7",
-								AffectedCPEList: []string{
-									"cpe:/a:redhat:enterprise_linux:8",
-									"cpe:/a:redhat:enterprise_linux:8::appstream",
-								},
-								AdvisoryID: "RHSA-2020:4751",
-							},
-						},
+					key: []string{"advisory-detail", "RHSA-2020:9999", "Red Hat",
+						"cpe:/a:redhat:rhel_eus:8.1::appstream", "thunderbird"},
+					value: types.Advisory{
+						FixedVersion: "0:78.6.0-1.el8_3",
+						CveIDs:       []string{"CVE-2020-26971", "CVE-2020-26972"},
+					},
+				},
+				{
+					key: []string{"advisory-detail", "RHSA-2020:4751", "Red Hat",
+						"cpe:/a:redhat:enterprise_linux:8", "httpd:2.4::httpd"},
+					value: types.Advisory{
+						FixedVersion: "0:2.4.37-30.module+el8.3.0+7001+0766b9e7",
+						CveIDs:       []string{"CVE-2018-17189"},
+					},
+				},
+				{
+					key: []string{"advisory-detail", "RHSA-2020:4751", "Red Hat",
+						"cpe:/a:redhat:enterprise_linux:8::appstream", "httpd:2.4::httpd"},
+					value: types.Advisory{
+						FixedVersion: "0:2.4.37-30.module+el8.3.0+7001+0766b9e7",
+						CveIDs:       []string{"CVE-2018-17189"},
+					},
+				},
+				{
+					key: []string{"advisory-detail", "CVE-2020-14342", "Red Hat",
+						"cpe:/a:redhat:enterprise_linux:8::crb", "cifs-utils"},
+					value: types.Advisory{
+						FixedVersion: "",
 					},
 				},
 			},
@@ -233,7 +180,7 @@ func TestVulnSrc_Update(t *testing.T) {
 
 			assert.NoError(t, err)
 			for _, w := range tc.wants {
-				dbtest.JSONEq(t, db.Path(dir), w.key, w.value)
+				dbtest.JSONEq(t, db.Path(dir), w.key, w.value, w.key)
 			}
 		})
 	}
@@ -337,7 +284,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			defer db.Close()
 
 			vs := NewVulnSrc()
-			got, err := vs.Get(tt.args.release, tt.args.pkgName, tt.args.repositories)
+			got, err := vs.Get(tt.args.pkgName, tt.args.repositories)
 
 			if tt.wantErr != "" {
 				require.NotNil(t, err)

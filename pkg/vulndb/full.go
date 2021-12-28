@@ -42,6 +42,9 @@ func (f fullDB) optimize() error {
 			return xerrors.Errorf("failed to save advisories: %w", err)
 		}
 
+		if len(details) == 0 {
+			return nil
+		}
 		vuln := f.vulnClient.Normalize(details)
 		if err := f.dbc.PutVulnerability(tx, cveID, vuln); err != nil {
 			return xerrors.Errorf("failed to put vulnerability: %w", err)
