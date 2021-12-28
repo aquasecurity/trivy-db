@@ -10,12 +10,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aquasecurity/trivy-db/pkg/types"
-
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
@@ -122,44 +121,11 @@ func (vs VulnSrc) save(cves []RedhatCVE) error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx, cves []RedhatCVE) error {
 	for _, cve := range cves {
-		if err := vs.putAdvisoryDetail(tx, cve); err != nil {
-			return err
-		}
 		if err := vs.putVulnerabilityDetail(tx, cve); err != nil {
 			return err
 		}
 	}
 
-	return nil
-}
-
-func (vs VulnSrc) putAdvisoryDetail(tx *bolt.Tx, cve RedhatCVE) error {
-	// OVAL v2 contains unpatched vulnerabilities as well, so this process is usually unnecessary.
-	// But OVAL v2 is missing some unpatched vulnerabilities and Security Data API should be used for now.
-	for _, pkgState := range cve.PackageState {
-		// Add modular namespace: nodejs:12/npm => nodejs:12::npm
-		pkgName := strings.ReplaceAll(pkgState.PackageName, "/", "::")
-		if pkgName == "" {
-			continue
-		}
-
-		// e.g. Red Hat Enterprise Linux 7
-		platformName := pkgState.ProductName
-		if !utils.StringInSlice(platformName, targetPlatforms) {
-			continue
-		}
-		if !utils.StringInSlice(pkgState.FixState, targetStatus) {
-			continue
-		}
-
-		advisory := types.Advisory{
-			// It means this vulnerability affects all versions
-			FixedVersion: "",
-		}
-		if err := vs.dbc.PutAdvisoryDetail(tx, cve.Name, pkgName, []string{platformName}, advisory); err != nil {
-			return xerrors.Errorf("failed to save Red Hat advisory: %w", err)
-		}
-	}
 	return nil
 }
 
@@ -177,7 +143,7 @@ func (vs VulnSrc) putVulnerabilityDetail(tx *bolt.Tx, cve RedhatCVE) error {
 		Severity:     severityFromThreat(cve.ThreatSeverity),
 		References:   references,
 		Title:        strings.TrimSpace(title),
-		Description:  strings.TrimSpace(strings.Join(cve.Details, "")),
+		Description:  strings.TrimSpace(strings.Join(cve.Details, " ")),
 	}
 	if err := vs.dbc.PutVulnerabilityDetail(tx, cve.Name, vulnerability.RedHat, vuln); err != nil {
 		return xerrors.Errorf("failed to save Red Hat vulnerability: %w", err)
@@ -188,23 +154,6 @@ func (vs VulnSrc) putVulnerabilityDetail(tx *bolt.Tx, cve RedhatCVE) error {
 		return xerrors.Errorf("failed to save Red Hat vulnerability severity: %w", err)
 	}
 	return nil
-}
-
-func (vs VulnSrc) Get(majorVersion string, pkgName string) ([]types.Advisory, error) {
-	bucket := fmt.Sprintf(platformFormat, majorVersion)
-	advs, err := vs.dbc.GetAdvisories(bucket, pkgName)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to get Red Hat advisories: %w", err)
-	}
-
-	var advisories []types.Advisory
-	for _, adv := range advs {
-		if adv.FixedVersion != "" {
-			continue
-		}
-		advisories = append(advisories, adv)
-	}
-	return advisories, nil
 }
 
 func severityFromThreat(sev string) types.Severity {
