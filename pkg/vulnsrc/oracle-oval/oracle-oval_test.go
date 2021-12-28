@@ -5,6 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	bolt "go.etcd.io/bbolt"
@@ -26,23 +28,23 @@ func TestVulnSrc_Update(t *testing.T) {
 		name           string
 		cacheDir       string
 		batchUpdateErr error
-		expectedError  error
-		expectedVulns  []types.Advisory
+		want           []types.Advisory
+		wantErr        string
 	}{
 		{
 			name:     "happy path",
 			cacheDir: "testdata",
 		},
 		{
-			name:          "cache dir doesnt exist",
-			cacheDir:      "badpathdoesnotexist",
-			expectedError: errors.New("error in Oracle Linux OVAL walk: error in file walk: lstat badpathdoesnotexist/vuln-list/oval/oracle: no such file or directory"),
+			name:     "cache dir doesnt exist",
+			cacheDir: "badpathdoesnotexist",
+			wantErr:  "lstat badpathdoesnotexist/vuln-list/oval/oracle: no such file or directory",
 		},
 		{
 			name:           "unable to save oracle linux oval defintions",
 			cacheDir:       "testdata",
 			batchUpdateErr: errors.New("unable to batch update"),
-			expectedError:  errors.New("error in Oracle Linux OVAL save: error in batch update: unable to batch update"),
+			wantErr:        "unable to batch update",
 		},
 	}
 
@@ -54,8 +56,9 @@ func TestVulnSrc_Update(t *testing.T) {
 
 			err := ac.Update(tc.cacheDir)
 			switch {
-			case tc.expectedError != nil:
-				assert.EqualError(t, err, tc.expectedError.Error(), tc.name)
+			case tc.wantErr != "":
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.wantErr, tc.name)
 			default:
 				assert.NoError(t, err, tc.name)
 			}
