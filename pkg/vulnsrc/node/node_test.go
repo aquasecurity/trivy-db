@@ -31,7 +31,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "nodejs-security-wg",
+						NestedBktNames:  []string{vulnerability.NodejsSecurityWg},
 						PkgName:         "bassmaster",
 						VulnerabilityID: "CVE-2014-7205",
 						Advisory: Advisory{
@@ -74,7 +74,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "nodejs-security-wg",
+						NestedBktNames:  []string{vulnerability.NodejsSecurityWg},
 						PkgName:         "bassmaster",
 						VulnerabilityID: "CVE-2014-7205",
 						Advisory: Advisory{
@@ -125,7 +125,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "nodejs-security-wg",
+						NestedBktNames:  []string{vulnerability.NodejsSecurityWg},
 						PkgName:         "missingcvss-missingseverity-package",
 						VulnerabilityID: "NSWG-ECO-0",
 						Advisory:        Advisory{},
@@ -163,7 +163,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "nodejs-security-wg",
+						NestedBktNames:  []string{vulnerability.NodejsSecurityWg},
 						PkgName:         "hubl-server",
 						VulnerabilityID: "NSWG-ECO-334",
 						Advisory: Advisory{

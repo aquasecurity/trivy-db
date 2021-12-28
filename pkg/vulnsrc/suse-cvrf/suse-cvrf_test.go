@@ -158,7 +158,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "SUSE Linux Enterprise 15.1",
+						NestedBktNames:  []string{"SUSE Linux Enterprise 15.1"},
 						PkgName:         "helm-mirror",
 						VulnerabilityID: "SUSE-SU-2019:0048-2",
 						Advisory: types.Advisory{
@@ -274,7 +274,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "openSUSE Leap 15.1",
+						NestedBktNames:  []string{"openSUSE Leap 15.1"},
 						PkgName:         "strongswan",
 						VulnerabilityID: "openSUSE-SU-2019:2598-1",
 						Advisory: types.Advisory{
@@ -286,7 +286,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "openSUSE Leap 15.1",
+						NestedBktNames:  []string{"openSUSE Leap 15.1"},
 						PkgName:         "strongswan-sqlite",
 						VulnerabilityID: "openSUSE-SU-2019:2598-1",
 						Advisory: types.Advisory{
@@ -384,7 +384,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "SUSE Linux Enterprise 15",
+						NestedBktNames:  []string{"SUSE Linux Enterprise 15"},
 						PkgName:         "GraphicsMagick",
 						VulnerabilityID: "openSUSE-SU-2019:0003-1",
 						Advisory: types.Advisory{
@@ -396,7 +396,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "SUSE Linux Enterprise 15",
+						NestedBktNames:  []string{"SUSE Linux Enterprise 15"},
 						PkgName:         "GraphicsMagick-devel",
 						VulnerabilityID: "openSUSE-SU-2019:0003-1",
 						Advisory: types.Advisory{
@@ -463,7 +463,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:              true,
-						SourceAnything:          true,
+						NestedBktNamesAnything:  true,
 						PkgNameAnything:         true,
 						VulnerabilityIDAnything: true,
 						AdvisoryAnything:        true,
@@ -504,7 +504,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:              true,
-						SourceAnything:          true,
+						NestedBktNamesAnything:  true,
 						PkgNameAnything:         true,
 						VulnerabilityIDAnything: true,
 						AdvisoryAnything:        true,
@@ -556,7 +556,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:              true,
-						SourceAnything:          true,
+						NestedBktNamesAnything:  true,
 						PkgNameAnything:         true,
 						VulnerabilityIDAnything: true,
 						AdvisoryAnything:        true,

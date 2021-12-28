@@ -17,7 +17,7 @@ func Test_walkFunc(t *testing.T) {
 		{
 			Args: db.OperationPutAdvisoryDetailArgs{
 				TxAnything:      true,
-				Source:          vulnerability.RubySec,
+				NestedBktNames:  []string{vulnerability.RubySec},
 				PkgName:         "doorkeeper-openid_connect",
 				VulnerabilityID: "CVE-2019-9837",
 				Advisory: Advisory{

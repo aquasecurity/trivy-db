@@ -126,7 +126,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, advisoryDB AdvisoryDB) error {
 
 func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
 	pkgName = ToLowerCasePythonPackage(pkgName)
-	advisories, err := vs.dbc.ForEachAdvisory(vulnerability.PythonSafetyDB, pkgName)
+	advisories, err := vs.dbc.ForEachAdvisory([]string{vulnerability.PythonSafetyDB}, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to iterate python vulnerabilities: %w", err)
 	}

@@ -192,7 +192,7 @@ func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
 	pkgName = vs.ToLowerCasePackage(pkgName)
 
 	bucket := fmt.Sprintf(platformFormat, vs.ecosystem.String())
-	advisories, err := vs.dbc.ForEachAdvisory(bucket, pkgName)
+	advisories, err := vs.dbc.ForEachAdvisory([]string{bucket}, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to iterate GHSA: %w", err)
 	}

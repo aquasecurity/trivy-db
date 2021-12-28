@@ -123,7 +123,7 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 }
 
 func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
-	advisories, err := vs.dbc.ForEachAdvisory(vulnerability.PhpSecurityAdvisories, pkgName)
+	advisories, err := vs.dbc.ForEachAdvisory([]string{vulnerability.PhpSecurityAdvisories}, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to iterate php vulnerabilities: %w", err)
 	}

@@ -40,7 +40,7 @@ type Operation interface {
 		vulnerability types.VulnerabilityDetail) (err error)
 	DeleteVulnerabilityDetailBucket() (err error)
 
-	ForEachAdvisory(source string, pkgName string) (value map[string][]byte, err error)
+	ForEachAdvisory(sources []string, pkgName string) (value map[string][]byte, err error)
 	GetAdvisories(source string, pkgName string) (advisories []types.Advisory, err error)
 
 	PutSeverity(tx *bolt.Tx, vulnerabilityID string, severity types.Severity) (err error)
@@ -53,7 +53,7 @@ type Operation interface {
 	GetVulnerability(vulnerabilityID string) (vulnerability types.Vulnerability, err error)
 
 	SaveAdvisoryDetails(tx *bolt.Tx, cveID string) (err error)
-	PutAdvisoryDetail(tx *bolt.Tx, vulnID, pkgName string, nestedBktNames []string, advisory interface{}) (err error)
+	PutAdvisoryDetail(tx *bolt.Tx, vulnerabilityID, pkgName string, nestedBktNames []string, advisory interface{}) (err error)
 	DeleteAdvisoryDetailBucket() error
 
 	PutRedHatCPEs(tx *bolt.Tx, repository string, cpes []string) (err error)
@@ -219,7 +219,12 @@ func (dbc Config) get(bktNames []string, key string) (value []byte, err error) {
 	return value, nil
 }
 
-func (dbc Config) forEach(rootBucket, nestedBucket string) (value map[string][]byte, err error) {
+func (dbc Config) forEach(bktNames []string) (value map[string][]byte, err error) {
+	if len(bktNames) < 2 {
+		return nil, xerrors.Errorf("bucket must be nested: %v", bktNames)
+	}
+	rootBucket, nestedBuckets := bktNames[0], bktNames[1:]
+
 	value = map[string][]byte{}
 	err = db.View(func(tx *bolt.Tx) error {
 		var rootBuckets []string
@@ -242,16 +247,23 @@ func (dbc Config) forEach(rootBucket, nestedBucket string) (value map[string][]b
 				continue
 			}
 
-			nested := root.Bucket([]byte(nestedBucket))
-			if nested == nil {
+			bkt := root
+			for _, nestedBkt := range nestedBuckets {
+				bkt = bkt.Bucket([]byte(nestedBkt))
+				if bkt == nil {
+					break
+				}
+			}
+			if bkt == nil {
 				continue
 			}
-			err := nested.ForEach(func(k, v []byte) error {
+
+			err = bkt.ForEach(func(k, v []byte) error {
 				value[string(k)] = v
 				return nil
 			})
 			if err != nil {
-				return xerrors.Errorf("error in db foreach: %w", err)
+				return xerrors.Errorf("db foreach error: %w", err)
 			}
 		}
 		return nil

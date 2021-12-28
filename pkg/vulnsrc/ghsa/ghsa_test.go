@@ -217,7 +217,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory Composer",
+						NestedBktNames:  []string{"GitHub Security Advisory Composer"},
 						PkgName:         "contao/core-bundle",
 						VulnerabilityID: "GHSA-wjx8-cgrm-hh8p",
 						Advisory: Advisory{
@@ -318,7 +318,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory Maven",
+						NestedBktNames:  []string{"GitHub Security Advisory Maven"},
 						PkgName:         "org.springframework.boot:spring-boot",
 						VulnerabilityID: "CVE-2018-1196",
 						Advisory: Advisory{
@@ -412,7 +412,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory Npm",
+						NestedBktNames:  []string{"GitHub Security Advisory Npm"},
 						PkgName:         "atob",
 						VulnerabilityID: "CVE-2018-3745",
 						Advisory: Advisory{
@@ -502,7 +502,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory Nuget",
+						NestedBktNames:  []string{"GitHub Security Advisory Nuget"},
 						PkgName:         "CLEditor",
 						VulnerabilityID: "CVE-2019-1010113",
 						Advisory: Advisory{
@@ -597,7 +597,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory Pip",
+						NestedBktNames:  []string{"GitHub Security Advisory Pip"},
 						PkgName:         "django",
 						VulnerabilityID: "CVE-2018-14574",
 						Advisory: Advisory{
@@ -701,7 +701,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory Pip",
+						NestedBktNames:  []string{"GitHub Security Advisory Pip"},
 						PkgName:         "django",
 						VulnerabilityID: "CVE-2018-14574",
 						Advisory: Advisory{
@@ -805,7 +805,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory Pip",
+						NestedBktNames:  []string{"GitHub Security Advisory Pip"},
 						PkgName:         "dj-ango",
 						VulnerabilityID: "CVE-2018-14574",
 						Advisory: Advisory{
@@ -903,7 +903,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory Rubygems",
+						NestedBktNames:  []string{"GitHub Security Advisory Rubygems"},
 						PkgName:         "activestorage",
 						VulnerabilityID: "CVE-2018-16477",
 						Advisory: Advisory{
@@ -1014,7 +1014,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory Maven",
+						NestedBktNames:  []string{"GitHub Security Advisory Maven"},
 						PkgName:         "com.fasterxml.jackson.core:jackson-databind",
 						VulnerabilityID: "CVE-2019-20330",
 						Advisory: Advisory{
@@ -1112,7 +1112,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory Npm",
+						NestedBktNames:  []string{"GitHub Security Advisory Npm"},
 						PkgName:         "renovate",
 						VulnerabilityID: "GHSA-v7x3-7hw7-pcjg",
 						Advisory: Advisory{
@@ -1202,7 +1202,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory Rubygems",
+						NestedBktNames:  []string{"GitHub Security Advisory Rubygems"},
 						PkgName:         "activestorage",
 						VulnerabilityID: "CVE-2018-16477",
 						Advisory: Advisory{
@@ -1271,7 +1271,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory Rubygems",
+						NestedBktNames:  []string{"GitHub Security Advisory Rubygems"},
 						PkgName:         "activestorage",
 						VulnerabilityID: "CVE-2018-16477",
 						Advisory: Advisory{
@@ -1356,7 +1356,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory Rubygems",
+						NestedBktNames:  []string{"GitHub Security Advisory Rubygems"},
 						PkgName:         "activestorage",
 						VulnerabilityID: "CVE-2018-16477",
 						Advisory: Advisory{
@@ -1443,7 +1443,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
 				Args: db.OperationForEachAdvisoryArgs{
-					Source:  "GitHub Security Advisory Composer",
+					Sources: []string{"GitHub Security Advisory Composer"},
 					PkgName: "contao/core-bundle",
 				},
 				Returns: db.OperationForEachAdvisoryReturns{
@@ -1469,7 +1469,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
 				Args: db.OperationForEachAdvisoryArgs{
-					Source:  "GitHub Security Advisory Maven",
+					Sources: []string{"GitHub Security Advisory Maven"},
 					PkgName: "org.springframework.boot:spring-boot",
 				},
 				Returns: db.OperationForEachAdvisoryReturns{
@@ -1495,7 +1495,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
 				Args: db.OperationForEachAdvisoryArgs{
-					Source:  "GitHub Security Advisory Npm",
+					Sources: []string{"GitHub Security Advisory Npm"},
 					PkgName: "atob",
 				},
 				Returns: db.OperationForEachAdvisoryReturns{
@@ -1521,7 +1521,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
 				Args: db.OperationForEachAdvisoryArgs{
-					Source:  "GitHub Security Advisory Nuget",
+					Sources: []string{"GitHub Security Advisory Nuget"},
 					PkgName: "CLEditor",
 				},
 				Returns: db.OperationForEachAdvisoryReturns{
@@ -1547,7 +1547,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
 				Args: db.OperationForEachAdvisoryArgs{
-					Source:  "GitHub Security Advisory Pip",
+					Sources: []string{"GitHub Security Advisory Pip"},
 					PkgName: "django",
 				},
 				Returns: db.OperationForEachAdvisoryReturns{
@@ -1573,7 +1573,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
 				Args: db.OperationForEachAdvisoryArgs{
-					Source:  "GitHub Security Advisory Pip",
+					Sources: []string{"GitHub Security Advisory Pip"},
 					PkgName: "django",
 				},
 				Returns: db.OperationForEachAdvisoryReturns{
@@ -1599,7 +1599,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
 				Args: db.OperationForEachAdvisoryArgs{
-					Source:  "GitHub Security Advisory Pip",
+					Sources: []string{"GitHub Security Advisory Pip"},
 					PkgName: "py-gfm",
 				},
 				Returns: db.OperationForEachAdvisoryReturns{
@@ -1625,7 +1625,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
 				Args: db.OperationForEachAdvisoryArgs{
-					Source:  "GitHub Security Advisory Rubygems",
+					Sources: []string{"GitHub Security Advisory Rubygems"},
 					PkgName: "activestorage",
 				},
 				Returns: db.OperationForEachAdvisoryReturns{
@@ -1651,7 +1651,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 			forEachAdvisoryExpectation: db.OperationForEachAdvisoryExpectation{
 				Args: db.OperationForEachAdvisoryArgs{
-					Source:  "GitHub Security Advisory Composer",
+					Sources: []string{"GitHub Security Advisory Composer"},
 					PkgName: "4.8.6",
 				},
 				Returns: db.OperationForEachAdvisoryReturns{

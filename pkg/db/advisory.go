@@ -15,12 +15,12 @@ func (dbc Config) PutAdvisory(tx *bolt.Tx, bktNames []string, key string, adviso
 	return nil
 }
 
-func (dbc Config) ForEachAdvisory(source, pkgName string) (value map[string][]byte, err error) {
-	return dbc.forEach(source, pkgName)
+func (dbc Config) ForEachAdvisory(sources []string, pkgName string) (value map[string][]byte, err error) {
+	return dbc.forEach(append(sources, pkgName))
 }
 
 func (dbc Config) GetAdvisories(source, pkgName string) ([]types.Advisory, error) {
-	advisories, err := dbc.ForEachAdvisory(source, pkgName)
+	advisories, err := dbc.ForEachAdvisory([]string{source}, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("advisory foreach error: %w", err)
 	}

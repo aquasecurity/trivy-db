@@ -143,7 +143,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-devel",
 						VulnerabilityID: "CVE-2007-0493",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "30:9.3.3-8.el5"},
@@ -152,7 +152,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-devel",
 						VulnerabilityID: "CVE-2007-0494",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "30:9.3.3-8.el5"},
@@ -286,7 +286,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-devel",
 						VulnerabilityID: "CVE-2007-0493",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "30:9.3.3-8.el5"},
@@ -295,7 +295,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-devel",
 						VulnerabilityID: "CVE-2007-0494",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "30:9.3.3-8.el5"},
@@ -481,7 +481,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 6",
+						NestedBktNames:  []string{"Oracle Linux 6"},
 						PkgName:         "kernel-uek-doc",
 						VulnerabilityID: "CVE-2018-1094",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "4.1.12-124.24.3.el6uek"},
@@ -490,7 +490,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 6",
+						NestedBktNames:  []string{"Oracle Linux 6"},
 						PkgName:         "kernel-uek-doc",
 						VulnerabilityID: "CVE-2018-19824",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "4.1.12-124.24.3.el6uek"},
@@ -499,7 +499,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 6",
+						NestedBktNames:  []string{"Oracle Linux 6"},
 						PkgName:         "kernel-uek-firmware",
 						VulnerabilityID: "CVE-2018-1094",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "4.1.12-124.24.3.el6uek"},
@@ -508,7 +508,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 6",
+						NestedBktNames:  []string{"Oracle Linux 6"},
 						PkgName:         "kernel-uek-firmware",
 						VulnerabilityID: "CVE-2018-19824",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "4.1.12-124.24.3.el6uek"},
@@ -517,7 +517,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 7",
+						NestedBktNames:  []string{"Oracle Linux 7"},
 						PkgName:         "kernel-uek-doc",
 						VulnerabilityID: "CVE-2018-1094",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "4.1.12-124.24.3.el7uek"},
@@ -526,7 +526,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 7",
+						NestedBktNames:  []string{"Oracle Linux 7"},
 						PkgName:         "kernel-uek-doc",
 						VulnerabilityID: "CVE-2018-19824",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "4.1.12-124.24.3.el7uek"},
@@ -535,7 +535,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 7",
+						NestedBktNames:  []string{"Oracle Linux 7"},
 						PkgName:         "kernel-uek-firmware",
 						VulnerabilityID: "CVE-2018-1094",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "4.1.12-124.24.3.el7uek"},
@@ -544,7 +544,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 7",
+						NestedBktNames:  []string{"Oracle Linux 7"},
 						PkgName:         "kernel-uek-firmware",
 						VulnerabilityID: "CVE-2018-19824",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "4.1.12-124.24.3.el7uek"},
@@ -685,7 +685,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-devel",
 						VulnerabilityID: "CVE-2007-0493",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "30:9.3.3-8.el5"},
@@ -694,7 +694,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-devel",
 						VulnerabilityID: "CVE-2007-0494",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "30:9.3.3-8.el5"},
@@ -703,7 +703,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-sdb",
 						VulnerabilityID: "CVE-2007-0493",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "30:9.3.3-8.el5"},
@@ -712,7 +712,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-sdb",
 						VulnerabilityID: "CVE-2007-0494",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "30:9.3.3-8.el5"},
@@ -841,7 +841,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-devel",
 						VulnerabilityID: "CVE-2007-0493",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "9.3.3-8.el5"},
@@ -850,7 +850,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-devel",
 						VulnerabilityID: "CVE-2007-0494",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "9.3.3-8.el5"},
@@ -962,7 +962,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-devel",
 						VulnerabilityID: "ELSA-2007-0057",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "9.3.3-8.el5"},

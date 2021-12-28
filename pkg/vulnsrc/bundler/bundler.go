@@ -156,7 +156,7 @@ func (vs VulnSrc) walkFunc(err error, info os.FileInfo, path string, tx *bolt.Tx
 }
 
 func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
-	advisories, err := vs.dbc.ForEachAdvisory(vulnerability.RubySec, pkgName)
+	advisories, err := vs.dbc.ForEachAdvisory([]string{vulnerability.RubySec}, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to iterate ruby vulnerabilities: %w", err)
 	}

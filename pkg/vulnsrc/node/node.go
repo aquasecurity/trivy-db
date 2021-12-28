@@ -187,7 +187,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, f *os.File) error {
 }
 
 func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
-	advisories, err := vs.dbc.ForEachAdvisory(vulnerability.NodejsSecurityWg, pkgName)
+	advisories, err := vs.dbc.ForEachAdvisory([]string{vulnerability.NodejsSecurityWg}, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to iterate node vulnerabilities: %w", err)
 	}

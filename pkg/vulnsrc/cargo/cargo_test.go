@@ -94,7 +94,7 @@ func TestVulnSrc_update(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "rust-advisory-db",
+						NestedBktNames:  []string{vulnerability.RustSec},
 						PkgName:         "bitvec",
 						VulnerabilityID: "RUSTSEC-2020-0007",
 						Advisory: Advisory{

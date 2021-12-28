@@ -144,7 +144,7 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 }
 
 func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
-	advisories, err := vs.dbc.ForEachAdvisory(vulnerability.RustSec, pkgName)
+	advisories, err := vs.dbc.ForEachAdvisory([]string{vulnerability.RustSec}, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to iterate rust vulnerabilities: %w", err)
 	}
