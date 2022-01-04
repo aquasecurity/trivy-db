@@ -81,7 +81,6 @@ func TestConfig_StoreMetadata(t *testing.T) {
 	fixedTime := time.Unix(1584149443, 0)
 	metadata := db.Metadata{
 		Version:    42,
-		Type:       db.TypeFull,
 		NextUpdate: fixedTime.UTC(),
 		UpdatedAt:  fixedTime.UTC(),
 	}
@@ -107,7 +106,6 @@ func TestConfig_GetMetadata(t *testing.T) {
 		fixedTime := time.Unix(1584149443, 0)
 		_ = dbc.SetMetadata(db.Metadata{
 			Version:    42,
-			Type:       db.TypeFull,
 			NextUpdate: fixedTime,
 			UpdatedAt:  fixedTime,
 		})
@@ -115,7 +113,6 @@ func TestConfig_GetMetadata(t *testing.T) {
 		md, err := dbc.GetMetadata()
 		require.NoError(t, err)
 		assert.Equal(t, 42, md.Version)
-		assert.Equal(t, db.TypeFull, md.Type)
 		assert.Equal(t, time.Unix(1584149443, 0).Unix(), md.NextUpdate.Unix())
 		assert.Equal(t, time.Unix(1584149443, 0).Unix(), md.UpdatedAt.Unix())
 	})

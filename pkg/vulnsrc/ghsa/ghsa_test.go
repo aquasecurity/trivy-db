@@ -92,7 +92,7 @@ func TestVulnSrc_save(t *testing.T) {
 		args                   args
 		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
 		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
-		putSeverity            []db.OperationPutSeverityExpectation
+		putVulnerabilityID     []db.OperationPutVulnerabilityIDExpectation
 		wantErr                string
 	}{
 		{
@@ -150,7 +150,7 @@ func TestVulnSrc_save(t *testing.T) {
 			},
 			putAdvisoryDetail:      []db.OperationPutAdvisoryDetailExpectation{},
 			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{},
-			putSeverity:            []db.OperationPutSeverityExpectation{},
+			putVulnerabilityID:     []db.OperationPutVulnerabilityIDExpectation{},
 		},
 		{
 			name:      "happy path composer",
@@ -254,12 +254,11 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "GHSA-wjx8-cgrm-hh8p",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -348,12 +347,11 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2018-1196",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -438,12 +436,11 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2018-3745",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -527,12 +524,11 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2019-1010113",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -631,12 +627,11 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2018-14574",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -735,12 +730,11 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2018-14574",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -839,12 +833,11 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2018-14574",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -929,12 +922,11 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2018-16477",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -1048,12 +1040,11 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2019-20330",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -1138,12 +1129,11 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "GHSA-v7x3-7hw7-pcjg",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -1382,19 +1372,18 @@ func TestVulnSrc_save(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2018-16477",
-						Severity:        types.SeverityUnknown,
 					},
-					Returns: db.OperationPutSeverityReturns{
+					Returns: db.OperationPutVulnerabilityIDReturns{
 						Err: errors.New("error"),
 					},
 				},
 			},
-			wantErr: "failed to save GHSA vulnerability severity",
+			wantErr: "failed to save the vulnerability ID",
 		},
 	}
 	for _, tt := range tests {
@@ -1402,7 +1391,7 @@ func TestVulnSrc_save(t *testing.T) {
 			mockDBConfig := new(db.MockOperation)
 			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tt.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tt.putVulnerabilityDetail)
-			mockDBConfig.ApplyPutSeverityExpectations(tt.putSeverity)
+			mockDBConfig.ApplyPutVulnerabilityIDExpectations(tt.putVulnerabilityID)
 
 			vs := VulnSrc{
 				dbc:       mockDBConfig,

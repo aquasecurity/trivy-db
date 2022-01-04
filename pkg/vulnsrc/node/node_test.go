@@ -21,7 +21,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 		inputFile              string
 		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
 		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
-		putSeverity            []db.OperationPutSeverityExpectation
+		putVulnerabilityID     []db.OperationPutVulnerabilityIDExpectation
 		expectedErrorMsg       string
 	}{
 		{
@@ -57,12 +57,11 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2014-7205",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -100,12 +99,11 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2014-7205",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -146,12 +144,11 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "NSWG-ECO-0",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -188,12 +185,11 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "NSWG-ECO-334",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -211,7 +207,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 			mockDBConfig := new(db.MockOperation)
 			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tc.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tc.putVulnerabilityDetail)
-			mockDBConfig.ApplyPutSeverityExpectations(tc.putSeverity)
+			mockDBConfig.ApplyPutVulnerabilityIDExpectations(tc.putVulnerabilityID)
 
 			ac := VulnSrc{dbc: mockDBConfig}
 

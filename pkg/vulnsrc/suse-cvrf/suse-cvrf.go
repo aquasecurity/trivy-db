@@ -144,9 +144,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 			return xerrors.Errorf("failed to save SUSE CVRF vulnerability: %w", err)
 		}
 
-		// for light DB
-		if err := vs.dbc.PutSeverity(tx, cvrf.Tracking.ID, types.SeverityUnknown); err != nil {
-			return xerrors.Errorf("failed to save SUSE vulnerability severity: %w", err)
+		// for optimization
+		if err := vs.dbc.PutVulnerabilityID(tx, cvrf.Tracking.ID); err != nil {
+			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 		}
 	}
 	return nil

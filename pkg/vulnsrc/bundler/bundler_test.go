@@ -45,12 +45,11 @@ func Test_walkFunc(t *testing.T) {
 			},
 		},
 	})
-	mockDBConfig.ApplyPutSeverityExpectations([]db.OperationPutSeverityExpectation{
+	mockDBConfig.ApplyPutVulnerabilityIDExpectations([]db.OperationPutVulnerabilityIDExpectation{
 		{
-			Args: db.OperationPutSeverityArgs{
+			Args: db.OperationPutVulnerabilityIDArgs{
 				TxAnything:      true,
 				VulnerabilityID: "CVE-2019-9837",
-				Severity:        0,
 			},
 		},
 	})

@@ -88,9 +88,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, avgs []ArchVulnGroup) error {
 					return xerrors.Errorf("failed to save arch linux vulnerability: %w", err)
 				}
 
-				// for light DB
-				if err := vs.dbc.PutSeverity(tx, cveId, types.SeverityUnknown); err != nil {
-					return xerrors.Errorf("failed to save arch linux vulnerability severity for light: %w", err)
+				// for optimization
+				if err := vs.dbc.PutVulnerabilityID(tx, cveId); err != nil {
+					return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 				}
 			}
 

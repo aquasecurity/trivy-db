@@ -141,9 +141,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 						return xerrors.Errorf("failed to save Amazon vulnerability detail: %w", err)
 					}
 
-					// for light DB
-					if err := vs.dbc.PutSeverity(tx, cveID, types.SeverityUnknown); err != nil {
-						return xerrors.Errorf("failed to save Amazon vulnerability severity: %w", err)
+					// for optimization
+					if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
+						return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 					}
 				}
 			}
