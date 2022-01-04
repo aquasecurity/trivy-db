@@ -88,9 +88,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []PhotonCVE) error {
 			return xerrors.Errorf("failed to save Photon vulnerability detail: %w", err)
 		}
 
-		// for light DB
-		if err := vs.dbc.PutSeverity(tx, cve.CveID, types.SeverityUnknown); err != nil {
-			return xerrors.Errorf("failed to save Photon vulnerability severity: %w", err)
+		// for optimization
+		if err := vs.dbc.PutVulnerabilityID(tx, cve.CveID); err != nil {
+			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 		}
 	}
 	return nil

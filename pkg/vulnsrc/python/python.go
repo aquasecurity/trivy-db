@@ -115,8 +115,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, advisoryDB AdvisoryDB) error {
 				if err = vs.dbc.PutVulnerabilityDetail(tx, vulnerabilityID, vulnerability.PythonSafetyDB, vuln); err != nil {
 					return xerrors.Errorf("failed to save python vulnerability detail: %w", err)
 				}
-				if err := vs.dbc.PutSeverity(tx, vulnerabilityID, types.SeverityUnknown); err != nil {
-					return xerrors.Errorf("failed to save python vulnerability severity: %w", err)
+
+				// for optimization
+				if err = vs.dbc.PutVulnerabilityID(tx, vulnerabilityID); err != nil {
+					return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 				}
 			}
 		}

@@ -16,14 +16,7 @@ import (
 
 type CustomPut func(dbc Operation, tx *bolt.Tx, adv interface{}) error
 
-type Type int
-
-const (
-	SchemaVersion = 1
-
-	TypeFull Type = iota
-	TypeLight
-)
+const SchemaVersion = 2
 
 var (
 	db    *bolt.DB
@@ -43,11 +36,8 @@ type Operation interface {
 	ForEachAdvisory(source string, pkgName string) (value map[string][]byte, err error)
 	GetAdvisories(source string, pkgName string) (advisories []types.Advisory, err error)
 
-	PutSeverity(tx *bolt.Tx, vulnerabilityID string, severity types.Severity) (err error)
-	GetSeverity(vulnerabilityID string) (severity types.Severity, err error)
-	ForEachSeverity(fn func(tx *bolt.Tx, cveID string, severity types.Severity) error) (err error)
-
-	DeleteSeverityBucket() (err error)
+	PutVulnerabilityID(tx *bolt.Tx, vulnerabilityID string) (err error)
+	ForEachVulnerabilityID(fn func(tx *bolt.Tx, cveID string) error) (err error)
 
 	PutVulnerability(tx *bolt.Tx, vulnerabilityID string, vulnerability types.Vulnerability) (err error)
 	GetVulnerability(vulnerabilityID string) (vulnerability types.Vulnerability, err error)

@@ -180,8 +180,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 			return xerrors.Errorf("failed to save GHSA vulnerability detail: %w", err)
 		}
 
-		if err := vs.dbc.PutSeverity(tx, vulnID, types.SeverityUnknown); err != nil {
-			return xerrors.Errorf("failed to save GHSA vulnerability severity: %w", err)
+		// for optimization
+		if err = vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
+			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 		}
 	}
 

@@ -82,7 +82,6 @@ func TestVulnSrc_Commit(t *testing.T) {
 		cves                   []Item
 		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
 		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
-		putSeverity            []db.OperationPutSeverityExpectation
 		expectedErrorMsg       string
 	}{
 		{
@@ -231,7 +230,6 @@ func TestVulnSrc_Commit(t *testing.T) {
 			mockDBConfig := new(db.MockOperation)
 			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tc.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tc.putVulnerabilityDetail)
-			mockDBConfig.ApplyPutSeverityExpectations(tc.putSeverity)
 
 			ac := VulnSrc{dbc: mockDBConfig}
 			err := ac.commit(tx, tc.cves)
