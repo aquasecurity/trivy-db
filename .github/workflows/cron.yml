@@ -39,8 +39,8 @@ jobs:
       - name: Compress assets
         run: make db-compress
 
-      - name: Rename
-        run: mv assets/trivy-offline.db.tgz db.tar.gz
+      - name: Move DB
+        run: mv assets/db.tar.gz .
 
       - name: Login to GitHub Packages Container registry
         uses: docker/login-action@v1

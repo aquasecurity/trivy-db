@@ -82,7 +82,7 @@ func TestVulnSrc_update(t *testing.T) {
 		args                   args
 		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
 		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
-		putSeverity            []db.OperationPutSeverityExpectation
+		putVulnerabilityID     []db.OperationPutVulnerabilityIDExpectation
 		wantErr                string
 	}{
 		{
@@ -126,12 +126,11 @@ func TestVulnSrc_update(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "RUSTSEC-2020-0007",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -142,7 +141,7 @@ func TestVulnSrc_update(t *testing.T) {
 			mockDBConfig := new(db.MockOperation)
 			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tt.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tt.putVulnerabilityDetail)
-			mockDBConfig.ApplyPutSeverityExpectations(tt.putSeverity)
+			mockDBConfig.ApplyPutVulnerabilityIDExpectations(tt.putVulnerabilityID)
 
 			vs := VulnSrc{
 				dbc: mockDBConfig,

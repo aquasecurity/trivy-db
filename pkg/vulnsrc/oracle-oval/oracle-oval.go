@@ -127,9 +127,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 				return xerrors.Errorf("failed to save Oracle Linux OVAL vulnerability: %w", err)
 			}
 
-			// for light DB
-			if err := vs.dbc.PutSeverity(tx, vulnID, types.SeverityUnknown); err != nil {
-				return xerrors.Errorf("failed to save Oracle Linux vulnerability severity: %w", err)
+			// for optimization
+			if err := vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
+				return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 			}
 		}
 	}
