@@ -18,9 +18,7 @@ import (
 
 type CustomPut func(dbc Operation, tx *bolt.Tx, adv interface{}) error
 
-const (
-	SchemaVersion = 1
-)
+const SchemaVersion = 2
 
 var (
 	db    *bolt.DB

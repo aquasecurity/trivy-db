@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 env:
   GH_USER: aqua-bot
-  VERSION: 1
+  VERSION: 2
 jobs:
   build:
     name: Build DB

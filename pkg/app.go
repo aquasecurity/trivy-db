@@ -3,17 +3,13 @@ package pkg
 import (
 	"time"
 
-	"github.com/aquasecurity/trivy-db/pkg/github"
-
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc"
 	"github.com/urfave/cli"
 )
 
-type AppConfig struct {
-	Client github.VCSClientInterface
-}
+type AppConfig struct{}
 
 func (ac *AppConfig) NewApp(version string) *cli.App {
 	app := cli.NewApp()
@@ -48,17 +44,6 @@ func (ac *AppConfig) NewApp(version string) *cli.App {
 					Usage:  "update interval",
 					Value:  24 * time.Hour,
 					EnvVar: "UPDATE_INTERVAL",
-				},
-			},
-		},
-		{
-			Name:   "upload",
-			Usage:  "upload database files to GitHub Release",
-			Action: ac.upload,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "dir",
-					Usage: "dir",
 				},
 			},
 		},
