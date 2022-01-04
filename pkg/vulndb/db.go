@@ -2,7 +2,6 @@ package vulndb
 
 import (
 	"log"
-	"path/filepath"
 	"time"
 
 	bolt "go.etcd.io/bbolt"
@@ -10,6 +9,7 @@ import (
 	"k8s.io/utils/clock"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/metadata"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
@@ -20,6 +20,7 @@ type VulnDB interface {
 
 type TrivyDB struct {
 	dbc            db.Config
+	metadata       metadata.Client
 	vulnClient     vulnerability.Vulnerability
 	vulnSrcs       map[string]vulnsrc.VulnSrc
 	cacheDir       string
@@ -51,6 +52,7 @@ func New(cacheDir string, updateInterval time.Duration, opts ...Option) *TrivyDB
 	dbc := db.Config{}
 	tdb := &TrivyDB{
 		dbc:            dbc,
+		metadata:       metadata.NewClient(cacheDir),
 		vulnClient:     vulnerability.New(dbc),
 		vulnSrcs:       vulnSrcs,
 		cacheDir:       cacheDir,
@@ -79,20 +81,14 @@ func (t TrivyDB) Insert(targets []string) error {
 		}
 	}
 
-	md := db.Metadata{
+	md := metadata.Metadata{
 		Version:    db.SchemaVersion,
 		NextUpdate: t.clock.Now().UTC().Add(t.updateInterval),
 		UpdatedAt:  t.clock.Now().UTC(),
 	}
 
-	err := t.dbc.SetMetadata(md)
-	if err != nil {
-		return xerrors.Errorf("failed to save metadata: %w", err)
-	}
-
-	err = t.dbc.StoreMetadata(md, filepath.Join(t.cacheDir, "db"))
-	if err != nil {
-		return xerrors.Errorf("failed to store metadata: %w", err)
+	if err := t.metadata.Update(md); err != nil {
+		return xerrors.Errorf("metadata update error: %w", err)
 	}
 
 	return nil

@@ -16,6 +16,7 @@ import (
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/dbtest"
+	"github.com/aquasecurity/trivy-db/pkg/metadata"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulndb"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc"
@@ -44,7 +45,7 @@ func TestTrivyDB_Insert(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    db.Metadata
+		want    metadata.Metadata
 		wantErr string
 	}{
 		{
@@ -56,7 +57,7 @@ func TestTrivyDB_Insert(t *testing.T) {
 			args: args{
 				targets: []string{"fake"},
 			},
-			want: db.Metadata{
+			want: metadata.Metadata{
 				Version:    db.SchemaVersion,
 				NextUpdate: time.Date(2021, 1, 2, 15, 4, 5, 0, time.UTC),
 				UpdatedAt:  time.Date(2021, 1, 2, 3, 4, 5, 0, time.UTC),
@@ -105,20 +106,15 @@ func TestTrivyDB_Insert(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			f, err := os.Open(filepath.Join(cacheDir, "db", "metadata.json"))
+			f, err := os.Open(metadata.Path(cacheDir))
 			require.NoError(t, err)
 
 			// Compare metadata JSON file
-			var got db.Metadata
+			var got metadata.Metadata
 			err = json.NewDecoder(f).Decode(&got)
 			require.NoError(t, err)
 
 			assert.Equal(t, tt.want, got)
-
-			// Compare DB entries
-			require.NoError(t, db.Close())
-			dbPath := db.Path(cacheDir)
-			dbtest.JSONEq(t, dbPath, []string{"trivy", "metadata", "data"}, tt.want)
 		})
 	}
 }
