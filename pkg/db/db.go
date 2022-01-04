@@ -3,17 +3,15 @@ package db
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime/debug"
 	"strings"
-	"time"
-
-	"github.com/aquasecurity/trivy-db/pkg/types"
 
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
+
+	"github.com/aquasecurity/trivy-db/pkg/types"
 )
 
 type CustomPut func(dbc Operation, tx *bolt.Tx, adv interface{}) error
@@ -60,14 +58,6 @@ type Operation interface {
 	DeleteAdvisoryDetailBucket() error
 }
 
-type Metadata struct {
-	Version      int  `json:",omitempty"`
-	Type         Type `json:",omitempty"`
-	NextUpdate   time.Time
-	UpdatedAt    time.Time
-	DownloadedAt time.Time
-}
-
 type Config struct {
 }
 
@@ -98,9 +88,12 @@ func Init(cacheDir string) (err error) {
 	return nil
 }
 
+func Dir(cacheDir string) string {
+	return filepath.Join(cacheDir, "db")
+}
+
 func Path(cacheDir string) string {
-	dbDir = filepath.Join(cacheDir, "db")
-	dbPath := filepath.Join(dbDir, "trivy.db")
+	dbPath := filepath.Join(Dir(cacheDir), "trivy.db")
 	return dbPath
 }
 
@@ -113,42 +106,6 @@ func Close() error {
 
 func (dbc Config) Connection() *bolt.DB {
 	return db
-}
-
-func (dbc Config) GetVersion() int {
-	metadata, err := dbc.GetMetadata()
-	if err != nil {
-		return 0
-	}
-	return metadata.Version
-}
-
-func (dbc Config) GetMetadata() (Metadata, error) {
-	var metadata Metadata
-	value, err := Config{}.get("trivy", "metadata", "data")
-	if err != nil {
-		return Metadata{}, err
-	}
-	if err = json.Unmarshal(value, &metadata); err != nil {
-		return Metadata{}, err
-	}
-	return metadata, nil
-}
-
-func (dbc Config) SetMetadata(metadata Metadata) error {
-	err := dbc.update("trivy", "metadata", "data", metadata)
-	if err != nil {
-		return xerrors.Errorf("failed to save metadata: %w", err)
-	}
-	return nil
-}
-
-func (dbc Config) StoreMetadata(metadata Metadata, dir string) error {
-	b, err := json.Marshal(metadata)
-	if err != nil {
-		return xerrors.Errorf("failed to store metadata: %w", err)
-	}
-	return ioutil.WriteFile(filepath.Join(dir, "metadata.json"), b, 0600)
 }
 
 func (dbc Config) BatchUpdate(fn func(tx *bolt.Tx) error) error {
