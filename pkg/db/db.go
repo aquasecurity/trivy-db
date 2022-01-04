@@ -116,24 +116,6 @@ func (dbc Config) BatchUpdate(fn func(tx *bolt.Tx) error) error {
 	return nil
 }
 
-func (dbc Config) update(rootBucket, nestedBucket, key string, value interface{}) error {
-	err := db.Update(func(tx *bolt.Tx) error {
-		return dbc.putNestedBucket(tx, rootBucket, nestedBucket, key, value)
-	})
-	if err != nil {
-		return xerrors.Errorf("error in db update: %w", err)
-	}
-	return err
-}
-
-func (dbc Config) putNestedBucket(tx *bolt.Tx, rootBucket, nestedBucket, key string, value interface{}) error {
-	root, err := tx.CreateBucketIfNotExists([]byte(rootBucket))
-	if err != nil {
-		return xerrors.Errorf("failed to create a bucket: %w", err)
-	}
-	return dbc.put(root, nestedBucket, key, value)
-}
-
 func (dbc Config) put(root *bolt.Bucket, nestedBucket, key string, value interface{}) error {
 	nested, err := root.CreateBucketIfNotExists([]byte(nestedBucket))
 	if err != nil {
@@ -144,25 +126,6 @@ func (dbc Config) put(root *bolt.Bucket, nestedBucket, key string, value interfa
 		return xerrors.Errorf("failed to unmarshal JSON: %w", err)
 	}
 	return nested.Put([]byte(key), v)
-}
-
-func (dbc Config) get(rootBucket, nestedBucket, key string) (value []byte, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		root := tx.Bucket([]byte(rootBucket))
-		if root == nil {
-			return nil
-		}
-		nested := root.Bucket([]byte(nestedBucket))
-		if nested == nil {
-			return nil
-		}
-		value = nested.Get([]byte(key))
-		return nil
-	})
-	if err != nil {
-		return nil, xerrors.Errorf("failed to get data from db: %w", err)
-	}
-	return value, nil
 }
 
 func (dbc Config) forEach(rootBucket, nestedBucket string) (value map[string][]byte, err error) {
