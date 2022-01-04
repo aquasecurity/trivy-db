@@ -21,7 +21,7 @@ type CustomPut func(dbc Operation, tx *bolt.Tx, adv interface{}) error
 type Type int
 
 const (
-	SchemaVersion = 1
+	SchemaVersion = 2
 
 	TypeFull Type = iota
 	TypeLight
