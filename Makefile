@@ -74,7 +74,7 @@ db-compact: $(GOBIN)/bbolt cache/db/trivy.db
 	mkdir -p assets/
 	$(GOBIN)/bbolt compact -o ./assets/trivy.db cache/db/trivy.db
 	cp cache/db/metadata.json ./assets/metadata.json
-	rm cache/db/trivy.db cache/db/metadata.json
+	rm -rf cache/db
 
 .PHONY: db-compress
 db-compress: assets/trivy.db assets/metadata.json
