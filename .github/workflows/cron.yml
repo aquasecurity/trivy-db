@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: '0 */6 * * *'
   workflow_dispatch:
+env:
+  GH_USER: aqua-bot
+  VERSION: 2
 jobs:
   build:
     name: Build DB
@@ -19,17 +22,15 @@ jobs:
         run: go install go.etcd.io/bbolt/cmd/bbolt@v1.3.5
 
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
       - name: Download vuln-list and advisories
         run: make db-fetch-langs db-fetch-vuln-list-main
 
       - name: Build the binary
         run: make build
-      #
-      # Full DB
-      #
-      - name: Build full database
+
+      - name: Build database
         run: make db-build
 
       - name: Compact DB
@@ -38,28 +39,21 @@ jobs:
       - name: Compress assets
         run: make db-compress
 
-      #
-      # Light DB
-      #
-      - name: Build light database
-        run: make db-build
-        env:
-          DB_TYPE: trivy-light
+      - name: Move DB
+        run: mv assets/db.tar.gz .
 
-      - name: Compact DB
-        run: make db-compact
-        env:
-          DB_TYPE: trivy-light
+      - name: Login to GitHub Packages Container registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ env.GH_USER }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Compress assets
-        run: make db-compress
-        env:
-          DB_TYPE: trivy-light
-
-      #
-      # Upload
-      #
-      - name: Upload assets
-        run: ./trivy-db upload --dir assets
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload assets to GHCR
+        run: |
+          tags=(latest ${{ env.VERSION }})
+          for tag in ${tags[@]}; do
+            oras push ghcr.io/${{ github.repository }}:${tag} \
+              --manifest-config /dev/null:application/vnd.aquasec.trivy.config.v1+json \
+              db.tar.gz:application/vnd.aquasec.trivy.db.layer.v1.tar+gzip
+          done

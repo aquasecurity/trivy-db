@@ -1,6 +1,0 @@
-- bucket: severity
-  pairs:
-    - key: CVE-2019-10906
-      value: UNKNOWN
-    - key: CVE-2021-3669
-      value: UNKNOWN

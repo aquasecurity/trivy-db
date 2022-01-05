@@ -9,7 +9,6 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/cargo"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/composer"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
-	debianoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/glad"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/govulndb"
@@ -42,7 +41,6 @@ var (
 		redhat.NewVulnSrc(),
 		redhatoval.NewVulnSrc(),
 		debian.NewVulnSrc(),
-		debianoval.NewVulnSrc(),
 		ubuntu.NewVulnSrc(),
 		amazon.NewVulnSrc(),
 		oracleoval.NewVulnSrc(),

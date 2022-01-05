@@ -154,6 +154,7 @@ func (vs VulnSrc) putAdvisoryDetail(tx *bolt.Tx, cve RedhatCVE) error {
 			// It means this vulnerability affects all versions
 			FixedVersion: "",
 		}
+
 		if err := vs.dbc.PutAdvisoryDetail(tx, cve.Name, platformName, pkgName, advisory); err != nil {
 			return xerrors.Errorf("failed to save Red Hat advisory: %w", err)
 		}
@@ -181,9 +182,9 @@ func (vs VulnSrc) putVulnerabilityDetail(tx *bolt.Tx, cve RedhatCVE) error {
 		return xerrors.Errorf("failed to save Red Hat vulnerability: %w", err)
 	}
 
-	// for light DB
-	if err := vs.dbc.PutSeverity(tx, cve.Name, types.SeverityUnknown); err != nil {
-		return xerrors.Errorf("failed to save Red Hat vulnerability severity: %w", err)
+	// for optimization
+	if err := vs.dbc.PutVulnerabilityID(tx, cve.Name); err != nil {
+		return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 	}
 	return nil
 }

@@ -95,9 +95,9 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 					return xerrors.Errorf("failed to save Alpine advisory: %w", err)
 				}
 
-				// for light DB
-				if err := vs.dbc.PutSeverity(tx, cveID, types.SeverityUnknown); err != nil {
-					return xerrors.Errorf("failed to save Alpine vulnerability severity: %w", err)
+				// for optimization
+				if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
+					return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 				}
 			}
 		}

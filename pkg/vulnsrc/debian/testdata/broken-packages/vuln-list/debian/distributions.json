@@ -1,0 +1,42 @@
+{
+  "wheezy": {
+    "major-version": "7",
+    "support": "end-of-life",
+    "contact": ""
+  },
+  "jessie": {
+    "major-version": "8",
+    "support": "end-of-life",
+    "contact": ""
+  },
+  "stretch": {
+    "major-version": "9",
+    "support": "lts",
+    "contact": "debian-lts@lists.debian.org"
+  },
+  "buster": {
+    "major-version": "10",
+    "support": "security",
+    "contact": "team@security.debian.org"
+  },
+  "bullseye": {
+    "major-version": "11",
+    "support": "security",
+    "contact": "team@security.debian.org"
+  },
+  "bookworm": {
+    "major-version": "12",
+    "support": "none",
+    "contact": ""
+  },
+  "trixie": {
+    "major-version": "13",
+    "support": "none",
+    "contact": ""
+  },
+  "sid": {
+    "major-version": "",
+    "support": "none",
+    "contact": ""
+  }
+}
