@@ -15,6 +15,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
+	version "github.com/knqyf263/go-rpm-version"
 )
 
 const (
@@ -54,8 +55,8 @@ func (vs VulnSrc) Update(dir string) error {
 			return nil
 		}
 
-		version := dirs[len(dirs)-3]
-		errata[version] = append(errata[version], erratum)
+		majorVer := dirs[len(dirs)-3]
+		errata[majorVer] = append(errata[majorVer], erratum)
 		return nil
 	})
 	if err != nil {
@@ -71,9 +72,10 @@ func (vs VulnSrc) Update(dir string) error {
 
 func (vs VulnSrc) save(errataVer map[string][]Erratum) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		for version, errata := range errataVer {
-			if err := vs.commit(tx, version, errata); err != nil {
-				return xerrors.Errorf("error in save Alma %s: %w", version, err)
+		for majorVer, errata := range errataVer {
+			platformName := fmt.Sprintf(platformFormat, majorVer)
+			if err := vs.commit(tx, platformName, errata); err != nil {
+				return xerrors.Errorf("error in save Alma %s: %w", majorVer, err)
 			}
 		}
 		return nil
@@ -84,8 +86,7 @@ func (vs VulnSrc) save(errataVer map[string][]Erratum) error {
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, version string, errata []Erratum) error {
-	platformName := fmt.Sprintf(platformFormat, version)
+func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, errata []Erratum) error {
 	for _, erratum := range errata {
 		var references []string
 		for _, ref := range erratum.References {
@@ -98,6 +99,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, version string, errata []Erratum) error {
 			if ref.Type != "cve" {
 				continue
 			}
+
+			// We need to work around this issue for now.
+			// https://github.com/aquasecurity/fanal/issues/186#issuecomment-931523102
+			advisories := map[string]types.Advisory{}
 
 			cveID := ref.Title
 			for _, pkg := range erratum.Pkglist.Packages {
@@ -113,8 +118,13 @@ func (vs VulnSrc) commit(tx *bolt.Tx, version string, errata []Erratum) error {
 				advisory := types.Advisory{
 					FixedVersion: constructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 				}
-				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, platformName, pkgName, advisory); err != nil {
-					return xerrors.Errorf("failed to save Alma advisory: %w", err)
+
+				if adv, ok := advisories[pkgName]; ok {
+					if version.NewVersion(advisory.FixedVersion).LessThan(version.NewVersion(adv.FixedVersion)) {
+						advisories[pkgName] = advisory
+					}
+				} else {
+					advisories[pkgName] = advisory
 				}
 
 				vuln := types.VulnerabilityDetail{
@@ -129,6 +139,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, version string, errata []Erratum) error {
 
 				if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
 					return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+				}
+			}
+
+			for pkgName, advisory := range advisories {
+				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, platformName, pkgName, advisory); err != nil {
+					return xerrors.Errorf("failed to save Alma advisory: %w", err)
 				}
 			}
 		}
