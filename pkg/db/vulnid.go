@@ -14,7 +14,7 @@ func (dbc Config) PutVulnerabilityID(tx *bolt.Tx, vulnID string) error {
 	if err != nil {
 		return xerrors.Errorf("failed to create %s bucket: %w", vulnerabilityIDBucket, err)
 	}
-	return bucket.Put([]byte(vulnID), []byte{})
+	return bucket.Put([]byte(vulnID), []byte("{}"))
 }
 
 func (dbc Config) ForEachVulnerabilityID(f func(tx *bolt.Tx, vulnID string) error) error {

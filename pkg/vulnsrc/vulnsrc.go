@@ -1,6 +1,7 @@
 package vulnsrc
 
 import (
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alma"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/amazon"
 	archlinux "github.com/aquasecurity/trivy-db/pkg/vulnsrc/arch-linux"
@@ -34,6 +35,7 @@ var (
 		nvd.NewVulnSrc(),
 
 		// OS packages
+		alma.NewVulnSrc(),
 		alpine.NewVulnSrc(),
 		archlinux.NewVulnSrc(),
 		redhat.NewVulnSrc(),
