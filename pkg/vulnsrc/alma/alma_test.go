@@ -1,4 +1,4 @@
-package alma
+package alma_test
 
 import (
 	"path/filepath"
@@ -10,12 +10,13 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alma"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
 	type want struct {
 		key   []string
-		value types.Advisory
+		value interface{}
 	}
 	tests := []struct {
 		name       string
@@ -28,244 +29,52 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []want{
 				{
-					key: []string{"advisory-detail", "CVE-2021-27918", "alma 8", "go-toolset"},
+					key: []string{"advisory-detail", "CVE-2021-27918", "alma 8", "go-toolset:rhel8::go-toolset"},
 					value: types.Advisory{
 						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2021-27918", "alma 8", "golang"},
+					key: []string{"advisory-detail", "CVE-2021-27918", "alma 8", "go-toolset:rhel8::golang"},
 					value: types.Advisory{
 						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2021-27918", "alma 8", "golang-bin"},
+					key: []string{"advisory-detail", "CVE-2021-31525", "alma 8", "go-toolset:rhel8::go-toolset"},
 					value: types.Advisory{
 						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2021-27918", "alma 8", "golang-docs"},
+					key: []string{"advisory-detail", "CVE-2021-31525", "alma 8", "go-toolset:rhel8::golang"},
 					value: types.Advisory{
 						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2021-27918", "alma 8", "golang-misc"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
+					key: []string{"vulnerability-detail", "CVE-2021-27918", "alma"},
+					value: types.VulnerabilityDetail{
+						Severity:    types.SeverityMedium,
+						Title:       "Moderate: go-toolset:rhel8 security, bug fix, and enhancement update",
+						Description: "Go Toolset provides the Go programming language tools and libraries. Go is alternatively known as golang. \n\nThe following packages have been upgraded to a later upstream version: golang (1.15.14). (BZ#1982287)\n\nSecurity Fix(es):\n\n* golang: encoding/xml: infinite loop when using xml.NewTokenDecoder with a custom TokenReader (CVE-2021-27918)\n\n* golang: net/http: panic in ReadRequest and ReadResponse when reading a very large header (CVE-2021-31525)\n\n* golang: archive/zip: malformed archive may cause panic or memory exhaustion (CVE-2021-33196)\n\n* golang: crypto/tls: certificate of wrong type is causing TLS client to panic (CVE-2021-34558)\n\nFor more details about the security issue(s), including the impact, a CVSS score, acknowledgments, and other related information, refer to the CVE page(s) listed in the References section.\n\nBug Fix(es):\n\n* FIPS mode AES CBC CryptBlocks incorrectly re-initializes IV in file crypto/internal/boring/aes.go (BZ#1978567)\n\n* FIPS mode AES CBC Decrypter produces incorrect result (BZ#1983976)",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2021-27918", "alma 8", "golang-race"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
+					key: []string{"vulnerability-detail", "CVE-2021-31525", "alma"},
+					value: types.VulnerabilityDetail{
+						Severity:    types.SeverityMedium,
+						Title:       "Moderate: go-toolset:rhel8 security, bug fix, and enhancement update",
+						Description: "Go Toolset provides the Go programming language tools and libraries. Go is alternatively known as golang. \n\nThe following packages have been upgraded to a later upstream version: golang (1.15.14). (BZ#1982287)\n\nSecurity Fix(es):\n\n* golang: encoding/xml: infinite loop when using xml.NewTokenDecoder with a custom TokenReader (CVE-2021-27918)\n\n* golang: net/http: panic in ReadRequest and ReadResponse when reading a very large header (CVE-2021-31525)\n\n* golang: archive/zip: malformed archive may cause panic or memory exhaustion (CVE-2021-33196)\n\n* golang: crypto/tls: certificate of wrong type is causing TLS client to panic (CVE-2021-34558)\n\nFor more details about the security issue(s), including the impact, a CVSS score, acknowledgments, and other related information, refer to the CVE page(s) listed in the References section.\n\nBug Fix(es):\n\n* FIPS mode AES CBC CryptBlocks incorrectly re-initializes IV in file crypto/internal/boring/aes.go (BZ#1978567)\n\n* FIPS mode AES CBC Decrypter produces incorrect result (BZ#1983976)",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2021-27918", "alma 8", "golang-src"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
+					key:   []string{"vulnerability-id", "CVE-2021-27918"},
+					value: map[string]interface{}{},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2021-27918", "alma 8", "golang-tests"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-27918", "alma 8", "go-toolset"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-27918", "alma 8", "golang"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-27918", "alma 8", "golang-bin"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-27918", "alma 8", "golang-docs"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-27918", "alma 8", "golang-misc"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-27918", "alma 8", "golang-race"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-27918", "alma 8", "golang-src"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-27918", "alma 8", "golang-tests"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-31525", "alma 8", "go-toolset"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-31525", "alma 8", "golang"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-31525", "alma 8", "golang-bin"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-31525", "alma 8", "golang-docs"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-31525", "alma 8", "golang-misc"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-31525", "alma 8", "golang-race"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-31525", "alma 8", "golang-src"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-31525", "alma 8", "golang-tests"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-33196", "alma 8", "go-toolset"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-33196", "alma 8", "golang"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-33196", "alma 8", "golang-bin"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-33196", "alma 8", "golang-docs"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-33196", "alma 8", "golang-misc"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-33196", "alma 8", "golang-race"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-33196", "alma 8", "golang-src"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-33196", "alma 8", "golang-tests"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-34558", "alma 8", "go-toolset"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-34558", "alma 8", "golang"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-34558", "alma 8", "golang-bin"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-34558", "alma 8", "golang-docs"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-34558", "alma 8", "golang-misc"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-34558", "alma 8", "golang-race"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-34558", "alma 8", "golang-src"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
-				},
-				{
-					key: []string{"advisory-detail", "CVE-2021-34558", "alma 8", "golang-tests"},
-					value: types.Advisory{
-						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",
-					},
+					key:   []string{"vulnerability-id", "CVE-2021-31525"},
+					value: map[string]interface{}{},
 				},
 			},
 		},
@@ -283,7 +92,7 @@ func TestVulnSrc_Update(t *testing.T) {
 			require.NoError(t, err)
 			defer db.Close()
 
-			vs := NewVulnSrc()
+			vs := alma.NewVulnSrc()
 			err = vs.Update(tt.dir)
 			if tt.wantErr != "" {
 				require.NotNil(t, err)
@@ -293,8 +102,8 @@ func TestVulnSrc_Update(t *testing.T) {
 
 			require.NoError(t, err)
 			require.NoError(t, db.Close()) // Need to close before dbtest.JSONEq is called
-			for _, want := range tt.wantValues {
-				dbtest.JSONEq(t, db.Path(tempDir), want.key, want.value)
+			for _, w := range tt.wantValues {
+				dbtest.JSONEq(t, db.Path(tempDir), w.key, w.value, w.key)
 			}
 		})
 	}

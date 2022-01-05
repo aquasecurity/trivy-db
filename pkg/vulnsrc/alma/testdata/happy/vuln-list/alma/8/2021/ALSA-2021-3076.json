@@ -38,78 +38,6 @@
         "sum": "bfef3d2370d7e99a874ee3577e3d5a595d7e34a776321f9e0f7ca1103da7c11f",
         "sum_type": "sha256",
         "reboot_suggested": 0
-      },
-      {
-        "name": "golang-bin",
-        "version": "1.15.14",
-        "release": "1.module_el8.4.0+2519+614b07b8",
-        "epoch": "0",
-        "arch": "x86_64",
-        "src": "golang-1.15.14-1.module_el8.4.0+2519+614b07b8.src.rpm",
-        "filename": "golang-bin-1.15.14-1.module_el8.4.0+2519+614b07b8.x86_64.rpm",
-        "sum": "a427be65ac8fac8e45e4d40b64ad1cc0f044a8f23ff6904073e0217e4d70c9d9",
-        "sum_type": "sha256",
-        "reboot_suggested": 0
-      },
-      {
-        "name": "golang-docs",
-        "version": "1.15.14",
-        "release": "1.module_el8.4.0+2519+614b07b8",
-        "epoch": "0",
-        "arch": "noarch",
-        "src": "golang-1.15.14-1.module_el8.4.0+2519+614b07b8.src.rpm",
-        "filename": "golang-docs-1.15.14-1.module_el8.4.0+2519+614b07b8.noarch.rpm",
-        "sum": "42fdb8312c9dbb5a2c8a4eef92e13229a8882ce549c415423e8ddac928ac1c22",
-        "sum_type": "sha256",
-        "reboot_suggested": 0
-      },
-      {
-        "name": "golang-misc",
-        "version": "1.15.14",
-        "release": "1.module_el8.4.0+2519+614b07b8",
-        "epoch": "0",
-        "arch": "noarch",
-        "src": "golang-1.15.14-1.module_el8.4.0+2519+614b07b8.src.rpm",
-        "filename": "golang-misc-1.15.14-1.module_el8.4.0+2519+614b07b8.noarch.rpm",
-        "sum": "df348103e56cc9a80a2947f3539db626ab15c50999a96b567229a4fb1f8d4524",
-        "sum_type": "sha256",
-        "reboot_suggested": 0
-      },
-      {
-        "name": "golang-race",
-        "version": "1.15.14",
-        "release": "1.module_el8.4.0+2519+614b07b8",
-        "epoch": "0",
-        "arch": "x86_64",
-        "src": "golang-1.15.14-1.module_el8.4.0+2519+614b07b8.src.rpm",
-        "filename": "golang-race-1.15.14-1.module_el8.4.0+2519+614b07b8.x86_64.rpm",
-        "sum": "6154fad17d93bbb4381a22a1fbc845b192439a14b3b0062f44cba82151bcee61",
-        "sum_type": "sha256",
-        "reboot_suggested": 0
-      },
-      {
-        "name": "golang-src",
-        "version": "1.15.14",
-        "release": "1.module_el8.4.0+2519+614b07b8",
-        "epoch": "0",
-        "arch": "noarch",
-        "src": "golang-1.15.14-1.module_el8.4.0+2519+614b07b8.src.rpm",
-        "filename": "golang-src-1.15.14-1.module_el8.4.0+2519+614b07b8.noarch.rpm",
-        "sum": "a4ae76ef61bae3068cc9550ebbd3d390f7d256de374caa0a117d15c3d455ed95",
-        "sum_type": "sha256",
-        "reboot_suggested": 0
-      },
-      {
-        "name": "golang-tests",
-        "version": "1.15.14",
-        "release": "1.module_el8.4.0+2519+614b07b8",
-        "epoch": "0",
-        "arch": "noarch",
-        "src": "golang-1.15.14-1.module_el8.4.0+2519+614b07b8.src.rpm",
-        "filename": "golang-tests-1.15.14-1.module_el8.4.0+2519+614b07b8.noarch.rpm",
-        "sum": "75ee9b5707d6aa8ec592536374209ad43001619c09bb0d287d339d223499cd76",
-        "sum_type": "sha256",
-        "reboot_suggested": 0
       }
     ],
     "module": {
@@ -133,18 +61,6 @@
       "type": "cve",
       "id": "CVE-2021-31525",
       "title": "CVE-2021-31525"
-    },
-    {
-      "href": "https://vulners.com/cve/CVE-2021-33196",
-      "type": "cve",
-      "id": "CVE-2021-33196",
-      "title": "CVE-2021-33196"
-    },
-    {
-      "href": "https://vulners.com/cve/CVE-2021-34558",
-      "type": "cve",
-      "id": "CVE-2021-34558",
-      "title": "CVE-2021-34558"
     }
   ],
   "release": "0",

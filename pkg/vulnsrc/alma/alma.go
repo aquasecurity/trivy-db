@@ -41,9 +41,9 @@ func (vs VulnSrc) Name() string {
 
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", almaDir)
-	errata := map[string][]erratum{}
+	errata := map[string][]Erratum{}
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-		var erratum erratum
+		var erratum Erratum
 		if err := json.NewDecoder(r).Decode(&erratum); err != nil {
 			return xerrors.Errorf("failed to decode Alma erratum: %w", err)
 		}
@@ -62,14 +62,14 @@ func (vs VulnSrc) Update(dir string) error {
 		return xerrors.Errorf("error in Alma walk: %w", err)
 	}
 
-	if err := vs.save(errata); err != nil {
+	if err = vs.save(errata); err != nil {
 		return xerrors.Errorf("error in Alma save: %w", err)
 	}
 
 	return nil
 }
 
-func (vs VulnSrc) save(errataVer map[string][]erratum) error {
+func (vs VulnSrc) save(errataVer map[string][]Erratum) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for version, errata := range errataVer {
 			if err := vs.commit(tx, version, errata); err != nil {
@@ -84,10 +84,10 @@ func (vs VulnSrc) save(errataVer map[string][]erratum) error {
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, version string, errata []erratum) error {
+func (vs VulnSrc) commit(tx *bolt.Tx, version string, errata []Erratum) error {
 	platformName := fmt.Sprintf(platformFormat, version)
 	for _, erratum := range errata {
-		references := []string{}
+		var references []string
 		for _, ref := range erratum.References {
 			if ref.Type != "cve" {
 				references = append(references, ref.Href)
@@ -119,17 +119,16 @@ func (vs VulnSrc) commit(tx *bolt.Tx, version string, errata []erratum) error {
 
 				vuln := types.VulnerabilityDetail{
 					Severity:    generalizeSeverity(erratum.Severity),
-					References:  references,
 					Title:       erratum.Title,
 					Description: erratum.Description,
+					References:  references,
 				}
 				if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Alma, vuln); err != nil {
 					return xerrors.Errorf("failed to save Alma vulnerability: %w", err)
 				}
 
-				// for light DB
-				if err := vs.dbc.PutSeverity(tx, cveID, types.SeverityUnknown); err != nil {
-					return xerrors.Errorf("failed to save Alma vulnerability severity for light: %w", err)
+				if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
+					return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 				}
 			}
 		}

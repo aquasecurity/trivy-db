@@ -1,6 +1,6 @@
 package alma
 
-type erratum struct {
+type Erratum struct {
 	ID           OID         `json:"_id"`
 	BsRepoID     OID         `json:"bs_repo_id"`
 	UpdateinfoID string      `json:"updateinfo_id"`
