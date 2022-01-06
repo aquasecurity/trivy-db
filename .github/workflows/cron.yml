@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Download vuln-list and advisories
-        run: make db-fetch-langs db-fetch-vuln-list-main
+        run: make db-fetch-langs db-fetch-vuln-list
 
       - name: Build the binary
         run: make build
