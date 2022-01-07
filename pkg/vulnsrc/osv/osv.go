@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
-	"time"
 
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
@@ -144,11 +143,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, osvs []OSV) error {
 				VulnerableVersions: vulnerableVersions,
 				PatchedVersions:    patchedVersions,
 			}
+
 			source, err := bucket.Name(vs.ecosystem.packageType, dataSource)
 			if err != nil {
-				return err
+				return xerrors.Errorf("bucket error: %w", err)
 			}
-			if err := vs.dbc.PutAdvisoryDetail(tx, vulnId, source, affected.Package.Name, advisory); err != nil {
+			if err = vs.dbc.PutAdvisoryDetail(tx, vulnId, source, affected.Package.Name, advisory); err != nil {
 				return xerrors.Errorf("failed to save osv advisory: %w", err)
 			}
 
@@ -160,18 +160,18 @@ func (vs VulnSrc) commit(tx *bolt.Tx, osvs []OSV) error {
 			vuln := types.VulnerabilityDetail{
 				ID:               vulnId,
 				Description:      osv.Details,
-				PublishedDate:    mustParse(time.RFC3339, osv.Published),
-				LastModifiedDate: mustParse(time.RFC3339Nano, osv.Modified),
+				PublishedDate:    utils.MustTimeParse(osv.Published),
+				LastModifiedDate: utils.MustTimeParse(osv.Modified),
 				Title:            osv.ID,
 				References:       references,
 			}
 
-			if err := vs.dbc.PutVulnerabilityDetail(tx, vulnId, vs.ecosystem.packageType, vuln); err != nil {
+			if err = vs.dbc.PutVulnerabilityDetail(tx, vulnId, vs.ecosystem.packageType, vuln); err != nil {
 				return xerrors.Errorf("failed to save osv vulnerability: %w", err)
 			}
 
 			// for optimization
-			if err := vs.dbc.PutVulnerabilityID(tx, vulnId); err != nil {
+			if err = vs.dbc.PutVulnerabilityID(tx, vulnId); err != nil {
 				return xerrors.Errorf("failed to save osv vulnerability severity for light: %w", err)
 			}
 		}
@@ -185,12 +185,4 @@ func getVulnId(osv *OSV) string {
 	} else {
 		return osv.Aliases[0] //CVE Id
 	}
-}
-
-func mustParse(layout, value string) *time.Time {
-	t, err := time.Parse(layout, value)
-	if err != nil {
-		return nil
-	}
-	return &t
 }
