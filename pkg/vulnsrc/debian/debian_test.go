@@ -32,20 +32,20 @@ func TestVulnSrc_Update(t *testing.T) {
 			wantValues: []wantKV{
 				// Ref. https://security-tracker.debian.org/tracker/CVE-2021-33560
 				{
-					key: []string{"advisory-detail", "CVE-2021-33560", "debian oval 9", "libgcrypt20"},
+					key: []string{"advisory-detail", "CVE-2021-33560", "debian 9", "libgcrypt20"},
 					value: types.Advisory{
 						VendorIDs:    []string{"DLA-2691-1"},
 						FixedVersion: "1.7.6-2+deb9u4",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2021-33560", "debian oval 10", "libgcrypt20"},
+					key: []string{"advisory-detail", "CVE-2021-33560", "debian 10", "libgcrypt20"},
 					value: types.Advisory{
 						FixedVersion: "1.8.4-5+deb10u1",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2021-33560", "debian oval 11", "libgcrypt20"},
+					key: []string{"advisory-detail", "CVE-2021-33560", "debian 11", "libgcrypt20"},
 					value: types.Advisory{
 						FixedVersion: "1.8.7-6",
 					},
@@ -58,7 +58,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key: []string{"advisory-detail", "DSA-3714-1", "debian oval 8", "akonadi"},
+					key: []string{"advisory-detail", "DSA-3714-1", "debian 8", "akonadi"},
 					value: types.Advisory{
 						VendorIDs:    []string{"DSA-3714-1"},
 						FixedVersion: "1.13.0-2+deb8u2",
@@ -66,7 +66,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					// wrong no-dsa
-					key: []string{"advisory-detail", "CVE-2020-8631", "debian oval 11", "cloud-init"},
+					key: []string{"advisory-detail", "CVE-2020-8631", "debian 11", "cloud-init"},
 					value: types.Advisory{
 						FixedVersion: "19.4-2",
 					},
