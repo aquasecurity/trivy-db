@@ -52,9 +52,10 @@ jobs:
           tag-semver: |
             {{version}}
 
-      - name: Build and push - Docker/ECR
+      - name: Build and push - Docker
         id: docker_build
         uses: docker/build-push-action@v2
+        continue-on-error: true
         with:
           context: .
           platforms: linux/amd64
@@ -62,6 +63,19 @@ jobs:
           push: true
           tags: |
             ${{ env.ALIAS_DOCKER }}/${{ env.REP }}:${{ steps.date_version.outputs.version }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+
+      - name: Build and push - ECR
+        id: ecr_build
+        uses: docker/build-push-action@v2
+        continue-on-error: true
+        with:
+          context: .
+          platforms: linux/amd64
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          tags: |
             public.ecr.aws/${{ env.ALIAS_AWS }}/${{ env.REP }}:${{ steps.date_version.outputs.version }}
             ${{ env.ALIAS_DOCKER }}/${{ env.REP }}:latest
             public.ecr.aws/${{ env.ALIAS_AWS }}/${{ env.REP }}:latest
@@ -69,4 +83,6 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
 
       - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
+        run: |
+          echo ${{ steps.docker_build.outputs.digest }}
+          echo ${{ steps.ecr_build.outputs.digest }}
