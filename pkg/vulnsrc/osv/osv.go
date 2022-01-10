@@ -155,6 +155,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry OSV) error {
 
 	for _, vulnID := range vulnIDs {
 		vuln := types.VulnerabilityDetail{
+			Title:       entry.Summary,
 			Description: entry.Details,
 			References:  references,
 		}

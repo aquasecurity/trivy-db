@@ -5,6 +5,7 @@ type OSV struct {
 	Modified   string      `json:"modified,omitempty"`
 	Published  string      `json:"published,omitempty"`
 	Aliases    []string    `json:"aliases,omitempty"`
+	Summary    string      `json:"summary,omitempty"`
 	Details    string      `json:"details,omitempty"`
 	Affected   []Affected  `json:"affected,omitempty"`
 	References []Reference `json:"references,omitempty"`
