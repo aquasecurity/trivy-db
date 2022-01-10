@@ -1,22 +1,18 @@
 {
   "id": "PYSEC-2018-27",
-  "details": "qutebrowser before version 1.4.1 is vulnerable to a cross-site request forgery flaw that allows websites to access 'qute://*' URLs. A malicious website could exploit this to load a 'qute://settings/set' URL, which then sets 'editor.command' to a bash script, resulting in arbitrary code execution.",
-  "aliases": [
-    "CVE-2018-10895"
-  ],
   "modified": "2021-06-10T06:51:37.378319Z",
   "published": "2018-07-12T12:29:00Z",
-  "references": [
-    {
-      "type": "WEB",
-      "url": "https://github.com/qutebrowser/qutebrowser/commit/43e58ac865ff862c2008c510fc5f7627e10b4660"
-    }
+  "aliases": [
+    "CVE-2018-10895",
+    "GHSA-wgmx-52ph-qqcw"
   ],
+  "details": "qutebrowser before version 1.4.1 is vulnerable to a cross-site request forgery flaw that allows websites to access 'qute://*' URLs. A malicious website could exploit this to load a 'qute://settings/set' URL, which then sets 'editor.command' to a bash script, resulting in arbitrary code execution.",
   "affected": [
     {
       "package": {
+        "ecosystem": "PyPI",
         "name": "qutebrowser",
-        "ecosystem": "PyPI"
+        "purl": "pkg:pypi:qutebrowser"
       },
       "ranges": [
         {
@@ -91,6 +87,24 @@
       "database_specific": {
         "source": "https://github.com/pypa/advisory-db/blob/main/vulns/qutebrowser/PYSEC-2018-27.yaml"
       }
+    }
+  ],
+  "references": [
+    {
+      "type": "FIX",
+      "url": "https://github.com/qutebrowser/qutebrowser/commit/43e58ac865ff862c2008c510fc5f7627e10b4660"
+    },
+    {
+      "type": "REPORT",
+      "url": "https://bugzilla.redhat.com/show_bug.cgi?id=CVE-2018-10895"
+    },
+    {
+      "type": "WEB",
+      "url": "http://www.openwall.com/lists/oss-security/2018/07/11/7"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-wgmx-52ph-qqcw"
     }
   ]
 }

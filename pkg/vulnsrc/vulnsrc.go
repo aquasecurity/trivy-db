@@ -63,8 +63,6 @@ var (
 		ghsa.NewVulnSrc(ghsa.Rubygems),
 		glad.NewVulnSrc(),
 		govulndb.NewVulnSrc(),
-		osv.NewVulnSrc(osv.Python),
-		osv.NewVulnSrc(osv.Go),
-		osv.NewVulnSrc(osv.Rust),
+		osv.NewVulnSrc(),
 	}
 )
