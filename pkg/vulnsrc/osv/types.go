@@ -1,35 +1,12 @@
 package osv
 
-type OSV struct {
-	ID         string      `json:"id,omitempty"`
-	Modified   string      `json:"modified,omitempty"`
-	Published  string      `json:"published,omitempty"`
-	Aliases    []string    `json:"aliases,omitempty"`
-	Summary    string      `json:"summary,omitempty"`
-	Details    string      `json:"details,omitempty"`
-	Affected   []Affected  `json:"affected,omitempty"`
-	References []Reference `json:"references,omitempty"`
-}
+import "golang.org/x/vuln/osv"
 
-type Affected struct {
-	Package  *Package `json:"package,omitempty"`
-	Ranges   []Range  `json:"ranges,omitempty"`
-	Versions []string `json:"versions,omitempty"`
-}
-type Package struct {
-	Name string `json:"name,omitempty"`
-}
-type Range struct {
-	Type   string  `json:"type,omitempty"`
-	Repo   string  `json:"repo,omitempty"`
-	Events []Event `json:"events,omitempty"`
-}
-type Event struct {
-	Introduced string `json:"introduced,omitempty"`
-	Fixed      string `json:"fixed,omitempty"`
-}
+// source: https://github.com/golang/vuln/blob/9d39a965865fd1d0030df18602433a01f679fd7d/osv/json.go
+type Entry struct {
+	// According to the specification, "summary" field is missing in the below struct.
+	// https://ossf.github.io/osv-schema/
+	Summary string `json:"summary"`
 
-type Reference struct {
-	Type string `json:"type,omitempty"`
-	Url  string `json:"url,omitempty"`
+	osv.Entry
 }

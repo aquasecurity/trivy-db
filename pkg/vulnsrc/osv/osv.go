@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	bolt "go.etcd.io/bbolt"
+	"golang.org/x/vuln/osv"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
@@ -57,9 +58,9 @@ func (vs VulnSrc) Update(dir string) error {
 		log.Printf("    Updating Open Source Vulnerability %s", eco.pkgType)
 		rootDir := filepath.Join(dir, "vuln-list", osvDir, eco.dir)
 
-		var entries []OSV
+		var entries []Entry
 		err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-			var osv OSV
+			var osv Entry
 			if err := json.NewDecoder(r).Decode(&osv); err != nil {
 				return xerrors.Errorf("JSON decode error (%s): %w", path, err)
 			}
@@ -78,7 +79,7 @@ func (vs VulnSrc) Update(dir string) error {
 	return nil
 }
 
-func (vs VulnSrc) save(eco ecosystem, entries []OSV) error {
+func (vs VulnSrc) save(eco ecosystem, entries []Entry) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for _, entry := range entries {
 			if err := vs.commit(tx, eco, entry); err != nil {
@@ -93,7 +94,7 @@ func (vs VulnSrc) save(eco ecosystem, entries []OSV) error {
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry OSV) error {
+func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 	bktName, err := bucket.Name(eco.pkgType, dataSource)
 	if err != nil {
 		return xerrors.Errorf("bucket error: %w", err)
@@ -108,14 +109,14 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry OSV) error {
 
 	var references []string
 	for _, ref := range entry.References {
-		references = append(references, ref.Url)
+		references = append(references, ref.URL)
 	}
 
 	for _, affected := range entry.Affected {
 
 		var patchedVersions, vulnerableVersions []string
 		for _, affects := range affected.Ranges {
-			if affects.Type == "GIT" {
+			if affects.Type == osv.TypeGit {
 				continue
 			}
 
