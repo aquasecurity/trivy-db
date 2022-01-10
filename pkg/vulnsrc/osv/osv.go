@@ -170,8 +170,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, osvs []OSV) error {
 				return xerrors.Errorf("failed to save osv vulnerability: %w", err)
 			}
 
-			// for light DB
-			if err := vs.dbc.PutSeverity(tx, vulnId, types.SeverityUnknown); err != nil {
+			// for optimization
+			if err := vs.dbc.PutVulnerabilityID(tx, vulnId); err != nil {
 				return xerrors.Errorf("failed to save osv vulnerability severity for light: %w", err)
 			}
 		}
