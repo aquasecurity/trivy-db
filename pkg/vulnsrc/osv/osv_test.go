@@ -12,7 +12,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/types"
 )
 
-func TestOsv(t *testing.T) {
+func TestVulnSrc_Update(t *testing.T) {
 	type wantKV struct {
 		key   []string
 		value interface{}
