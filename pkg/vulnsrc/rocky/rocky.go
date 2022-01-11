@@ -24,7 +24,7 @@ const (
 var (
 	platformFormat = "rocky %s"
 	targetReleases = []string{"8"}
-	targetRepos    = []string{"BaseOS", "AppStream", "Devel"}
+	targetRepos    = []string{"BaseOS", "AppStream", "extras"}
 	targetArches   = []string{"x86_64"}
 )
 
