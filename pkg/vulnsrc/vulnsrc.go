@@ -17,7 +17,6 @@ import (
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/photon"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/python"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat"
 	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
 	susecvrf "github.com/aquasecurity/trivy-db/pkg/vulnsrc/suse-cvrf"
@@ -53,7 +52,6 @@ var (
 		bundler.NewVulnSrc(),
 		composer.NewVulnSrc(),
 		node.NewVulnSrc(),
-		python.NewVulnSrc(),
 		cargo.NewVulnSrc(),
 		ghsa.NewVulnSrc(ghsa.Composer),
 		ghsa.NewVulnSrc(ghsa.Maven),

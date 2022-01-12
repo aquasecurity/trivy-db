@@ -14,7 +14,6 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/python"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -215,7 +214,7 @@ func (vs VulnSrc) ToLowerCasePackage(pkgName string) string {
 			  from https://www.python.org/dev/peps/pep-0426/#name
 				All comparisons of distribution names MUST be case insensitive, and MUST consider hyphens and underscores to be equivalent.
 		*/
-		pkgName = python.ToLowerCasePythonPackage(pkgName)
+		pkgName = toLowerCasePythonPackage(pkgName)
 	} else if vs.ecosystem != Nuget { // Nuget is case-sensitive
 		pkgName = strings.ToLower(pkgName)
 	}
@@ -235,4 +234,14 @@ func severityFromThreat(urgency string) types.Severity {
 	default:
 		return types.SeverityUnknown
 	}
+}
+
+func toLowerCasePythonPackage(pkg string) string {
+	/*
+		  from https://www.python.org/dev/peps/pep-0426/#name
+			All comparisons of distribution names MUST be case insensitive, and MUST consider hyphens and underscores to be equivalent.
+	*/
+	pkg = strings.ToLower(pkg)
+	pkg = strings.ReplaceAll(pkg, "_", "-")
+	return pkg
 }
