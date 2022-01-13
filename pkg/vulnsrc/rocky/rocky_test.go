@@ -41,6 +41,11 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
+			name:       "skip advisories for modular package",
+			dir:        filepath.Join("testdata", "modular"),
+			wantValues: []want{},
+		},
+		{
 			name:    "sad path",
 			dir:     filepath.Join("testdata", "sad"),
 			wantErr: "failed to decode Rocky erratum",

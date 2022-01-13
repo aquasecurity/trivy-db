@@ -110,7 +110,12 @@ func (vs VulnSrc) save(errataVer map[string][]RLSA) error {
 func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error {
 	for _, erratum := range errata {
 		for _, cveID := range erratum.CveIDs {
+			putAdvisoryCount := 0
 			for _, pkg := range erratum.Packages {
+				if strings.Contains(pkg.Release, ".module+el") {
+					continue
+				}
+
 				advisory := types.Advisory{
 					FixedVersion: constructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 				}
@@ -118,6 +123,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error 
 					return xerrors.Errorf("failed to save Rocky advisory: %w", err)
 				}
 
+				putAdvisoryCount++
+			}
+			if putAdvisoryCount > 0 {
 				var references []string
 				for _, ref := range erratum.References {
 					references = append(references, ref.Href)
