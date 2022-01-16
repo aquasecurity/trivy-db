@@ -6,7 +6,6 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/amazon"
 	archlinux "github.com/aquasecurity/trivy-db/pkg/vulnsrc/arch-linux"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bundler"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/cargo"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/composer"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
@@ -52,7 +51,6 @@ var (
 		bundler.NewVulnSrc(),
 		composer.NewVulnSrc(),
 		node.NewVulnSrc(),
-		cargo.NewVulnSrc(),
 		ghsa.NewVulnSrc(ghsa.Composer),
 		ghsa.NewVulnSrc(ghsa.Maven),
 		ghsa.NewVulnSrc(ghsa.Npm),

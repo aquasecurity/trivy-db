@@ -58,9 +58,8 @@ db-all:
 
 .PHONY: db-fetch-langs
 db-fetch-langs:
-	mkdir -p cache/ruby-advisory-db cache/rust-advisory-db cache/php-security-advisories cache/nodejs-security-wg
+	mkdir -p cache/ruby-advisory-db cache/php-security-advisories cache/nodejs-security-wg
 	wget -qO - https://github.com/rubysec/ruby-advisory-db/archive/master.tar.gz | tar xz -C cache/ruby-advisory-db --strip-components=1
-	wget -qO - https://github.com/RustSec/advisory-db/archive/master.tar.gz | tar xz -C cache/rust-advisory-db --strip-components=1
 	wget -qO - https://github.com/FriendsOfPHP/security-advisories/archive/master.tar.gz | tar xz -C cache/php-security-advisories --strip-components=1
 	wget -qO - https://github.com/nodejs/security-wg/archive/main.tar.gz | tar xz -C cache/nodejs-security-wg --strip-components=1
 
