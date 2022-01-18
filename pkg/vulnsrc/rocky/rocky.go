@@ -23,7 +23,6 @@ const (
 
 var (
 	platformFormat = "rocky %s"
-	targetReleases = []string{"8"}
 	targetRepos    = []string{"BaseOS", "AppStream", "extras"}
 	targetArches   = []string{"x86_64"}
 )
@@ -58,10 +57,6 @@ func (vs VulnSrc) Update(dir string) error {
 		}
 
 		majorVer := dirs[len(dirs)-5]
-		if !utils.StringInSlice(majorVer, targetReleases) {
-			log.Printf("unsupported Rocky version: %s\n", majorVer)
-			return nil
-		}
 		repo := dirs[len(dirs)-4]
 		if !utils.StringInSlice(repo, targetRepos) {
 			log.Printf("unsupported Rocky repo: %s\n", repo)
