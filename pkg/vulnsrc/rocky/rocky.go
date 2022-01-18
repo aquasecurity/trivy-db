@@ -112,6 +112,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error 
 		for _, cveID := range erratum.CveIDs {
 			putAdvisoryCount := 0
 			for _, pkg := range erratum.Packages {
+				// Skip the modular packages until the following bug is fixed.
+				// https://forums.rockylinux.org/t/some-errata-missing-in-comparison-with-rhel-and-almalinux/3843/8
 				if strings.Contains(pkg.Release, ".module+el") {
 					continue
 				}
