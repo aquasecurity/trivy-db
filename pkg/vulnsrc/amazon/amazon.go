@@ -120,7 +120,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 				for _, pkg := range alas.Packages {
 					platformName := fmt.Sprintf(platformFormat, majorVersion)
 					advisory := types.Advisory{
-						FixedVersion: constructVersion(pkg.Epoch, pkg.Version, pkg.Release),
+						FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 					}
 					if err := vs.dbc.PutAdvisoryDetail(tx, cveID, platformName, pkg.Name, advisory); err != nil {
 						return xerrors.Errorf("failed to save Amazon advisory: %w", err)
@@ -175,18 +175,4 @@ func severityFromPriority(priority string) types.Severity {
 	default:
 		return types.SeverityUnknown
 	}
-}
-
-func constructVersion(epoch, version, release string) string {
-	verStr := ""
-	if epoch != "0" && epoch != "" {
-		verStr += fmt.Sprintf("%s:", epoch)
-	}
-	verStr += version
-
-	if release != "" {
-		verStr += fmt.Sprintf("-%s", release)
-
-	}
-	return verStr
 }

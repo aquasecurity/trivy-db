@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/fs"
 	"log"
@@ -117,4 +118,18 @@ func Uniq(strings []string) []string {
 func IsInt(s string) bool {
 	_, err := strconv.Atoi(s)
 	return err == nil
+}
+
+func ConstructVersion(epoch, version, release string) string {
+	verStr := ""
+	if epoch != "0" && epoch != "" {
+		verStr += fmt.Sprintf("%s:", epoch)
+	}
+	verStr += version
+
+	if release != "" {
+		verStr += fmt.Sprintf("-%s", release)
+
+	}
+	return verStr
 }

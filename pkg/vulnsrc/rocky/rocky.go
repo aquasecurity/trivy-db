@@ -119,7 +119,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error 
 				}
 
 				advisory := types.Advisory{
-					FixedVersion: constructVersion(pkg.Epoch, pkg.Version, pkg.Release),
+					FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 				}
 				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, platformName, pkg.Name, advisory); err != nil {
 					return xerrors.Errorf("failed to save Rocky advisory: %w", err)
@@ -159,20 +159,6 @@ func (vs VulnSrc) Get(release, pkgName string) ([]types.Advisory, error) {
 		return nil, xerrors.Errorf("failed to get Rocky advisories: %w", err)
 	}
 	return advisories, nil
-}
-
-func constructVersion(epoch, version, release string) string {
-	verStr := ""
-	if epoch != "0" && epoch != "" {
-		verStr += fmt.Sprintf("%s:", epoch)
-	}
-	verStr += version
-
-	if release != "" {
-		verStr += fmt.Sprintf("-%s", release)
-
-	}
-	return verStr
 }
 
 func generalizeSeverity(severity string) types.Severity {
