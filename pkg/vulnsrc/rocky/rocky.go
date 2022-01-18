@@ -52,22 +52,21 @@ func (vs VulnSrc) Update(dir string) error {
 
 		dirs := strings.Split(path, string(filepath.Separator))
 		if len(dirs) < 5 {
-			log.Printf("invalid path: %s\n", path)
+			log.Printf("Invalid path: %s", path)
 			return nil
 		}
 
-		majorVer := dirs[len(dirs)-5]
-		repo := dirs[len(dirs)-4]
+		majorVer, repo, arch := dirs[len(dirs)-5], dirs[len(dirs)-4], dirs[len(dirs)-3]
 		if !utils.StringInSlice(repo, targetRepos) {
-			log.Printf("unsupported Rocky repo: %s\n", repo)
+			log.Printf("Unsupported Rocky repo: %s", repo)
 			return nil
 		}
-		arch := dirs[len(dirs)-3]
+
 		if !utils.StringInSlice(arch, targetArches) {
 			switch arch {
 			case "aarch64":
 			default:
-				log.Printf("unsupported Rocky arch: %s\n", arch)
+				log.Printf("Unsupported Rocky arch: %s", arch)
 			}
 			return nil
 		}
@@ -79,7 +78,7 @@ func (vs VulnSrc) Update(dir string) error {
 		return xerrors.Errorf("error in Rocky walk: %w", err)
 	}
 
-	if err := vs.save(errata); err != nil {
+	if err = vs.save(errata); err != nil {
 		return xerrors.Errorf("error in Rocky save: %w", err)
 	}
 
@@ -122,6 +121,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error 
 
 				putAdvisoryCount++
 			}
+
 			if putAdvisoryCount > 0 {
 				var references []string
 				for _, ref := range erratum.References {
