@@ -82,6 +82,11 @@ func (vs VulnSrc) Update(dir string) error {
 func (vs VulnSrc) save(eco ecosystem, entries []Entry) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for _, entry := range entries {
+			//GHSA-IDs is stored via ghsa package.
+			//Skip them to avoid duplication.
+			if strings.HasPrefix(entry.ID, "GHSA") {
+				continue
+			}
 			if err := vs.commit(tx, eco, entry); err != nil {
 				return err
 			}
