@@ -116,7 +116,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, errata []Erratum) err
 				}
 
 				advisory := types.Advisory{
-					FixedVersion: constructVersion(pkg.Epoch, pkg.Version, pkg.Release),
+					FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 				}
 
 				if adv, ok := advisories[pkgName]; ok {
@@ -173,18 +173,4 @@ func generalizeSeverity(severity string) types.Severity {
 		return types.SeverityCritical
 	}
 	return types.SeverityUnknown
-}
-
-func constructVersion(epoch, version, release string) string {
-	verStr := ""
-	if epoch != "0" && epoch != "" {
-		verStr += fmt.Sprintf("%s:", epoch)
-	}
-	verStr += version
-
-	if release != "" {
-		verStr += fmt.Sprintf("-%s", release)
-
-	}
-	return verStr
 }
