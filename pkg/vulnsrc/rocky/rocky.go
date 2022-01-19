@@ -50,13 +50,13 @@ func (vs VulnSrc) Update(dir string) error {
 			return xerrors.Errorf("failed to decode Rocky erratum: %w", err)
 		}
 
-		dirs := strings.Split(path, string(filepath.Separator))
-		if len(dirs) < 5 {
+		dirs := strings.Split(strings.TrimPrefix(path, rootDir), string(filepath.Separator))[1:]
+		if len(dirs) != 5 {
 			log.Printf("Invalid path: %s", path)
 			return nil
 		}
 
-		majorVer, repo, arch := dirs[len(dirs)-5], dirs[len(dirs)-4], dirs[len(dirs)-3]
+		majorVer, repo, arch := dirs[0], dirs[1], dirs[2]
 		if !utils.StringInSlice(repo, targetRepos) {
 			log.Printf("Unsupported Rocky repo: %s", repo)
 			return nil
