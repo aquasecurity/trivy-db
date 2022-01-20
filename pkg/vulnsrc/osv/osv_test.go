@@ -12,12 +12,11 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/types"
 )
 
-type wantKV struct {
-	key   []string
-	value interface{}
-}
-
 func TestVulnSrc_Update(t *testing.T) {
+	type wantKV struct {
+		key   []string
+		value interface{}
+	}
 	tests := []struct {
 		name       string
 		dir        string
