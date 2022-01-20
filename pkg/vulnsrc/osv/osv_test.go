@@ -12,11 +12,12 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/types"
 )
 
+type wantKV struct {
+	key   []string
+	value interface{}
+}
+
 func TestVulnSrc_Update(t *testing.T) {
-	type wantKV struct {
-		key   []string
-		value interface{}
-	}
 	tests := []struct {
 		name       string
 		dir        string
@@ -111,11 +112,51 @@ func TestVulnSrc_Update(t *testing.T) {
 
 func TestVulnSrc_PythonGHSAIDsIsSkipped(t *testing.T) {
 	tests := []struct {
-		name     string
-		dir      string
-		dbBucket []string
+		name          string
+		dir           string
+		pythonBuckets []wantKV
+		rustBuckets   []wantKV
 	}{
-		{"happy path, when python GHSA-ID is skipped", "testdata/skipGHSA", []string{"advisory-detail", "CVE-2021-40829"}},
+		{
+			name: "happy path, when python GHSA-ID is skipped",
+			dir:  "testdata/skipGHSA",
+			pythonBuckets: []wantKV{
+				{
+					key: []string{"advisory-detail", "CVE-2021-40829"},
+				},
+				{
+					key: []string{"vulnerability-detail", "CVE-2021-40829"},
+				},
+				{
+					key: []string{"vulnerability-id", "CVE-2021-40829"},
+				},
+			},
+			rustBuckets: []wantKV{
+				{
+					key: []string{"advisory-detail", "CVE-2017-18587", "cargo::Open Source Vulnerability", "hyper"},
+					value: types.Advisory{
+						VulnerableVersions: []string{">=0.0.0-0, <0.9.18", ">=0.10.0, <0.10.2"},
+						PatchedVersions:    []string{"0.9.18", "0.10.2"},
+					},
+				},
+				{
+					key: []string{"vulnerability-detail", "CVE-2017-18587", "osv-crates.io"},
+					value: types.VulnerabilityDetail{
+						Title:       "headers containing newline characters can split messages",
+						Description: "Serializing of headers to the socket did not filter the values for newline bytes (`\\r` or `\\n`),\nwhich allowed for header values to split a request or response. People would not likely include\nnewlines in the headers in their own applications, so the way for most people to exploit this\nis if an application constructs headers based on unsanitized user input.\n\nThis issue was fixed by replacing all newline characters with a space during serialization of\na header value.",
+						References: []string{
+							"https://crates.io/crates/hyper",
+							"https://rustsec.org/advisories/RUSTSEC-2017-0002.html",
+							"https://github.com/hyperium/hyper/wiki/Security-001",
+						},
+					},
+				},
+				{
+					key:   []string{"vulnerability-id", "CVE-2017-18587"},
+					value: map[string]interface{}{},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -131,7 +172,13 @@ func TestVulnSrc_PythonGHSAIDsIsSkipped(t *testing.T) {
 			require.NoError(t, err)
 			require.NoError(t, db.Close())
 
-			dbtest.NoBucket(t, db.Path(tempDir), tt.dbBucket)
+			for _, pythonBucket := range tt.pythonBuckets {
+				dbtest.NoBucket(t, db.Path(tempDir), pythonBucket.key)
+			}
+
+			for _, rustBucket := range tt.rustBuckets {
+				dbtest.JSONEq(t, db.Path(tempDir), rustBucket.key, rustBucket.value)
+			}
 		})
 	}
 }
