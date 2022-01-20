@@ -64,7 +64,11 @@ func (vs VulnSrc) Update(dir string) error {
 			if err := json.NewDecoder(r).Decode(&osv); err != nil {
 				return xerrors.Errorf("JSON decode error (%s): %w", path, err)
 			}
-			entries = append(entries, osv)
+			//GHSA-IDs are already stored via ghsa package.
+			//Skip them to avoid duplication.
+			if !strings.HasPrefix(osv.ID, "GHSA") {
+				entries = append(entries, osv)
+			}
 			return nil
 		})
 		if err != nil {
@@ -82,11 +86,6 @@ func (vs VulnSrc) Update(dir string) error {
 func (vs VulnSrc) save(eco ecosystem, entries []Entry) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for _, entry := range entries {
-			//GHSA-IDs are already stored via ghsa package.
-			//Skip them to avoid duplication.
-			if strings.HasPrefix(entry.ID, "GHSA") {
-				continue
-			}
 			if err := vs.commit(tx, eco, entry); err != nil {
 				return err
 			}
