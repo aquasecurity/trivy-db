@@ -108,3 +108,30 @@ func TestVulnSrc_Update(t *testing.T) {
 		})
 	}
 }
+
+func TestVulnSrc_PythonGHSAIDsIsSkipped(t *testing.T) {
+	tests := []struct {
+		name     string
+		dir      string
+		dbBucket []string
+	}{
+		{"happy path, when python GHSA-ID is skipped", "testdata/skipGHSA", []string{"advisory-detail", "CVE-2021-40829"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tempDir := t.TempDir()
+
+			err := db.Init(tempDir)
+			require.NoError(t, err)
+			defer db.Close()
+
+			vulnSrc := NewVulnSrc()
+			err = vulnSrc.Update(tt.dir)
+			require.NoError(t, err)
+			require.NoError(t, db.Close())
+
+			dbtest.NoBucket(t, db.Path(tempDir), tt.dbBucket)
+		})
+	}
+}
