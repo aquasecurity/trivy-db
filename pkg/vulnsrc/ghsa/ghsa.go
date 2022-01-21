@@ -168,11 +168,13 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 		}
 
 		vuln := types.VulnerabilityDetail{
-			ID:          vulnID,
-			Severity:    severityFromThreat(ghsa.Severity),
-			References:  references,
-			Title:       ghsa.Advisory.Summary,
-			Description: ghsa.Advisory.Description,
+			ID:           vulnID,
+			Severity:     severityFromThreat(ghsa.Severity),
+			References:   references,
+			Title:        ghsa.Advisory.Summary,
+			Description:  ghsa.Advisory.Description,
+			CvssScoreV3:  ghsa.Advisory.CVSS.Score,
+			CvssVectorV3: ghsa.Advisory.CVSS.VectorString,
 		}
 
 		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, fmt.Sprintf(datasourceFormat, strings.ToLower(vs.ecosystem.String())), vuln); err != nil {

@@ -24,6 +24,12 @@ type GhsaAdvisory struct {
 	Summary     string
 	UpdatedAt   string
 	WithdrawnAt string
+	CVSS        GhsaCvss
+}
+
+type GhsaCvss struct {
+	Score        float64
+	VectorString string
 }
 
 type Identifier struct {
