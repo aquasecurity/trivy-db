@@ -66,12 +66,24 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
+					key:   []string{"advisory-detail", "CVE-2021-40829"}, // skip GHSA-id
+					value: nil,
+				},
+				{
+					key:   []string{"vulnerability-detail", "CVE-2021-40829"}, // skip GHSA-id
+					value: nil,
+				},
+				{
 					key:   []string{"vulnerability-id", "CVE-2018-10895"},
 					value: map[string]interface{}{},
 				},
 				{
 					key:   []string{"vulnerability-id", "CVE-2017-18587"},
 					value: map[string]interface{}{},
+				},
+				{
+					key:   []string{"vulnerability-id", "CVE-2021-40829"}, // skip GHSA-id
+					value: nil,
 				},
 			},
 		},
@@ -103,7 +115,12 @@ func TestVulnSrc_Update(t *testing.T) {
 			require.NoError(t, db.Close())
 
 			for _, want := range tt.wantValues {
-				dbtest.JSONEq(t, db.Path(tempDir), want.key, want.value)
+				if want.value != nil {
+					dbtest.JSONEq(t, db.Path(tempDir), want.key, want.value)
+				} else {
+					dbtest.NoBucket(t, db.Path(tempDir), want.key)
+				}
+
 			}
 		})
 	}

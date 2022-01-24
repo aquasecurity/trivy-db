@@ -60,11 +60,18 @@ func (vs VulnSrc) Update(dir string) error {
 
 		var entries []Entry
 		err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-			var osv Entry
-			if err := json.NewDecoder(r).Decode(&osv); err != nil {
+			var entry Entry
+			if err := json.NewDecoder(r).Decode(&entry); err != nil {
 				return xerrors.Errorf("JSON decode error (%s): %w", path, err)
 			}
-			entries = append(entries, osv)
+
+			// GHSA-IDs are already stored via ghsa package.
+			// Skip them to avoid duplication.
+			if strings.HasPrefix(entry.ID, "GHSA") {
+				return nil
+			}
+
+			entries = append(entries, entry)
 			return nil
 		})
 		if err != nil {
