@@ -24,6 +24,11 @@ const (
 
 var (
 	targetVersions = []string{"1", "2"}
+
+	source = types.DataSource{
+		Name: "Amazon Linux Security Center",
+		URL:  "https://alas.aws.amazon.com/",
+	}
 )
 
 type VulnSrc struct {
@@ -115,10 +120,13 @@ func (vs VulnSrc) save() error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx) error {
 	for majorVersion, alasList := range vs.advisories {
+		platformName := fmt.Sprintf(platformFormat, majorVersion)
+		if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+			return xerrors.Errorf("failed to put data source: %w", err)
+		}
 		for _, alas := range alasList {
 			for _, cveID := range alas.CveIDs {
 				for _, pkg := range alas.Packages {
-					platformName := fmt.Sprintf(platformFormat, majorVersion)
 					advisory := types.Advisory{
 						FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 					}

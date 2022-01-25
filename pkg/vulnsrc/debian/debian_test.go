@@ -30,6 +30,13 @@ func TestVulnSrc_Update(t *testing.T) {
 			name: "happy path",
 			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []wantKV{
+				{
+					key: []string{"data-source", "debian 9"},
+					value: types.DataSource{
+						Name: "Debian Security Tracker",
+						URL:  "https://salsa.debian.org/security-tracker-team/security-tracker",
+					},
+				},
 				// Ref. https://security-tracker.debian.org/tracker/CVE-2021-33560
 				{
 					key: []string{"advisory-detail", "CVE-2021-33560", "debian 9", "libgcrypt20"},

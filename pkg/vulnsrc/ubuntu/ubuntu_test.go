@@ -28,6 +28,13 @@ func TestVulnSrc_Update(t *testing.T) {
 			name: "happy path",
 			wantValues: []wantKV{
 				{
+					key: []string{"data-source", "ubuntu 18.04"},
+					value: types.DataSource{
+						Name: "Ubuntu CVE Tracker",
+						URL:  "https://git.launchpad.net/ubuntu-cve-tracker",
+					},
+				},
+				{
 					key: []string{"advisory-detail", "CVE-2020-1234", "ubuntu 18.04", "xen"},
 					value: types.Advisory{
 						FixedVersion: "1.2.3",

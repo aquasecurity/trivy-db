@@ -103,6 +103,11 @@ type AdvisoryDetail struct {
 	AdvisoryItem interface{}
 }
 
+type DataSource struct {
+	Name string `json:",omitempty"`
+	URL  string `json:",omitempty"`
+}
+
 type Advisory struct {
 	VulnerabilityID string   `json:",omitempty"`
 	VendorIDs       []string `json:",omitempty"` // e.g. RHSA-ID and DSA-ID
@@ -126,6 +131,9 @@ type Advisory struct {
 	VulnerableVersions []string `json:",omitempty"`
 	PatchedVersions    []string `json:",omitempty"`
 	UnaffectedVersions []string `json:",omitempty"`
+
+	// DataSource holds where the advisory comes from
+	DataSource *DataSource `json:",omitempty"`
 
 	// Custom is basically for extensibility and is not supposed to be used in OSS
 	Custom interface{} `json:",omitempty"`

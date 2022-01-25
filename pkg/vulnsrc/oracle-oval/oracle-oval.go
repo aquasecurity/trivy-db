@@ -23,6 +23,11 @@ var (
 	platformFormat  = "Oracle Linux %s"
 	targetPlatforms = []string{"Oracle Linux 5", "Oracle Linux 6", "Oracle Linux 7", "Oracle Linux 8"}
 	oracleDir       = filepath.Join("oval", "oracle")
+
+	source = types.DataSource{
+		Name: "Oracle Linux OVAL definitions",
+		URL:  "https://linux.oracle.com/security/oval/",
+	}
 )
 
 type VulnSrc struct {
@@ -97,6 +102,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			platformName := fmt.Sprintf(platformFormat, affectedPkg.OSVer)
 			if !utils.StringInSlice(platformName, targetPlatforms) {
 				continue
+			}
+
+			if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+				return xerrors.Errorf("failed to put data source: %w", err)
 			}
 
 			advisory := types.Advisory{

@@ -20,6 +20,11 @@ const (
 	platformFormat = "Photon OS %s"
 )
 
+var source = types.DataSource{
+	Name: "Photon OS CVE metadata",
+	URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
+}
+
 type VulnSrc struct {
 	dbc db.Operation
 }
@@ -73,6 +78,10 @@ func (vs VulnSrc) save(cves []PhotonCVE) error {
 func (vs VulnSrc) commit(tx *bolt.Tx, cves []PhotonCVE) error {
 	for _, cve := range cves {
 		platformName := fmt.Sprintf(platformFormat, cve.OSVersion)
+		if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+			return xerrors.Errorf("failed to put data source: %w", err)
+		}
+
 		advisory := types.Advisory{
 			FixedVersion: cve.ResVer,
 		}

@@ -33,6 +33,11 @@ var (
 	suseDir = filepath.Join("cvrf", "suse")
 
 	versionReplacer = strings.NewReplacer("-SECURITY", "", "-LTSS", "", "-TERADATA", "")
+
+	source = types.DataSource{
+		Name: "SUSE CVRF",
+		URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+	}
 )
 
 type VulnSrc struct {
@@ -111,6 +116,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 		for _, affectedPkg := range affectedPkgs {
 			advisory := types.Advisory{
 				FixedVersion: affectedPkg.Package.FixedVersion,
+			}
+
+			if err := vs.dbc.PutDataSource(tx, affectedPkg.OSVer, source); err != nil {
+				return xerrors.Errorf("failed to put data source: %w", err)
 			}
 
 			if err := vs.dbc.PutAdvisoryDetail(tx, cvrf.Tracking.ID, affectedPkg.OSVer, affectedPkg.Package.Name, advisory); err != nil {

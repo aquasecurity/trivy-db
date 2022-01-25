@@ -41,6 +41,11 @@ var (
 	// NOTE: "removed" should not be marked as "not-affected".
 	// ref. https://security-team.debian.org/security_tracker.html#removed-packages
 	skipStatuses = []string{"not-affected", "undetermined"}
+
+	source = types.DataSource{
+		Name: "Debian Security Tracker",
+		URL:  "https://salsa.debian.org/security-tracker-team/security-tracker",
+	}
 )
 
 type Option func(src *VulnSrc)
@@ -443,6 +448,10 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 	// for optimization
 	if err := dbc.PutVulnerabilityID(tx, adv.VulnerabilityID); err != nil {
 		return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+	}
+
+	if err := dbc.PutDataSource(tx, adv.Platform, source); err != nil {
+		return xerrors.Errorf("failed to put data source: %w", err)
 	}
 
 	return nil

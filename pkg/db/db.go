@@ -33,7 +33,7 @@ type Operation interface {
 
 	PutAdvisory(tx *bolt.Tx, source string, pkgName string, vulnerabilityID string,
 		advisory interface{}) (err error)
-	ForEachAdvisory(source string, pkgName string) (value map[string][]byte, err error)
+	ForEachAdvisory(source string, pkgName string) (value map[string]Value, err error)
 	GetAdvisories(source string, pkgName string) (advisories []types.Advisory, err error)
 
 	PutVulnerabilityID(tx *bolt.Tx, vulnerabilityID string) (err error)
@@ -46,6 +46,8 @@ type Operation interface {
 	PutAdvisoryDetail(tx *bolt.Tx, vulnerabilityID string, source string, pkgName string,
 		advisory interface{}) (err error)
 	DeleteAdvisoryDetailBucket() error
+
+	PutDataSource(tx *bolt.Tx, bktName string, source types.DataSource) (err error)
 }
 
 type Config struct {
@@ -118,9 +120,14 @@ func (dbc Config) put(root *bolt.Bucket, nestedBucket, key string, value interfa
 	return nested.Put([]byte(key), v)
 }
 
-func (dbc Config) forEach(rootBucket, nestedBucket string) (value map[string][]byte, err error) {
-	value = map[string][]byte{}
-	err = db.View(func(tx *bolt.Tx) error {
+type Value struct {
+	Source  types.DataSource
+	Content []byte
+}
+
+func (dbc Config) forEach(rootBucket, nestedBucket string) (map[string]Value, error) {
+	values := map[string]Value{}
+	err := db.View(func(tx *bolt.Tx) error {
 		var rootBuckets []string
 
 		if strings.Contains(rootBucket, "::") {
@@ -141,12 +148,18 @@ func (dbc Config) forEach(rootBucket, nestedBucket string) (value map[string][]b
 				continue
 			}
 
+			source, _ := dbc.getDataSource(tx, r)
+
 			nested := root.Bucket([]byte(nestedBucket))
 			if nested == nil {
 				continue
 			}
+
 			err := nested.ForEach(func(k, v []byte) error {
-				value[string(k)] = v
+				values[string(k)] = Value{
+					Source:  source,
+					Content: v,
+				}
 				return nil
 			})
 			if err != nil {
@@ -158,7 +171,7 @@ func (dbc Config) forEach(rootBucket, nestedBucket string) (value map[string][]b
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get all key/value in the specified bucket: %w", err)
 	}
-	return value, nil
+	return values, nil
 }
 
 func (dbc Config) deleteBucket(bucketName string) error {

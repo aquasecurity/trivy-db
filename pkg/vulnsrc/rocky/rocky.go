@@ -18,13 +18,17 @@ import (
 )
 
 const (
-	rockyDir = "rocky"
+	rockyDir       = "rocky"
+	platformFormat = "rocky %s"
 )
 
 var (
-	platformFormat = "rocky %s"
-	targetRepos    = []string{"BaseOS", "AppStream", "extras"}
-	targetArches   = []string{"x86_64"}
+	targetRepos  = []string{"BaseOS", "AppStream", "extras"}
+	targetArches = []string{"x86_64"}
+	source       = types.DataSource{
+		Name: "Rocky Linux updateinfo",
+		URL:  "https://download.rockylinux.org/pub/rocky/",
+	}
 )
 
 type VulnSrc struct {
@@ -89,6 +93,9 @@ func (vs VulnSrc) save(errataVer map[string][]RLSA) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for majorVer, errata := range errataVer {
 			platformName := fmt.Sprintf(platformFormat, majorVer)
+			if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+				return xerrors.Errorf("failed to put data source: %w", err)
+			}
 			if err := vs.commit(tx, platformName, errata); err != nil {
 				return xerrors.Errorf("error in save Rocky %s: %w", majorVer, err)
 			}

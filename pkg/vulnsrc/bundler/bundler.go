@@ -1,9 +1,7 @@
 package bundler
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,11 +15,12 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-// https://github.com/rubysec/ruby-advisory-db.git
+const bundlerDir = "ruby-advisory-db"
 
-const (
-	bundlerDir = "ruby-advisory-db"
-)
+var source = types.DataSource{
+	Name: "Ruby Advisory Database",
+	URL:  "https://github.com/rubysec/ruby-advisory-db",
+}
 
 type RawAdvisory struct {
 	Gem                string
@@ -75,6 +74,10 @@ func (vs VulnSrc) update(repoPath string) error {
 	root := filepath.Join(repoPath, "gems")
 
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
+		if err := vs.dbc.PutDataSource(tx, vulnerability.RubySec, source); err != nil {
+			return xerrors.Errorf("failed to put data source: %w", err)
+		}
+
 		if err := vs.walk(tx, root); err != nil {
 			return xerrors.Errorf("failed to walk ruby advisories: %w", err)
 		}
@@ -103,7 +106,7 @@ func (vs VulnSrc) walkFunc(err error, info os.FileInfo, path string, tx *bolt.Tx
 		return nil
 	}
 
-	buf, err := ioutil.ReadFile(path)
+	buf, err := os.ReadFile(path)
 	if err != nil {
 		return xerrors.Errorf("failed to read a file: %w", err)
 	}
@@ -127,7 +130,7 @@ func (vs VulnSrc) walkFunc(err error, info os.FileInfo, path string, tx *bolt.Tx
 	}
 
 	// for detecting vulnerabilities
-	a := Advisory{
+	a := types.Advisory{
 		PatchedVersions:    advisory.PatchedVersions,
 		UnaffectedVersions: advisory.UnaffectedVersions,
 	}
@@ -156,20 +159,11 @@ func (vs VulnSrc) walkFunc(err error, info os.FileInfo, path string, tx *bolt.Tx
 	return nil
 }
 
-func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
-	advisories, err := vs.dbc.ForEachAdvisory(vulnerability.RubySec, pkgName)
+func (vs VulnSrc) Get(pkgName string) ([]types.Advisory, error) {
+	advisories, err := vs.dbc.GetAdvisories(vulnerability.RubySec, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to iterate ruby vulnerabilities: %w", err)
 	}
 
-	var results []Advisory
-	for vulnID, a := range advisories {
-		var advisory Advisory
-		if err = json.Unmarshal(a, &advisory); err != nil {
-			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
-		}
-		advisory.VulnerabilityID = vulnID
-		results = append(results, advisory)
-	}
-	return results, nil
+	return advisories, nil
 }

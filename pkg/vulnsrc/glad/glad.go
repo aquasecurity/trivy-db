@@ -34,7 +34,11 @@ var (
 	// TODO: support Conan, Npm, NuGet, PyPI and Packagist
 	supportedPkgTypes   = []packageType{Go, Maven}
 	supportedIDPrefixes = []string{"CVE", "GMS"}
-	datasource          = "GitLab Advisory Database"
+
+	source = types.DataSource{
+		Name: "GitLab Advisory Database Community",
+		URL:  "https://gitlab.com/gitlab-org/advisories-community",
+	}
 )
 
 type packageType string
@@ -120,9 +124,13 @@ func (vs VulnSrc) commit(tx *bolt.Tx, pkgType packageType, glads []Advisory) err
 			pkgName = strings.ReplaceAll(pkgName, "/", ":")
 		}
 
-		bucketName, err := bucket.Name(string(pkgType), datasource)
+		bucketName, err := bucket.Name(string(pkgType), source.Name)
 		if err != nil {
-			return xerrors.Errorf("failed to get bucket name with %s, %s: %w", pkgType, datasource, err)
+			return xerrors.Errorf("failed to get bucket name with %s, %s: %w", pkgType, source.Name, err)
+		}
+
+		if err = vs.dbc.PutDataSource(tx, bucketName, source); err != nil {
+			return xerrors.Errorf("failed to put data source: %w", err)
 		}
 
 		if err = vs.dbc.PutAdvisoryDetail(tx, glad.Identifier, bucketName, pkgName, a); err != nil {

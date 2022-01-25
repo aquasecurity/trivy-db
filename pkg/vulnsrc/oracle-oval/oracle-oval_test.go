@@ -67,6 +67,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 	testCases := []struct {
 		name                   string
 		cves                   []OracleOVAL
+		putDataSource          []db.OperationPutDataSourceExpectation
 		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
 		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
 		putVulnerabilityID     []db.OperationPutVulnerabilityIDExpectation
@@ -137,6 +138,19 @@ func TestVulnSrc_Commit(t *testing.T) {
 							ID:     "CVE-2007-0494",
 						},
 					},
+				},
+			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Oracle Linux 5",
+						Source: types.DataSource{
+							Name: "Oracle Linux OVAL definitions",
+							URL:  "https://linux.oracle.com/security/oval/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
 				},
 			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
@@ -278,6 +292,19 @@ func TestVulnSrc_Commit(t *testing.T) {
 							ID:     "CVE-2007-0494",
 						},
 					},
+				},
+			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Oracle Linux 5",
+						Source: types.DataSource{
+							Name: "Oracle Linux OVAL definitions",
+							URL:  "https://linux.oracle.com/security/oval/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
 				},
 			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
@@ -471,6 +498,30 @@ func TestVulnSrc_Commit(t *testing.T) {
 							ID:     "CVE-2018-19824",
 						},
 					},
+				},
+			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Oracle Linux 6",
+						Source: types.DataSource{
+							Name: "Oracle Linux OVAL definitions",
+							URL:  "https://linux.oracle.com/security/oval/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Oracle Linux 7",
+						Source: types.DataSource{
+							Name: "Oracle Linux OVAL definitions",
+							URL:  "https://linux.oracle.com/security/oval/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
 				},
 			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
@@ -675,6 +726,19 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Oracle Linux 5",
+						Source: types.DataSource{
+							Name: "Oracle Linux OVAL definitions",
+							URL:  "https://linux.oracle.com/security/oval/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
@@ -829,6 +893,19 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Oracle Linux 5",
+						Source: types.DataSource{
+							Name: "Oracle Linux OVAL definitions",
+							URL:  "https://linux.oracle.com/security/oval/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
@@ -974,6 +1051,19 @@ func TestVulnSrc_Commit(t *testing.T) {
 							Severity: types.SeverityMedium,
 						},
 					},
+				},
+			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Oracle Linux 5",
+						Source: types.DataSource{
+							Name: "Oracle Linux OVAL definitions",
+							URL:  "https://linux.oracle.com/security/oval/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
 				},
 			},
 			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
@@ -1161,6 +1251,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 			mockDBConfig := new(db.MockOperation)
 			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tc.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tc.putVulnerabilityDetail)
+			mockDBConfig.ApplyPutDataSourceExpectations(tc.putDataSource)
 			mockDBConfig.ApplyPutVulnerabilityIDExpectations(tc.putVulnerabilityID)
 
 			ac := VulnSrc{dbc: mockDBConfig}
@@ -1174,19 +1265,6 @@ func TestVulnSrc_Commit(t *testing.T) {
 			}
 			mockDBConfig.AssertExpectations(t)
 		})
-	}
-}
-
-func TestSeverityFromThreat(t *testing.T) {
-	testCases := map[string]types.Severity{
-		"LOW":       types.SeverityLow,
-		"MODERATE":  types.SeverityMedium,
-		"IMPORTANT": types.SeverityHigh,
-		"CRITICAL":  types.SeverityCritical,
-		"N/A":       types.SeverityUnknown,
-	}
-	for k, v := range testCases {
-		assert.Equal(t, v, severityFromThreat(k))
 	}
 }
 

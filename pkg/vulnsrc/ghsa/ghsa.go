@@ -25,7 +25,7 @@ const (
 	Npm
 	Nuget
 	Pip
-	Rubygems
+	RubyGems
 )
 
 type Ecosystem int
@@ -42,8 +42,8 @@ func (e Ecosystem) String() string {
 		return "Nuget"
 	case Pip:
 		return "Pip"
-	case Rubygems:
-		return "Rubygems"
+	case RubyGems:
+		return "RubyGems"
 	}
 	return "Unknown"
 }
@@ -77,7 +77,7 @@ func (vs VulnSrc) Name() string {
 		return vulnerability.GHSANuget
 	case Pip:
 		return vulnerability.GHSAPip
-	case Rubygems:
+	case RubyGems:
 		return vulnerability.GHSARubygems
 	}
 	return ""
@@ -119,11 +119,20 @@ func (vs VulnSrc) save(ghsas []GithubSecurityAdvisory) error {
 }
 
 func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
+	platformName := fmt.Sprintf(platformFormat, vs.ecosystem)
+	err := vs.dbc.PutDataSource(tx, platformName, types.DataSource{
+		Name: fmt.Sprintf("GitHub Advisory Database %s", vs.ecosystem),
+		URL: fmt.Sprintf("https://github.com/advisories?query=type%%3Areviewed+ecosystem%%3A%s",
+			strings.ToLower(vs.ecosystem.String())),
+	})
+	if err != nil {
+		return xerrors.Errorf("failed to put data source: %w", err)
+	}
+
 	for _, ghsa := range ghsas {
 		if ghsa.Advisory.WithdrawnAt != "" {
 			continue
 		}
-		platformName := fmt.Sprintf(platformFormat, vs.ecosystem)
 		var pvs, avs []string
 		for _, va := range ghsa.Versions {
 			// e.g. GHSA-r4x3-g983-9g48 PatchVersion has "<" operator
@@ -150,7 +159,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 		}
 		vulnID = strings.TrimSpace(vulnID)
 
-		a := Advisory{
+		a := types.Advisory{
 			PatchedVersions:    pvs,
 			VulnerableVersions: avs,
 		}
@@ -188,26 +197,18 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 	return nil
 }
 
-func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
+func (vs VulnSrc) Get(pkgName string) ([]types.Advisory, error) {
 	pkgName = vs.ToLowerCasePackage(pkgName)
 
 	bucket := fmt.Sprintf(platformFormat, vs.ecosystem.String())
-	advisories, err := vs.dbc.ForEachAdvisory(bucket, pkgName)
+	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to iterate GHSA: %w", err)
+		return nil, xerrors.Errorf("GHSA advisory error: %w", err)
 	}
 
-	var results []Advisory
-	for vulnID, a := range advisories {
-		var advisory Advisory
-		if err = json.Unmarshal(a, &advisory); err != nil {
-			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
-		}
-		advisory.VulnerabilityID = vulnID
-		results = append(results, advisory)
-	}
-	return results, nil
+	return advisories, nil
 }
+
 func (vs VulnSrc) ToLowerCasePackage(pkgName string) string {
 	if vs.ecosystem == Pip {
 		/*
