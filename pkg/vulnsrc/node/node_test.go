@@ -34,9 +34,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 						Source:          "nodejs-security-wg",
 						PkgName:         "bassmaster",
 						VulnerabilityID: "CVE-2014-7205",
-						Advisory: Advisory{
-							VulnerableVersions: "<=1.5.1",
-							PatchedVersions:    ">=1.5.2",
+						Advisory: types.Advisory{
+							VulnerableVersions: []string{"<=1.5.1"},
+							PatchedVersions:    []string{">=1.5.2"},
 						},
 					},
 				},
@@ -76,9 +76,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 						Source:          "nodejs-security-wg",
 						PkgName:         "bassmaster",
 						VulnerabilityID: "CVE-2014-7205",
-						Advisory: Advisory{
-							VulnerableVersions: "<=1.5.1",
-							PatchedVersions:    ">=1.5.2",
+						Advisory: types.Advisory{
+							VulnerableVersions: []string{"<=1.5.1"},
+							PatchedVersions:    []string{">=1.5.2"},
 						},
 					},
 				},
@@ -126,7 +126,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 						Source:          "nodejs-security-wg",
 						PkgName:         "missingcvss-missingseverity-package",
 						VulnerabilityID: "NSWG-ECO-0",
-						Advisory:        Advisory{},
+						Advisory:        types.Advisory{},
 					},
 				},
 			},
@@ -163,9 +163,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 						Source:          "nodejs-security-wg",
 						PkgName:         "hubl-server",
 						VulnerabilityID: "NSWG-ECO-334",
-						Advisory: Advisory{
-							VulnerableVersions: "<=99.999.99999",
-							PatchedVersions:    "<0.0.0",
+						Advisory: types.Advisory{
+							VulnerableVersions: []string{"<=99.999.99999"},
+							PatchedVersions:    []string{"<0.0.0"},
 						},
 					},
 				},

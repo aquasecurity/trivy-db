@@ -25,18 +25,35 @@ const (
 )
 
 var ecosystems = []ecosystem{
-	{dir: "python", pkgType: vulnerability.Pip, source: vulnerability.OSVPyPI},
-	{dir: "rust", pkgType: vulnerability.Cargo, source: vulnerability.OSVCratesio},
+	{
+		dir:      "python",
+		pkgType:  vulnerability.Pip,
+		sourceID: vulnerability.OSVPyPI,
+		dataSource: types.DataSource{
+			Name: "Python Packaging Advisory Database",
+			URL:  "https://github.com/pypa/advisory-db",
+		},
+	},
+	{
+		dir:      "rust",
+		pkgType:  vulnerability.Cargo,
+		sourceID: vulnerability.OSVCratesio,
+		dataSource: types.DataSource{
+			Name: "RustSec Advisory Database",
+			URL:  "https://github.com/RustSec/advisory-db",
+		},
+	},
 
 	// We cannot use OSV for golang scanning until module names are included.
 	// See https://github.com/golang/go/issues/50006 for the detail.
-	//{dir: "go", pkgType: vulnerability.Go, source: vulnerability.OSVGo},
+	//{dir: "go", pkgType: vulnerability.Go, sourceID: vulnerability.OSVGo},
 }
 
 type ecosystem struct {
-	dir     string
-	pkgType string
-	source  string
+	dir        string
+	pkgType    string
+	sourceID   string
+	dataSource types.DataSource
 }
 
 type VulnSrc struct {
@@ -107,6 +124,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 		return xerrors.Errorf("bucket error: %w", err)
 	}
 
+	if err = vs.dbc.PutDataSource(tx, bktName, eco.dataSource); err != nil {
+		return xerrors.Errorf("failed to put data source: %w", err)
+	}
+
 	// Aliases contain CVE-IDs
 	vulnIDs := filterCveIDs(entry.Aliases)
 	if len(vulnIDs) == 0 {
@@ -168,7 +189,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 			References:  references,
 		}
 
-		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, eco.source, vuln); err != nil {
+		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, eco.sourceID, vuln); err != nil {
 			return xerrors.Errorf("failed to put vulnerability detail (%s): %w", vulnID, err)
 		}
 

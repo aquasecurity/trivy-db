@@ -20,8 +20,7 @@ func Test_walkFunc(t *testing.T) {
 				Source:          vulnerability.RubySec,
 				PkgName:         "doorkeeper-openid_connect",
 				VulnerabilityID: "CVE-2019-9837",
-				Advisory: Advisory{
-					//VulnerabilityID:    "CVE-2018-16487", // TODO: Why is this field needed if the key is already the same?
+				Advisory: types.Advisory{
 					PatchedVersions:    []string{">= 1.5.4"},
 					UnaffectedVersions: []string{"< 1.4.0"},
 				},

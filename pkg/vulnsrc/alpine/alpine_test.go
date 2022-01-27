@@ -16,7 +16,7 @@ import (
 func TestVulnSrc_Update(t *testing.T) {
 	type want struct {
 		key   []string
-		value types.Advisory
+		value interface{}
 	}
 	tests := []struct {
 		name       string
@@ -28,6 +28,13 @@ func TestVulnSrc_Update(t *testing.T) {
 			name: "happy path",
 			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []want{
+				{
+					key: []string{"data-source", "alpine 3.12"},
+					value: types.DataSource{
+						Name: "Alpine Secdb",
+						URL:  "https://secdb.alpinelinux.org/",
+					},
+				},
 				{
 					key: []string{"advisory-detail", "CVE-2019-14904", "alpine 3.12", "ansible"},
 					value: types.Advisory{

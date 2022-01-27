@@ -22,6 +22,11 @@ const (
 
 var (
 	platformFormat = "alpine %s"
+
+	source = types.DataSource{
+		Name: "Alpine Secdb",
+		URL:  "https://secdb.alpinelinux.org/",
+	}
 )
 
 type VulnSrc struct {
@@ -62,10 +67,13 @@ func (vs VulnSrc) Update(dir string) error {
 
 func (vs VulnSrc) save(advisories []advisory) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		for _, advisory := range advisories {
-			version := strings.TrimPrefix(advisory.Distroversion, "v")
+		for _, adv := range advisories {
+			version := strings.TrimPrefix(adv.Distroversion, "v")
 			platformName := fmt.Sprintf(platformFormat, version)
-			if err := vs.saveSecFixes(tx, platformName, advisory.PkgName, advisory.Secfixes); err != nil {
+			if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+				return xerrors.Errorf("failed to put data source: %w", err)
+			}
+			if err := vs.saveSecFixes(tx, platformName, adv.PkgName, adv.Secfixes); err != nil {
 				return err
 			}
 		}

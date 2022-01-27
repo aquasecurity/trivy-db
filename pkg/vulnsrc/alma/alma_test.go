@@ -29,6 +29,13 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []want{
 				{
+					key: []string{"data-source", "alma 8"},
+					value: types.DataSource{
+						Name: "AlmaLinux Product Errata",
+						URL:  "https://errata.almalinux.org/",
+					},
+				},
+				{
 					key: []string{"advisory-detail", "CVE-2021-27918", "alma 8", "go-toolset:rhel8::go-toolset"},
 					value: types.Advisory{
 						FixedVersion: "1.15.14-1.module_el8.4.0+2519+614b07b8",

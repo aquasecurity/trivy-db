@@ -131,7 +131,7 @@ type OperationForEachAdvisoryArgs struct {
 }
 
 type OperationForEachAdvisoryReturns struct {
-	Value map[string][]byte
+	Value map[string]Value
 	Err   error
 }
 
@@ -162,15 +162,15 @@ func (_m *MockOperation) ApplyForEachAdvisoryExpectations(expectations []Operati
 }
 
 // ForEachAdvisory provides a mock function with given fields: source, pkgName
-func (_m *MockOperation) ForEachAdvisory(source string, pkgName string) (map[string][]byte, error) {
+func (_m *MockOperation) ForEachAdvisory(source string, pkgName string) (map[string]Value, error) {
 	ret := _m.Called(source, pkgName)
 
-	var r0 map[string][]byte
-	if rf, ok := ret.Get(0).(func(string, string) map[string][]byte); ok {
+	var r0 map[string]Value
+	if rf, ok := ret.Get(0).(func(string, string) map[string]Value); ok {
 		r0 = rf(source, pkgName)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string][]byte)
+			r0 = ret.Get(0).(map[string]Value)
 		}
 	}
 
@@ -586,6 +586,64 @@ func (_m *MockOperation) PutAdvisoryDetail(tx *bbolt.Tx, vulnerabilityID string,
 	var r0 error
 	if rf, ok := ret.Get(0).(func(*bbolt.Tx, string, string, string, interface{}) error); ok {
 		r0 = rf(tx, vulnerabilityID, source, pkgName, advisory)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+type OperationPutDataSourceArgs struct {
+	Tx              *bbolt.Tx
+	TxAnything      bool
+	BktName         string
+	BktNameAnything bool
+	Source          types.DataSource
+	SourceAnything  bool
+}
+
+type OperationPutDataSourceReturns struct {
+	Err error
+}
+
+type OperationPutDataSourceExpectation struct {
+	Args    OperationPutDataSourceArgs
+	Returns OperationPutDataSourceReturns
+}
+
+func (_m *MockOperation) ApplyPutDataSourceExpectation(e OperationPutDataSourceExpectation) {
+	var args []interface{}
+	if e.Args.TxAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.Tx)
+	}
+	if e.Args.BktNameAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.BktName)
+	}
+	if e.Args.SourceAnything {
+		args = append(args, mock.Anything)
+	} else {
+		args = append(args, e.Args.Source)
+	}
+	_m.On("PutDataSource", args...).Return(e.Returns.Err)
+}
+
+func (_m *MockOperation) ApplyPutDataSourceExpectations(expectations []OperationPutDataSourceExpectation) {
+	for _, e := range expectations {
+		_m.ApplyPutDataSourceExpectation(e)
+	}
+}
+
+// PutDataSource provides a mock function with given fields: tx, bktName, source
+func (_m *MockOperation) PutDataSource(tx *bbolt.Tx, bktName string, source types.DataSource) error {
+	ret := _m.Called(tx, bktName, source)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(*bbolt.Tx, string, types.DataSource) error); ok {
+		r0 = rf(tx, bktName, source)
 	} else {
 		r0 = ret.Error(0)
 	}

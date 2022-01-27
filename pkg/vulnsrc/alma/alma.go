@@ -24,6 +24,11 @@ const (
 
 var (
 	platformFormat = "alma %s"
+
+	source = types.DataSource{
+		Name: "AlmaLinux Product Errata",
+		URL:  "https://errata.almalinux.org/",
+	}
 )
 
 type VulnSrc struct {
@@ -74,8 +79,12 @@ func (vs VulnSrc) save(errataVer map[string][]Erratum) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for majorVer, errata := range errataVer {
 			platformName := fmt.Sprintf(platformFormat, majorVer)
+			if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+				return xerrors.Errorf("failed to put data source: %w", err)
+			}
+
 			if err := vs.commit(tx, platformName, errata); err != nil {
-				return xerrors.Errorf("error in save Alma %s: %w", majorVer, err)
+				return xerrors.Errorf("Alma %s commit error: %w", majorVer, err)
 			}
 		}
 		return nil

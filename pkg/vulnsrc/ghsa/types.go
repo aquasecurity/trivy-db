@@ -1,11 +1,5 @@
 package ghsa
 
-type Advisory struct {
-	VulnerabilityID    string   `json:",omitempty"`
-	VulnerableVersions []string `json:",omitempty"`
-	PatchedVersions    []string `json:",omitempty"`
-}
-
 type Package struct {
 	Ecosystem string
 	Name      string

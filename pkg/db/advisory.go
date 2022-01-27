@@ -16,7 +16,7 @@ func (dbc Config) PutAdvisory(tx *bolt.Tx, source, pkgName, cveID string, adviso
 	return dbc.put(root, pkgName, cveID, advisory)
 }
 
-func (dbc Config) ForEachAdvisory(source, pkgName string) (value map[string][]byte, err error) {
+func (dbc Config) ForEachAdvisory(source, pkgName string) (value map[string]Value, err error) {
 	return dbc.forEach(source, pkgName)
 }
 
@@ -32,10 +32,18 @@ func (dbc Config) GetAdvisories(source, pkgName string) ([]types.Advisory, error
 	var results []types.Advisory
 	for vulnID, v := range advisories {
 		var advisory types.Advisory
-		if err = json.Unmarshal(v, &advisory); err != nil {
+		if err = json.Unmarshal(v.Content, &advisory); err != nil {
 			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
 		}
+
 		advisory.VulnerabilityID = vulnID
+		if v.Source != (types.DataSource{}) {
+			advisory.DataSource = &types.DataSource{
+				Name: v.Source.Name,
+				URL:  v.Source.URL,
+			}
+		}
+
 		results = append(results, advisory)
 	}
 	return results, nil

@@ -37,6 +37,13 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []wantKV{
 				{
+					key: []string{"data-source", "amazon linux 1"},
+					value: types.DataSource{
+						Name: "Amazon Linux Security Center",
+						URL:  "https://alas.aws.amazon.com/",
+					},
+				},
+				{
 					key: []string{"advisory-detail", "CVE-2018-17456", "amazon linux 1", "git"},
 					value: types.Advisory{
 						FixedVersion: "2.14.5-1.59.amzn1",

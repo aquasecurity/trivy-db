@@ -28,6 +28,20 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []wantKV{
 				{
+					key: []string{"data-source", "pip::Open Source Vulnerability"},
+					value: types.DataSource{
+						Name: "Python Packaging Advisory Database",
+						URL:  "https://github.com/pypa/advisory-db",
+					},
+				},
+				{
+					key: []string{"data-source", "cargo::Open Source Vulnerability"},
+					value: types.DataSource{
+						Name: "RustSec Advisory Database",
+						URL:  "https://github.com/RustSec/advisory-db",
+					},
+				},
+				{
 					key: []string{"advisory-detail", "CVE-2018-10895", "pip::Open Source Vulnerability", "qutebrowser"},
 					value: types.Advisory{
 						VulnerableVersions: []string{">=0, <1.4.1"},

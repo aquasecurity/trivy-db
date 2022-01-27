@@ -58,7 +58,7 @@ var (
 		ghsa.NewVulnSrc(ghsa.Npm),
 		ghsa.NewVulnSrc(ghsa.Nuget),
 		ghsa.NewVulnSrc(ghsa.Pip),
-		ghsa.NewVulnSrc(ghsa.Rubygems),
+		ghsa.NewVulnSrc(ghsa.RubyGems),
 		glad.NewVulnSrc(),
 		govulndb.NewVulnSrc(),
 		osv.NewVulnSrc(),
