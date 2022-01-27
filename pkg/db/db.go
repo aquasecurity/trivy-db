@@ -11,6 +11,7 @@ import (
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 )
 
@@ -148,14 +149,17 @@ func (dbc Config) forEach(rootBucket, nestedBucket string) (map[string]Value, er
 				continue
 			}
 
-			source, _ := dbc.getDataSource(tx, r)
+			source, err := dbc.getDataSource(tx, r)
+			if err != nil {
+				log.Logger.Debugf("Data source error: %s", err)
+			}
 
 			nested := root.Bucket([]byte(nestedBucket))
 			if nested == nil {
 				continue
 			}
 
-			err := nested.ForEach(func(k, v []byte) error {
+			err = nested.ForEach(func(k, v []byte) error {
 				values[string(k)] = Value{
 					Source:  source,
 					Content: v,
