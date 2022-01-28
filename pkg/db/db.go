@@ -32,9 +32,7 @@ type Operation interface {
 		vulnerability types.VulnerabilityDetail) (err error)
 	DeleteVulnerabilityDetailBucket() (err error)
 
-	PutAdvisory(tx *bolt.Tx, source string, pkgName string, vulnerabilityID string,
-		advisory interface{}) (err error)
-	ForEachAdvisory(source string, pkgName string) (value map[string]Value, err error)
+	ForEachAdvisory(sources []string, pkgName string) (value map[string]Value, err error)
 	GetAdvisories(source string, pkgName string) (advisories []types.Advisory, err error)
 
 	PutVulnerabilityID(tx *bolt.Tx, vulnerabilityID string) (err error)
@@ -43,12 +41,18 @@ type Operation interface {
 	PutVulnerability(tx *bolt.Tx, vulnerabilityID string, vulnerability types.Vulnerability) (err error)
 	GetVulnerability(vulnerabilityID string) (vulnerability types.Vulnerability, err error)
 
-	GetAdvisoryDetails(cveID string) ([]types.AdvisoryDetail, error)
-	PutAdvisoryDetail(tx *bolt.Tx, vulnerabilityID string, source string, pkgName string,
-		advisory interface{}) (err error)
+	SaveAdvisoryDetails(tx *bolt.Tx, cveID string) (err error)
+	PutAdvisoryDetail(tx *bolt.Tx, vulnerabilityID, pkgName string, nestedBktNames []string, advisory interface{}) (err error)
 	DeleteAdvisoryDetailBucket() error
 
 	PutDataSource(tx *bolt.Tx, bktName string, source types.DataSource) (err error)
+
+	// For Red Hat
+	PutRedHatRepositories(tx *bolt.Tx, repository string, cpeIndices []int) (err error)
+	PutRedHatNVRs(tx *bolt.Tx, nvr string, cpeIndices []int) (err error)
+	PutRedHatCPEs(tx *bolt.Tx, cpeIndex int, cpe string) (err error)
+	RedHatRepoToCPEs(repository string) (cpeIndices []int, err error)
+	RedHatNVRToCPEs(nvr string) (cpeIndices []int, err error)
 }
 
 type Config struct {
@@ -109,16 +113,53 @@ func (dbc Config) BatchUpdate(fn func(tx *bolt.Tx) error) error {
 	return nil
 }
 
-func (dbc Config) put(root *bolt.Bucket, nestedBucket, key string, value interface{}) error {
-	nested, err := root.CreateBucketIfNotExists([]byte(nestedBucket))
+func (dbc Config) put(tx *bolt.Tx, bktNames []string, key string, value interface{}) error {
+	if len(bktNames) == 0 {
+		return xerrors.Errorf("empty bucket name")
+	}
+
+	bkt, err := tx.CreateBucketIfNotExists([]byte(bktNames[0]))
 	if err != nil {
-		return xerrors.Errorf("failed to create a bucket: %w", err)
+		return xerrors.Errorf("failed to create '%s' bucket: %w", bktNames[0], err)
+	}
+
+	for _, bktName := range bktNames[1:] {
+		bkt, err = bkt.CreateBucketIfNotExists([]byte(bktName))
+		if err != nil {
+			return xerrors.Errorf("failed to create a bucket: %w", err)
+		}
 	}
 	v, err := json.Marshal(value)
 	if err != nil {
 		return xerrors.Errorf("failed to unmarshal JSON: %w", err)
 	}
-	return nested.Put([]byte(key), v)
+
+	return bkt.Put([]byte(key), v)
+}
+
+func (dbc Config) get(bktNames []string, key string) (value []byte, err error) {
+	err = db.View(func(tx *bolt.Tx) error {
+		if len(bktNames) == 0 {
+			return xerrors.Errorf("empty bucket name")
+		}
+
+		bkt := tx.Bucket([]byte(bktNames[0]))
+		if bkt == nil {
+			return nil
+		}
+		for _, bktName := range bktNames[1:] {
+			bkt = bkt.Bucket([]byte(bktName))
+			if bkt == nil {
+				return nil
+			}
+		}
+		value = bkt.Get([]byte(key))
+		return nil
+	})
+	if err != nil {
+		return nil, xerrors.Errorf("failed to get data from db: %w", err)
+	}
+	return value, nil
 }
 
 type Value struct {
@@ -126,7 +167,12 @@ type Value struct {
 	Content []byte
 }
 
-func (dbc Config) forEach(rootBucket, nestedBucket string) (map[string]Value, error) {
+func (dbc Config) forEach(bktNames []string) (map[string]Value, error) {
+	if len(bktNames) < 2 {
+		return nil, xerrors.Errorf("bucket must be nested: %v", bktNames)
+	}
+	rootBucket, nestedBuckets := bktNames[0], bktNames[1:]
+
 	values := map[string]Value{}
 	err := db.View(func(tx *bolt.Tx) error {
 		var rootBuckets []string
@@ -154,12 +200,18 @@ func (dbc Config) forEach(rootBucket, nestedBucket string) (map[string]Value, er
 				log.Logger.Debugf("Data source error: %s", err)
 			}
 
-			nested := root.Bucket([]byte(nestedBucket))
-			if nested == nil {
+			bkt := root
+			for _, nestedBkt := range nestedBuckets {
+				bkt = bkt.Bucket([]byte(nestedBkt))
+				if bkt == nil {
+					break
+				}
+			}
+			if bkt == nil {
 				continue
 			}
 
-			err = nested.ForEach(func(k, v []byte) error {
+			err = bkt.ForEach(func(k, v []byte) error {
 				values[string(k)] = Value{
 					Source:  source,
 					Content: v,
@@ -167,7 +219,7 @@ func (dbc Config) forEach(rootBucket, nestedBucket string) (map[string]Value, er
 				return nil
 			})
 			if err != nil {
-				return xerrors.Errorf("error in db foreach: %w", err)
+				return xerrors.Errorf("db foreach error: %w", err)
 			}
 		}
 		return nil

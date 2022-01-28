@@ -127,7 +127,7 @@ func TestVulnSrc_commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Photon OS 1.0",
+						NestedBktNames:  []string{"Photon OS 1.0"},
 						PkgName:         "ansible",
 						VulnerabilityID: "CVE-2019-10156",
 						Advisory: types.Advisory{
@@ -188,7 +188,7 @@ func TestVulnSrc_commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Photon OS 1.0",
+						NestedBktNames:  []string{"Photon OS 1.0"},
 						PkgName:         "ansible",
 						VulnerabilityID: "CVE-2019-10156",
 						Advisory: types.Advisory{
@@ -233,7 +233,7 @@ func TestVulnSrc_commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Photon OS 1.0",
+						NestedBktNames:  []string{"Photon OS 1.0"},
 						PkgName:         "ansible",
 						VulnerabilityID: "CVE-2019-10156",
 						Advisory: types.Advisory{
@@ -290,7 +290,7 @@ func TestVulnSrc_commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Photon OS 1.0",
+						NestedBktNames:  []string{"Photon OS 1.0"},
 						PkgName:         "ansible",
 						VulnerabilityID: "CVE-2019-10156",
 						Advisory: types.Advisory{

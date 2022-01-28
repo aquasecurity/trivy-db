@@ -13,6 +13,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -146,7 +147,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 	for packageName, patch := range cve.Patches {
 		pkgName := string(packageName)
 		for release, status := range patch {
-			if !utils.StringInSlice(status.Status, targetStatuses) {
+			if !strings.InSlice(status.Status, targetStatuses) {
 				continue
 			}
 			osVersion, ok := UbuntuReleasesMapping[string(release)]
@@ -162,7 +163,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 			if status.Status == "released" {
 				adv.FixedVersion = status.Note
 			}
-			if err := dbc.PutAdvisoryDetail(tx, cve.Candidate, platformName, pkgName, adv); err != nil {
+			if err := dbc.PutAdvisoryDetail(tx, cve.Candidate, pkgName, []string{platformName}, adv); err != nil {
 				return xerrors.Errorf("failed to save Ubuntu advisory: %w", err)
 			}
 

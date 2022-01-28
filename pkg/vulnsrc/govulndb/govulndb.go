@@ -145,7 +145,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, bktName string, item Entry) error {
 	pkgName := item.Module
 
 	for _, vulnID := range vulnIDs {
-		err := vs.dbc.PutAdvisoryDetail(tx, vulnID, bktName, pkgName, a)
+		err := vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bktName}, a)
 		if err != nil {
 			return xerrors.Errorf("failed to save go-vulndb advisory: %w", err)
 		}

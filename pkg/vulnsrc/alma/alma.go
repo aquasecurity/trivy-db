@@ -152,7 +152,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, errata []Erratum) err
 			}
 
 			for pkgName, advisory := range advisories {
-				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, platformName, pkgName, advisory); err != nil {
+				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkgName, []string{platformName}, advisory); err != nil {
 					return xerrors.Errorf("failed to save Alma advisory: %w", err)
 				}
 			}

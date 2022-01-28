@@ -176,7 +176,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 		}
 
 		for _, vulnID := range vulnIDs {
-			if err = vs.dbc.PutAdvisoryDetail(tx, vulnID, bktName, affected.Package.Name, advisory); err != nil {
+			if err = vs.dbc.PutAdvisoryDetail(tx, vulnID, affected.Package.Name, []string{bktName}, advisory); err != nil {
 				return xerrors.Errorf("failed to save OSV advisory: %w", err)
 			}
 		}

@@ -1,0 +1,28 @@
+- bucket: Red Hat
+  pairs:
+    - bucket: bind
+      pairs:
+        - key: CVE-2020-8625
+          value:
+            Entries:
+              - Affected:
+                  - 0
+                  - 1
+                Cves:
+                  - Severity: 1
+        - key: RHSA-2018:0488
+          value:
+            Entries:
+              - FixedVersion: 32:9.9.4-29.el7_2.8
+                Affected:
+                  - 0
+                  - 1
+                Cves:
+                  - ID: CVE-2017-3145
+                    Severity: 3
+              - FixedVersion: 32:9.9.4-50.el7_3.3
+                Affected:
+                  - 3
+                Cves:
+                  - ID: CVE-2017-3145
+                    Severity: 2

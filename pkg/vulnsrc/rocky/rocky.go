@@ -14,6 +14,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -61,12 +62,12 @@ func (vs VulnSrc) Update(dir string) error {
 		}
 
 		majorVer, repo, arch := dirs[0], dirs[1], dirs[2]
-		if !utils.StringInSlice(repo, targetRepos) {
+		if !ustrings.InSlice(repo, targetRepos) {
 			log.Printf("Unsupported Rocky repo: %s", repo)
 			return nil
 		}
 
-		if !utils.StringInSlice(arch, targetArches) {
+		if !ustrings.InSlice(arch, targetArches) {
 			switch arch {
 			case "aarch64":
 			default:
@@ -122,7 +123,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error 
 				advisory := types.Advisory{
 					FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 				}
-				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, platformName, pkg.Name, advisory); err != nil {
+				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkg.Name, []string{platformName}, advisory); err != nil {
 					return xerrors.Errorf("failed to save Rocky advisory: %w", err)
 				}
 

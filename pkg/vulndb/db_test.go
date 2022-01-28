@@ -170,7 +170,7 @@ func TestTrivyDB_Build(t *testing.T) {
 				"testdata/fixtures/happy/vulnerability-detail.yaml",
 				"testdata/fixtures/sad/advisory-detail.yaml",
 			},
-			wantErr: "failed to unmarshall advisory_detail",
+			wantErr: "failed to unmarshall the advisory detail",
 		},
 		{
 			name: "missing advisory detail",
@@ -184,7 +184,7 @@ func TestTrivyDB_Build(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cacheDir := dbtest.InitTestDB(t, tt.fixtures)
+			cacheDir := dbtest.InitDB(t, tt.fixtures)
 			defer db.Close()
 
 			full := vulndb.New(cacheDir, 12*time.Hour)

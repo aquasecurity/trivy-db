@@ -102,7 +102,7 @@ func TestVulnSrc_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tmpDir := dbtest.InitTestDB(t, nil)
+			tmpDir := dbtest.InitDB(t, nil)
 			dbPath := db.Path(tmpDir)
 
 			vs := debian.NewVulnSrc()
@@ -170,7 +170,7 @@ func TestVulnSrc_Get(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_ = dbtest.InitTestDB(t, tt.fixtures)
+			_ = dbtest.InitDB(t, tt.fixtures)
 			defer db.Close()
 
 			vs := debian.NewVulnSrc()

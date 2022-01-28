@@ -14,6 +14,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -93,7 +94,7 @@ func (vs *VulnSrc) walkFunc(r io.Reader, path string) error {
 		return nil
 	}
 	version := paths[len(paths)-2]
-	if !utils.StringInSlice(version, targetVersions) {
+	if !ustrings.InSlice(version, targetVersions) {
 		log.Printf("unsupported Amazon version: %s\n", version)
 		return nil
 	}
@@ -130,7 +131,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 					advisory := types.Advisory{
 						FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 					}
-					if err := vs.dbc.PutAdvisoryDetail(tx, cveID, platformName, pkg.Name, advisory); err != nil {
+					if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkg.Name, []string{platformName}, advisory); err != nil {
 						return xerrors.Errorf("failed to save Amazon advisory: %w", err)
 					}
 

@@ -9,8 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
-	"strconv"
 
 	"golang.org/x/xerrors"
 )
@@ -53,7 +51,7 @@ func FileWalk(root string, walkFn func(r io.Reader, path string) error) error {
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in file walk: %w", err)
+		return xerrors.Errorf("file walk error: %w", err)
 	}
 	return nil
 }
@@ -77,15 +75,6 @@ func Exists(path string) (bool, error) {
 	return true, err
 }
 
-func StringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
 func Exec(command string, args []string) (string, error) {
 	cmd := exec.Command(command, args...)
 	var stdoutBuf, stderrBuf bytes.Buffer
@@ -96,28 +85,6 @@ func Exec(command string, args []string) (string, error) {
 		return "", xerrors.Errorf("failed to exec: %w", err)
 	}
 	return stdoutBuf.String(), nil
-}
-
-func Uniq(strings []string) []string {
-	sort.Slice(strings, func(i, j int) bool {
-		return strings[i] < strings[j]
-	})
-
-	ret := []string{}
-	preStr := ""
-	for _, s := range strings {
-		if preStr != s {
-			ret = append(ret, s)
-		}
-		preStr = s
-	}
-
-	return ret
-}
-
-func IsInt(s string) bool {
-	_, err := strconv.Atoi(s)
-	return err == nil
 }
 
 func ConstructVersion(epoch, version, release string) string {

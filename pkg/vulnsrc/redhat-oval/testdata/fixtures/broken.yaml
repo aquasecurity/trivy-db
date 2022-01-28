@@ -1,0 +1,7 @@
+- bucket: Red Hat
+  pairs:
+    - bucket: bind
+      pairs:
+        - key: CVE-2020-8625
+          value:
+            Entries: "broken"

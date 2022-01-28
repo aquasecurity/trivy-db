@@ -8,22 +8,21 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func (dbc Config) PutAdvisory(tx *bolt.Tx, source, pkgName, cveID string, advisory interface{}) error {
-	root, err := tx.CreateBucketIfNotExists([]byte(source))
-	if err != nil {
-		return xerrors.Errorf("failed to create a bucket: %w", err)
+func (dbc Config) PutAdvisory(tx *bolt.Tx, bktNames []string, key string, advisory interface{}) error {
+	if err := dbc.put(tx, bktNames, key, advisory); err != nil {
+		return xerrors.Errorf("failed to put advisory: %w", err)
 	}
-	return dbc.put(root, pkgName, cveID, advisory)
+	return nil
 }
 
-func (dbc Config) ForEachAdvisory(source, pkgName string) (value map[string]Value, err error) {
-	return dbc.forEach(source, pkgName)
+func (dbc Config) ForEachAdvisory(sources []string, pkgName string) (map[string]Value, error) {
+	return dbc.forEach(append(sources, pkgName))
 }
 
 func (dbc Config) GetAdvisories(source, pkgName string) ([]types.Advisory, error) {
-	advisories, err := dbc.ForEachAdvisory(source, pkgName)
+	advisories, err := dbc.ForEachAdvisory([]string{source}, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("error in advisory foreach: %w", err)
+		return nil, xerrors.Errorf("advisory foreach error: %w", err)
 	}
 	if len(advisories) == 0 {
 		return nil, nil

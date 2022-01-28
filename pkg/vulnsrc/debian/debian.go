@@ -15,6 +15,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -190,7 +191,7 @@ func (vs VulnSrc) parseCVE(dir string) error {
 			}
 
 			// Skip not-affected, removed or undetermined advisories
-			if utils.StringInSlice(ann.Kind, skipStatuses) {
+			if strings.InSlice(ann.Kind, skipStatuses) {
 				vs.notAffected[bkt] = struct{}{}
 				continue
 			}
@@ -280,7 +281,7 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 				}
 
 				// Skip not-affected, removed or undetermined advisories
-				if utils.StringInSlice(ann.Kind, skipStatuses) {
+				if strings.InSlice(ann.Kind, skipStatuses) {
 					vs.notAffected[bkt] = struct{}{}
 					continue
 				}
@@ -441,7 +442,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 		FixedVersion: adv.FixedVersion,
 	}
 
-	if err := dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.Platform, adv.PkgName, detail); err != nil {
+	if err := dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.PkgName, []string{adv.Platform}, detail); err != nil {
 		return xerrors.Errorf("failed to save Debian advisory: %w", err)
 	}
 

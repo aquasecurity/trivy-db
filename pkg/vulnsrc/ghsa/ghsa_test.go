@@ -231,7 +231,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory Composer",
+						NestedBktNames:  []string{"GitHub Security Advisory Composer"},
 						PkgName:         "contao/core-bundle",
 						VulnerabilityID: "GHSA-wjx8-cgrm-hh8p",
 						Advisory: types.Advisory{
@@ -344,7 +344,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory Maven",
+						NestedBktNames:  []string{"GitHub Security Advisory Maven"},
 						PkgName:         "org.springframework.boot:spring-boot",
 						VulnerabilityID: "CVE-2018-1196",
 						Advisory: types.Advisory{
@@ -456,7 +456,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory Pip",
+						NestedBktNames:  []string{"GitHub Security Advisory Pip"},
 						PkgName:         "django",
 						VulnerabilityID: "CVE-2018-14574",
 						Advisory: types.Advisory{
@@ -572,7 +572,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory Pip",
+						NestedBktNames:  []string{"GitHub Security Advisory Pip"},
 						PkgName:         "dj-ango",
 						VulnerabilityID: "CVE-2018-14574",
 						Advisory: types.Advisory{
@@ -703,7 +703,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory Maven",
+						NestedBktNames:  []string{"GitHub Security Advisory Maven"},
 						PkgName:         "com.fasterxml.jackson.core:jackson-databind",
 						VulnerabilityID: "CVE-2019-20330",
 						Advisory: types.Advisory{
@@ -813,7 +813,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory Npm",
+						NestedBktNames:  []string{"GitHub Security Advisory Npm"},
 						PkgName:         "renovate",
 						VulnerabilityID: "GHSA-v7x3-7hw7-pcjg",
 						Advisory: types.Advisory{
@@ -915,7 +915,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory RubyGems",
+						NestedBktNames:  []string{"GitHub Security Advisory RubyGems"},
 						PkgName:         "activestorage",
 						VulnerabilityID: "CVE-2018-16477",
 						Advisory: types.Advisory{
@@ -997,7 +997,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory RubyGems",
+						NestedBktNames:  []string{"GitHub Security Advisory RubyGems"},
 						PkgName:         "activestorage",
 						VulnerabilityID: "CVE-2018-16477",
 						Advisory: types.Advisory{
@@ -1095,7 +1095,7 @@ func TestVulnSrc_save(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "GitHub Security Advisory RubyGems",
+						NestedBktNames:  []string{"GitHub Security Advisory RubyGems"},
 						PkgName:         "activestorage",
 						VulnerabilityID: "CVE-2018-16477",
 						Advisory: types.Advisory{

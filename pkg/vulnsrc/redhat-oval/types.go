@@ -1,63 +1,65 @@
 package redhatoval
 
-type RedhatOVAL struct {
+import "github.com/aquasecurity/trivy-db/pkg/types"
+
+type redhatOVAL struct {
 	Class    string
 	ID       string
 	Version  string
-	Metadata Metadata
-	Criteria Criteria
+	Metadata ovalMetadata
+	Criteria criteria
 }
 
-type Metadata struct {
+type ovalMetadata struct {
 	Title        string
-	AffectedList []Affected
-	References   []Reference
+	AffectedList []affected
+	References   []reference
 	Description  string
-	Advisory     Advisory
+	Advisory     ovalAdvisory
 }
 
-type Advisory struct {
+type ovalAdvisory struct {
 	From            string
 	Severity        string
 	Rights          string
-	Issued          Issued
-	Updated         Updated
-	Cves            []Cve
-	Bugzilla        []Bugzilla
+	Issued          issued
+	Updated         updated
+	Cves            []ovalCVE
+	Bugzilla        []bugzilla
 	AffectedCpeList []string
 }
 
-type Criteria struct {
+type criteria struct {
 	Operator   string
-	Criterias  []Criteria
-	Criterions []Criterion
+	Criterias  []criteria
+	Criterions []criterion
 }
 
-type Criterion struct {
+type criterion struct {
 	TestRef string
 	Comment string
 }
 
-type Affected struct {
+type affected struct {
 	Family    string
 	Platforms []string
 }
 
-type Reference struct {
+type reference struct {
 	Source string
 	RefID  string
 	RefURL string
 }
 
-type Issued struct {
+type issued struct {
 	Date string
 }
 
-type Updated struct {
+type updated struct {
 	Date string
 }
 
-type Cve struct {
+type ovalCVE struct {
 	CveID  string
 	Cvss2  string
 	Cvss3  string
@@ -67,75 +69,106 @@ type Cve struct {
 	Public string
 }
 
-type Bugzilla struct {
+type bugzilla struct {
 	ID   string
 	Href string
 }
 
-type Tests struct {
-	RpminfoTests []RpminfoTest
+type ovalTests struct {
+	RpminfoTests []rpminfoTest
 }
 
-type Objects struct {
-	RpminfoObjects []RpminfoObject
+type ovalObjects struct {
+	RpminfoObjects []rpminfoObject
 }
 
-type States struct {
-	RpminfoState []RpminfoState
+type ovalStates struct {
+	RpminfoState []rpminfoState
 }
 
-type State struct {
+type ovalstate struct {
 	Text     string
 	StateRef string
 }
 
-type Object struct {
+type ovalObject struct {
 	Text      string
 	ObjectRef string
 }
 
-type RpminfoTest struct {
+type rpminfoTest struct {
 	Check          string
 	Comment        string
 	ID             string
 	Version        string
 	CheckExistence string
-	Object         Object
-	State          State
+	Object         ovalObject
+	State          ovalstate
 }
 
-type RpminfoObject struct {
+type rpminfoObject struct {
 	ID      string
 	Version string
 	Name    string
 }
 
-type RpminfoState struct {
+type rpminfoState struct {
 	ID             string
 	Version        string
-	Arch           Arch
-	Evr            Evr
-	SignatureKeyID SignatureKeyID
+	Arch           arch
+	Evr            evr
+	SignatureKeyID signatureKeyID
 }
 
-type SignatureKeyID struct {
+type signatureKeyID struct {
 	Text      string
 	Operation string
 }
 
-type Arch struct {
-	Text      string
-	Datatype  string
-	Operation string
-}
-
-type Evr struct {
+type arch struct {
 	Text      string
 	Datatype  string
 	Operation string
 }
 
-type Package struct {
+type evr struct {
+	Text      string
+	Datatype  string
+	Operation string
+}
+
+type pkg struct {
 	Name         string
 	FixedVersion string
+}
+
+type bucket struct {
+	pkgName string
+	vulnID  string
+}
+
+type Advisory struct {
+	Entries []Entry `json:",omitempty"`
+}
+
+type Definition struct {
+	Entry Entry `json:",omitempty"`
+}
+
+// Entry holds the unique advisory information per platform.
+type Entry struct {
+	FixedVersion string `json:",omitempty"`
+	Cves         []CveEntry
+
+	// For DB size optimization, CPE names will not be stored.
+	// CPE indices are stored instead.
+	AffectedCPEList    []string `json:"-"`
+	AffectedCPEIndices []int    `json:"Affected,omitempty"`
+}
+
+type CveEntry struct {
+	ID string `json:",omitempty"`
+
+	// Severity may differ depending on platform even though the advisories resolve the same CVE-ID.
+	Severity types.Severity `json:",omitempty"`
 }

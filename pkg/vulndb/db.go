@@ -132,8 +132,12 @@ func (t TrivyDB) optimize() error {
 			return nil
 		}
 
-		if err := t.vulnClient.SaveAdvisoryDetails(tx, cveID); err != nil {
+		if err := t.dbc.SaveAdvisoryDetails(tx, cveID); err != nil {
 			return xerrors.Errorf("failed to save advisories: %w", err)
+		}
+
+		if len(details) == 0 {
+			return nil
 		}
 
 		vuln := t.vulnClient.Normalize(details)
