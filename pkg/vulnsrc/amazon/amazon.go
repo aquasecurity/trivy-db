@@ -25,6 +25,11 @@ const (
 
 var (
 	targetVersions = []string{"1", "2"}
+
+	source = types.DataSource{
+		Name: "Amazon Linux Security Center",
+		URL:  "https://alas.aws.amazon.com/",
+	}
 )
 
 type VulnSrc struct {
@@ -116,12 +121,15 @@ func (vs VulnSrc) save() error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx) error {
 	for majorVersion, alasList := range vs.advisories {
+		platformName := fmt.Sprintf(platformFormat, majorVersion)
+		if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+			return xerrors.Errorf("failed to put data source: %w", err)
+		}
 		for _, alas := range alasList {
 			for _, cveID := range alas.CveIDs {
 				for _, pkg := range alas.Packages {
-					platformName := fmt.Sprintf(platformFormat, majorVersion)
 					advisory := types.Advisory{
-						FixedVersion: constructVersion(pkg.Epoch, pkg.Version, pkg.Release),
+						FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 					}
 					if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkg.Name, []string{platformName}, advisory); err != nil {
 						return xerrors.Errorf("failed to save Amazon advisory: %w", err)
@@ -142,9 +150,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 						return xerrors.Errorf("failed to save Amazon vulnerability detail: %w", err)
 					}
 
-					// for light DB
-					if err := vs.dbc.PutSeverity(tx, cveID, types.SeverityUnknown); err != nil {
-						return xerrors.Errorf("failed to save Amazon vulnerability severity: %w", err)
+					// for optimization
+					if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
+						return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 					}
 				}
 			}
@@ -176,18 +184,4 @@ func severityFromPriority(priority string) types.Severity {
 	default:
 		return types.SeverityUnknown
 	}
-}
-
-func constructVersion(epoch, version, release string) string {
-	verStr := ""
-	if epoch != "0" && epoch != "" {
-		verStr += fmt.Sprintf("%s:", epoch)
-	}
-	verStr += version
-
-	if release != "" {
-		verStr += fmt.Sprintf("-%s", release)
-
-	}
-	return verStr
 }

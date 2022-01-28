@@ -21,7 +21,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 		inputFile              string
 		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
 		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
-		putSeverity            []db.OperationPutSeverityExpectation
+		putVulnerabilityID     []db.OperationPutVulnerabilityIDExpectation
 		expectedErrorMsg       string
 	}{
 		{
@@ -34,9 +34,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 						NestedBktNames:  []string{vulnerability.NodejsSecurityWg},
 						PkgName:         "bassmaster",
 						VulnerabilityID: "CVE-2014-7205",
-						Advisory: Advisory{
-							VulnerableVersions: "<=1.5.1",
-							PatchedVersions:    ">=1.5.2",
+						Advisory: types.Advisory{
+							VulnerableVersions: []string{"<=1.5.1"},
+							PatchedVersions:    []string{">=1.5.2"},
 						},
 					},
 				},
@@ -57,12 +57,11 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2014-7205",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -77,9 +76,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 						NestedBktNames:  []string{vulnerability.NodejsSecurityWg},
 						PkgName:         "bassmaster",
 						VulnerabilityID: "CVE-2014-7205",
-						Advisory: Advisory{
-							VulnerableVersions: "<=1.5.1",
-							PatchedVersions:    ">=1.5.2",
+						Advisory: types.Advisory{
+							VulnerableVersions: []string{"<=1.5.1"},
+							PatchedVersions:    []string{">=1.5.2"},
 						},
 					},
 				},
@@ -100,12 +99,11 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2014-7205",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -128,7 +126,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 						NestedBktNames:  []string{vulnerability.NodejsSecurityWg},
 						PkgName:         "missingcvss-missingseverity-package",
 						VulnerabilityID: "NSWG-ECO-0",
-						Advisory:        Advisory{},
+						Advisory:        types.Advisory{},
 					},
 				},
 			},
@@ -146,12 +144,11 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "NSWG-ECO-0",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -166,9 +163,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 						NestedBktNames:  []string{vulnerability.NodejsSecurityWg},
 						PkgName:         "hubl-server",
 						VulnerabilityID: "NSWG-ECO-334",
-						Advisory: Advisory{
-							VulnerableVersions: "<=99.999.99999",
-							PatchedVersions:    "<0.0.0",
+						Advisory: types.Advisory{
+							VulnerableVersions: []string{"<=99.999.99999"},
+							PatchedVersions:    []string{"<0.0.0"},
 						},
 					},
 				},
@@ -188,12 +185,11 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "NSWG-ECO-334",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -211,7 +207,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 			mockDBConfig := new(db.MockOperation)
 			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tc.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tc.putVulnerabilityDetail)
-			mockDBConfig.ApplyPutSeverityExpectations(tc.putSeverity)
+			mockDBConfig.ApplyPutVulnerabilityIDExpectations(tc.putVulnerabilityID)
 
 			ac := VulnSrc{dbc: mockDBConfig}
 

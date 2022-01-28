@@ -14,7 +14,6 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/python"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -26,7 +25,7 @@ const (
 	Npm
 	Nuget
 	Pip
-	Rubygems
+	RubyGems
 )
 
 type Ecosystem int
@@ -43,8 +42,8 @@ func (e Ecosystem) String() string {
 		return "Nuget"
 	case Pip:
 		return "Pip"
-	case Rubygems:
-		return "Rubygems"
+	case RubyGems:
+		return "RubyGems"
 	}
 	return "Unknown"
 }
@@ -78,7 +77,7 @@ func (vs VulnSrc) Name() string {
 		return vulnerability.GHSANuget
 	case Pip:
 		return vulnerability.GHSAPip
-	case Rubygems:
+	case RubyGems:
 		return vulnerability.GHSARubygems
 	}
 	return ""
@@ -120,11 +119,20 @@ func (vs VulnSrc) save(ghsas []GithubSecurityAdvisory) error {
 }
 
 func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
+	platformName := fmt.Sprintf(platformFormat, vs.ecosystem)
+	err := vs.dbc.PutDataSource(tx, platformName, types.DataSource{
+		Name: fmt.Sprintf("GitHub Advisory Database %s", vs.ecosystem),
+		URL: fmt.Sprintf("https://github.com/advisories?query=type%%3Areviewed+ecosystem%%3A%s",
+			strings.ToLower(vs.ecosystem.String())),
+	})
+	if err != nil {
+		return xerrors.Errorf("failed to put data source: %w", err)
+	}
+
 	for _, ghsa := range ghsas {
 		if ghsa.Advisory.WithdrawnAt != "" {
 			continue
 		}
-		platformName := fmt.Sprintf(platformFormat, vs.ecosystem)
 		var pvs, avs []string
 		for _, va := range ghsa.Versions {
 			// e.g. GHSA-r4x3-g983-9g48 PatchVersion has "<" operator
@@ -151,14 +159,14 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 		}
 		vulnID = strings.TrimSpace(vulnID)
 
-		a := Advisory{
+		a := types.Advisory{
 			PatchedVersions:    pvs,
 			VulnerableVersions: avs,
 		}
 
 		pkgName := vs.ToLowerCasePackage(ghsa.Package.Name)
 
-		err := vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{platformName}, a)
+		err = vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{platformName}, a)
 		if err != nil {
 			return xerrors.Errorf("failed to save GHSA: %w", err)
 		}
@@ -180,41 +188,34 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ghsas []GithubSecurityAdvisory) error {
 			return xerrors.Errorf("failed to save GHSA vulnerability detail: %w", err)
 		}
 
-		if err := vs.dbc.PutSeverity(tx, vulnID, types.SeverityUnknown); err != nil {
-			return xerrors.Errorf("failed to save GHSA vulnerability severity: %w", err)
+		// for optimization
+		if err = vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
+			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 		}
 	}
 
 	return nil
 }
 
-func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
+func (vs VulnSrc) Get(pkgName string) ([]types.Advisory, error) {
 	pkgName = vs.ToLowerCasePackage(pkgName)
 
 	bucket := fmt.Sprintf(platformFormat, vs.ecosystem.String())
-	advisories, err := vs.dbc.ForEachAdvisory([]string{bucket}, pkgName)
+	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to iterate GHSA: %w", err)
+		return nil, xerrors.Errorf("GHSA advisory error: %w", err)
 	}
 
-	var results []Advisory
-	for vulnID, a := range advisories {
-		var advisory Advisory
-		if err = json.Unmarshal(a, &advisory); err != nil {
-			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
-		}
-		advisory.VulnerabilityID = vulnID
-		results = append(results, advisory)
-	}
-	return results, nil
+	return advisories, nil
 }
+
 func (vs VulnSrc) ToLowerCasePackage(pkgName string) string {
 	if vs.ecosystem == Pip {
 		/*
 			  from https://www.python.org/dev/peps/pep-0426/#name
 				All comparisons of distribution names MUST be case insensitive, and MUST consider hyphens and underscores to be equivalent.
 		*/
-		pkgName = python.ToLowerCasePythonPackage(pkgName)
+		pkgName = toLowerCasePythonPackage(pkgName)
 	} else if vs.ecosystem != Nuget { // Nuget is case-sensitive
 		pkgName = strings.ToLower(pkgName)
 	}
@@ -234,4 +235,14 @@ func severityFromThreat(urgency string) types.Severity {
 	default:
 		return types.SeverityUnknown
 	}
+}
+
+func toLowerCasePythonPackage(pkg string) string {
+	/*
+		  from https://www.python.org/dev/peps/pep-0426/#name
+			All comparisons of distribution names MUST be case insensitive, and MUST consider hyphens and underscores to be equivalent.
+	*/
+	pkg = strings.ToLower(pkg)
+	pkg = strings.ReplaceAll(pkg, "_", "-")
+	return pkg
 }

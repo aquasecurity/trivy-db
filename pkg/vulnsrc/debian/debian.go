@@ -34,20 +34,19 @@ const (
 	dlaDir            = "DLA"
 	dsaDir            = "DSA"
 
-	// This bucket stores unfixed vulnerabilities only.
 	// e.g. debian 8
 	platformFormat = "debian %s"
-
-	// The security advisories are not from OVAL, but we have to keep this bucket for backward compatibility.
-	// This bucket stores fixed vulnerabilities only.
-	// e.g. debian oval 8
-	ovalPlatformFormat = "debian oval %s"
 )
 
 var (
 	// NOTE: "removed" should not be marked as "not-affected".
 	// ref. https://security-team.debian.org/security_tracker.html#removed-packages
 	skipStatuses = []string{"not-affected", "undetermined"}
+
+	source = types.DataSource{
+		Name: "Debian Security Tracker",
+		URL:  "https://salsa.debian.org/security-tracker-team/security-tracker",
+	}
 )
 
 type Option func(src *VulnSrc)
@@ -417,22 +416,10 @@ func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt bucket, advisory Advisory) error 
 		return nil
 	}
 
-	var platform string
-	if advisory.FixedVersion == "" {
-		// Convert major version to bucket name for unfixed vulnerabilities
-		// e.g. "10" => "debian 10"
-		platform = fmt.Sprintf(platformFormat, majorVersion)
-
-	} else {
-		// Convert major version to bucket name for fixed vulnerabilities
-		// e.g. "10" => "debian oval 10"
-		platform = fmt.Sprintf(ovalPlatformFormat, majorVersion)
-	}
-
 	// Fill information for the buckets.
 	advisory.VulnerabilityID = bkt.vulnID
 	advisory.PkgName = bkt.pkgName
-	advisory.Platform = platform
+	advisory.Platform = fmt.Sprintf(platformFormat, majorVersion)
 
 	if err := vs.put(vs.dbc, tx, advisory); err != nil {
 		return xerrors.Errorf("put error: %w", err)
@@ -459,29 +446,26 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 		return xerrors.Errorf("failed to save Debian advisory: %w", err)
 	}
 
-	// for light DB
-	if err := dbc.PutSeverity(tx, adv.VulnerabilityID, types.SeverityUnknown); err != nil {
-		return xerrors.Errorf("failed to save Debian vulnerability severity: %w", err)
+	// for optimization
+	if err := dbc.PutVulnerabilityID(tx, adv.VulnerabilityID); err != nil {
+		return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+	}
+
+	if err := dbc.PutDataSource(tx, adv.Platform, source); err != nil {
+		return xerrors.Errorf("failed to put data source: %w", err)
 	}
 
 	return nil
 }
 
 func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
-	// For unfixed vulnerabilities
 	bkt := fmt.Sprintf(platformFormat, release)
-	unfixedAdvs, err := vs.dbc.GetAdvisories(bkt, pkgName)
+	advisories, err := vs.dbc.GetAdvisories(bkt, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get Debian advisories: %w", err)
 	}
 
-	// For fixed vulnerabilities
-	ovalBkt := fmt.Sprintf(ovalPlatformFormat, release)
-	fixedAdvs, err := vs.dbc.GetAdvisories(ovalBkt, pkgName)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to get Debian OVAL advisories: %w", err)
-	}
-	return append(fixedAdvs, unfixedAdvs...), nil
+	return advisories, nil
 }
 
 func severityFromUrgency(urgency string) types.Severity {

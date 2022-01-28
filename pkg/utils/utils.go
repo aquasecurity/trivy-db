@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/fs"
 	"log"
@@ -84,4 +85,18 @@ func Exec(command string, args []string) (string, error) {
 		return "", xerrors.Errorf("failed to exec: %w", err)
 	}
 	return stdoutBuf.String(), nil
+}
+
+func ConstructVersion(epoch, version, release string) string {
+	verStr := ""
+	if epoch != "0" && epoch != "" {
+		verStr += fmt.Sprintf("%s:", epoch)
+	}
+	verStr += version
+
+	if release != "" {
+		verStr += fmt.Sprintf("-%s", release)
+
+	}
+	return verStr
 }

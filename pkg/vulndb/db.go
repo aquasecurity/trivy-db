@@ -2,13 +2,14 @@ package vulndb
 
 import (
 	"log"
-	"path/filepath"
 	"time"
 
+	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 	"k8s.io/utils/clock"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/metadata"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
@@ -17,8 +18,9 @@ type VulnDB interface {
 	Build(targets []string) error
 }
 
-type Core struct {
+type TrivyDB struct {
 	dbc            db.Config
+	metadata       metadata.Client
 	vulnClient     vulnerability.Vulnerability
 	vulnSrcs       map[string]vulnsrc.VulnSrc
 	cacheDir       string
@@ -26,21 +28,21 @@ type Core struct {
 	clock          clock.Clock
 }
 
-type Option func(*Core)
+type Option func(*TrivyDB)
 
 func WithClock(clock clock.Clock) Option {
-	return func(core *Core) {
+	return func(core *TrivyDB) {
 		core.clock = clock
 	}
 }
 
 func WithVulnSrcs(srcs map[string]vulnsrc.VulnSrc) Option {
-	return func(core *Core) {
+	return func(core *TrivyDB) {
 		core.vulnSrcs = srcs
 	}
 }
 
-func NewCore(cacheDir string, updateInterval time.Duration, opts ...Option) *Core {
+func New(cacheDir string, updateInterval time.Duration, opts ...Option) *TrivyDB {
 	// Initialize map
 	vulnSrcs := map[string]vulnsrc.VulnSrc{}
 	for _, v := range vulnsrc.All {
@@ -48,8 +50,9 @@ func NewCore(cacheDir string, updateInterval time.Duration, opts ...Option) *Cor
 	}
 
 	dbc := db.Config{}
-	core := &Core{
+	tdb := &TrivyDB{
 		dbc:            dbc,
+		metadata:       metadata.NewClient(cacheDir),
 		vulnClient:     vulnerability.New(dbc),
 		vulnSrcs:       vulnSrcs,
 		cacheDir:       cacheDir,
@@ -58,48 +61,60 @@ func NewCore(cacheDir string, updateInterval time.Duration, opts ...Option) *Cor
 	}
 
 	for _, opt := range opts {
-		opt(core)
+		opt(tdb)
 	}
 
-	return core
+	return tdb
 }
 
-func (c Core) Insert(dbType db.Type, targets []string) error {
+func (t TrivyDB) Insert(targets []string) error {
 	log.Println("Updating vulnerability database...")
 	for _, target := range targets {
-		src, ok := c.vulnSrc(target)
+		src, ok := t.vulnSrc(target)
 		if !ok {
 			return xerrors.Errorf("%s is not supported", target)
 		}
 		log.Printf("Updating %s data...\n", target)
 
-		if err := src.Update(c.cacheDir); err != nil {
+		if err := src.Update(t.cacheDir); err != nil {
 			return xerrors.Errorf("%s update error: %w", target, err)
 		}
 	}
 
-	md := db.Metadata{
+	md := metadata.Metadata{
 		Version:    db.SchemaVersion,
-		Type:       dbType,
-		NextUpdate: c.clock.Now().UTC().Add(c.updateInterval),
-		UpdatedAt:  c.clock.Now().UTC(),
+		NextUpdate: t.clock.Now().UTC().Add(t.updateInterval),
+		UpdatedAt:  t.clock.Now().UTC(),
 	}
 
-	err := c.dbc.SetMetadata(md)
-	if err != nil {
-		return xerrors.Errorf("failed to save metadata: %w", err)
-	}
-
-	err = c.dbc.StoreMetadata(md, filepath.Join(c.cacheDir, "db"))
-	if err != nil {
-		return xerrors.Errorf("failed to store metadata: %w", err)
+	if err := t.metadata.Update(md); err != nil {
+		return xerrors.Errorf("metadata update error: %w", err)
 	}
 
 	return nil
 }
 
-func (c Core) vulnSrc(target string) (vulnsrc.VulnSrc, bool) {
-	for _, src := range c.vulnSrcs {
+func (t TrivyDB) Build(targets []string) error {
+	// Insert all security advisories
+	if err := t.Insert(targets); err != nil {
+		return xerrors.Errorf("insert error: %w", err)
+	}
+
+	// Remove unnecessary details
+	if err := t.optimize(); err != nil {
+		return xerrors.Errorf("optimize error: %w", err)
+	}
+
+	// Remove unnecessary buckets
+	if err := t.cleanup(); err != nil {
+		return xerrors.Errorf("cleanup error: %w", err)
+	}
+
+	return nil
+}
+
+func (t TrivyDB) vulnSrc(target string) (vulnsrc.VulnSrc, bool) {
+	for _, src := range t.vulnSrcs {
 		if target == src.Name() {
 			return src, true
 		}
@@ -107,13 +122,51 @@ func (c Core) vulnSrc(target string) (vulnsrc.VulnSrc, bool) {
 	return nil, false
 }
 
-func New(dbType db.Type, cacheDir string, updateInterval time.Duration, opts ...Option) VulnDB {
-	core := NewCore(cacheDir, updateInterval, opts...)
+func (t TrivyDB) optimize() error {
+	// NVD also contains many vulnerabilities that are not related to OS packages or language-specific packages.
+	// Trivy DB will not store them so that it could reduce the database size.
+	// This bucket has only vulnerability IDs provided by vendors. They must be stored.
+	err := t.dbc.ForEachVulnerabilityID(func(tx *bolt.Tx, cveID string) error {
+		details := t.vulnClient.GetDetails(cveID)
+		if t.vulnClient.IsRejected(details) {
+			return nil
+		}
 
-	switch dbType {
-	case db.TypeLight:
-		return lightDB{Core: core}
-	default:
-		return fullDB{Core: core}
+		if err := t.dbc.SaveAdvisoryDetails(tx, cveID); err != nil {
+			return xerrors.Errorf("failed to save advisories: %w", err)
+		}
+
+		if len(details) == 0 {
+			return nil
+		}
+
+		vuln := t.vulnClient.Normalize(details)
+		if err := t.dbc.PutVulnerability(tx, cveID, vuln); err != nil {
+			return xerrors.Errorf("failed to put vulnerability: %w", err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return xerrors.Errorf("failed to iterate severity: %w", err)
 	}
+
+	return nil
+}
+
+func (t TrivyDB) cleanup() error {
+	if err := t.dbc.DeleteVulnerabilityIDBucket(); err != nil {
+		return xerrors.Errorf("failed to delete severity bucket: %w", err)
+	}
+
+	if err := t.dbc.DeleteVulnerabilityDetailBucket(); err != nil {
+		return xerrors.Errorf("failed to delete vulnerability detail bucket: %w", err)
+	}
+
+	if err := t.dbc.DeleteAdvisoryDetailBucket(); err != nil {
+		return xerrors.Errorf("failed to delete advisory detail bucket: %w", err)
+	}
+
+	return nil
 }

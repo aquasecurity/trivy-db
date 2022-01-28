@@ -28,14 +28,21 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:  "testdata/happy",
 			want: []wantKV{
 				{
-					key: []string{"advisory-detail", "CVE-2019-0210", "go::vulndb", "github.com/apache/thrift"},
+					key: []string{"data-source", "go::The Go Vulnerability Database"},
+					value: types.DataSource{
+						Name: "The Go Vulnerability Database",
+						URL:  "https://github.com/golang/vulndb",
+					},
+				},
+				{
+					key: []string{"advisory-detail", "CVE-2019-0210", "go::The Go Vulnerability Database", "github.com/apache/thrift"},
 					value: types.Advisory{
 						PatchedVersions:    []string{"0.13.0"},
 						VulnerableVersions: []string{">=0.0.0-20151001171628-53dd39833a08, <0.13.0"},
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "CVE-2019-0210", "go::vulndb"},
+					key: []string{"vulnerability-detail", "CVE-2019-0210", "go::The Go Vulnerability Database"},
 					value: types.VulnerabilityDetail{
 						Description: "Due to an improper bounds check, parsing maliciously crafted messages can cause panics. If\nthis package is used to parse untrusted input, this may be used as a vector for a denial of\nservice attack.\n",
 						References: []string{
@@ -46,14 +53,14 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2020-26160", "go::vulndb", "github.com/dgrijalva/jwt-go/v4"},
+					key: []string{"advisory-detail", "CVE-2020-26160", "go::The Go Vulnerability Database", "github.com/dgrijalva/jwt-go/v4"},
 					value: types.Advisory{
 						PatchedVersions:    []string{"4.0.0-preview1"},
 						VulnerableVersions: []string{">=0, <4.0.0-preview1"},
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "CVE-2020-26160", "go::vulndb"},
+					key: []string{"vulnerability-detail", "CVE-2020-26160", "go::The Go Vulnerability Database"},
 					value: types.VulnerabilityDetail{
 						Description: "If a JWT contains an audience claim with an array of strings, rather\nthan a single string, and `MapClaims.VerifyAudience` is called with\n`req` set to `false`, then audience verification will be bypassed,\nallowing an invalid set of audiences to be provided.\n",
 						References: []string{

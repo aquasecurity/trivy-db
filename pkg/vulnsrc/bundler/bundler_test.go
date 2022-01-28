@@ -20,8 +20,7 @@ func Test_walkFunc(t *testing.T) {
 				NestedBktNames:  []string{vulnerability.RubySec},
 				PkgName:         "doorkeeper-openid_connect",
 				VulnerabilityID: "CVE-2019-9837",
-				Advisory: Advisory{
-					//VulnerabilityID:    "CVE-2018-16487", // TODO: Why is this field needed if the key is already the same?
+				Advisory: types.Advisory{
 					PatchedVersions:    []string{">= 1.5.4"},
 					UnaffectedVersions: []string{"< 1.4.0"},
 				},
@@ -45,12 +44,11 @@ func Test_walkFunc(t *testing.T) {
 			},
 		},
 	})
-	mockDBConfig.ApplyPutSeverityExpectations([]db.OperationPutSeverityExpectation{
+	mockDBConfig.ApplyPutVulnerabilityIDExpectations([]db.OperationPutVulnerabilityIDExpectation{
 		{
-			Args: db.OperationPutSeverityArgs{
+			Args: db.OperationPutVulnerabilityIDArgs{
 				TxAnything:      true,
 				VulnerabilityID: "CVE-2019-9837",
-				Severity:        0,
 			},
 		},
 	})

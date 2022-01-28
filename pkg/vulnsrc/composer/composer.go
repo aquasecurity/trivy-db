@@ -1,8 +1,6 @@
 package composer
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,11 +14,12 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-// https://github.com/FriendsOfPHP/security-advisories
+const composerDir = "php-security-advisories"
 
-const (
-	composerDir = "php-security-advisories"
-)
+var source = types.DataSource{
+	Name: "PHP Security Advisories Database",
+	URL:  "https://github.com/FriendsOfPHP/security-advisories",
+}
 
 type RawAdvisory struct {
 	Cve       string
@@ -63,6 +62,9 @@ func (vs VulnSrc) Update(dir string) (err error) {
 
 func (vs VulnSrc) update(repoPath string) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
+		if err := vs.dbc.PutDataSource(tx, vulnerability.PhpSecurityAdvisories, source); err != nil {
+			return xerrors.Errorf("failed to put data source: %w", err)
+		}
 		if err := vs.walk(tx, repoPath); err != nil {
 			return xerrors.Errorf("failed to walk compose advisories: %w", err)
 		}
@@ -73,6 +75,7 @@ func (vs VulnSrc) update(repoPath string) error {
 	}
 	return nil
 }
+
 func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -81,7 +84,7 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		if info.IsDir() || !strings.HasPrefix(info.Name(), "CVE-") {
 			return nil
 		}
-		buf, err := ioutil.ReadFile(path)
+		buf, err := os.ReadFile(path)
 		if err != nil {
 			return xerrors.Errorf("failed to read a file: %w", err)
 		}
@@ -99,7 +102,14 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 			vulnID = strings.TrimSuffix(info.Name(), ".yaml")
 		}
 
-		a := Advisory{Branches: advisory.Branches}
+		var vulnerableVersions []string
+		for _, branch := range advisory.Branches {
+			vulnerableVersions = append(vulnerableVersions, strings.Join(branch.Versions, ", "))
+		}
+
+		a := types.Advisory{
+			VulnerableVersions: vulnerableVersions,
+		}
 		err = vs.dbc.PutAdvisoryDetail(tx, vulnID, advisory.Reference, []string{vulnerability.PhpSecurityAdvisories}, a)
 		if err != nil {
 			return xerrors.Errorf("failed to save php advisory: %w", err)
@@ -115,27 +125,19 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 			return xerrors.Errorf("failed to save php vulnerability detail: %w", err)
 		}
 
-		if err := vs.dbc.PutSeverity(tx, vulnID, types.SeverityUnknown); err != nil {
-			return xerrors.Errorf("failed to save php vulnerability severity: %w", err)
+		// for optimization
+		if err = vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
+			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 		}
 		return nil
 	})
 }
 
-func (vs VulnSrc) Get(pkgName string) ([]Advisory, error) {
-	advisories, err := vs.dbc.ForEachAdvisory([]string{vulnerability.PhpSecurityAdvisories}, pkgName)
+func (vs VulnSrc) Get(pkgName string) ([]types.Advisory, error) {
+	advisories, err := vs.dbc.GetAdvisories(vulnerability.PhpSecurityAdvisories, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to iterate php vulnerabilities: %w", err)
+		return nil, xerrors.Errorf("failed to get php vulnerabilities: %w", err)
 	}
 
-	var results []Advisory
-	for vulnID, a := range advisories {
-		var advisory Advisory
-		if err = json.Unmarshal(a, &advisory); err != nil {
-			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
-		}
-		advisory.VulnerabilityID = vulnID
-		results = append(results, advisory)
-	}
-	return results, nil
+	return advisories, nil
 }

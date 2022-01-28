@@ -142,9 +142,9 @@ func (vs VulnSrc) putVulnerabilityDetail(tx *bolt.Tx, cve RedhatCVE) error {
 		return xerrors.Errorf("failed to save Red Hat vulnerability: %w", err)
 	}
 
-	// for light DB
-	if err := vs.dbc.PutSeverity(tx, cve.Name, types.SeverityUnknown); err != nil {
-		return xerrors.Errorf("failed to save Red Hat vulnerability severity: %w", err)
+	// for optimization
+	if err := vs.dbc.PutVulnerabilityID(tx, cve.Name); err != nil {
+		return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 	}
 	return nil
 }

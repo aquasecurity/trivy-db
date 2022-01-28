@@ -104,7 +104,7 @@ func TestConfig_ForEachAdvisory(t *testing.T) {
 				}
 
 				var gotAdvisory types.Advisory
-				err = json.Unmarshal(g, &gotAdvisory)
+				err = json.Unmarshal(g.Content, &gotAdvisory)
 				require.NoError(t, err)
 
 				assert.Equal(t, wantAdvisory, gotAdvisory)

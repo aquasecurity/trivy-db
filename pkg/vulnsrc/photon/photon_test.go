@@ -90,9 +90,10 @@ func TestVulnSrc_commit(t *testing.T) {
 	tests := []struct {
 		name                   string
 		args                   args
+		putDataSource          []db.OperationPutDataSourceExpectation
 		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
 		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
-		putSeverity            []db.OperationPutSeverityExpectation
+		putVulnerabilityID     []db.OperationPutVulnerabilityIDExpectation
 		wantErr                string
 	}{
 		{
@@ -107,6 +108,19 @@ func TestVulnSrc_commit(t *testing.T) {
 						AffVer:    "all versions before 2.8.3-1.ph3 are vulnerable",
 						ResVer:    "2.8.3-1.ph3",
 					},
+				},
+			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Photon OS 1.0",
+						Source: types.DataSource{
+							Name: "Photon OS CVE metadata",
+							URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
 				},
 			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
@@ -134,12 +148,11 @@ func TestVulnSrc_commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2019-10156",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -156,6 +169,19 @@ func TestVulnSrc_commit(t *testing.T) {
 						AffVer:    "all versions before 2.8.3-1.ph3 are vulnerable",
 						ResVer:    "2.8.3-1.ph3",
 					},
+				},
+			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Photon OS 1.0",
+						Source: types.DataSource{
+							Name: "Photon OS CVE metadata",
+							URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
 				},
 			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
@@ -188,6 +214,19 @@ func TestVulnSrc_commit(t *testing.T) {
 						AffVer:    "all versions before 2.8.3-1.ph3 are vulnerable",
 						ResVer:    "2.8.3-1.ph3",
 					},
+				},
+			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Photon OS 1.0",
+						Source: types.DataSource{
+							Name: "Photon OS CVE metadata",
+							URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
 				},
 			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
@@ -234,6 +273,19 @@ func TestVulnSrc_commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Photon OS 1.0",
+						Source: types.DataSource{
+							Name: "Photon OS CVE metadata",
+							URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
@@ -259,27 +311,27 @@ func TestVulnSrc_commit(t *testing.T) {
 					},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "CVE-2019-10156",
-						Severity:        types.SeverityUnknown,
 					},
-					Returns: db.OperationPutSeverityReturns{
+					Returns: db.OperationPutVulnerabilityIDReturns{
 						Err: errors.New("error"),
 					},
 				},
 			},
-			wantErr: "failed to save Photon vulnerability severity",
+			wantErr: "failed to save the vulnerability ID",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockDBConfig := new(db.MockOperation)
+			mockDBConfig.ApplyPutDataSourceExpectations(tt.putDataSource)
 			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tt.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tt.putVulnerabilityDetail)
-			mockDBConfig.ApplyPutSeverityExpectations(tt.putSeverity)
+			mockDBConfig.ApplyPutVulnerabilityIDExpectations(tt.putVulnerabilityID)
 
 			vs := VulnSrc{
 				dbc: mockDBConfig,

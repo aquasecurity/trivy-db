@@ -74,9 +74,10 @@ func TestVulnSrc_Commit(t *testing.T) {
 	testCases := []struct {
 		name                   string
 		cvrfs                  []SuseCvrf
+		putDataSource          []db.OperationPutDataSourceExpectation
 		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
 		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
-		putSeverity            []db.OperationPutSeverityExpectation
+		putVulnerabilityID     []db.OperationPutVulnerabilityIDExpectation
 		expectedErrorMsg       string
 	}{
 		{
@@ -154,6 +155,19 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "SUSE Linux Enterprise 15.1",
+						Source: types.DataSource{
+							Name: "SUSE CVRF",
+							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
@@ -187,12 +201,11 @@ func TestVulnSrc_Commit(t *testing.T) {
 					Returns: db.OperationPutVulnerabilityDetailReturns{},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "SUSE-SU-2019:0048-2",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -270,6 +283,19 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "openSUSE Leap 15.1",
+						Source: types.DataSource{
+							Name: "SUSE CVRF",
+							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
@@ -315,12 +341,11 @@ func TestVulnSrc_Commit(t *testing.T) {
 					Returns: db.OperationPutVulnerabilityDetailReturns{},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "openSUSE-SU-2019:2598-1",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -380,6 +405,19 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "SUSE Linux Enterprise 15",
+						Source: types.DataSource{
+							Name: "SUSE CVRF",
+							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
@@ -424,12 +462,11 @@ func TestVulnSrc_Commit(t *testing.T) {
 					Returns: db.OperationPutVulnerabilityDetailReturns{},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:      true,
 						VulnerabilityID: "openSUSE-SU-2019:0003-1",
-						Severity:        types.SeverityUnknown,
 					},
 				},
 			},
@@ -457,6 +494,19 @@ func TestVulnSrc_Commit(t *testing.T) {
 							Threats: []Threat{{Type: "Impact", Severity: "moderate"}},
 						},
 					},
+				},
+			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "SUSE Linux Enterprise 15",
+						Source: types.DataSource{
+							Name: "SUSE CVRF",
+							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
 				},
 			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
@@ -500,6 +550,19 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "SUSE Linux Enterprise 15",
+						Source: types.DataSource{
+							Name: "SUSE CVRF",
+							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
@@ -528,7 +591,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 			expectedErrorMsg: "failed to save SUSE CVRF vulnerability",
 		},
 		{
-			name: "PutSeverity returns an error",
+			name: "PutVulnerabilityID returns an error",
 			cvrfs: []SuseCvrf{
 				{
 					Title: "Security update for GraphicsMagick",
@@ -550,6 +613,19 @@ func TestVulnSrc_Commit(t *testing.T) {
 							Threats: []Threat{{Type: "Impact", Severity: "moderate"}},
 						},
 					},
+				},
+			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "SUSE Linux Enterprise 15",
+						Source: types.DataSource{
+							Name: "SUSE CVRF",
+							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
 				},
 			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
@@ -575,19 +651,18 @@ func TestVulnSrc_Commit(t *testing.T) {
 					Returns: db.OperationPutVulnerabilityDetailReturns{},
 				},
 			},
-			putSeverity: []db.OperationPutSeverityExpectation{
+			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutSeverityArgs{
+					Args: db.OperationPutVulnerabilityIDArgs{
 						TxAnything:              true,
 						VulnerabilityIDAnything: true,
-						SeverityAnything:        true,
 					},
-					Returns: db.OperationPutSeverityReturns{
+					Returns: db.OperationPutVulnerabilityIDReturns{
 						Err: errors.New("error"),
 					},
 				},
 			},
-			expectedErrorMsg: "failed to save SUSE vulnerability severity",
+			expectedErrorMsg: "failed to save the vulnerability ID",
 		},
 	}
 
@@ -595,9 +670,10 @@ func TestVulnSrc_Commit(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tx := &bolt.Tx{}
 			mockDBConfig := new(db.MockOperation)
+			mockDBConfig.ApplyPutDataSourceExpectations(tc.putDataSource)
 			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tc.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tc.putVulnerabilityDetail)
-			mockDBConfig.ApplyPutSeverityExpectations(tc.putSeverity)
+			mockDBConfig.ApplyPutVulnerabilityIDExpectations(tc.putVulnerabilityID)
 
 			ac := VulnSrc{dbc: mockDBConfig}
 			err := ac.commit(tx, tc.cvrfs)

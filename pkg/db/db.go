@@ -3,29 +3,21 @@ package db
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime/debug"
 	"strings"
-	"time"
-
-	"github.com/aquasecurity/trivy-db/pkg/types"
 
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
+
+	"github.com/aquasecurity/trivy-db/pkg/log"
+	"github.com/aquasecurity/trivy-db/pkg/types"
 )
 
 type CustomPut func(dbc Operation, tx *bolt.Tx, adv interface{}) error
 
-type Type int
-
-const (
-	SchemaVersion = 1
-
-	TypeFull Type = iota
-	TypeLight
-)
+const SchemaVersion = 2
 
 var (
 	db    *bolt.DB
@@ -40,14 +32,11 @@ type Operation interface {
 		vulnerability types.VulnerabilityDetail) (err error)
 	DeleteVulnerabilityDetailBucket() (err error)
 
-	ForEachAdvisory(sources []string, pkgName string) (value map[string][]byte, err error)
+	ForEachAdvisory(sources []string, pkgName string) (value map[string]Value, err error)
 	GetAdvisories(source string, pkgName string) (advisories []types.Advisory, err error)
 
-	PutSeverity(tx *bolt.Tx, vulnerabilityID string, severity types.Severity) (err error)
-	GetSeverity(vulnerabilityID string) (severity types.Severity, err error)
-	ForEachSeverity(fn func(tx *bolt.Tx, cveID string, severity types.Severity) error) (err error)
-
-	DeleteSeverityBucket() (err error)
+	PutVulnerabilityID(tx *bolt.Tx, vulnerabilityID string) (err error)
+	ForEachVulnerabilityID(fn func(tx *bolt.Tx, cveID string) error) (err error)
 
 	PutVulnerability(tx *bolt.Tx, vulnerabilityID string, vulnerability types.Vulnerability) (err error)
 	GetVulnerability(vulnerabilityID string) (vulnerability types.Vulnerability, err error)
@@ -56,19 +45,14 @@ type Operation interface {
 	PutAdvisoryDetail(tx *bolt.Tx, vulnerabilityID, pkgName string, nestedBktNames []string, advisory interface{}) (err error)
 	DeleteAdvisoryDetailBucket() error
 
+	PutDataSource(tx *bolt.Tx, bktName string, source types.DataSource) (err error)
+
+	// For Red Hat
 	PutRedHatRepositories(tx *bolt.Tx, repository string, cpeIndices []int) (err error)
 	PutRedHatNVRs(tx *bolt.Tx, nvr string, cpeIndices []int) (err error)
 	PutRedHatCPEs(tx *bolt.Tx, cpeIndex int, cpe string) (err error)
 	RedHatRepoToCPEs(repository string) (cpeIndices []int, err error)
 	RedHatNVRToCPEs(nvr string) (cpeIndices []int, err error)
-}
-
-type Metadata struct {
-	Version      int  `json:",omitempty"`
-	Type         Type `json:",omitempty"`
-	NextUpdate   time.Time
-	UpdatedAt    time.Time
-	DownloadedAt time.Time
 }
 
 type Config struct {
@@ -101,9 +85,12 @@ func Init(cacheDir string) (err error) {
 	return nil
 }
 
+func Dir(cacheDir string) string {
+	return filepath.Join(cacheDir, "db")
+}
+
 func Path(cacheDir string) string {
-	dbDir = filepath.Join(cacheDir, "db")
-	dbPath := filepath.Join(dbDir, "trivy.db")
+	dbPath := filepath.Join(Dir(cacheDir), "trivy.db")
 	return dbPath
 }
 
@@ -118,59 +105,12 @@ func (dbc Config) Connection() *bolt.DB {
 	return db
 }
 
-func (dbc Config) GetVersion() int {
-	metadata, err := dbc.GetMetadata()
-	if err != nil {
-		return 0
-	}
-	return metadata.Version
-}
-
-func (dbc Config) GetMetadata() (Metadata, error) {
-	value, err := dbc.get([]string{"trivy", "metadata"}, "data")
-	if err != nil {
-		return Metadata{}, err
-	}
-
-	var metadata Metadata
-	if err = json.Unmarshal(value, &metadata); err != nil {
-		return Metadata{}, xerrors.Errorf("JSON unmarshal error: %w", err)
-	}
-	return metadata, nil
-}
-
-func (dbc Config) SetMetadata(metadata Metadata) error {
-	err := dbc.update("trivy", "metadata", "data", metadata)
-	if err != nil {
-		return xerrors.Errorf("failed to save metadata: %w", err)
-	}
-	return nil
-}
-
-func (dbc Config) StoreMetadata(metadata Metadata, dir string) error {
-	b, err := json.Marshal(metadata)
-	if err != nil {
-		return xerrors.Errorf("failed to store metadata: %w", err)
-	}
-	return ioutil.WriteFile(filepath.Join(dir, "metadata.json"), b, 0600)
-}
-
 func (dbc Config) BatchUpdate(fn func(tx *bolt.Tx) error) error {
 	err := db.Batch(fn)
 	if err != nil {
 		return xerrors.Errorf("error in batch update: %w", err)
 	}
 	return nil
-}
-
-func (dbc Config) update(rootBucket, nestedBucket, key string, value interface{}) error {
-	err := db.Update(func(tx *bolt.Tx) error {
-		return dbc.put(tx, []string{rootBucket, nestedBucket}, key, value)
-	})
-	if err != nil {
-		return xerrors.Errorf("database update error: %w", err)
-	}
-	return err
 }
 
 func (dbc Config) put(tx *bolt.Tx, bktNames []string, key string, value interface{}) error {
@@ -222,14 +162,19 @@ func (dbc Config) get(bktNames []string, key string) (value []byte, err error) {
 	return value, nil
 }
 
-func (dbc Config) forEach(bktNames []string) (value map[string][]byte, err error) {
+type Value struct {
+	Source  types.DataSource
+	Content []byte
+}
+
+func (dbc Config) forEach(bktNames []string) (map[string]Value, error) {
 	if len(bktNames) < 2 {
 		return nil, xerrors.Errorf("bucket must be nested: %v", bktNames)
 	}
 	rootBucket, nestedBuckets := bktNames[0], bktNames[1:]
 
-	value = map[string][]byte{}
-	err = db.View(func(tx *bolt.Tx) error {
+	values := map[string]Value{}
+	err := db.View(func(tx *bolt.Tx) error {
 		var rootBuckets []string
 
 		if strings.Contains(rootBucket, "::") {
@@ -250,6 +195,11 @@ func (dbc Config) forEach(bktNames []string) (value map[string][]byte, err error
 				continue
 			}
 
+			source, err := dbc.getDataSource(tx, r)
+			if err != nil {
+				log.Logger.Debugf("Data source error: %s", err)
+			}
+
 			bkt := root
 			for _, nestedBkt := range nestedBuckets {
 				bkt = bkt.Bucket([]byte(nestedBkt))
@@ -262,7 +212,10 @@ func (dbc Config) forEach(bktNames []string) (value map[string][]byte, err error
 			}
 
 			err = bkt.ForEach(func(k, v []byte) error {
-				value[string(k)] = v
+				values[string(k)] = Value{
+					Source:  source,
+					Content: v,
+				}
 				return nil
 			})
 			if err != nil {
@@ -274,7 +227,7 @@ func (dbc Config) forEach(bktNames []string) (value map[string][]byte, err error
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get all key/value in the specified bucket: %w", err)
 	}
-	return value, nil
+	return values, nil
 }
 
 func (dbc Config) deleteBucket(bucketName string) error {

@@ -188,7 +188,7 @@ func (vs VulnSrc) save(repoToCpe, nvrToCpe map[string][]string, advisories map[b
 				return xerrors.Errorf("failed to save Red Hat OVAL advisory: %w", err)
 			}
 
-			if err := vs.dbc.PutSeverity(tx, bkt.vulnID, types.SeverityUnknown); err != nil {
+			if err := vs.dbc.PutVulnerabilityID(tx, bkt.vulnID); err != nil {
 				return xerrors.Errorf("failed to put severity: %w", err)
 			}
 		}
@@ -242,12 +242,12 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 
 	var advisories []types.Advisory
 	for vulnID, v := range rawAdvisories {
-		if len(v) == 0 {
+		if len(v.Content) == 0 {
 			continue
 		}
 
 		var adv Advisory
-		if err = json.Unmarshal(v, &adv); err != nil {
+		if err = json.Unmarshal(v.Content, &adv); err != nil {
 			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
 		}
 

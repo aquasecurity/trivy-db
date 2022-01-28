@@ -24,6 +24,11 @@ var (
 	platformFormat  = "Oracle Linux %s"
 	targetPlatforms = []string{"Oracle Linux 5", "Oracle Linux 6", "Oracle Linux 7", "Oracle Linux 8"}
 	oracleDir       = filepath.Join("oval", "oracle")
+
+	source = types.DataSource{
+		Name: "Oracle Linux OVAL definitions",
+		URL:  "https://linux.oracle.com/security/oval/",
+	}
 )
 
 type VulnSrc struct {
@@ -100,6 +105,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 				continue
 			}
 
+			if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+				return xerrors.Errorf("failed to put data source: %w", err)
+			}
+
 			advisory := types.Advisory{
 				FixedVersion: affectedPkg.Package.FixedVersion,
 			}
@@ -128,9 +137,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 				return xerrors.Errorf("failed to save Oracle Linux OVAL vulnerability: %w", err)
 			}
 
-			// for light DB
-			if err := vs.dbc.PutSeverity(tx, vulnID, types.SeverityUnknown); err != nil {
-				return xerrors.Errorf("failed to save Oracle Linux vulnerability severity: %w", err)
+			// for optimization
+			if err := vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
+				return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 			}
 		}
 	}

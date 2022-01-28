@@ -93,8 +93,19 @@ type VulnerabilityDetail struct {
 	References       []string   `json:",omitempty"`
 	Title            string     `json:",omitempty"`
 	Description      string     `json:",omitempty"`
-	PublishedDate    *time.Time `json:",omitempty"`
-	LastModifiedDate *time.Time `json:",omitempty"`
+	PublishedDate    *time.Time `json:",omitempty"` // Take from NVD
+	LastModifiedDate *time.Time `json:",omitempty"` // Take from NVD
+}
+
+type AdvisoryDetail struct {
+	PlatformName string
+	PackageName  string
+	AdvisoryItem interface{}
+}
+
+type DataSource struct {
+	Name string `json:",omitempty"`
+	URL  string `json:",omitempty"`
 }
 
 type Advisory struct {
@@ -121,6 +132,9 @@ type Advisory struct {
 	PatchedVersions    []string `json:",omitempty"`
 	UnaffectedVersions []string `json:",omitempty"`
 
+	// DataSource holds where the advisory comes from
+	DataSource *DataSource `json:",omitempty"`
+
 	// Custom is basically for extensibility and is not supposed to be used in OSS
 	Custom interface{} `json:",omitempty"`
 }
@@ -133,8 +147,8 @@ type Vulnerability struct {
 	VendorSeverity   VendorSeverity `json:",omitempty"`
 	CVSS             VendorCVSS     `json:",omitempty"`
 	References       []string       `json:",omitempty"`
-	PublishedDate    *time.Time     `json:",omitempty"`
-	LastModifiedDate *time.Time     `json:",omitempty"`
+	PublishedDate    *time.Time     `json:",omitempty"` // Take from NVD
+	LastModifiedDate *time.Time     `json:",omitempty"` // Take from NVD
 
 	// Custom is basically for extensibility and is not supposed to be used in OSS
 	Custom interface{} `json:",omitempty"`

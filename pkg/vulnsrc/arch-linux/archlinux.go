@@ -20,6 +20,13 @@ const (
 	platformName = "archlinux"
 )
 
+var (
+	source = types.DataSource{
+		Name: "Arch Linux Vulnerable issues",
+		URL:  "https://security.archlinux.org/",
+	}
+)
+
 type VulnSrc struct {
 	dbc db.Operation
 }
@@ -60,7 +67,13 @@ func (vs VulnSrc) Update(dir string) error {
 
 func (vs VulnSrc) save(avgs []ArchVulnGroup) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		return vs.commit(tx, avgs)
+		if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+			return xerrors.Errorf("failed to put data source: %w", err)
+		}
+		if err := vs.commit(tx, avgs); err != nil {
+			return xerrors.Errorf("commit error: %w", err)
+		}
+		return nil
 	})
 	if err != nil {
 		return xerrors.Errorf("error in batch update: %w", err)
@@ -88,9 +101,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, avgs []ArchVulnGroup) error {
 					return xerrors.Errorf("failed to save arch linux vulnerability: %w", err)
 				}
 
-				// for light DB
-				if err := vs.dbc.PutSeverity(tx, cveId, types.SeverityUnknown); err != nil {
-					return xerrors.Errorf("failed to save arch linux vulnerability severity for light: %w", err)
+				// for optimization
+				if err := vs.dbc.PutVulnerabilityID(tx, cveId); err != nil {
+					return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 				}
 			}
 

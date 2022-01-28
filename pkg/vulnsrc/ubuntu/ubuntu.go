@@ -46,6 +46,11 @@ var (
 		"hirsute": "21.04",
 		"impish":  "21.10",
 	}
+
+	source = types.DataSource{
+		Name: "Ubuntu CVE Tracker",
+		URL:  "https://git.launchpad.net/ubuntu-cve-tracker",
+	}
 )
 
 type Option func(src *VulnSrc)
@@ -150,6 +155,10 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 				continue
 			}
 			platformName := fmt.Sprintf(platformFormat, osVersion)
+			if err := dbc.PutDataSource(tx, platformName, source); err != nil {
+				return xerrors.Errorf("failed to put data source: %w", err)
+			}
+
 			adv := types.Advisory{}
 			if status.Status == "released" {
 				adv.FixedVersion = status.Note
@@ -167,9 +176,9 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 				return xerrors.Errorf("failed to save Ubuntu vulnerability: %w", err)
 			}
 
-			// for light DB
-			if err := dbc.PutSeverity(tx, cve.Candidate, types.SeverityUnknown); err != nil {
-				return xerrors.Errorf("failed to save Ubuntu vulnerability severity: %w", err)
+			// for optimization
+			if err := dbc.PutVulnerabilityID(tx, cve.Candidate); err != nil {
+				return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 			}
 		}
 	}

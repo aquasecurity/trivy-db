@@ -1,0 +1,96 @@
+{
+  "_id": {
+    "$oid": "60c0a7e538ca2e5c4497ce85"
+  },
+  "bs_repo_id": {
+    "$oid": "5d9f70c5b456f24391e2644f"
+  },
+  "updateinfo_id": "ALSA-2021:0551",
+  "description": "Node.js is a software development platform for building fast and scalable network applications in the JavaScript programming language. \n\nThe following packages have been upgraded to a later upstream version: nodejs (14.15.4).\n\nSecurity Fix(es):\n\n* nodejs-npm-user-validate: improper input validation when validating user emails leads to ReDoS (CVE-2020-7754)\n\n* nodejs-y18n: prototype pollution vulnerability (CVE-2020-7774)\n\n* nodejs-ini: prototype pollution via malicious INI file (CVE-2020-7788)\n\n* nodejs: use-after-free in the TLS implementation (CVE-2020-8265)\n\n* c-ares: ares_parse_{a,aaaa}_reply() insufficient naddrttls validation DoS (CVE-2020-8277)\n\n* nodejs-ajv: prototype pollution via crafted JSON schema in ajv.validate function (CVE-2020-15366)\n\n* nodejs: HTTP request smuggling via two copies of a header field in an http request (CVE-2020-8287)\n\nFor more details about the security issue(s), including the impact, a CVSS score, acknowledgments, and other related information, refer to the CVE page(s) listed in the References section.\n\nBug Fix(es):\n\n* yarn install crashes with nodejs:14 on aarch64 (BZ#1916465)",
+  "fromstr": "packager@almalinux.org",
+  "issued_date": {
+    "$date": 1613460882000
+  },
+  "pkglist": {
+    "name": "almalinux-8-for-x86_64-appstream-rpms__8_1_nodejs",
+    "shortname": "almalinux-8-for-x86_64-appstream-rpms__8_1_nodejs",
+    "packages": [
+      {
+        "name": "nodejs-nodemon",
+        "version": "2.0.3",
+        "release": "1.module_el8.4.0+2522+3bd42762",
+        "epoch": "0",
+        "arch": "noarch",
+        "src": "nodejs-nodemon-2.0.3-1.module_el8.4.0+2522+3bd42762.src.rpm",
+        "filename": "nodejs-nodemon-2.0.3-1.module_el8.4.0+2522+3bd42762.noarch.rpm",
+        "sum": "dd60424553eab98771dc437f5102d0f03c57588beaf39a2ea63ad41052b42838",
+        "sum_type": "sha256",
+        "reboot_suggested": 0
+      },
+      {
+        "name": "nodejs-packaging",
+        "version": "23",
+        "release": "3.module_el8.4.0+2522+3bd42762",
+        "epoch": "0",
+        "arch": "noarch",
+        "src": "nodejs-packaging-23-3.module_el8.4.0+2522+3bd42762.src.rpm",
+        "filename": "nodejs-packaging-23-3.module_el8.4.0+2522+3bd42762.noarch.rpm",
+        "sum": "5ec709f70c833b784601552cba74067eb2a98aecaf8403431e26580abb8601b5",
+        "sum_type": "sha256",
+        "reboot_suggested": 0
+      },
+      {
+        "name": "nodejs-nodemon",
+        "version": "2.0.3",
+        "release": "1.module_el8.3.0+2022+0cf59502",
+        "epoch": "0",
+        "arch": "noarch",
+        "src": "nodejs-nodemon-2.0.3-1.module_el8.3.0+2022+0cf59502.src.rpm",
+        "filename": "nodejs-nodemon-2.0.3-1.module_el8.3.0+2022+0cf59502.noarch.rpm",
+        "sum": "9d19368d2de03b094ead46b247f6d3a73e7516583a1859bc11340e705944ba18",
+        "sum_type": 5,
+        "reboot_suggested": 0
+      },
+      {
+        "name": "nodejs-packaging",
+        "version": "23",
+        "release": "3.module_el8.3.0+2022+0cf59502",
+        "epoch": "0",
+        "arch": "noarch",
+        "src": "nodejs-packaging-23-3.module_el8.3.0+2022+0cf59502.src.rpm",
+        "filename": "nodejs-packaging-23-3.module_el8.3.0+2022+0cf59502.noarch.rpm",
+        "sum": "c98137c332ce13e467bed2451c0a7e35091189457982476b6483b758ef35654e",
+        "sum_type": 5,
+        "reboot_suggested": 0
+      }
+    ],
+    "module": {
+      "stream": "14",
+      "name": "nodejs",
+      "version": 8040020210810214412,
+      "arch": "x86_64",
+      "context": "522a0ee4"
+    }
+  },
+  "pushcount": "2",
+  "references": [
+    {
+      "href": "https://vulners.com/cve/CVE-2020-7754",
+      "type": "cve",
+      "id": "CVE-2020-7754",
+      "title": "CVE-2020-7754"
+    }
+  ],
+  "release": "0",
+  "rights": "Copyright 2021 AlmaLinux OS",
+  "severity": "Important",
+  "solution": "For details on how to apply this update, which includes the changes described in this advisory, refer to:\n\nhttps://access.redhat.com/articles/11258",
+  "status": "final",
+  "summary": "An update for the nodejs:14 module is now available for AlmaLinux\n\nAlmaLinux Product Security has rated this update as having a security impact of Moderate. A Common Vulnerability Scoring System (CVSS) base score, which gives a detailed severity rating, is available for each vulnerability from the CVE link(s) in the References section.",
+  "title": "Important: nodejs:14 security and bug fix update",
+  "type": "security",
+  "updated_date": {
+    "$date": 1613480589000
+  },
+  "version": "3"
+}
