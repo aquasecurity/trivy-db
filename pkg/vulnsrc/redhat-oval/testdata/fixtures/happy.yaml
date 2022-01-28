@@ -22,7 +22,6 @@
                     Severity: 3
               - FixedVersion: 32:9.9.4-50.el7_3.3
                 Affected:
-                  - 2
                   - 3
                 Cves:
                   - ID: CVE-2017-3145

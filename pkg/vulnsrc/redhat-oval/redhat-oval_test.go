@@ -3,6 +3,7 @@ package redhatoval_test
 import (
 	"os"
 	"path/filepath"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -246,14 +247,14 @@ func TestVulnSrc_Get(t *testing.T) {
 			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/cpe.yaml"},
 			want: []types.Advisory{
 				{
-					VulnerabilityID: "CVE-2020-8625",
-					Severity:        types.SeverityLow,
-				},
-				{
 					VulnerabilityID: "CVE-2017-3145",
 					VendorIDs:       []string{"RHSA-2018:0488"},
 					Severity:        types.SeverityHigh,
 					FixedVersion:    "32:9.9.4-29.el7_2.8",
+				},
+				{
+					VulnerabilityID: "CVE-2020-8625",
+					Severity:        types.SeverityLow,
 				},
 			},
 		},
@@ -266,20 +267,14 @@ func TestVulnSrc_Get(t *testing.T) {
 			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/cpe.yaml"},
 			want: []types.Advisory{
 				{
-					VulnerabilityID: "CVE-2020-8625",
-					Severity:        types.SeverityLow,
-				},
-				{
 					VulnerabilityID: "CVE-2017-3145",
 					VendorIDs:       []string{"RHSA-2018:0488"},
 					Severity:        types.SeverityHigh,
 					FixedVersion:    "32:9.9.4-29.el7_2.8",
 				},
 				{
-					VulnerabilityID: "CVE-2017-3145",
-					VendorIDs:       []string{"RHSA-2018:0488"},
-					Severity:        types.SeverityMedium,
-					FixedVersion:    "32:9.9.4-50.el7_3.3",
+					VulnerabilityID: "CVE-2020-8625",
+					Severity:        types.SeverityLow,
 				},
 			},
 		},
@@ -344,6 +339,10 @@ func TestVulnSrc_Get(t *testing.T) {
 				assert.Contains(t, err.Error(), tt.wantErr)
 				return
 			}
+
+			sort.Slice(got, func(i, j int) bool {
+				return got[i].VulnerabilityID < got[j].VulnerabilityID
+			})
 
 			// Compare
 			assert.NoError(t, err)
