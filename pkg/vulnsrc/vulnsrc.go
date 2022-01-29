@@ -11,6 +11,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/glad"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/govulndb"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/mariner"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
@@ -48,6 +49,7 @@ var (
 		susecvrf.NewVulnSrc(susecvrf.SUSEEnterpriseLinux),
 		susecvrf.NewVulnSrc(susecvrf.OpenSUSE),
 		photon.NewVulnSrc(),
+		mariner.NewVulnSrc(),
 
 		// Language-specific packages
 		bundler.NewVulnSrc(),
