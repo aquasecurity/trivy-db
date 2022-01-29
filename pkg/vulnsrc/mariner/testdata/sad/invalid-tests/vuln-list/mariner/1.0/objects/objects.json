@@ -1,0 +1,9 @@
+{
+  "RpminfoObjects": [
+    {
+      "ID": "oval:com.microsoft.cbl-mariner:obj:1643374849000004",
+      "Version": "1643374849",
+      "Name": "clamav"
+    }
+  ]
+}

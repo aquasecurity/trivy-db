@@ -83,9 +83,29 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
-			name:    "sad path",
-			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "failed to parse CBL-Mariner OVAL: failed to parse ovalTests: failed to parse objects",
+			name:    "sad path invalid objects",
+			dir:     filepath.Join("testdata", "sad", "invalid-objects"),
+			wantErr: "failed to parse objects",
+		},
+		{
+			name:    "sad path invalid states",
+			dir:     filepath.Join("testdata", "sad", "invalid-states"),
+			wantErr: "failed to parse states",
+		},
+		{
+			name:    "sad path invalid tests",
+			dir:     filepath.Join("testdata", "sad", "invalid-tests"),
+			wantErr: "failed to parse tests",
+		},
+		{
+			name:    "sad path empty test ref definition",
+			dir:     filepath.Join("testdata", "sad", "empty-testref-definition"),
+			wantErr: "",
+		},
+		{
+			name:    "sad path empty state ref tests",
+			dir:     filepath.Join("testdata", "sad", "empty-stateref-tests"),
+			wantErr: "unable to follow test refs: invalid test, no state ref",
 		},
 	}
 	for _, tt := range tests {
@@ -99,7 +119,7 @@ func TestVulnSrc_Update(t *testing.T) {
 			vs := cbl.NewVulnSrc()
 			err = vs.Update(tt.dir)
 			if tt.wantErr != "" {
-				require.NotNil(t, err)
+				require.Error(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
 				return
 			}

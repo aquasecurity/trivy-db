@@ -63,7 +63,7 @@ func (vs VulnSrc) Update(dir string) error {
 		}
 
 		if err = vs.save(ver.Name(), entries); err != nil {
-			return xerrors.Errorf("error in CBL-Marinersave: %w", err)
+			return xerrors.Errorf("error in CBL-Mariner save: %w", err)
 		}
 	}
 
@@ -76,7 +76,7 @@ func parseOVAL(dir string) ([]Entry, error) {
 	// Parse and resolve tests
 	tests, err := resolveTests(dir)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to parse ovalTests: %w", err)
+		return nil, xerrors.Errorf("failed to resolve tests: %w", err)
 	}
 
 	defs, err := oval.ParseDefinitions(dir)
@@ -148,18 +148,18 @@ func resolveTests(dir string) (map[string]resolvedTest, error) {
 func followTestRefs(test oval.RpmInfoTest, objects map[string]string, states map[string]oval.RpmInfoState) (resolvedTest, error) {
 	// Follow object ref
 	if test.Object.ObjectRef == "" {
-		return resolvedTest{}, xerrors.New("invalid tests object empty")
+		return resolvedTest{}, xerrors.New("invalid test, no object ref")
 	}
 
 	pkgName, ok := objects[test.Object.ObjectRef]
 	if !ok {
-		return resolvedTest{}, xerrors.Errorf("invalid tests data, can't find object ref: %s, test ref: %s",
+		return resolvedTest{}, xerrors.Errorf("invalid test data, can't find object ref: %s, test ref: %s",
 			test.Object.ObjectRef, test.ID)
 	}
 
 	// Follow state ref
 	if test.State.StateRef == "" {
-		return resolvedTest{}, xerrors.New("invalid tests state empty")
+		return resolvedTest{}, xerrors.New("invalid test, no state ref")
 	}
 
 	state, ok := states[test.State.StateRef]
@@ -169,7 +169,7 @@ func followTestRefs(test oval.RpmInfoTest, objects map[string]string, states map
 	}
 
 	if state.Evr.Datatype != "evr_string" {
-		return resolvedTest{}, xerrors.Errorf("state datatype (%s): %w", state.Evr.Datatype, ErrNotSupported)
+		return resolvedTest{}, xerrors.Errorf("state data type (%s): %w", state.Evr.Datatype, ErrNotSupported)
 	}
 
 	if state.Evr.Operation != string(lte) && state.Evr.Operation != string(lt) {

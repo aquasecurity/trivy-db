@@ -1,0 +1,13 @@
+{
+  "RpminfoState": [
+    {
+      "ID": "oval:com.microsoft.cbl-mariner:ste:1643374849000005",
+      "Version": "1643374849",
+      "Evr": {
+        "Text": "0:0.103.2-1.cm1",
+        "Datatype": "evr_string",
+        "Operation": "less than"
+      }
+    }
+  ]
+}
