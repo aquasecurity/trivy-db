@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -99,4 +100,17 @@ func ConstructVersion(epoch, version, release string) string {
 
 	}
 	return verStr
+}
+
+func UnmarshalJSONFile(v interface{}, fileName string) error {
+	f, err := os.Open(fileName)
+	if err != nil {
+		return xerrors.Errorf("unable to open a file (%s): %w", fileName, err)
+	}
+	defer f.Close()
+
+	if err = json.NewDecoder(f).Decode(v); err != nil {
+		return xerrors.Errorf("failed to decode file (%s): %w", fileName, err)
+	}
+	return nil
 }

@@ -1,0 +1,12 @@
+- bucket: CBL-Mariner 1.0
+  pairs:
+    - bucket: clamav
+      pairs:
+        - key: CVE-2008-3914
+          value:
+            FixedVersion: 0:0.103.2-1.cm1
+- bucket: CBL-Mariner 2.0
+  pairs:
+    - bucket: bind
+      pairs:
+        - key: CVE-2019-6470
