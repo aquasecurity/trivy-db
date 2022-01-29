@@ -1,0 +1,8 @@
+- bucket: CBL-Mariner 1.0
+  pairs:
+    - bucket: clamav
+      pairs:
+        - key: CVE-2008-3914
+          value:
+            FixedVersion: 
+              BrokenObject: ""

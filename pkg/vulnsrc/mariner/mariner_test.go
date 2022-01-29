@@ -2,6 +2,7 @@ package mariner_test
 
 import (
 	"path/filepath"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,6 +11,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/mariner"
 	cbl "github.com/aquasecurity/trivy-db/pkg/vulnsrc/mariner"
 )
 
@@ -129,6 +131,78 @@ func TestVulnSrc_Update(t *testing.T) {
 			for _, w := range tt.wantValues {
 				dbtest.JSONEq(t, db.Path(tempDir), w.key, w.value, w.key)
 			}
+		})
+	}
+}
+
+func TestVulnSrc_Get(t *testing.T) {
+	tests := []struct {
+		name     string
+		release  string
+		pkgName  string
+		fixtures []string
+		want     []types.Advisory
+		wantErr  string
+	}{
+		{
+			name:     "happy path",
+			release:  "1.0",
+			pkgName:  "clamav",
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2008-3914",
+					FixedVersion:    "0:0.103.2-1.cm1",
+				},
+			},
+		},
+		{
+			name:     "happy path non fixed version",
+			release:  "2.0",
+			pkgName:  "bind",
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2019-6470",
+				},
+			},
+		},
+		{
+			name:     "unknown package",
+			release:  "2.0",
+			pkgName:  "unknown-package",
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			want:     []types.Advisory(nil),
+		},
+		{
+			name:     "broken bucket",
+			release:  "1.0",
+			pkgName:  "clamav",
+			fixtures: []string{"testdata/fixtures/broken.yaml"},
+			wantErr:  "failed to unmarshal advisory JSON",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_ = dbtest.InitDB(t, tt.fixtures)
+			defer db.Close()
+
+			vs := mariner.NewVulnSrc()
+			got, err := vs.Get(tt.release, tt.pkgName)
+
+			if tt.wantErr != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
+				return
+			}
+
+			sort.Slice(got, func(i, j int) bool {
+				return got[i].VulnerabilityID < got[j].VulnerabilityID
+			})
+
+			// Compare
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
