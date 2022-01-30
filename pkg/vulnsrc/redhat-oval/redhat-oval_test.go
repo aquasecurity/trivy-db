@@ -14,6 +14,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	redhat "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestMain(m *testing.M) {
@@ -37,6 +38,14 @@ func TestVulnSrc_Update(t *testing.T) {
 			name:     "happy path",
 			cacheDir: filepath.Join("testdata", "happy"),
 			wants: []want{
+				{
+					key: []string{"data-source", "Red Hat"},
+					value: types.DataSource{
+						ID:   vulnerability.RedHatOVAL,
+						Name: "Red Hat OVAL v2",
+						URL:  "https://www.redhat.com/security/data/oval/v2/",
+					},
+				},
 				{
 					key:   []string{"Red Hat CPE", "cpe", "0"},
 					value: "cpe:/a:redhat:enterprise_linux:7",

@@ -30,6 +30,12 @@ var (
 	redhatDir = filepath.Join("oval", "redhat")
 
 	moduleRegexp = regexp.MustCompile(`Module\s+(.*)\s+is enabled`)
+
+	source = types.DataSource{
+		ID:   vulnerability.RedHatOVAL,
+		Name: "Red Hat OVAL v2",
+		URL:  "https://www.redhat.com/security/data/oval/v2/",
+	}
 )
 
 type VulnSrc struct {
@@ -163,6 +169,10 @@ func (vs VulnSrc) mergeAdvisories(advisories map[bucket]Advisory, defs map[bucke
 func (vs VulnSrc) save(repoToCpe, nvrToCpe map[string][]string, advisories map[bucket]Advisory, uniqCPEs CPEMap) error {
 	cpeList := uniqCPEs.List()
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
+		if err := vs.dbc.PutDataSource(tx, rootBucket, source); err != nil {
+			return xerrors.Errorf("failed to put data source: %w", err)
+		}
+
 		// Store the mapping between repository and CPE names
 		for repo, cpes := range repoToCpe {
 			if err := vs.dbc.PutRedHatRepositories(tx, repo, cpeList.Indices(cpes)); err != nil {
