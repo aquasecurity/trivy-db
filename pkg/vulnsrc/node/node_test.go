@@ -31,7 +31,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						NestedBktNames:  []string{vulnerability.NodejsSecurityWg},
+						NestedBktNames:  []string{"npm::Node.js Ecosystem Security Working Group"},
 						PkgName:         "bassmaster",
 						VulnerabilityID: "CVE-2014-7205",
 						Advisory: types.Advisory{
@@ -73,7 +73,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						NestedBktNames:  []string{vulnerability.NodejsSecurityWg},
+						NestedBktNames:  []string{"npm::Node.js Ecosystem Security Working Group"},
 						PkgName:         "bassmaster",
 						VulnerabilityID: "CVE-2014-7205",
 						Advisory: types.Advisory{
@@ -123,7 +123,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						NestedBktNames:  []string{vulnerability.NodejsSecurityWg},
+						NestedBktNames:  []string{"npm::Node.js Ecosystem Security Working Group"},
 						PkgName:         "missingcvss-missingseverity-package",
 						VulnerabilityID: "NSWG-ECO-0",
 						Advisory:        types.Advisory{},
@@ -160,7 +160,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						NestedBktNames:  []string{vulnerability.NodejsSecurityWg},
+						NestedBktNames:  []string{"npm::Node.js Ecosystem Security Working Group"},
 						PkgName:         "hubl-server",
 						VulnerabilityID: "NSWG-ECO-334",
 						Advisory: types.Advisory{

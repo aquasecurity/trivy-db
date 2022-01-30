@@ -12,15 +12,20 @@ import (
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 const bundlerDir = "ruby-advisory-db"
 
-var source = types.DataSource{
-	Name: "Ruby Advisory Database",
-	URL:  "https://github.com/rubysec/ruby-advisory-db",
-}
+var (
+	source = types.DataSource{
+		Name: "Ruby Advisory Database",
+		URL:  "https://github.com/rubysec/ruby-advisory-db",
+	}
+
+	bucketName = bucket.Name(string(vulnerability.RubyGems), source.Name)
+)
 
 type RawAdvisory struct {
 	Gem                string
@@ -74,7 +79,7 @@ func (vs VulnSrc) update(repoPath string) error {
 	root := filepath.Join(repoPath, "gems")
 
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		if err := vs.dbc.PutDataSource(tx, vulnerability.RubySec, source); err != nil {
+		if err := vs.dbc.PutDataSource(tx, bucketName, source); err != nil {
 			return xerrors.Errorf("failed to put data source: %w", err)
 		}
 
@@ -134,20 +139,21 @@ func (vs VulnSrc) walkFunc(err error, info os.FileInfo, path string, tx *bolt.Tx
 		PatchedVersions:    advisory.PatchedVersions,
 		UnaffectedVersions: advisory.UnaffectedVersions,
 	}
-	err = vs.dbc.PutAdvisoryDetail(tx, vulnerabilityID, advisory.Gem, []string{vulnerability.RubySec}, a)
+
+	err = vs.dbc.PutAdvisoryDetail(tx, vulnerabilityID, advisory.Gem, []string{bucketName}, a)
 	if err != nil {
 		return xerrors.Errorf("failed to save ruby advisory: %w", err)
 	}
 
 	// for displaying vulnerability detail
 	vuln := types.VulnerabilityDetail{
-		ID:          vulnerabilityID,
 		CvssScore:   advisory.CvssV2,
 		CvssScoreV3: advisory.CvssV3,
 		References:  append([]string{advisory.Url}, advisory.Related.Url...),
 		Title:       advisory.Title,
 		Description: advisory.Description,
 	}
+
 	if err = vs.dbc.PutVulnerabilityDetail(tx, vulnerabilityID, vulnerability.RubySec, vuln); err != nil {
 		return xerrors.Errorf("failed to save ruby vulnerability detail: %w", err)
 	}
@@ -157,13 +163,4 @@ func (vs VulnSrc) walkFunc(err error, info os.FileInfo, path string, tx *bolt.Tx
 		return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 	}
 	return nil
-}
-
-func (vs VulnSrc) Get(pkgName string) ([]types.Advisory, error) {
-	advisories, err := vs.dbc.GetAdvisories(vulnerability.RubySec, pkgName)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to iterate ruby vulnerabilities: %w", err)
-	}
-
-	return advisories, nil
 }

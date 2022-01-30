@@ -5,7 +5,7 @@ type Package struct {
 	Name      string
 }
 
-type GhsaAdvisory struct {
+type Advisory struct {
 	DatabaseId  int
 	Id          string
 	GhsaId      string
@@ -38,10 +38,10 @@ type Version struct {
 	VulnerableVersionRange string
 }
 
-type GithubSecurityAdvisory struct {
+type Entry struct {
 	Severity  string
 	UpdatedAt string
 	Package   Package
-	Advisory  GhsaAdvisory
+	Advisory  Advisory
 	Versions  []Version
 }

@@ -26,18 +26,16 @@ const (
 
 var ecosystems = []ecosystem{
 	{
-		dir:      "python",
-		pkgType:  vulnerability.Pip,
-		sourceID: vulnerability.OSVPyPI,
+		dir:  "python",
+		name: vulnerability.Pip,
 		dataSource: types.DataSource{
 			Name: "Python Packaging Advisory Database",
 			URL:  "https://github.com/pypa/advisory-db",
 		},
 	},
 	{
-		dir:      "rust",
-		pkgType:  vulnerability.Cargo,
-		sourceID: vulnerability.OSVCratesio,
+		dir:  "rust",
+		name: vulnerability.Cargo,
 		dataSource: types.DataSource{
 			Name: "RustSec Advisory Database",
 			URL:  "https://github.com/RustSec/advisory-db",
@@ -51,8 +49,7 @@ var ecosystems = []ecosystem{
 
 type ecosystem struct {
 	dir        string
-	pkgType    string
-	sourceID   string
+	name       types.Ecosystem
 	dataSource types.DataSource
 }
 
@@ -72,7 +69,7 @@ func (vs VulnSrc) Name() types.SourceID {
 
 func (vs VulnSrc) Update(dir string) error {
 	for _, eco := range ecosystems {
-		log.Printf("    Updating Open Source Vulnerability %s", eco.pkgType)
+		log.Printf("    Updating Open Source Vulnerability %s", eco.name)
 		rootDir := filepath.Join(dir, "vuln-list", osvDir, eco.dir)
 
 		var entries []Entry
@@ -119,12 +116,9 @@ func (vs VulnSrc) save(eco ecosystem, entries []Entry) error {
 }
 
 func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
-	bktName, err := bucket.Name(eco.pkgType, dataSource)
-	if err != nil {
-		return xerrors.Errorf("bucket error: %w", err)
-	}
+	bktName := bucket.Name(string(eco.name), dataSource)
 
-	if err = vs.dbc.PutDataSource(tx, bktName, eco.dataSource); err != nil {
+	if err := vs.dbc.PutDataSource(tx, bktName, eco.dataSource); err != nil {
 		return xerrors.Errorf("failed to put data source: %w", err)
 	}
 
@@ -141,7 +135,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 	}
 
 	for _, affected := range entry.Affected {
-
+		pkgName := utils.NormalizePkgName(eco.name, affected.Package.Name)
 		var patchedVersions, vulnerableVersions []string
 		for _, affects := range affected.Ranges {
 			if affects.Type == osv.TypeGit {
@@ -176,7 +170,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 		}
 
 		for _, vulnID := range vulnIDs {
-			if err = vs.dbc.PutAdvisoryDetail(tx, vulnID, affected.Package.Name, []string{bktName}, advisory); err != nil {
+			if err := vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bktName}, advisory); err != nil {
 				return xerrors.Errorf("failed to save OSV advisory: %w", err)
 			}
 		}
@@ -189,11 +183,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 			References:  references,
 		}
 
-		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, eco.sourceID, vuln); err != nil {
+		if err := vs.dbc.PutVulnerabilityDetail(tx, vulnID, vulnerability.OSV, vuln); err != nil {
 			return xerrors.Errorf("failed to put vulnerability detail (%s): %w", vulnID, err)
 		}
 
-		if err = vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
+		if err := vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
 			return xerrors.Errorf("failed to put vulnerability id (%s): %w", vulnID, err)
 		}
 	}

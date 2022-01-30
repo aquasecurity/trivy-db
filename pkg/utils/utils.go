@@ -1,17 +1,13 @@
 package utils
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
-	"io/fs"
-	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
+	"strings"
 
-	"golang.org/x/xerrors"
+	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func CacheDir() string {
@@ -20,72 +16,6 @@ func CacheDir() string {
 		tmpDir = os.TempDir()
 	}
 	return filepath.Join(tmpDir, "trivy-db")
-}
-
-func FileWalk(root string, walkFn func(r io.Reader, path string) error) error {
-	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		} else if d.IsDir() {
-			return nil
-		}
-
-		info, err := d.Info()
-		if err != nil {
-			return xerrors.Errorf("file info error: %w", err)
-		}
-
-		if info.Size() == 0 {
-			log.Printf("invalid size: %s\n", path)
-			return nil
-		}
-
-		f, err := os.Open(path)
-		if err != nil {
-			return xerrors.Errorf("failed to open file: %w", err)
-		}
-		defer f.Close()
-
-		if err = walkFn(f, path); err != nil {
-			return err
-		}
-		return nil
-	})
-	if err != nil {
-		return xerrors.Errorf("file walk error: %w", err)
-	}
-	return nil
-}
-
-func IsCommandAvailable(name string) bool {
-	cmd := exec.Command(name, "--help")
-	if err := cmd.Run(); err != nil {
-		return false
-	}
-	return true
-}
-
-func Exists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true, nil
-	}
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-	return true, err
-}
-
-func Exec(command string, args []string) (string, error) {
-	cmd := exec.Command(command, args...)
-	var stdoutBuf, stderrBuf bytes.Buffer
-	cmd.Stdout = &stdoutBuf
-	cmd.Stderr = &stderrBuf
-	if err := cmd.Run(); err != nil {
-		log.Println(stderrBuf.String())
-		return "", xerrors.Errorf("failed to exec: %w", err)
-	}
-	return stdoutBuf.String(), nil
 }
 
 func ConstructVersion(epoch, version, release string) string {
@@ -102,15 +32,15 @@ func ConstructVersion(epoch, version, release string) string {
 	return verStr
 }
 
-func UnmarshalJSONFile(v interface{}, fileName string) error {
-	f, err := os.Open(fileName)
-	if err != nil {
-		return xerrors.Errorf("unable to open a file (%s): %w", fileName, err)
+func NormalizePkgName(ecosystem types.Ecosystem, pkgName string) string {
+	if ecosystem == vulnerability.Pip {
+		// from https://www.python.org/dev/peps/pep-0426/#name
+		// All comparisons of distribution names MUST be case insensitive,
+		// and MUST consider hyphens and underscores to be equivalent.
+		pkgName = strings.ToLower(pkgName)
+		pkgName = strings.ReplaceAll(pkgName, "_", "-")
+	} else if ecosystem != vulnerability.NuGet { // Nuget is case-sensitive
+		pkgName = strings.ToLower(pkgName)
 	}
-	defer f.Close()
-
-	if err = json.NewDecoder(f).Decode(v); err != nil {
-		return xerrors.Errorf("failed to decode file (%s): %w", fileName, err)
-	}
-	return nil
+	return pkgName
 }

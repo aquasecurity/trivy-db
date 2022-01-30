@@ -18,10 +18,14 @@ import (
 
 const composerDir = "php-security-advisories"
 
-var source = types.DataSource{
-	Name: "PHP Security Advisories Database",
-	URL:  "https://github.com/FriendsOfPHP/security-advisories",
-}
+var (
+	source = types.DataSource{
+		Name: "PHP Security Advisories Database",
+		URL:  "https://github.com/FriendsOfPHP/security-advisories",
+	}
+
+	bucketName = bucket.Name(string(vulnerability.Composer), source.Name)
+)
 
 type RawAdvisory struct {
 	Cve       string
@@ -64,7 +68,7 @@ func (vs VulnSrc) Update(dir string) (err error) {
 
 func (vs VulnSrc) update(repoPath string) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		if err := vs.dbc.PutDataSource(tx, vulnerability.PhpSecurityAdvisories, source); err != nil {
+		if err := vs.dbc.PutDataSource(tx, bucketName, source); err != nil {
 			return xerrors.Errorf("failed to put data source: %w", err)
 		}
 		if err := vs.walk(tx, repoPath); err != nil {
@@ -112,7 +116,11 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		a := types.Advisory{
 			VulnerableVersions: vulnerableVersions,
 		}
-		err = vs.dbc.PutAdvisoryDetail(tx, vulnID, advisory.Reference, []string{vulnerability.PhpSecurityAdvisories}, a)
+
+		pkgName := strings.TrimPrefix(advisory.Reference, "composer://")
+		pkgName = utils.NormalizePkgName(vulnerability.Composer, pkgName)
+
+		err = vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bucketName}, a)
 		if err != nil {
 			return xerrors.Errorf("failed to save php advisory: %w", err)
 		}
@@ -133,13 +141,4 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		}
 		return nil
 	})
-}
-
-func (vs VulnSrc) Get(pkgName string) ([]types.Advisory, error) {
-	advisories, err := vs.dbc.GetAdvisories(vulnerability.PhpSecurityAdvisories, pkgName)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to get php vulnerabilities: %w", err)
-	}
-
-	return advisories, nil
 }
