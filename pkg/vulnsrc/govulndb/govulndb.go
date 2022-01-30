@@ -21,10 +21,15 @@ import (
 
 const govulndbDir = "go"
 
-var source = types.DataSource{
-	Name: "The Go Vulnerability Database",
-	URL:  "https://github.com/golang/vulndb",
-}
+var (
+	source = types.DataSource{
+		ID:   vulnerability.GoVulnDB,
+		Name: "The Go Vulnerability Database",
+		URL:  "https://github.com/golang/vulndb",
+	}
+
+	bucketName = bucket.Name(string(vulnerability.Go), source.Name)
+)
 
 type VulnSrc struct {
 	dbc db.Operation
@@ -36,8 +41,8 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
-func (vs VulnSrc) Name() string {
-	return vulnerability.GoVulnDB
+func (vs VulnSrc) Name() types.SourceID {
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -71,13 +76,12 @@ func (vs VulnSrc) Update(dir string) error {
 func (vs VulnSrc) save(items []Entry) error {
 	log.Println("Saving The Go Vulnerability Database")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		bktName, _ := bucket.Name(vulnerability.Go, source.Name)
-		if err := vs.dbc.PutDataSource(tx, bktName, source); err != nil {
+		if err := vs.dbc.PutDataSource(tx, bucketName, source); err != nil {
 			return xerrors.Errorf("failed to put data source: %w", err)
 		}
 
 		for _, item := range items {
-			if err := vs.commit(tx, bktName, item); err != nil {
+			if err := vs.commit(tx, item); err != nil {
 				return xerrors.Errorf("commit error (%s): %w", item.ID, err)
 			}
 		}
@@ -89,7 +93,7 @@ func (vs VulnSrc) save(items []Entry) error {
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, bktName string, item Entry) error {
+func (vs VulnSrc) commit(tx *bolt.Tx, item Entry) error {
 	// Aliases contain CVE-IDs
 	vulnIDs := item.Aliases
 	if len(vulnIDs) == 0 {
@@ -145,7 +149,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, bktName string, item Entry) error {
 	pkgName := item.Module
 
 	for _, vulnID := range vulnIDs {
-		err := vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bktName}, a)
+		err := vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bucketName}, a)
 		if err != nil {
 			return xerrors.Errorf("failed to save go-vulndb advisory: %w", err)
 		}
@@ -154,7 +158,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, bktName string, item Entry) error {
 			Description: item.Details,
 			References:  references,
 		}
-		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, bktName, vuln); err != nil {
+		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, source.ID, vuln); err != nil {
 			return xerrors.Errorf("failed to put vulnerability detail (%s): %w", vulnID, err)
 		}
 

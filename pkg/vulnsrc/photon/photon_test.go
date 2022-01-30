@@ -4,15 +4,12 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
-
-	"github.com/aquasecurity/trivy-db/pkg/types"
-
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
@@ -116,6 +113,7 @@ func TestVulnSrc_commit(t *testing.T) {
 						TxAnything: true,
 						BktName:    "Photon OS 1.0",
 						Source: types.DataSource{
+							ID:   vulnerability.Photon,
 							Name: "Photon OS CVE metadata",
 							URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
 						},
@@ -177,6 +175,7 @@ func TestVulnSrc_commit(t *testing.T) {
 						TxAnything: true,
 						BktName:    "Photon OS 1.0",
 						Source: types.DataSource{
+							ID:   vulnerability.Photon,
 							Name: "Photon OS CVE metadata",
 							URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
 						},
@@ -222,6 +221,7 @@ func TestVulnSrc_commit(t *testing.T) {
 						TxAnything: true,
 						BktName:    "Photon OS 1.0",
 						Source: types.DataSource{
+							ID:   vulnerability.Photon,
 							Name: "Photon OS CVE metadata",
 							URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
 						},
@@ -279,6 +279,7 @@ func TestVulnSrc_commit(t *testing.T) {
 						TxAnything: true,
 						BktName:    "Photon OS 1.0",
 						Source: types.DataSource{
+							ID:   vulnerability.Photon,
 							Name: "Photon OS CVE metadata",
 							URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
 						},

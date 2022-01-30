@@ -27,8 +27,8 @@ var (
 type Operation interface {
 	BatchUpdate(fn func(*bolt.Tx) error) (err error)
 
-	GetVulnerabilityDetail(cveID string) (detail map[string]types.VulnerabilityDetail, err error)
-	PutVulnerabilityDetail(tx *bolt.Tx, vulnerabilityID string, source string,
+	GetVulnerabilityDetail(cveID string) (detail map[types.SourceID]types.VulnerabilityDetail, err error)
+	PutVulnerabilityDetail(tx *bolt.Tx, vulnerabilityID string, source types.SourceID,
 		vulnerability types.VulnerabilityDetail) (err error)
 	DeleteVulnerabilityDetailBucket() (err error)
 

@@ -10,6 +10,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
@@ -30,6 +31,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					key: []string{"data-source", "ubuntu 18.04"},
 					value: types.DataSource{
+						ID:   vulnerability.Ubuntu,
 						Name: "Ubuntu CVE Tracker",
 						URL:  "https://git.launchpad.net/ubuntu-cve-tracker",
 					},

@@ -13,6 +13,7 @@ import (
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestMain(m *testing.M) {
@@ -161,6 +162,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 						TxAnything: true,
 						BktName:    "SUSE Linux Enterprise 15.1",
 						Source: types.DataSource{
+							ID:   vulnerability.SuseCVRF,
 							Name: "SUSE CVRF",
 							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
 						},
@@ -289,6 +291,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 						TxAnything: true,
 						BktName:    "openSUSE Leap 15.1",
 						Source: types.DataSource{
+							ID:   vulnerability.SuseCVRF,
 							Name: "SUSE CVRF",
 							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
 						},
@@ -411,6 +414,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 						TxAnything: true,
 						BktName:    "SUSE Linux Enterprise 15",
 						Source: types.DataSource{
+							ID:   vulnerability.SuseCVRF,
 							Name: "SUSE CVRF",
 							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
 						},
@@ -502,6 +506,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 						TxAnything: true,
 						BktName:    "SUSE Linux Enterprise 15",
 						Source: types.DataSource{
+							ID:   vulnerability.SuseCVRF,
 							Name: "SUSE CVRF",
 							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
 						},
@@ -556,6 +561,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 						TxAnything: true,
 						BktName:    "SUSE Linux Enterprise 15",
 						Source: types.DataSource{
+							ID:   vulnerability.SuseCVRF,
 							Name: "SUSE CVRF",
 							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
 						},
@@ -621,6 +627,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 						TxAnything: true,
 						BktName:    "SUSE Linux Enterprise 15",
 						Source: types.DataSource{
+							ID:   vulnerability.SuseCVRF,
 							Name: "SUSE CVRF",
 							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
 						},

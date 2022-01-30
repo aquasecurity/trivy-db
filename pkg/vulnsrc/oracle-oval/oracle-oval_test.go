@@ -149,6 +149,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 						TxAnything: true,
 						BktName:    "Oracle Linux 5",
 						Source: types.DataSource{
+							ID:   vulnerability.OracleOVAL,
 							Name: "Oracle Linux OVAL definitions",
 							URL:  "https://linux.oracle.com/security/oval/",
 						},
@@ -303,6 +304,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 						TxAnything: true,
 						BktName:    "Oracle Linux 5",
 						Source: types.DataSource{
+							ID:   vulnerability.OracleOVAL,
 							Name: "Oracle Linux OVAL definitions",
 							URL:  "https://linux.oracle.com/security/oval/",
 						},
@@ -509,6 +511,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 						TxAnything: true,
 						BktName:    "Oracle Linux 6",
 						Source: types.DataSource{
+							ID:   vulnerability.OracleOVAL,
 							Name: "Oracle Linux OVAL definitions",
 							URL:  "https://linux.oracle.com/security/oval/",
 						},
@@ -520,6 +523,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 						TxAnything: true,
 						BktName:    "Oracle Linux 7",
 						Source: types.DataSource{
+							ID:   vulnerability.OracleOVAL,
 							Name: "Oracle Linux OVAL definitions",
 							URL:  "https://linux.oracle.com/security/oval/",
 						},
@@ -735,6 +739,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 						TxAnything: true,
 						BktName:    "Oracle Linux 5",
 						Source: types.DataSource{
+							ID:   vulnerability.OracleOVAL,
 							Name: "Oracle Linux OVAL definitions",
 							URL:  "https://linux.oracle.com/security/oval/",
 						},
@@ -902,6 +907,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 						TxAnything: true,
 						BktName:    "Oracle Linux 5",
 						Source: types.DataSource{
+							ID:   vulnerability.OracleOVAL,
 							Name: "Oracle Linux OVAL definitions",
 							URL:  "https://linux.oracle.com/security/oval/",
 						},
@@ -1062,6 +1068,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 						TxAnything: true,
 						BktName:    "Oracle Linux 5",
 						Source: types.DataSource{
+							ID:   vulnerability.OracleOVAL,
 							Name: "Oracle Linux OVAL definitions",
 							URL:  "https://linux.oracle.com/security/oval/",
 						},

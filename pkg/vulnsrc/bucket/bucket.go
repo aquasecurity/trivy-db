@@ -4,17 +4,14 @@ import (
 	"fmt"
 	"strings"
 
-	"golang.org/x/xerrors"
-
+	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 const separator = "::"
 
-var ErrUnknownEcosystem = xerrors.New("unknown ecosystem")
-
-func Name(ecosystem, dataSource string) (string, error) {
-	var prefix string
+func Name(ecosystem, dataSource string) string {
+	var prefix types.Ecosystem
 	switch strings.ToLower(ecosystem) {
 	case "go", "golang":
 		prefix = vulnerability.Go
@@ -35,7 +32,7 @@ func Name(ecosystem, dataSource string) (string, error) {
 	case "cargo":
 		prefix = vulnerability.Cargo
 	default:
-		return "", ErrUnknownEcosystem
+		return ""
 	}
-	return fmt.Sprintf("%s%s%s", prefix, separator, dataSource), nil
+	return fmt.Sprintf("%s%s%s", prefix, separator, dataSource)
 }

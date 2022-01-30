@@ -29,7 +29,7 @@ func (ac *AppConfig) NewApp(version string) *cli.App {
 					Value: func() *cli.StringSlice {
 						var targets cli.StringSlice
 						for _, v := range vulnsrc.All {
-							targets = append(targets, v.Name())
+							targets = append(targets, string(v.Name()))
 						}
 						return &targets
 					}(),

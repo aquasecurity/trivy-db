@@ -347,7 +347,7 @@ type OperationGetVulnerabilityDetailArgs struct {
 }
 
 type OperationGetVulnerabilityDetailReturns struct {
-	Detail map[string]types.VulnerabilityDetail
+	Detail map[types.SourceID]types.VulnerabilityDetail
 	Err    error
 }
 
@@ -373,15 +373,15 @@ func (_m *MockOperation) ApplyGetVulnerabilityDetailExpectations(expectations []
 }
 
 // GetVulnerabilityDetail provides a mock function with given fields: cveID
-func (_m *MockOperation) GetVulnerabilityDetail(cveID string) (map[string]types.VulnerabilityDetail, error) {
+func (_m *MockOperation) GetVulnerabilityDetail(cveID string) (map[types.SourceID]types.VulnerabilityDetail, error) {
 	ret := _m.Called(cveID)
 
-	var r0 map[string]types.VulnerabilityDetail
-	if rf, ok := ret.Get(0).(func(string) map[string]types.VulnerabilityDetail); ok {
+	var r0 map[types.SourceID]types.VulnerabilityDetail
+	if rf, ok := ret.Get(0).(func(string) map[types.SourceID]types.VulnerabilityDetail); ok {
 		r0 = rf(cveID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string]types.VulnerabilityDetail)
+			r0 = ret.Get(0).(map[types.SourceID]types.VulnerabilityDetail)
 		}
 	}
 
@@ -762,7 +762,7 @@ type OperationPutVulnerabilityDetailArgs struct {
 	TxAnything              bool
 	VulnerabilityID         string
 	VulnerabilityIDAnything bool
-	Source                  string
+	Source                  types.SourceID
 	SourceAnything          bool
 	Vulnerability           types.VulnerabilityDetail
 	VulnerabilityAnything   bool
@@ -809,11 +809,11 @@ func (_m *MockOperation) ApplyPutVulnerabilityDetailExpectations(expectations []
 }
 
 // PutVulnerabilityDetail provides a mock function with given fields: tx, vulnerabilityID, source, vulnerability
-func (_m *MockOperation) PutVulnerabilityDetail(tx *bbolt.Tx, vulnerabilityID string, source string, vulnerability types.VulnerabilityDetail) error {
+func (_m *MockOperation) PutVulnerabilityDetail(tx *bbolt.Tx, vulnerabilityID string, source types.SourceID, vulnerability types.VulnerabilityDetail) error {
 	ret := _m.Called(tx, vulnerabilityID, source, vulnerability)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*bbolt.Tx, string, string, types.VulnerabilityDetail) error); ok {
+	if rf, ok := ret.Get(0).(func(*bbolt.Tx, string, types.SourceID, types.VulnerabilityDetail) error); ok {
 		r0 = rf(tx, vulnerabilityID, source, vulnerability)
 	} else {
 		r0 = ret.Error(0)

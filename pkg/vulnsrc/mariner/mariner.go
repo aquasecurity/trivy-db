@@ -21,6 +21,7 @@ var (
 	platformFormat = "CBL-Mariner %s"
 
 	source = types.DataSource{
+		ID:   vulnerability.CBLMariner,
 		Name: "CBL-Mariner Vulnerability Data",
 		URL:  "https://github.com/microsoft/CBL-MarinerVulnerabilityData",
 	}
@@ -44,8 +45,8 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
-func (vs VulnSrc) Name() string {
-	return vulnerability.CBLMariner
+func (vs VulnSrc) Name() types.SourceID {
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -220,7 +221,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, entries []Entry) erro
 			Description: entry.Metadata.Description,
 			References:  []string{entry.Metadata.Reference.RefURL},
 		}
-		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.CBLMariner, vuln); err != nil {
+		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, source.ID, vuln); err != nil {
 			return xerrors.Errorf("failed to save CBL-Mariner vulnerability detail: %w", err)
 		}
 

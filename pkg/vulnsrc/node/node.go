@@ -13,6 +13,7 @@ import (
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -21,12 +22,13 @@ const (
 )
 
 var (
-	repoPath string
-
 	source = types.DataSource{
+		ID:   vulnerability.NodejsSecurityWg,
 		Name: "Node.js Ecosystem Security Working Group",
 		URL:  "https://github.com/nodejs/security-wg",
 	}
+
+	bucketName = bucket.Name(string(vulnerability.Npm), source.Name)
 )
 
 type Number struct {
@@ -82,12 +84,12 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
-func (vs VulnSrc) Name() string {
-	return vulnerability.NodejsSecurityWg
+func (vs VulnSrc) Name() types.SourceID {
+	return source.ID
 }
 
-func (vs VulnSrc) Update(dir string) (err error) {
-	repoPath = filepath.Join(dir, nodeDir)
+func (vs VulnSrc) Update(dir string) error {
+	repoPath := filepath.Join(dir, nodeDir)
 	if err := vs.update(repoPath); err != nil {
 		return xerrors.Errorf("failed to update node vulnerabilities: %w", err)
 	}
@@ -98,7 +100,7 @@ func (vs VulnSrc) update(repoPath string) error {
 	root := filepath.Join(repoPath, "vuln")
 
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		if err := vs.dbc.PutDataSource(tx, vulnerability.NodejsSecurityWg, source); err != nil {
+		if err := vs.dbc.PutDataSource(tx, bucketName, source); err != nil {
 			return xerrors.Errorf("failed to put data source: %w", err)
 		}
 		if err := vs.walk(tx, root); err != nil {
@@ -113,7 +115,7 @@ func (vs VulnSrc) update(repoPath string) error {
 }
 
 func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
-	return filepath.Walk(filepath.Join(repoPath, "vuln"), func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -152,7 +154,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, f *os.File) error {
 	adv := convertToGenericAdvisory(advisory)
 	for _, vulnID := range vulnerabilityIDs {
 		// for detecting vulnerabilities
-		err = vs.dbc.PutAdvisoryDetail(tx, vulnID, advisory.ModuleName, []string{vulnerability.NodejsSecurityWg}, adv)
+		err = vs.dbc.PutAdvisoryDetail(tx, vulnID, advisory.ModuleName, []string{bucketName}, adv)
 		if err != nil {
 			return xerrors.Errorf("failed to save node advisory: %w", err)
 		}
@@ -171,7 +173,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, f *os.File) error {
 			Title:       advisory.Title,
 			Description: advisory.Overview,
 		}
-		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, vulnerability.NodejsSecurityWg, vuln); err != nil {
+		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, source.ID, vuln); err != nil {
 			return xerrors.Errorf("failed to save node vulnerability detail: %w", err)
 		}
 
@@ -201,13 +203,4 @@ func convertToGenericAdvisory(advisory RawAdvisory) types.Advisory {
 		VulnerableVersions: vulnerable,
 		PatchedVersions:    patched,
 	}
-}
-
-func (vs VulnSrc) Get(pkgName string) ([]types.Advisory, error) {
-	advisories, err := vs.dbc.GetAdvisories(vulnerability.NodejsSecurityWg, pkgName)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to get Node.js vulnerabilities: %w", err)
-	}
-
-	return advisories, nil
 }

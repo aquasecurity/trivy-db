@@ -11,6 +11,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
@@ -31,6 +32,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					key: []string{"data-source", "alpine 3.12"},
 					value: types.DataSource{
+						ID:   vulnerability.Alpine,
 						Name: "Alpine Secdb",
 						URL:  "https://secdb.alpinelinux.org/",
 					},

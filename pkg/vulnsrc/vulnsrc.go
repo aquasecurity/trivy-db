@@ -1,6 +1,7 @@
 package vulnsrc
 
 import (
+	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alma"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/amazon"
@@ -25,7 +26,7 @@ import (
 )
 
 type VulnSrc interface {
-	Name() string
+	Name() types.SourceID
 	Update(dir string) (err error)
 }
 
@@ -55,12 +56,7 @@ var (
 		bundler.NewVulnSrc(),
 		composer.NewVulnSrc(),
 		node.NewVulnSrc(),
-		ghsa.NewVulnSrc(ghsa.Composer),
-		ghsa.NewVulnSrc(ghsa.Maven),
-		ghsa.NewVulnSrc(ghsa.Npm),
-		ghsa.NewVulnSrc(ghsa.Nuget),
-		ghsa.NewVulnSrc(ghsa.Pip),
-		ghsa.NewVulnSrc(ghsa.RubyGems),
+		ghsa.NewVulnSrc(),
 		glad.NewVulnSrc(),
 		govulndb.NewVulnSrc(),
 		osv.NewVulnSrc(),

@@ -38,6 +38,7 @@ func (dbc Config) GetAdvisories(source, pkgName string) ([]types.Advisory, error
 		advisory.VulnerabilityID = vulnID
 		if v.Source != (types.DataSource{}) {
 			advisory.DataSource = &types.DataSource{
+				ID:   v.Source.ID,
 				Name: v.Source.Name,
 				URL:  v.Source.URL,
 			}

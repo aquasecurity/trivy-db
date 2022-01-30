@@ -10,6 +10,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
@@ -30,6 +31,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					key: []string{"data-source", "pip::Open Source Vulnerability"},
 					value: types.DataSource{
+						ID:   vulnerability.OSV,
 						Name: "Python Packaging Advisory Database",
 						URL:  "https://github.com/pypa/advisory-db",
 					},
@@ -37,6 +39,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					key: []string{"data-source", "cargo::Open Source Vulnerability"},
 					value: types.DataSource{
+						ID:   vulnerability.OSV,
 						Name: "RustSec Advisory Database",
 						URL:  "https://github.com/RustSec/advisory-db",
 					},
@@ -49,7 +52,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "CVE-2018-10895", "osv-pypi"},
+					key: []string{"vulnerability-detail", "CVE-2018-10895", string(vulnerability.OSV)},
 					value: types.VulnerabilityDetail{
 						Description: "qutebrowser before version 1.4.1 is vulnerable to a cross-site request forgery flaw that allows websites to access 'qute://*' URLs. A malicious website could exploit this to load a 'qute://settings/set' URL, which then sets 'editor.command' to a bash script, resulting in arbitrary code execution.",
 						References: []string{
@@ -68,7 +71,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "CVE-2017-18587", "osv-crates.io"},
+					key: []string{"vulnerability-detail", "CVE-2017-18587", string(vulnerability.OSV)},
 					value: types.VulnerabilityDetail{
 						Title:       "headers containing newline characters can split messages",
 						Description: "Serializing of headers to the socket did not filter the values for newline bytes (`\\r` or `\\n`),\nwhich allowed for header values to split a request or response. People would not likely include\nnewlines in the headers in their own applications, so the way for most people to exploit this\nis if an application constructs headers based on unsanitized user input.\n\nThis issue was fixed by replacing all newline characters with a space during serialization of\na header value.",

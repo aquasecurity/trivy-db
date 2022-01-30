@@ -14,6 +14,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/amazon"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestMain(m *testing.M) {
@@ -39,6 +40,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					key: []string{"data-source", "amazon linux 1"},
 					value: types.DataSource{
+						ID:   vulnerability.Amazon,
 						Name: "Amazon Linux Security Center",
 						URL:  "https://alas.aws.amazon.com/",
 					},
