@@ -11,7 +11,6 @@ import (
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
-	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
@@ -118,7 +117,7 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		}
 
 		pkgName := strings.TrimPrefix(advisory.Reference, "composer://")
-		pkgName = utils.NormalizePkgName(vulnerability.Composer, pkgName)
+		pkgName = vulnerability.NormalizePkgName(vulnerability.Composer, pkgName)
 
 		err = vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bucketName}, a)
 		if err != nil {

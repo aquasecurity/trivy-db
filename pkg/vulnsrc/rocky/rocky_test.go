@@ -48,7 +48,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "CVE-2021-25215", vulnerability.Rocky},
+					key: []string{"vulnerability-detail", "CVE-2021-25215", string(vulnerability.Rocky)},
 					value: types.VulnerabilityDetail{
 						Severity: types.SeverityHigh,
 						References: []string{

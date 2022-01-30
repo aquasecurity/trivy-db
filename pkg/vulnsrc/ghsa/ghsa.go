@@ -49,8 +49,8 @@ func (vs VulnSrc) Name() types.SourceID {
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", ghsaDir)
 
-	var entries []Entry
 	for _, ecosystem := range ecosystems {
+		var entries []Entry
 		err := utils.FileWalk(filepath.Join(rootDir, string(ecosystem)), func(r io.Reader, path string) error {
 			var entry Entry
 			if err := json.NewDecoder(r).Decode(&entry); err != nil {
@@ -129,7 +129,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ecosystem types.Ecosystem, entries []Entry
 			VulnerableVersions: avs,
 		}
 
-		pkgName := utils.NormalizePkgName(ecosystem, entry.Package.Name)
+		pkgName := vulnerability.NormalizePkgName(ecosystem, entry.Package.Name)
 		err = vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bucketName}, a)
 		if err != nil {
 			return xerrors.Errorf("failed to save GHSA: %w", err)
