@@ -10,6 +10,7 @@ import (
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/metadata"
+	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
@@ -22,7 +23,7 @@ type TrivyDB struct {
 	dbc            db.Config
 	metadata       metadata.Client
 	vulnClient     vulnerability.Vulnerability
-	vulnSrcs       map[string]vulnsrc.VulnSrc
+	vulnSrcs       map[types.SourceID]vulnsrc.VulnSrc
 	cacheDir       string
 	updateInterval time.Duration
 	clock          clock.Clock
@@ -36,7 +37,7 @@ func WithClock(clock clock.Clock) Option {
 	}
 }
 
-func WithVulnSrcs(srcs map[string]vulnsrc.VulnSrc) Option {
+func WithVulnSrcs(srcs map[types.SourceID]vulnsrc.VulnSrc) Option {
 	return func(core *TrivyDB) {
 		core.vulnSrcs = srcs
 	}
@@ -44,7 +45,7 @@ func WithVulnSrcs(srcs map[string]vulnsrc.VulnSrc) Option {
 
 func New(cacheDir string, updateInterval time.Duration, opts ...Option) *TrivyDB {
 	// Initialize map
-	vulnSrcs := map[string]vulnsrc.VulnSrc{}
+	vulnSrcs := map[types.SourceID]vulnsrc.VulnSrc{}
 	for _, v := range vulnsrc.All {
 		vulnSrcs[v.Name()] = v
 	}
@@ -115,7 +116,7 @@ func (t TrivyDB) Build(targets []string) error {
 
 func (t TrivyDB) vulnSrc(target string) (vulnsrc.VulnSrc, bool) {
 	for _, src := range t.vulnSrcs {
-		if target == src.Name() {
+		if target == string(src.Name()) {
 			return src, true
 		}
 	}

@@ -101,7 +101,7 @@ func NewVulnSrc(opts ...Option) VulnSrc {
 	return src
 }
 
-func (vs VulnSrc) Name() string {
+func (vs VulnSrc) Name() types.SourceID {
 	return vulnerability.Debian
 }
 

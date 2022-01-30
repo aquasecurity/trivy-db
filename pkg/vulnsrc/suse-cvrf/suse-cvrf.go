@@ -53,7 +53,7 @@ func NewVulnSrc(dist Distribution) VulnSrc {
 	}
 }
 
-func (vs VulnSrc) Name() string {
+func (vs VulnSrc) Name() types.SourceID {
 	switch vs.dist {
 	case SUSEEnterpriseLinux:
 		return vulnerability.SuseCVRF

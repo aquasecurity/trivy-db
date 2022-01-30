@@ -58,7 +58,7 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
-func (vs VulnSrc) Name() string {
+func (vs VulnSrc) Name() types.SourceID {
 	return vulnerability.RubySec
 }
 

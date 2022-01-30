@@ -66,8 +66,8 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
-func (vs VulnSrc) Name() string {
-	return "osv"
+func (vs VulnSrc) Name() types.SourceID {
+	return vulnerability.OSV
 }
 
 func (vs VulnSrc) Update(dir string) error {

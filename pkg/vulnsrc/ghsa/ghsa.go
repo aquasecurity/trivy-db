@@ -65,22 +65,8 @@ func NewVulnSrc(ecosystem Ecosystem) VulnSrc {
 	}
 }
 
-func (vs VulnSrc) Name() string {
-	switch vs.ecosystem {
-	case Composer:
-		return vulnerability.GHSAComposer
-	case Maven:
-		return vulnerability.GHSAMaven
-	case Npm:
-		return vulnerability.GHSANpm
-	case Nuget:
-		return vulnerability.GHSANuget
-	case Pip:
-		return vulnerability.GHSAPip
-	case RubyGems:
-		return vulnerability.GHSARubygems
-	}
-	return ""
+func (vs VulnSrc) Name() types.SourceID {
+	return vulnerability.GHSA
 }
 
 func (vs VulnSrc) Update(dir string) error {

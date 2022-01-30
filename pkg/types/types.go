@@ -9,7 +9,7 @@ import (
 
 type Severity int
 
-type VendorSeverity map[string]Severity
+type VendorSeverity map[SourceID]Severity
 
 type CVSS struct {
 	V2Vector string  `json:"V2Vector,omitempty"`
@@ -23,7 +23,7 @@ type CVSSVector struct {
 	V3 string `json:"v3,omitempty"`
 }
 
-type VendorCVSS map[string]CVSS
+type VendorCVSS map[SourceID]CVSS
 
 const (
 	SeverityUnknown Severity = iota
@@ -153,3 +153,9 @@ type Vulnerability struct {
 	// Custom is basically for extensibility and is not supposed to be used in OSS
 	Custom interface{} `json:",omitempty"`
 }
+
+// SourceID represents data source such as NVD.
+type SourceID string
+
+// Ecosystem represents language-specific ecosystem
+type Ecosystem string
