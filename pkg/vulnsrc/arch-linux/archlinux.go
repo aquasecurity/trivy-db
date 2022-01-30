@@ -22,6 +22,7 @@ const (
 
 var (
 	source = types.DataSource{
+		ID:   vulnerability.ArchLinux,
 		Name: "Arch Linux Vulnerable issues",
 		URL:  "https://security.archlinux.org/",
 	}
@@ -38,7 +39,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return vulnerability.ArchLinux
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -97,7 +98,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, avgs []ArchVulnGroup) error {
 				vuln := types.VulnerabilityDetail{
 					Severity: convertSeverity(avg.Severity),
 				}
-				if err := vs.dbc.PutVulnerabilityDetail(tx, cveId, vulnerability.ArchLinux, vuln); err != nil {
+				if err := vs.dbc.PutVulnerabilityDetail(tx, cveId, source.ID, vuln); err != nil {
 					return xerrors.Errorf("failed to save arch linux vulnerability: %w", err)
 				}
 

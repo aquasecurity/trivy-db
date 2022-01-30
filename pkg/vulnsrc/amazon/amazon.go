@@ -27,6 +27,7 @@ var (
 	targetVersions = []string{"1", "2"}
 
 	source = types.DataSource{
+		ID:   vulnerability.Amazon,
 		Name: "Amazon Linux Security Center",
 		URL:  "https://alas.aws.amazon.com/",
 	}
@@ -70,7 +71,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return vulnerability.Amazon
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -146,7 +147,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 						Description: alas.Description,
 						Title:       "",
 					}
-					if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Amazon, vuln); err != nil {
+					if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, source.ID, vuln); err != nil {
 						return xerrors.Errorf("failed to save Amazon vulnerability detail: %w", err)
 					}
 

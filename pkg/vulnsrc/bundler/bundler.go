@@ -20,6 +20,7 @@ const bundlerDir = "ruby-advisory-db"
 
 var (
 	source = types.DataSource{
+		ID:   vulnerability.RubySec,
 		Name: "Ruby Advisory Database",
 		URL:  "https://github.com/rubysec/ruby-advisory-db",
 	}
@@ -64,7 +65,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return vulnerability.RubySec
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -154,7 +155,7 @@ func (vs VulnSrc) walkFunc(err error, info os.FileInfo, path string, tx *bolt.Tx
 		Description: advisory.Description,
 	}
 
-	if err = vs.dbc.PutVulnerabilityDetail(tx, vulnerabilityID, vulnerability.RubySec, vuln); err != nil {
+	if err = vs.dbc.PutVulnerabilityDetail(tx, vulnerabilityID, source.ID, vuln); err != nil {
 		return xerrors.Errorf("failed to save ruby vulnerability detail: %w", err)
 	}
 

@@ -32,6 +32,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					key: []string{"data-source", "rubygems::Ruby Advisory Database"},
 					value: types.DataSource{
+						ID:   vulnerability.RubySec,
 						Name: "Ruby Advisory Database",
 						URL:  "https://github.com/rubysec/ruby-advisory-db",
 					},

@@ -23,6 +23,7 @@ const govulndbDir = "go"
 
 var (
 	source = types.DataSource{
+		ID:   vulnerability.GoVulnDB,
 		Name: "The Go Vulnerability Database",
 		URL:  "https://github.com/golang/vulndb",
 	}
@@ -41,7 +42,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return vulnerability.GoVulnDB
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -157,7 +158,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, item Entry) error {
 			Description: item.Details,
 			References:  references,
 		}
-		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, vulnerability.GoVulnDB, vuln); err != nil {
+		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, source.ID, vuln); err != nil {
 			return xerrors.Errorf("failed to put vulnerability detail (%s): %w", vulnID, err)
 		}
 

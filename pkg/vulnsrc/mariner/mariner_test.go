@@ -13,6 +13,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/mariner"
 	cbl "github.com/aquasecurity/trivy-db/pkg/vulnsrc/mariner"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
@@ -33,6 +34,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					key: []string{"data-source", "CBL-Mariner 1.0"},
 					value: types.DataSource{
+						ID:   vulnerability.CBLMariner,
 						Name: "CBL-Mariner Vulnerability Data",
 						URL:  "https://github.com/microsoft/CBL-MarinerVulnerabilityData",
 					},
@@ -40,6 +42,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					key: []string{"data-source", "CBL-Mariner 2.0"},
 					value: types.DataSource{
+						ID:   vulnerability.CBLMariner,
 						Name: "CBL-Mariner Vulnerability Data",
 						URL:  "https://github.com/microsoft/CBL-MarinerVulnerabilityData",
 					},

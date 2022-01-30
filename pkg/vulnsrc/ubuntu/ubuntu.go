@@ -48,6 +48,7 @@ var (
 	}
 
 	source = types.DataSource{
+		ID:   vulnerability.Ubuntu,
 		Name: "Ubuntu CVE Tracker",
 		URL:  "https://git.launchpad.net/ubuntu-cve-tracker",
 	}
@@ -80,7 +81,7 @@ func NewVulnSrc(opts ...Option) VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return vulnerability.Ubuntu
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -172,7 +173,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 				References:  cve.References,
 				Description: cve.Description,
 			}
-			if err := dbc.PutVulnerabilityDetail(tx, cve.Candidate, vulnerability.Ubuntu, vuln); err != nil {
+			if err := dbc.PutVulnerabilityDetail(tx, cve.Candidate, source.ID, vuln); err != nil {
 				return xerrors.Errorf("failed to save Ubuntu vulnerability: %w", err)
 			}
 

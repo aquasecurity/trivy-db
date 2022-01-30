@@ -21,6 +21,7 @@ import (
 const ghsaDir = "ghsa"
 
 var (
+	sourceID   = vulnerability.GHSA
 	ecosystems = []types.Ecosystem{
 		vulnerability.Composer,
 		vulnerability.Maven,
@@ -43,7 +44,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return vulnerability.GHSA
+	return sourceID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -87,6 +88,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ecosystem types.Ecosystem, entries []Entry
 	sourceName := fmt.Sprintf(platformFormat, strings.Title(string(ecosystem)))
 	bucketName := bucket.Name(string(ecosystem), sourceName)
 	err := vs.dbc.PutDataSource(tx, bucketName, types.DataSource{
+		ID:   sourceID,
 		Name: sourceName,
 		URL:  fmt.Sprintf("https://github.com/advisories?query=type%%3Areviewed+ecosystem%%3A%s", ecosystem),
 	})

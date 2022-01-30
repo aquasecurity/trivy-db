@@ -36,6 +36,7 @@ var (
 	versionReplacer = strings.NewReplacer("-SECURITY", "", "-LTSS", "", "-TERADATA", "")
 
 	source = types.DataSource{
+		ID:   vulnerability.SuseCVRF,
 		Name: "SUSE CVRF",
 		URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
 	}
@@ -54,14 +55,7 @@ func NewVulnSrc(dist Distribution) VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	switch vs.dist {
-	case SUSEEnterpriseLinux:
-		return vulnerability.SuseCVRF
-	case OpenSUSE:
-		return vulnerability.OpenSuseCVRF
-	default:
-		return ""
-	}
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -151,7 +145,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 			Severity:    severity,
 		}
 
-		if err := vs.dbc.PutVulnerabilityDetail(tx, cvrf.Tracking.ID, vulnerability.SuseCVRF, vuln); err != nil {
+		if err := vs.dbc.PutVulnerabilityDetail(tx, cvrf.Tracking.ID, source.ID, vuln); err != nil {
 			return xerrors.Errorf("failed to save SUSE CVRF vulnerability: %w", err)
 		}
 

@@ -24,6 +24,7 @@ var (
 	platformFormat = "alpine %s"
 
 	source = types.DataSource{
+		ID:   vulnerability.Alpine,
 		Name: "Alpine Secdb",
 		URL:  "https://secdb.alpinelinux.org/",
 	}
@@ -40,7 +41,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return vulnerability.Alpine
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {

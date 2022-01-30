@@ -26,6 +26,7 @@ var (
 	oracleDir       = filepath.Join("oval", "oracle")
 
 	source = types.DataSource{
+		ID:   vulnerability.OracleOVAL,
 		Name: "Oracle Linux OVAL definitions",
 		URL:  "https://linux.oracle.com/security/oval/",
 	}
@@ -42,7 +43,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return vulnerability.OracleOVAL
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -133,7 +134,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 				Severity:    severityFromThreat(oval.Severity),
 			}
 
-			if err := vs.dbc.PutVulnerabilityDetail(tx, vulnID, vulnerability.OracleOVAL, vuln); err != nil {
+			if err := vs.dbc.PutVulnerabilityDetail(tx, vulnID, source.ID, vuln); err != nil {
 				return xerrors.Errorf("failed to save Oracle Linux OVAL vulnerability: %w", err)
 			}
 

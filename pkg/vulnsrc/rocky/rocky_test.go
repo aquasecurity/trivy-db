@@ -31,6 +31,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					key: []string{"data-source", "rocky 8"},
 					value: types.DataSource{
+						ID:   vulnerability.Rocky,
 						Name: "Rocky Linux updateinfo",
 						URL:  "https://download.rockylinux.org/pub/rocky/",
 					},

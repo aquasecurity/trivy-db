@@ -19,6 +19,7 @@ const composerDir = "php-security-advisories"
 
 var (
 	source = types.DataSource{
+		ID:   vulnerability.PhpSecurityAdvisories,
 		Name: "PHP Security Advisories Database",
 		URL:  "https://github.com/FriendsOfPHP/security-advisories",
 	}
@@ -54,7 +55,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return vulnerability.PhpSecurityAdvisories
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) (err error) {
@@ -130,7 +131,7 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 			References: []string{advisory.Link},
 			Title:      advisory.Title,
 		}
-		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, vulnerability.PhpSecurityAdvisories, vuln); err != nil {
+		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, source.ID, vuln); err != nil {
 			return xerrors.Errorf("failed to save php vulnerability detail: %w", err)
 		}
 

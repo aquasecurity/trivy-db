@@ -44,6 +44,7 @@ var (
 	skipStatuses = []string{"not-affected", "undetermined"}
 
 	source = types.DataSource{
+		ID:   vulnerability.Debian,
 		Name: "Debian Security Tracker",
 		URL:  "https://salsa.debian.org/security-tracker-team/security-tracker",
 	}
@@ -102,7 +103,7 @@ func NewVulnSrc(opts ...Option) VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return vulnerability.Debian
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {

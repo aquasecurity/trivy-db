@@ -10,6 +10,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
@@ -30,6 +31,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					key: []string{"data-source", "archlinux"},
 					value: types.DataSource{
+						ID:   vulnerability.ArchLinux,
 						Name: "Arch Linux Vulnerable issues",
 						URL:  "https://security.archlinux.org/",
 					},

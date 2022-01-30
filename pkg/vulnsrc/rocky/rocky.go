@@ -27,6 +27,7 @@ var (
 	targetRepos  = []string{"BaseOS", "AppStream", "extras"}
 	targetArches = []string{"x86_64"}
 	source       = types.DataSource{
+		ID:   vulnerability.Rocky,
 		Name: "Rocky Linux updateinfo",
 		URL:  "https://download.rockylinux.org/pub/rocky/",
 	}
@@ -43,7 +44,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return vulnerability.Rocky
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -142,7 +143,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error 
 					Title:       erratum.Title,
 					Description: erratum.Description,
 				}
-				if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Rocky, vuln); err != nil {
+				if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, source.ID, vuln); err != nil {
 					return xerrors.Errorf("failed to save Rocky vulnerability: %w", err)
 				}
 

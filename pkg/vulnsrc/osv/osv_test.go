@@ -31,6 +31,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					key: []string{"data-source", "pip::Open Source Vulnerability"},
 					value: types.DataSource{
+						ID:   vulnerability.OSV,
 						Name: "Python Packaging Advisory Database",
 						URL:  "https://github.com/pypa/advisory-db",
 					},
@@ -38,6 +39,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					key: []string{"data-source", "cargo::Open Source Vulnerability"},
 					value: types.DataSource{
+						ID:   vulnerability.OSV,
 						Name: "RustSec Advisory Database",
 						URL:  "https://github.com/RustSec/advisory-db",
 					},

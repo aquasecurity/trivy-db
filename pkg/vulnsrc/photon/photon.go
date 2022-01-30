@@ -21,6 +21,7 @@ const (
 )
 
 var source = types.DataSource{
+	ID:   vulnerability.Photon,
 	Name: "Photon OS CVE metadata",
 	URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
 }
@@ -36,7 +37,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return vulnerability.Photon
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -93,7 +94,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []PhotonCVE) error {
 			// Photon uses CVSS Version 3.X
 			CvssScoreV3: cve.CveScore,
 		}
-		if err := vs.dbc.PutVulnerabilityDetail(tx, cve.CveID, vulnerability.Photon, vuln); err != nil {
+		if err := vs.dbc.PutVulnerabilityDetail(tx, cve.CveID, source.ID, vuln); err != nil {
 			return xerrors.Errorf("failed to save Photon vulnerability detail: %w", err)
 		}
 

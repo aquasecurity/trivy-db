@@ -36,6 +36,7 @@ var (
 	supportedIDPrefixes = []string{"CVE", "GMS"}
 
 	source = types.DataSource{
+		ID:   vulnerability.GLAD,
 		Name: "GitLab Advisory Database Community",
 		URL:  "https://gitlab.com/gitlab-org/advisories-community",
 	}
@@ -54,7 +55,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return vulnerability.GLAD
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -142,7 +143,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, pkgType packageType, glads []Advisory) err
 			Description: glad.Description,
 		}
 
-		if err := vs.dbc.PutVulnerabilityDetail(tx, glad.Identifier, vulnerability.GLAD, vuln); err != nil {
+		if err := vs.dbc.PutVulnerabilityDetail(tx, glad.Identifier, source.ID, vuln); err != nil {
 			return xerrors.Errorf("failed to save GLAD vulnerability detail: %w", err)
 		}
 

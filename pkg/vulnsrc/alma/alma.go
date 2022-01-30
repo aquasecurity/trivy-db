@@ -26,6 +26,7 @@ var (
 	platformFormat = "alma %s"
 
 	source = types.DataSource{
+		ID:   vulnerability.Alma,
 		Name: "AlmaLinux Product Errata",
 		URL:  "https://errata.almalinux.org/",
 	}
@@ -42,7 +43,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return vulnerability.Alma
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -142,7 +143,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, errata []Erratum) err
 					Description: erratum.Description,
 					References:  references,
 				}
-				if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Alma, vuln); err != nil {
+				if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, source.ID, vuln); err != nil {
 					return xerrors.Errorf("failed to save Alma vulnerability: %w", err)
 				}
 

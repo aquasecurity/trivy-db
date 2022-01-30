@@ -31,6 +31,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					key: []string{"data-source", "go::The Go Vulnerability Database"},
 					value: types.DataSource{
+						ID:   vulnerability.GoVulnDB,
 						Name: "The Go Vulnerability Database",
 						URL:  "https://github.com/golang/vulndb",
 					},

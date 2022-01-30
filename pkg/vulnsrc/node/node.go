@@ -23,6 +23,7 @@ const (
 
 var (
 	source = types.DataSource{
+		ID:   vulnerability.NodejsSecurityWg,
 		Name: "Node.js Ecosystem Security Working Group",
 		URL:  "https://github.com/nodejs/security-wg",
 	}
@@ -84,7 +85,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return vulnerability.NodejsSecurityWg
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -172,7 +173,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, f *os.File) error {
 			Title:       advisory.Title,
 			Description: advisory.Overview,
 		}
-		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, vulnerability.NodejsSecurityWg, vuln); err != nil {
+		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, source.ID, vuln); err != nil {
 			return xerrors.Errorf("failed to save node vulnerability detail: %w", err)
 		}
 

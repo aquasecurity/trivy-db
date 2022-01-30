@@ -22,6 +22,7 @@ import (
 const (
 	osvDir     = "osv"
 	dataSource = "Open Source Vulnerability"
+	sourceID   = vulnerability.OSV
 )
 
 var ecosystems = []ecosystem{
@@ -29,6 +30,7 @@ var ecosystems = []ecosystem{
 		dir:  "python",
 		name: vulnerability.Pip,
 		dataSource: types.DataSource{
+			ID:   sourceID,
 			Name: "Python Packaging Advisory Database",
 			URL:  "https://github.com/pypa/advisory-db",
 		},
@@ -37,6 +39,7 @@ var ecosystems = []ecosystem{
 		dir:  "rust",
 		name: vulnerability.Cargo,
 		dataSource: types.DataSource{
+			ID:   sourceID,
 			Name: "RustSec Advisory Database",
 			URL:  "https://github.com/RustSec/advisory-db",
 		},
@@ -64,7 +67,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return vulnerability.OSV
+	return sourceID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -183,7 +186,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 			References:  references,
 		}
 
-		if err := vs.dbc.PutVulnerabilityDetail(tx, vulnID, vulnerability.OSV, vuln); err != nil {
+		if err := vs.dbc.PutVulnerabilityDetail(tx, vulnID, sourceID, vuln); err != nil {
 			return xerrors.Errorf("failed to put vulnerability detail (%s): %w", vulnID, err)
 		}
 
