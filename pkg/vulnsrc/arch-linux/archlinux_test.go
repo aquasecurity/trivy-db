@@ -10,12 +10,13 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
 	type want struct {
 		key   []string
-		value types.Advisory
+		value interface{}
 	}
 	tests := []struct {
 		name       string
@@ -27,6 +28,14 @@ func TestVulnSrc_Update(t *testing.T) {
 			name: "happy path",
 			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []want{
+				{
+					key: []string{"data-source", "archlinux"},
+					value: types.DataSource{
+						ID:   vulnerability.ArchLinux,
+						Name: "Arch Linux Vulnerable issues",
+						URL:  "https://security.archlinux.org/",
+					},
+				},
 				{
 					key: []string{"advisory-detail", "CVE-2019-11479", "archlinux", "linux-lts"},
 					value: types.Advisory{

@@ -11,6 +11,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/glad"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
@@ -29,14 +30,30 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []wantKV{
 				{
-					key: []string{"advisory-detail", "CVE-2016-1905", "go::GitLab Advisory Database", "k8s.io/kubernetes"},
+					key: []string{"data-source", "go::GitLab Advisory Database Community"},
+					value: types.DataSource{
+						ID:   vulnerability.GLAD,
+						Name: "GitLab Advisory Database Community",
+						URL:  "https://gitlab.com/gitlab-org/advisories-community",
+					},
+				},
+				{
+					key: []string{"data-source", "maven::GitLab Advisory Database Community"},
+					value: types.DataSource{
+						ID:   vulnerability.GLAD,
+						Name: "GitLab Advisory Database Community",
+						URL:  "https://gitlab.com/gitlab-org/advisories-community",
+					},
+				},
+				{
+					key: []string{"advisory-detail", "CVE-2016-1905", "go::GitLab Advisory Database Community", "k8s.io/kubernetes"},
 					value: types.Advisory{
 						PatchedVersions:    []string{"v1.2.0"},
 						VulnerableVersions: []string{"<v1.2.0"},
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2018-1196", "maven::GitLab Advisory Database", "org.springframework.boot:spring-boot"},
+					key: []string{"advisory-detail", "CVE-2018-1196", "maven::GitLab Advisory Database Community", "org.springframework.boot:spring-boot"},
 					value: types.Advisory{
 						PatchedVersions:    []string{"1.5.10.RELEASE"},
 						VulnerableVersions: []string{"(,1.5.10)"},

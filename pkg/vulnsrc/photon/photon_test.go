@@ -4,15 +4,12 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
-
-	"github.com/aquasecurity/trivy-db/pkg/types"
-
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
@@ -90,6 +87,7 @@ func TestVulnSrc_commit(t *testing.T) {
 	tests := []struct {
 		name                   string
 		args                   args
+		putDataSource          []db.OperationPutDataSourceExpectation
 		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
 		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
 		putVulnerabilityID     []db.OperationPutVulnerabilityIDExpectation
@@ -109,11 +107,25 @@ func TestVulnSrc_commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Photon OS 1.0",
+						Source: types.DataSource{
+							ID:   vulnerability.Photon,
+							Name: "Photon OS CVE metadata",
+							URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Photon OS 1.0",
+						NestedBktNames:  []string{"Photon OS 1.0"},
 						PkgName:         "ansible",
 						VulnerabilityID: "CVE-2019-10156",
 						Advisory: types.Advisory{
@@ -157,11 +169,25 @@ func TestVulnSrc_commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Photon OS 1.0",
+						Source: types.DataSource{
+							ID:   vulnerability.Photon,
+							Name: "Photon OS CVE metadata",
+							URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Photon OS 1.0",
+						NestedBktNames:  []string{"Photon OS 1.0"},
 						PkgName:         "ansible",
 						VulnerabilityID: "CVE-2019-10156",
 						Advisory: types.Advisory{
@@ -189,11 +215,25 @@ func TestVulnSrc_commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Photon OS 1.0",
+						Source: types.DataSource{
+							ID:   vulnerability.Photon,
+							Name: "Photon OS CVE metadata",
+							URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Photon OS 1.0",
+						NestedBktNames:  []string{"Photon OS 1.0"},
 						PkgName:         "ansible",
 						VulnerabilityID: "CVE-2019-10156",
 						Advisory: types.Advisory{
@@ -233,11 +273,25 @@ func TestVulnSrc_commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Photon OS 1.0",
+						Source: types.DataSource{
+							ID:   vulnerability.Photon,
+							Name: "Photon OS CVE metadata",
+							URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Photon OS 1.0",
+						NestedBktNames:  []string{"Photon OS 1.0"},
 						PkgName:         "ansible",
 						VulnerabilityID: "CVE-2019-10156",
 						Advisory: types.Advisory{
@@ -275,6 +329,7 @@ func TestVulnSrc_commit(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockDBConfig := new(db.MockOperation)
+			mockDBConfig.ApplyPutDataSourceExpectations(tt.putDataSource)
 			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tt.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tt.putVulnerabilityDetail)
 			mockDBConfig.ApplyPutVulnerabilityIDExpectations(tt.putVulnerabilityID)

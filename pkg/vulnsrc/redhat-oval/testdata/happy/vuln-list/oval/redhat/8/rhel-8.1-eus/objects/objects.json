@@ -1,0 +1,14 @@
+{
+  "RpminfoObjects": [
+    {
+      "ID": "oval:com.redhat.cve:obj:201812383003",
+      "Version": "631",
+      "Name": "thunderbird"
+    },
+    {
+      "ID": "oval:com.redhat.cve:obj:201812383002",
+      "Version": "631",
+      "Name": "thunderbird-debugsource"
+    }
+  ]
+}

@@ -154,7 +154,6 @@ func TestVulnSrc_Commit(t *testing.T) {
 	testCases := []struct {
 		name                   string
 		cves                   []RedhatCVE
-		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
 		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
 		putVulnerabilityID     []db.OperationPutVulnerabilityIDExpectation
 		expectedErrorMsg       string
@@ -174,20 +173,11 @@ func TestVulnSrc_Commit(t *testing.T) {
 					Cvss:           RedhatCvss{CvssBaseScore: "7.2", CvssScoringVector: "(AV:N/AC:L/Au:N/C:P/I:P/A:P)"},
 					Cvss3:          RedhatCvss3{Cvss3BaseScore: "4.0", Cvss3ScoringVector: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"},
 					ThreatSeverity: "Moderate",
-					References:     []string{"https://example.com"},
-					Bugzilla:       RedhatBugzilla{Description: "CVE-2019-0160 package: title   "},
-					Details:        []string{"detail1\n", "detail2"},
-				},
-			},
-			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
-				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:      true,
-						Source:          "Red Hat Enterprise Linux 6",
-						PkgName:         "package",
-						VulnerabilityID: "CVE-2019-0160",
-						Advisory:        types.Advisory{FixedVersion: ""},
+					References: []string{
+						"https://example.com",
 					},
+					Bugzilla: RedhatBugzilla{Description: "CVE-2019-0160 package: title   "},
+					Details:  []string{"detail1\n", "detail2"},
 				},
 			},
 			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
@@ -202,9 +192,12 @@ func TestVulnSrc_Commit(t *testing.T) {
 							CvssScoreV3:  4.0,
 							CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
 							Severity:     types.SeverityMedium,
-							References:   []string{"https://example.com"},
-							Title:        "package: title",
-							Description:  "detail1\ndetail2",
+							References: []string{
+								"https://example.com",
+								"https://access.redhat.com/security/cve/CVE-2019-0160",
+							},
+							Title:       "package: title",
+							Description: "detail1\ndetail2",
 						},
 					},
 				},
@@ -243,6 +236,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 							CvssScoreV3: 5.1,
 							Severity:    types.SeverityLow,
 							Title:       "package: title!",
+							References: []string{
+								"https://access.redhat.com/security/cve/CVE-2019-9999",
+							},
 						},
 					},
 				},
@@ -284,6 +280,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 							CvssScoreV3: 0,
 							Severity:    types.SeverityHigh,
 							Title:       "package: title",
+							References: []string{
+								"https://access.redhat.com/security/cve/CVE-2019-0001",
+							},
 						},
 					},
 				},
@@ -326,6 +325,9 @@ func TestVulnSrc_Commit(t *testing.T) {
 							CvssScoreV3: 9,
 							Severity:    types.SeverityCritical,
 							Title:       "test: title",
+							References: []string{
+								"https://access.redhat.com/security/cve/CVE-2018-0001",
+							},
 						},
 					},
 				},
@@ -338,42 +340,6 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
-		},
-		{
-			name: "PutAdvisoryDetail returns an error",
-			cves: []RedhatCVE{
-				{
-					Name: "CVE-2019-0160",
-					PackageState: []RedhatPackageState{
-						{
-							PackageName: "package",
-							ProductName: "Red Hat Enterprise Linux 6",
-							FixState:    "Will not fix",
-						},
-					},
-					Cvss:           RedhatCvss{CvssBaseScore: "7.2"},
-					Cvss3:          RedhatCvss3{Cvss3BaseScore: "4.0"},
-					ThreatSeverity: "Moderate",
-					References:     []string{"https://example.com"},
-					Bugzilla:       RedhatBugzilla{Description: "CVE-2019-0160 package: title   "},
-					Details:        []string{"detail1\n", "detail2"},
-				},
-			},
-			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
-				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:      true,
-						Source:          "Red Hat Enterprise Linux 6",
-						PkgName:         "package",
-						VulnerabilityID: "CVE-2019-0160",
-						Advisory:        types.Advisory{FixedVersion: ""},
-					},
-					Returns: db.OperationPutAdvisoryDetailReturns{
-						Err: errors.New("failed to put advisory"),
-					},
-				},
-			},
-			expectedErrorMsg: "failed to put advisory",
 		},
 		{
 			name: "PutVulnerabilityDetail returns an error",
@@ -395,17 +361,6 @@ func TestVulnSrc_Commit(t *testing.T) {
 					Details:        []string{"detail1\n", "detail2"},
 				},
 			},
-			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
-				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:      true,
-						Source:          "Red Hat Enterprise Linux 6",
-						PkgName:         "package",
-						VulnerabilityID: "CVE-2019-0160",
-						Advisory:        types.Advisory{FixedVersion: ""},
-					},
-				},
-			},
 			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
 					Args: db.OperationPutVulnerabilityDetailArgs{
@@ -416,7 +371,10 @@ func TestVulnSrc_Commit(t *testing.T) {
 							CvssScore:   7.2,
 							CvssScoreV3: 4.0,
 							Severity:    types.SeverityMedium,
-							References:  []string{"https://example.com"},
+							References: []string{
+								"https://example.com",
+								"https://access.redhat.com/security/cve/CVE-2019-0160",
+							},
 							Title:       "package: title",
 							Description: "detail1\ndetail2",
 						},
@@ -448,17 +406,6 @@ func TestVulnSrc_Commit(t *testing.T) {
 					Details:        []string{"detail1\n", "detail2"},
 				},
 			},
-			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
-				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:      true,
-						Source:          "Red Hat Enterprise Linux 6",
-						PkgName:         "package",
-						VulnerabilityID: "CVE-2019-0160",
-						Advisory:        types.Advisory{FixedVersion: ""},
-					},
-				},
-			},
 			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
 					Args: db.OperationPutVulnerabilityDetailArgs{
@@ -469,7 +416,10 @@ func TestVulnSrc_Commit(t *testing.T) {
 							CvssScore:   7.2,
 							CvssScoreV3: 4.0,
 							Severity:    types.SeverityUnknown,
-							References:  []string{"https://example.com"},
+							References: []string{
+								"https://example.com",
+								"https://access.redhat.com/security/cve/CVE-2019-0160",
+							},
 							Title:       "package: title",
 							Description: "detail1\ndetail2",
 						},
@@ -495,7 +445,6 @@ func TestVulnSrc_Commit(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tx := &bolt.Tx{}
 			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tc.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tc.putVulnerabilityDetail)
 			mockDBConfig.ApplyPutVulnerabilityIDExpectations(tc.putVulnerabilityID)
 
@@ -508,70 +457,6 @@ func TestVulnSrc_Commit(t *testing.T) {
 			default:
 				assert.NoError(t, err, tc.name)
 			}
-			mockDBConfig.AssertExpectations(t)
-		})
-	}
-}
-
-func TestVulnSrc_Get(t *testing.T) {
-	testCases := []struct {
-		name               string
-		majorVersion       string
-		pkgName            string
-		getAdvisories      db.OperationGetAdvisoriesExpectation
-		expectedErrorMsg   string
-		expectedAdvisories []types.Advisory
-	}{
-		{
-			name:         "happy path",
-			majorVersion: "6",
-			pkgName:      "package",
-			getAdvisories: db.OperationGetAdvisoriesExpectation{
-				Args: db.OperationGetAdvisoriesArgs{
-					Source:  "Red Hat Enterprise Linux 6",
-					PkgName: "package",
-				},
-				Returns: db.OperationGetAdvisoriesReturns{
-					Advisories: []types.Advisory{{FixedVersion: "1.2.3"}},
-				},
-			},
-			expectedAdvisories: []types.Advisory{{FixedVersion: "1.2.3"}},
-		},
-		{
-			name:         "GetAdvisories returns an error",
-			majorVersion: "6",
-			pkgName:      "package",
-			getAdvisories: db.OperationGetAdvisoriesExpectation{
-				Args: db.OperationGetAdvisoriesArgs{
-					Source:  "Red Hat Enterprise Linux 6",
-					PkgName: "package",
-				},
-				Returns: db.OperationGetAdvisoriesReturns{
-					Err: errors.New("failed to get advisories"),
-				},
-			},
-			expectedErrorMsg:   "failed to get advisories",
-			expectedAdvisories: nil,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyGetAdvisoriesExpectation(tc.getAdvisories)
-
-			vs := VulnSrc{dbc: mockDBConfig}
-			advisories, err := vs.Get(tc.majorVersion, tc.pkgName)
-
-			switch {
-			case tc.expectedErrorMsg != "":
-				assert.Contains(t, err.Error(), tc.expectedErrorMsg, tc.name)
-			default:
-				assert.NoError(t, err, tc.name)
-			}
-
-			assert.ElementsMatch(t, advisories, tc.expectedAdvisories, tc.name)
-
 			mockDBConfig.AssertExpectations(t)
 		})
 	}

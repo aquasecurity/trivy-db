@@ -5,6 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	bolt "go.etcd.io/bbolt"
@@ -26,23 +28,23 @@ func TestVulnSrc_Update(t *testing.T) {
 		name           string
 		cacheDir       string
 		batchUpdateErr error
-		expectedError  error
-		expectedVulns  []types.Advisory
+		want           []types.Advisory
+		wantErr        string
 	}{
 		{
 			name:     "happy path",
 			cacheDir: "testdata",
 		},
 		{
-			name:          "cache dir doesnt exist",
-			cacheDir:      "badpathdoesnotexist",
-			expectedError: errors.New("error in Oracle Linux OVAL walk: error in file walk: lstat badpathdoesnotexist/vuln-list/oval/oracle: no such file or directory"),
+			name:     "cache dir doesnt exist",
+			cacheDir: "badpathdoesnotexist",
+			wantErr:  "lstat badpathdoesnotexist/vuln-list/oval/oracle: no such file or directory",
 		},
 		{
 			name:           "unable to save oracle linux oval defintions",
 			cacheDir:       "testdata",
 			batchUpdateErr: errors.New("unable to batch update"),
-			expectedError:  errors.New("error in Oracle Linux OVAL save: error in batch update: unable to batch update"),
+			wantErr:        "unable to batch update",
 		},
 	}
 
@@ -54,8 +56,9 @@ func TestVulnSrc_Update(t *testing.T) {
 
 			err := ac.Update(tc.cacheDir)
 			switch {
-			case tc.expectedError != nil:
-				assert.EqualError(t, err, tc.expectedError.Error(), tc.name)
+			case tc.wantErr != "":
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.wantErr, tc.name)
 			default:
 				assert.NoError(t, err, tc.name)
 			}
@@ -67,6 +70,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 	testCases := []struct {
 		name                   string
 		cves                   []OracleOVAL
+		putDataSource          []db.OperationPutDataSourceExpectation
 		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
 		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
 		putVulnerabilityID     []db.OperationPutVulnerabilityIDExpectation
@@ -139,11 +143,25 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Oracle Linux 5",
+						Source: types.DataSource{
+							ID:   vulnerability.OracleOVAL,
+							Name: "Oracle Linux OVAL definitions",
+							URL:  "https://linux.oracle.com/security/oval/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-devel",
 						VulnerabilityID: "CVE-2007-0493",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "30:9.3.3-8.el5"},
@@ -152,7 +170,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-devel",
 						VulnerabilityID: "CVE-2007-0494",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "30:9.3.3-8.el5"},
@@ -280,11 +298,25 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Oracle Linux 5",
+						Source: types.DataSource{
+							ID:   vulnerability.OracleOVAL,
+							Name: "Oracle Linux OVAL definitions",
+							URL:  "https://linux.oracle.com/security/oval/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-devel",
 						VulnerabilityID: "CVE-2007-0493",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "30:9.3.3-8.el5"},
@@ -293,7 +325,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-devel",
 						VulnerabilityID: "CVE-2007-0494",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "30:9.3.3-8.el5"},
@@ -473,11 +505,37 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Oracle Linux 6",
+						Source: types.DataSource{
+							ID:   vulnerability.OracleOVAL,
+							Name: "Oracle Linux OVAL definitions",
+							URL:  "https://linux.oracle.com/security/oval/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Oracle Linux 7",
+						Source: types.DataSource{
+							ID:   vulnerability.OracleOVAL,
+							Name: "Oracle Linux OVAL definitions",
+							URL:  "https://linux.oracle.com/security/oval/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 6",
+						NestedBktNames:  []string{"Oracle Linux 6"},
 						PkgName:         "kernel-uek-doc",
 						VulnerabilityID: "CVE-2018-1094",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "4.1.12-124.24.3.el6uek"},
@@ -486,7 +544,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 6",
+						NestedBktNames:  []string{"Oracle Linux 6"},
 						PkgName:         "kernel-uek-doc",
 						VulnerabilityID: "CVE-2018-19824",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "4.1.12-124.24.3.el6uek"},
@@ -495,7 +553,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 6",
+						NestedBktNames:  []string{"Oracle Linux 6"},
 						PkgName:         "kernel-uek-firmware",
 						VulnerabilityID: "CVE-2018-1094",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "4.1.12-124.24.3.el6uek"},
@@ -504,7 +562,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 6",
+						NestedBktNames:  []string{"Oracle Linux 6"},
 						PkgName:         "kernel-uek-firmware",
 						VulnerabilityID: "CVE-2018-19824",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "4.1.12-124.24.3.el6uek"},
@@ -513,7 +571,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 7",
+						NestedBktNames:  []string{"Oracle Linux 7"},
 						PkgName:         "kernel-uek-doc",
 						VulnerabilityID: "CVE-2018-1094",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "4.1.12-124.24.3.el7uek"},
@@ -522,7 +580,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 7",
+						NestedBktNames:  []string{"Oracle Linux 7"},
 						PkgName:         "kernel-uek-doc",
 						VulnerabilityID: "CVE-2018-19824",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "4.1.12-124.24.3.el7uek"},
@@ -531,7 +589,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 7",
+						NestedBktNames:  []string{"Oracle Linux 7"},
 						PkgName:         "kernel-uek-firmware",
 						VulnerabilityID: "CVE-2018-1094",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "4.1.12-124.24.3.el7uek"},
@@ -540,7 +598,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 7",
+						NestedBktNames:  []string{"Oracle Linux 7"},
 						PkgName:         "kernel-uek-firmware",
 						VulnerabilityID: "CVE-2018-19824",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "4.1.12-124.24.3.el7uek"},
@@ -675,11 +733,25 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Oracle Linux 5",
+						Source: types.DataSource{
+							ID:   vulnerability.OracleOVAL,
+							Name: "Oracle Linux OVAL definitions",
+							URL:  "https://linux.oracle.com/security/oval/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-devel",
 						VulnerabilityID: "CVE-2007-0493",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "30:9.3.3-8.el5"},
@@ -688,7 +760,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-devel",
 						VulnerabilityID: "CVE-2007-0494",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "30:9.3.3-8.el5"},
@@ -697,7 +769,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-sdb",
 						VulnerabilityID: "CVE-2007-0493",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "30:9.3.3-8.el5"},
@@ -706,7 +778,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-sdb",
 						VulnerabilityID: "CVE-2007-0494",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "30:9.3.3-8.el5"},
@@ -829,11 +901,25 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Oracle Linux 5",
+						Source: types.DataSource{
+							ID:   vulnerability.OracleOVAL,
+							Name: "Oracle Linux OVAL definitions",
+							URL:  "https://linux.oracle.com/security/oval/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-devel",
 						VulnerabilityID: "CVE-2007-0493",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "9.3.3-8.el5"},
@@ -842,7 +928,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-devel",
 						VulnerabilityID: "CVE-2007-0494",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "9.3.3-8.el5"},
@@ -952,7 +1038,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "Oracle Linux 5",
+						NestedBktNames:  []string{"Oracle Linux 5"},
 						PkgName:         "bind-devel",
 						VulnerabilityID: "ELSA-2007-0057",
 						Advisory:        types.Advisory{VulnerabilityID: "", FixedVersion: "9.3.3-8.el5"},
@@ -974,6 +1060,20 @@ func TestVulnSrc_Commit(t *testing.T) {
 							Severity: types.SeverityMedium,
 						},
 					},
+				},
+			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "Oracle Linux 5",
+						Source: types.DataSource{
+							ID:   vulnerability.OracleOVAL,
+							Name: "Oracle Linux OVAL definitions",
+							URL:  "https://linux.oracle.com/security/oval/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
 				},
 			},
 			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
@@ -1161,6 +1261,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 			mockDBConfig := new(db.MockOperation)
 			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tc.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tc.putVulnerabilityDetail)
+			mockDBConfig.ApplyPutDataSourceExpectations(tc.putDataSource)
 			mockDBConfig.ApplyPutVulnerabilityIDExpectations(tc.putVulnerabilityID)
 
 			ac := VulnSrc{dbc: mockDBConfig}
@@ -1174,19 +1275,6 @@ func TestVulnSrc_Commit(t *testing.T) {
 			}
 			mockDBConfig.AssertExpectations(t)
 		})
-	}
-}
-
-func TestSeverityFromThreat(t *testing.T) {
-	testCases := map[string]types.Severity{
-		"LOW":       types.SeverityLow,
-		"MODERATE":  types.SeverityMedium,
-		"IMPORTANT": types.SeverityHigh,
-		"CRITICAL":  types.SeverityCritical,
-		"N/A":       types.SeverityUnknown,
-	}
-	for k, v := range testCases {
-		assert.Equal(t, v, severityFromThreat(k))
 	}
 }
 

@@ -20,11 +20,12 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulndb"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 type fakeVulnSrc struct{}
 
-func (f fakeVulnSrc) Name() string { return "fake" }
+func (f fakeVulnSrc) Name() types.SourceID { return "fake" }
 
 func (f fakeVulnSrc) Update(dir string) error {
 	if strings.Contains(dir, "bad") {
@@ -89,7 +90,7 @@ func TestTrivyDB_Insert(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			vulnsrcs := map[string]vulnsrc.VulnSrc{
+			vulnsrcs := map[types.SourceID]vulnsrc.VulnSrc{
 				"fake": fakeVulnSrc{},
 			}
 			cacheDir := filepath.Join(t.TempDir(), tt.fields.cacheDir)
@@ -153,9 +154,9 @@ func TestTrivyDB_Build(t *testing.T) {
 						Title:       "python-jinja2: str.format_map allows sandbox escape",
 						Description: "In Pallets Jinja before 2.10.1, str.format_map allows a sandbox escape.",
 						Severity:    "HIGH",
-						VendorSeverity: map[string]types.Severity{
-							"nvd":    types.SeverityHigh,
-							"redhat": types.SeverityCritical,
+						VendorSeverity: map[types.SourceID]types.Severity{
+							vulnerability.NVD:    types.SeverityHigh,
+							vulnerability.RedHat: types.SeverityCritical,
 						},
 						PublishedDate:    &published,
 						LastModifiedDate: &modified,
@@ -170,7 +171,7 @@ func TestTrivyDB_Build(t *testing.T) {
 				"testdata/fixtures/happy/vulnerability-detail.yaml",
 				"testdata/fixtures/sad/advisory-detail.yaml",
 			},
-			wantErr: "failed to unmarshall advisory_detail",
+			wantErr: "failed to unmarshall the advisory detail",
 		},
 		{
 			name: "missing advisory detail",
@@ -184,7 +185,7 @@ func TestTrivyDB_Build(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cacheDir := dbtest.InitTestDB(t, tt.fixtures)
+			cacheDir := dbtest.InitDB(t, tt.fixtures)
 			defer db.Close()
 
 			full := vulndb.New(cacheDir, 12*time.Hour)

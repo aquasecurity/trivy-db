@@ -1,0 +1,28 @@
+- bucket: Red Hat CPE
+  pairs:
+    - bucket: repository
+      pairs:
+        - key: "rhel-8-for-x86_64-baseos-rpms"
+          value:
+            - 0
+        - key: "3scale-amp-2-rpms-for-rhel-8-x86_64-debug-rpms"
+          value:
+            - 4
+    - bucket: nvr
+      pairs:
+        - key: "ubi8-init-container-8.0-7-x86_64"
+          value:
+            - 1
+            - 2
+    - bucket: cpe
+      pairs:
+        - key: "0"
+          value: "cpe:/a:redhat:enterprise_linux:8"
+        - key: "1"
+          value: "cpe:/a:redhat:enterprise_linux:8::appstream"
+        - key: "2"
+          value: "cpe:/o:redhat:enterprise_linux:8::baseos"
+        - key: "3"
+          value: "cpe:/a:redhat:3scale_amp:2.10::el8"
+        - key: "4"
+          value: "cpe:/o:redhat:rhel_e4s:8.0::baseos"

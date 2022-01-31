@@ -24,6 +24,12 @@ const (
 
 var (
 	platformFormat = "alma %s"
+
+	source = types.DataSource{
+		ID:   vulnerability.Alma,
+		Name: "AlmaLinux Product Errata",
+		URL:  "https://errata.almalinux.org/",
+	}
 )
 
 type VulnSrc struct {
@@ -36,8 +42,8 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
-func (vs VulnSrc) Name() string {
-	return vulnerability.Alma
+func (vs VulnSrc) Name() types.SourceID {
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -74,8 +80,12 @@ func (vs VulnSrc) save(errataVer map[string][]Erratum) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for majorVer, errata := range errataVer {
 			platformName := fmt.Sprintf(platformFormat, majorVer)
+			if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+				return xerrors.Errorf("failed to put data source: %w", err)
+			}
+
 			if err := vs.commit(tx, platformName, errata); err != nil {
-				return xerrors.Errorf("error in save Alma %s: %w", majorVer, err)
+				return xerrors.Errorf("Alma %s commit error: %w", majorVer, err)
 			}
 		}
 		return nil
@@ -133,7 +143,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, errata []Erratum) err
 					Description: erratum.Description,
 					References:  references,
 				}
-				if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Alma, vuln); err != nil {
+				if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, source.ID, vuln); err != nil {
 					return xerrors.Errorf("failed to save Alma vulnerability: %w", err)
 				}
 
@@ -143,7 +153,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, errata []Erratum) err
 			}
 
 			for pkgName, advisory := range advisories {
-				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, platformName, pkgName, advisory); err != nil {
+				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkgName, []string{platformName}, advisory); err != nil {
 					return xerrors.Errorf("failed to save Alma advisory: %w", err)
 				}
 			}

@@ -11,12 +11,13 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
 	type want struct {
 		key   []string
-		value types.Advisory
+		value interface{}
 	}
 	tests := []struct {
 		name       string
@@ -28,6 +29,14 @@ func TestVulnSrc_Update(t *testing.T) {
 			name: "happy path",
 			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []want{
+				{
+					key: []string{"data-source", "alpine 3.12"},
+					value: types.DataSource{
+						ID:   vulnerability.Alpine,
+						Name: "Alpine Secdb",
+						URL:  "https://secdb.alpinelinux.org/",
+					},
+				},
 				{
 					key: []string{"advisory-detail", "CVE-2019-14904", "alpine 3.12", "ansible"},
 					value: types.Advisory{

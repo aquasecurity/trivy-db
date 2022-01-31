@@ -11,6 +11,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alma"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
@@ -28,6 +29,14 @@ func TestVulnSrc_Update(t *testing.T) {
 			name: "happy path",
 			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []want{
+				{
+					key: []string{"data-source", "alma 8"},
+					value: types.DataSource{
+						ID:   vulnerability.Alma,
+						Name: "AlmaLinux Product Errata",
+						URL:  "https://errata.almalinux.org/",
+					},
+				},
 				{
 					key: []string{"advisory-detail", "CVE-2021-27918", "alma 8", "go-toolset:rhel8::go-toolset"},
 					value: types.Advisory{

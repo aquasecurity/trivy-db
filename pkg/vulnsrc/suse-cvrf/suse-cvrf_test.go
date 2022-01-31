@@ -13,6 +13,7 @@ import (
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestMain(m *testing.M) {
@@ -25,7 +26,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		dist           Distribution
 		cacheDir       string
 		batchUpdateErr error
-		expectedError  error
+		wantErr        string
 	}{
 		{
 			name:     "happy path with SUSE Enterprise Linux",
@@ -38,17 +39,17 @@ func TestVulnSrc_Update(t *testing.T) {
 			cacheDir: "testdata",
 		},
 		{
-			name:          "cache dir doesnt exist",
-			dist:          SUSEEnterpriseLinux,
-			cacheDir:      "badpathdoesnotexist",
-			expectedError: errors.New("error in SUSE CVRF walk: error in file walk: lstat badpathdoesnotexist/vuln-list/cvrf/suse/suse: no such file or directory"),
+			name:     "cache dir doesnt exist",
+			dist:     SUSEEnterpriseLinux,
+			cacheDir: "badpathdoesnotexist",
+			wantErr:  "lstat badpathdoesnotexist/vuln-list/cvrf/suse/suse: no such file or directory",
 		},
 		{
 			name:           "unable to save suse linux oval defintions",
 			dist:           SUSEEnterpriseLinux,
 			cacheDir:       "testdata",
 			batchUpdateErr: errors.New("unable to batch update"),
-			expectedError:  errors.New("error in SUSE CVRF save: error in batch update: unable to batch update"),
+			wantErr:        "unable to batch update",
 		},
 	}
 
@@ -60,20 +61,21 @@ func TestVulnSrc_Update(t *testing.T) {
 
 			err := ac.Update(tc.cacheDir)
 			switch {
-			case tc.expectedError != nil:
-				assert.EqualError(t, err, tc.expectedError.Error(), tc.name)
+			case tc.wantErr != "":
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.wantErr, tc.name)
 			default:
 				assert.NoError(t, err, tc.name)
 			}
 		})
 	}
-
 }
 
 func TestVulnSrc_Commit(t *testing.T) {
 	testCases := []struct {
 		name                   string
 		cvrfs                  []SuseCvrf
+		putDataSource          []db.OperationPutDataSourceExpectation
 		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
 		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
 		putVulnerabilityID     []db.OperationPutVulnerabilityIDExpectation
@@ -154,11 +156,25 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "SUSE Linux Enterprise 15.1",
+						Source: types.DataSource{
+							ID:   vulnerability.SuseCVRF,
+							Name: "SUSE CVRF",
+							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "SUSE Linux Enterprise 15.1",
+						NestedBktNames:  []string{"SUSE Linux Enterprise 15.1"},
 						PkgName:         "helm-mirror",
 						VulnerabilityID: "SUSE-SU-2019:0048-2",
 						Advisory: types.Advisory{
@@ -269,11 +285,25 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "openSUSE Leap 15.1",
+						Source: types.DataSource{
+							ID:   vulnerability.SuseCVRF,
+							Name: "SUSE CVRF",
+							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "openSUSE Leap 15.1",
+						NestedBktNames:  []string{"openSUSE Leap 15.1"},
 						PkgName:         "strongswan",
 						VulnerabilityID: "openSUSE-SU-2019:2598-1",
 						Advisory: types.Advisory{
@@ -285,7 +315,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "openSUSE Leap 15.1",
+						NestedBktNames:  []string{"openSUSE Leap 15.1"},
 						PkgName:         "strongswan-sqlite",
 						VulnerabilityID: "openSUSE-SU-2019:2598-1",
 						Advisory: types.Advisory{
@@ -378,11 +408,25 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "SUSE Linux Enterprise 15",
+						Source: types.DataSource{
+							ID:   vulnerability.SuseCVRF,
+							Name: "SUSE CVRF",
+							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "SUSE Linux Enterprise 15",
+						NestedBktNames:  []string{"SUSE Linux Enterprise 15"},
 						PkgName:         "GraphicsMagick",
 						VulnerabilityID: "openSUSE-SU-2019:0003-1",
 						Advisory: types.Advisory{
@@ -394,7 +438,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:      true,
-						Source:          "SUSE Linux Enterprise 15",
+						NestedBktNames:  []string{"SUSE Linux Enterprise 15"},
 						PkgName:         "GraphicsMagick-devel",
 						VulnerabilityID: "openSUSE-SU-2019:0003-1",
 						Advisory: types.Advisory{
@@ -456,11 +500,25 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "SUSE Linux Enterprise 15",
+						Source: types.DataSource{
+							ID:   vulnerability.SuseCVRF,
+							Name: "SUSE CVRF",
+							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:              true,
-						SourceAnything:          true,
+						NestedBktNamesAnything:  true,
 						PkgNameAnything:         true,
 						VulnerabilityIDAnything: true,
 						AdvisoryAnything:        true,
@@ -497,11 +555,25 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "SUSE Linux Enterprise 15",
+						Source: types.DataSource{
+							ID:   vulnerability.SuseCVRF,
+							Name: "SUSE CVRF",
+							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:              true,
-						SourceAnything:          true,
+						NestedBktNamesAnything:  true,
 						PkgNameAnything:         true,
 						VulnerabilityIDAnything: true,
 						AdvisoryAnything:        true,
@@ -549,11 +621,25 @@ func TestVulnSrc_Commit(t *testing.T) {
 					},
 				},
 			},
+			putDataSource: []db.OperationPutDataSourceExpectation{
+				{
+					Args: db.OperationPutDataSourceArgs{
+						TxAnything: true,
+						BktName:    "SUSE Linux Enterprise 15",
+						Source: types.DataSource{
+							ID:   vulnerability.SuseCVRF,
+							Name: "SUSE CVRF",
+							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+						},
+					},
+					Returns: db.OperationPutDataSourceReturns{},
+				},
+			},
 			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
 				{
 					Args: db.OperationPutAdvisoryDetailArgs{
 						TxAnything:              true,
-						SourceAnything:          true,
+						NestedBktNamesAnything:  true,
 						PkgNameAnything:         true,
 						VulnerabilityIDAnything: true,
 						AdvisoryAnything:        true,
@@ -591,6 +677,7 @@ func TestVulnSrc_Commit(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tx := &bolt.Tx{}
 			mockDBConfig := new(db.MockOperation)
+			mockDBConfig.ApplyPutDataSourceExpectations(tc.putDataSource)
 			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tc.putAdvisoryDetail)
 			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tc.putVulnerabilityDetail)
 			mockDBConfig.ApplyPutVulnerabilityIDExpectations(tc.putVulnerabilityID)

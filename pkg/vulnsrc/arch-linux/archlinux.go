@@ -20,6 +20,14 @@ const (
 	platformName = "archlinux"
 )
 
+var (
+	source = types.DataSource{
+		ID:   vulnerability.ArchLinux,
+		Name: "Arch Linux Vulnerable issues",
+		URL:  "https://security.archlinux.org/",
+	}
+)
+
 type VulnSrc struct {
 	dbc db.Operation
 }
@@ -30,8 +38,8 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
-func (vs VulnSrc) Name() string {
-	return vulnerability.ArchLinux
+func (vs VulnSrc) Name() types.SourceID {
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -60,7 +68,13 @@ func (vs VulnSrc) Update(dir string) error {
 
 func (vs VulnSrc) save(avgs []ArchVulnGroup) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		return vs.commit(tx, avgs)
+		if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+			return xerrors.Errorf("failed to put data source: %w", err)
+		}
+		if err := vs.commit(tx, avgs); err != nil {
+			return xerrors.Errorf("commit error: %w", err)
+		}
+		return nil
 	})
 	if err != nil {
 		return xerrors.Errorf("error in batch update: %w", err)
@@ -77,14 +91,14 @@ func (vs VulnSrc) commit(tx *bolt.Tx, avgs []ArchVulnGroup) error {
 			}
 
 			for _, pkg := range avg.Packages {
-				if err := vs.dbc.PutAdvisoryDetail(tx, cveId, platformName, pkg, advisory); err != nil {
+				if err := vs.dbc.PutAdvisoryDetail(tx, cveId, pkg, []string{platformName}, advisory); err != nil {
 					return xerrors.Errorf("failed to save arch linux advisory: %w", err)
 				}
 
 				vuln := types.VulnerabilityDetail{
 					Severity: convertSeverity(avg.Severity),
 				}
-				if err := vs.dbc.PutVulnerabilityDetail(tx, cveId, vulnerability.ArchLinux, vuln); err != nil {
+				if err := vs.dbc.PutVulnerabilityDetail(tx, cveId, source.ID, vuln); err != nil {
 					return xerrors.Errorf("failed to save arch linux vulnerability: %w", err)
 				}
 

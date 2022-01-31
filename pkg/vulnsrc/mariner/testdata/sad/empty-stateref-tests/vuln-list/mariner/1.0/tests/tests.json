@@ -1,0 +1,13 @@
+{
+  "RpminfoTests": [
+    {
+      "Check": "at least one",
+      "Comment": "Package clamav is earlier than 0.103.2-1, affected by CVE-2008-3914",
+      "ID": "oval:com.microsoft.cbl-mariner:tst:1643374849000003",
+      "Version": "1643374849",
+      "Object": {
+        "ObjectRef": "oval:com.microsoft.cbl-mariner:obj:1643374849000004"
+      }
+    }
+  ]
+}

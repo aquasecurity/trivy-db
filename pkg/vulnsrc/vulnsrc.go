@@ -1,6 +1,7 @@
 package vulnsrc
 
 import (
+	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alma"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/amazon"
@@ -11,6 +12,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/glad"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/govulndb"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/mariner"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
@@ -24,7 +26,7 @@ import (
 )
 
 type VulnSrc interface {
-	Name() string
+	Name() types.SourceID
 	Update(dir string) (err error)
 }
 
@@ -48,17 +50,13 @@ var (
 		susecvrf.NewVulnSrc(susecvrf.SUSEEnterpriseLinux),
 		susecvrf.NewVulnSrc(susecvrf.OpenSUSE),
 		photon.NewVulnSrc(),
+		mariner.NewVulnSrc(),
 
 		// Language-specific packages
 		bundler.NewVulnSrc(),
 		composer.NewVulnSrc(),
 		node.NewVulnSrc(),
-		ghsa.NewVulnSrc(ghsa.Composer),
-		ghsa.NewVulnSrc(ghsa.Maven),
-		ghsa.NewVulnSrc(ghsa.Npm),
-		ghsa.NewVulnSrc(ghsa.Nuget),
-		ghsa.NewVulnSrc(ghsa.Pip),
-		ghsa.NewVulnSrc(ghsa.Rubygems),
+		ghsa.NewVulnSrc(),
 		glad.NewVulnSrc(),
 		govulndb.NewVulnSrc(),
 		osv.NewVulnSrc(),

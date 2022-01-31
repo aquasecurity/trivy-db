@@ -22,6 +22,12 @@ const (
 
 var (
 	platformFormat = "alpine %s"
+
+	source = types.DataSource{
+		ID:   vulnerability.Alpine,
+		Name: "Alpine Secdb",
+		URL:  "https://secdb.alpinelinux.org/",
+	}
 )
 
 type VulnSrc struct {
@@ -34,8 +40,8 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
-func (vs VulnSrc) Name() string {
-	return vulnerability.Alpine
+func (vs VulnSrc) Name() types.SourceID {
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -62,10 +68,13 @@ func (vs VulnSrc) Update(dir string) error {
 
 func (vs VulnSrc) save(advisories []advisory) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		for _, advisory := range advisories {
-			version := strings.TrimPrefix(advisory.Distroversion, "v")
+		for _, adv := range advisories {
+			version := strings.TrimPrefix(adv.Distroversion, "v")
 			platformName := fmt.Sprintf(platformFormat, version)
-			if err := vs.saveSecFixes(tx, platformName, advisory.PkgName, advisory.Secfixes); err != nil {
+			if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+				return xerrors.Errorf("failed to put data source: %w", err)
+			}
+			if err := vs.saveSecFixes(tx, platformName, adv.PkgName, adv.Secfixes); err != nil {
 				return err
 			}
 		}
@@ -91,7 +100,7 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 				if !strings.HasPrefix(cveID, "CVE-") {
 					continue
 				}
-				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, platform, pkgName, advisory); err != nil {
+				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkgName, []string{platform}, advisory); err != nil {
 					return xerrors.Errorf("failed to save Alpine advisory: %w", err)
 				}
 

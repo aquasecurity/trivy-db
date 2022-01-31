@@ -81,11 +81,11 @@ func TestConfig_ForEachAdvisory(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Initialize DB
-			dbtest.InitTestDB(t, tt.fixtures)
+			dbtest.InitDB(t, tt.fixtures)
 			defer db.Close()
 
 			dbc := db.Config{}
-			got, err := dbc.ForEachAdvisory(tt.args.source, tt.args.pkgName)
+			got, err := dbc.ForEachAdvisory([]string{tt.args.source}, tt.args.pkgName)
 
 			if tt.wantErr != "" {
 				require.NotNil(t, err)
@@ -104,7 +104,7 @@ func TestConfig_ForEachAdvisory(t *testing.T) {
 				}
 
 				var gotAdvisory types.Advisory
-				err = json.Unmarshal(g, &gotAdvisory)
+				err = json.Unmarshal(g.Content, &gotAdvisory)
 				require.NoError(t, err)
 
 				assert.Equal(t, wantAdvisory, gotAdvisory)
@@ -202,7 +202,7 @@ func TestConfig_GetAdvisories(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Initialize DB
-			dbtest.InitTestDB(t, tt.fixtures)
+			dbtest.InitDB(t, tt.fixtures)
 			defer db.Close()
 
 			dbc := db.Config{}

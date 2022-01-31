@@ -13,6 +13,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -45,6 +46,12 @@ var (
 		"hirsute": "21.04",
 		"impish":  "21.10",
 	}
+
+	source = types.DataSource{
+		ID:   vulnerability.Ubuntu,
+		Name: "Ubuntu CVE Tracker",
+		URL:  "https://git.launchpad.net/ubuntu-cve-tracker",
+	}
 )
 
 type Option func(src *VulnSrc)
@@ -73,8 +80,8 @@ func NewVulnSrc(opts ...Option) VulnSrc {
 	return src
 }
 
-func (vs VulnSrc) Name() string {
-	return vulnerability.Ubuntu
+func (vs VulnSrc) Name() types.SourceID {
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -141,7 +148,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 	for packageName, patch := range cve.Patches {
 		pkgName := string(packageName)
 		for release, status := range patch {
-			if !utils.StringInSlice(status.Status, targetStatuses) {
+			if !strings.InSlice(status.Status, targetStatuses) {
 				continue
 			}
 			osVersion, ok := UbuntuReleasesMapping[string(release)]
@@ -149,11 +156,15 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 				continue
 			}
 			platformName := fmt.Sprintf(platformFormat, osVersion)
+			if err := dbc.PutDataSource(tx, platformName, source); err != nil {
+				return xerrors.Errorf("failed to put data source: %w", err)
+			}
+
 			adv := types.Advisory{}
 			if status.Status == "released" {
 				adv.FixedVersion = status.Note
 			}
-			if err := dbc.PutAdvisoryDetail(tx, cve.Candidate, platformName, pkgName, adv); err != nil {
+			if err := dbc.PutAdvisoryDetail(tx, cve.Candidate, pkgName, []string{platformName}, adv); err != nil {
 				return xerrors.Errorf("failed to save Ubuntu advisory: %w", err)
 			}
 
@@ -162,7 +173,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 				References:  cve.References,
 				Description: cve.Description,
 			}
-			if err := dbc.PutVulnerabilityDetail(tx, cve.Candidate, vulnerability.Ubuntu, vuln); err != nil {
+			if err := dbc.PutVulnerabilityDetail(tx, cve.Candidate, source.ID, vuln); err != nil {
 				return xerrors.Errorf("failed to save Ubuntu vulnerability: %w", err)
 			}
 

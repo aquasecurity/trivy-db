@@ -16,6 +16,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -33,6 +34,12 @@ var (
 	suseDir = filepath.Join("cvrf", "suse")
 
 	versionReplacer = strings.NewReplacer("-SECURITY", "", "-LTSS", "", "-TERADATA", "")
+
+	source = types.DataSource{
+		ID:   vulnerability.SuseCVRF,
+		Name: "SUSE CVRF",
+		URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+	}
 )
 
 type VulnSrc struct {
@@ -47,15 +54,8 @@ func NewVulnSrc(dist Distribution) VulnSrc {
 	}
 }
 
-func (vs VulnSrc) Name() string {
-	switch vs.dist {
-	case SUSEEnterpriseLinux:
-		return vulnerability.SuseCVRF
-	case OpenSUSE:
-		return vulnerability.OpenSuseCVRF
-	default:
-		return ""
-	}
+func (vs VulnSrc) Name() types.SourceID {
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -113,7 +113,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 				FixedVersion: affectedPkg.Package.FixedVersion,
 			}
 
-			if err := vs.dbc.PutAdvisoryDetail(tx, cvrf.Tracking.ID, affectedPkg.OSVer, affectedPkg.Package.Name, advisory); err != nil {
+			if err := vs.dbc.PutDataSource(tx, affectedPkg.OSVer, source); err != nil {
+				return xerrors.Errorf("failed to put data source: %w", err)
+			}
+
+			if err := vs.dbc.PutAdvisoryDetail(tx, cvrf.Tracking.ID, affectedPkg.Package.Name,
+				[]string{affectedPkg.OSVer}, advisory); err != nil {
 				return xerrors.Errorf("unable to save %s CVRF: %w", affectedPkg.OSVer, err)
 			}
 		}
@@ -140,7 +145,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 			Severity:    severity,
 		}
 
-		if err := vs.dbc.PutVulnerabilityDetail(tx, cvrf.Tracking.ID, vulnerability.SuseCVRF, vuln); err != nil {
+		if err := vs.dbc.PutVulnerabilityDetail(tx, cvrf.Tracking.ID, source.ID, vuln); err != nil {
 			return xerrors.Errorf("failed to save SUSE CVRF vulnerability: %w", err)
 		}
 
@@ -196,7 +201,7 @@ func getOSVersion(platformName string) string {
 	if strings.Contains(platformName, "SUSE Linux Enterprise") {
 		// e.g. SUSE Linux Enterprise Server 12 SP1-LTSS
 		ss := strings.Fields(platformName)
-		if strings.HasPrefix(ss[len(ss)-1], "SP") || utils.IsInt(ss[len(ss)-2]) {
+		if strings.HasPrefix(ss[len(ss)-1], "SP") || ustrings.IsInt(ss[len(ss)-2]) {
 			// Remove suffix such as -TERADATA, -LTSS
 			sps := strings.Split(ss[len(ss)-1], "-")
 			// Remove "SP" prefix

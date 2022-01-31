@@ -34,7 +34,12 @@ var (
 	// TODO: support Conan, Npm, NuGet, PyPI and Packagist
 	supportedPkgTypes   = []packageType{Go, Maven}
 	supportedIDPrefixes = []string{"CVE", "GMS"}
-	datasource          = "GitLab Advisory Database"
+
+	source = types.DataSource{
+		ID:   vulnerability.GLAD,
+		Name: "GitLab Advisory Database Community",
+		URL:  "https://gitlab.com/gitlab-org/advisories-community",
+	}
 )
 
 type packageType string
@@ -49,8 +54,8 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
-func (vs VulnSrc) Name() string {
-	return vulnerability.GLAD
+func (vs VulnSrc) Name() types.SourceID {
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -120,12 +125,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, pkgType packageType, glads []Advisory) err
 			pkgName = strings.ReplaceAll(pkgName, "/", ":")
 		}
 
-		bucketName, err := bucket.Name(string(pkgType), datasource)
-		if err != nil {
-			return xerrors.Errorf("failed to get bucket name with %s, %s: %w", pkgType, datasource, err)
+		bucketName := bucket.Name(string(pkgType), source.Name)
+		if err := vs.dbc.PutDataSource(tx, bucketName, source); err != nil {
+			return xerrors.Errorf("failed to put data source: %w", err)
 		}
 
-		if err = vs.dbc.PutAdvisoryDetail(tx, glad.Identifier, bucketName, pkgName, a); err != nil {
+		if err := vs.dbc.PutAdvisoryDetail(tx, glad.Identifier, pkgName, []string{bucketName}, a); err != nil {
 			return xerrors.Errorf("failed to save GLAD advisory detail: %w", err)
 		}
 
@@ -138,12 +143,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, pkgType packageType, glads []Advisory) err
 			Description: glad.Description,
 		}
 
-		if err = vs.dbc.PutVulnerabilityDetail(tx, glad.Identifier, vulnerability.GLAD, vuln); err != nil {
+		if err := vs.dbc.PutVulnerabilityDetail(tx, glad.Identifier, source.ID, vuln); err != nil {
 			return xerrors.Errorf("failed to save GLAD vulnerability detail: %w", err)
 		}
 
 		// for optimization
-		if err = vs.dbc.PutVulnerabilityID(tx, glad.Identifier); err != nil {
+		if err := vs.dbc.PutVulnerabilityID(tx, glad.Identifier); err != nil {
 			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 		}
 	}

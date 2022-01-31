@@ -20,6 +20,12 @@ const (
 	platformFormat = "Photon OS %s"
 )
 
+var source = types.DataSource{
+	ID:   vulnerability.Photon,
+	Name: "Photon OS CVE metadata",
+	URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
+}
+
 type VulnSrc struct {
 	dbc db.Operation
 }
@@ -30,8 +36,8 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
-func (vs VulnSrc) Name() string {
-	return vulnerability.Photon
+func (vs VulnSrc) Name() types.SourceID {
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -73,10 +79,14 @@ func (vs VulnSrc) save(cves []PhotonCVE) error {
 func (vs VulnSrc) commit(tx *bolt.Tx, cves []PhotonCVE) error {
 	for _, cve := range cves {
 		platformName := fmt.Sprintf(platformFormat, cve.OSVersion)
+		if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+			return xerrors.Errorf("failed to put data source: %w", err)
+		}
+
 		advisory := types.Advisory{
 			FixedVersion: cve.ResVer,
 		}
-		if err := vs.dbc.PutAdvisoryDetail(tx, cve.CveID, platformName, cve.Pkg, advisory); err != nil {
+		if err := vs.dbc.PutAdvisoryDetail(tx, cve.CveID, cve.Pkg, []string{platformName}, advisory); err != nil {
 			return xerrors.Errorf("failed to save Photon advisory: %w", err)
 		}
 
@@ -84,7 +94,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []PhotonCVE) error {
 			// Photon uses CVSS Version 3.X
 			CvssScoreV3: cve.CveScore,
 		}
-		if err := vs.dbc.PutVulnerabilityDetail(tx, cve.CveID, vulnerability.Photon, vuln); err != nil {
+		if err := vs.dbc.PutVulnerabilityDetail(tx, cve.CveID, source.ID, vuln); err != nil {
 			return xerrors.Errorf("failed to save Photon vulnerability detail: %w", err)
 		}
 

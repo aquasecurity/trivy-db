@@ -1,0 +1,16 @@
+- bucket: Red Hat CPE
+  pairs:
+    - bucket: repository
+      pairs:
+        - key: rhel-lb-for-rhel-6-server-eus-debug-rpms
+          value:
+            - 1
+            - 2
+        - key: broken
+          value: "broken"
+    - bucket: cpe
+      pairs:
+        - key: "1"
+          value: cpe:/o:redhat:enterprise_linux:6::server
+        - key: "2"
+          value: cpe:/o:redhat:rhel_eus:6.7::server

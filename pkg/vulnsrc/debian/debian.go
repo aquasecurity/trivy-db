@@ -15,6 +15,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -41,6 +42,12 @@ var (
 	// NOTE: "removed" should not be marked as "not-affected".
 	// ref. https://security-team.debian.org/security_tracker.html#removed-packages
 	skipStatuses = []string{"not-affected", "undetermined"}
+
+	source = types.DataSource{
+		ID:   vulnerability.Debian,
+		Name: "Debian Security Tracker",
+		URL:  "https://salsa.debian.org/security-tracker-team/security-tracker",
+	}
 )
 
 type Option func(src *VulnSrc)
@@ -95,8 +102,8 @@ func NewVulnSrc(opts ...Option) VulnSrc {
 	return src
 }
 
-func (vs VulnSrc) Name() string {
-	return vulnerability.Debian
+func (vs VulnSrc) Name() types.SourceID {
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -185,7 +192,7 @@ func (vs VulnSrc) parseCVE(dir string) error {
 			}
 
 			// Skip not-affected, removed or undetermined advisories
-			if utils.StringInSlice(ann.Kind, skipStatuses) {
+			if strings.InSlice(ann.Kind, skipStatuses) {
 				vs.notAffected[bkt] = struct{}{}
 				continue
 			}
@@ -275,7 +282,7 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 				}
 
 				// Skip not-affected, removed or undetermined advisories
-				if utils.StringInSlice(ann.Kind, skipStatuses) {
+				if strings.InSlice(ann.Kind, skipStatuses) {
 					vs.notAffected[bkt] = struct{}{}
 					continue
 				}
@@ -436,13 +443,17 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 		FixedVersion: adv.FixedVersion,
 	}
 
-	if err := dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.Platform, adv.PkgName, detail); err != nil {
+	if err := dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.PkgName, []string{adv.Platform}, detail); err != nil {
 		return xerrors.Errorf("failed to save Debian advisory: %w", err)
 	}
 
 	// for optimization
 	if err := dbc.PutVulnerabilityID(tx, adv.VulnerabilityID); err != nil {
 		return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+	}
+
+	if err := dbc.PutDataSource(tx, adv.Platform, source); err != nil {
+		return xerrors.Errorf("failed to put data source: %w", err)
 	}
 
 	return nil

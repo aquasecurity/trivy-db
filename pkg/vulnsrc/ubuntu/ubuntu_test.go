@@ -10,6 +10,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
@@ -27,6 +28,14 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name: "happy path",
 			wantValues: []wantKV{
+				{
+					key: []string{"data-source", "ubuntu 18.04"},
+					value: types.DataSource{
+						ID:   vulnerability.Ubuntu,
+						Name: "Ubuntu CVE Tracker",
+						URL:  "https://git.launchpad.net/ubuntu-cve-tracker",
+					},
+				},
 				{
 					key: []string{"advisory-detail", "CVE-2020-1234", "ubuntu 18.04", "xen"},
 					value: types.Advisory{
@@ -49,7 +58,7 @@ func TestVulnSrc_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cacheDir := dbtest.InitTestDB(t, nil)
+			cacheDir := dbtest.InitDB(t, nil)
 
 			src := ubuntu.NewVulnSrc()
 			err := src.Update("testdata")

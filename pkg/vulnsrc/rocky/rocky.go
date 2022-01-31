@@ -14,17 +14,23 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 const (
-	rockyDir = "rocky"
+	rockyDir       = "rocky"
+	platformFormat = "rocky %s"
 )
 
 var (
-	platformFormat = "rocky %s"
-	targetRepos    = []string{"BaseOS", "AppStream", "extras"}
-	targetArches   = []string{"x86_64"}
+	targetRepos  = []string{"BaseOS", "AppStream", "extras"}
+	targetArches = []string{"x86_64"}
+	source       = types.DataSource{
+		ID:   vulnerability.Rocky,
+		Name: "Rocky Linux updateinfo",
+		URL:  "https://download.rockylinux.org/pub/rocky/",
+	}
 )
 
 type VulnSrc struct {
@@ -37,8 +43,8 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
-func (vs VulnSrc) Name() string {
-	return vulnerability.Rocky
+func (vs VulnSrc) Name() types.SourceID {
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -57,12 +63,12 @@ func (vs VulnSrc) Update(dir string) error {
 		}
 
 		majorVer, repo, arch := dirs[0], dirs[1], dirs[2]
-		if !utils.StringInSlice(repo, targetRepos) {
+		if !ustrings.InSlice(repo, targetRepos) {
 			log.Printf("Unsupported Rocky repo: %s", repo)
 			return nil
 		}
 
-		if !utils.StringInSlice(arch, targetArches) {
+		if !ustrings.InSlice(arch, targetArches) {
 			switch arch {
 			case "aarch64":
 			default:
@@ -89,6 +95,9 @@ func (vs VulnSrc) save(errataVer map[string][]RLSA) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for majorVer, errata := range errataVer {
 			platformName := fmt.Sprintf(platformFormat, majorVer)
+			if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+				return xerrors.Errorf("failed to put data source: %w", err)
+			}
 			if err := vs.commit(tx, platformName, errata); err != nil {
 				return xerrors.Errorf("error in save Rocky %s: %w", majorVer, err)
 			}
@@ -115,7 +124,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error 
 				advisory := types.Advisory{
 					FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 				}
-				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, platformName, pkg.Name, advisory); err != nil {
+				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkg.Name, []string{platformName}, advisory); err != nil {
 					return xerrors.Errorf("failed to save Rocky advisory: %w", err)
 				}
 
@@ -134,7 +143,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error 
 					Title:       erratum.Title,
 					Description: erratum.Description,
 				}
-				if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Rocky, vuln); err != nil {
+				if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, source.ID, vuln); err != nil {
 					return xerrors.Errorf("failed to save Rocky vulnerability: %w", err)
 				}
 

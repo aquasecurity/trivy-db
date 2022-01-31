@@ -22,21 +22,38 @@ import (
 const (
 	osvDir     = "osv"
 	dataSource = "Open Source Vulnerability"
+	sourceID   = vulnerability.OSV
 )
 
 var ecosystems = []ecosystem{
-	{dir: "python", pkgType: vulnerability.Pip, source: vulnerability.OSVPyPI},
-	{dir: "rust", pkgType: vulnerability.Cargo, source: vulnerability.OSVCratesio},
+	{
+		dir:  "python",
+		name: vulnerability.Pip,
+		dataSource: types.DataSource{
+			ID:   sourceID,
+			Name: "Python Packaging Advisory Database",
+			URL:  "https://github.com/pypa/advisory-db",
+		},
+	},
+	{
+		dir:  "rust",
+		name: vulnerability.Cargo,
+		dataSource: types.DataSource{
+			ID:   sourceID,
+			Name: "RustSec Advisory Database",
+			URL:  "https://github.com/RustSec/advisory-db",
+		},
+	},
 
 	// We cannot use OSV for golang scanning until module names are included.
 	// See https://github.com/golang/go/issues/50006 for the detail.
-	//{dir: "go", pkgType: vulnerability.Go, source: vulnerability.OSVGo},
+	//{dir: "go", pkgType: vulnerability.Go, sourceID: vulnerability.OSVGo},
 }
 
 type ecosystem struct {
-	dir     string
-	pkgType string
-	source  string
+	dir        string
+	name       types.Ecosystem
+	dataSource types.DataSource
 }
 
 type VulnSrc struct {
@@ -49,22 +66,29 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
-func (vs VulnSrc) Name() string {
-	return "osv"
+func (vs VulnSrc) Name() types.SourceID {
+	return sourceID
 }
 
 func (vs VulnSrc) Update(dir string) error {
 	for _, eco := range ecosystems {
-		log.Printf("    Updating Open Source Vulnerability %s", eco.pkgType)
+		log.Printf("    Updating Open Source Vulnerability %s", eco.name)
 		rootDir := filepath.Join(dir, "vuln-list", osvDir, eco.dir)
 
 		var entries []Entry
 		err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-			var osv Entry
-			if err := json.NewDecoder(r).Decode(&osv); err != nil {
+			var entry Entry
+			if err := json.NewDecoder(r).Decode(&entry); err != nil {
 				return xerrors.Errorf("JSON decode error (%s): %w", path, err)
 			}
-			entries = append(entries, osv)
+
+			// GHSA-IDs are already stored via ghsa package.
+			// Skip them to avoid duplication.
+			if strings.HasPrefix(entry.ID, "GHSA") {
+				return nil
+			}
+
+			entries = append(entries, entry)
 			return nil
 		})
 		if err != nil {
@@ -95,9 +119,10 @@ func (vs VulnSrc) save(eco ecosystem, entries []Entry) error {
 }
 
 func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
-	bktName, err := bucket.Name(eco.pkgType, dataSource)
-	if err != nil {
-		return xerrors.Errorf("bucket error: %w", err)
+	bktName := bucket.Name(string(eco.name), dataSource)
+
+	if err := vs.dbc.PutDataSource(tx, bktName, eco.dataSource); err != nil {
+		return xerrors.Errorf("failed to put data source: %w", err)
 	}
 
 	// Aliases contain CVE-IDs
@@ -113,7 +138,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 	}
 
 	for _, affected := range entry.Affected {
-
+		pkgName := vulnerability.NormalizePkgName(eco.name, affected.Package.Name)
 		var patchedVersions, vulnerableVersions []string
 		for _, affects := range affected.Ranges {
 			if affects.Type == osv.TypeGit {
@@ -148,7 +173,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 		}
 
 		for _, vulnID := range vulnIDs {
-			if err = vs.dbc.PutAdvisoryDetail(tx, vulnID, bktName, affected.Package.Name, advisory); err != nil {
+			if err := vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bktName}, advisory); err != nil {
 				return xerrors.Errorf("failed to save OSV advisory: %w", err)
 			}
 		}
@@ -161,11 +186,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 			References:  references,
 		}
 
-		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, eco.source, vuln); err != nil {
+		if err := vs.dbc.PutVulnerabilityDetail(tx, vulnID, sourceID, vuln); err != nil {
 			return xerrors.Errorf("failed to put vulnerability detail (%s): %w", vulnID, err)
 		}
 
-		if err = vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
+		if err := vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
 			return xerrors.Errorf("failed to put vulnerability id (%s): %w", vulnID, err)
 		}
 	}

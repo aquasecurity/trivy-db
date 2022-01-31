@@ -12,6 +12,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
@@ -30,6 +31,14 @@ func TestVulnSrc_Update(t *testing.T) {
 			name: "happy path",
 			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []wantKV{
+				{
+					key: []string{"data-source", "debian 9"},
+					value: types.DataSource{
+						ID:   vulnerability.Debian,
+						Name: "Debian Security Tracker",
+						URL:  "https://salsa.debian.org/security-tracker-team/security-tracker",
+					},
+				},
 				// Ref. https://security-tracker.debian.org/tracker/CVE-2021-33560
 				{
 					key: []string{"advisory-detail", "CVE-2021-33560", "debian 9", "libgcrypt20"},
@@ -95,7 +104,7 @@ func TestVulnSrc_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tmpDir := dbtest.InitTestDB(t, nil)
+			tmpDir := dbtest.InitDB(t, nil)
 			dbPath := db.Path(tmpDir)
 
 			vs := debian.NewVulnSrc()
@@ -163,7 +172,7 @@ func TestVulnSrc_Get(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_ = dbtest.InitTestDB(t, tt.fixtures)
+			_ = dbtest.InitDB(t, tt.fixtures)
 			defer db.Close()
 
 			vs := debian.NewVulnSrc()

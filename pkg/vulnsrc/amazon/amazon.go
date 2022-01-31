@@ -14,6 +14,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -24,6 +25,12 @@ const (
 
 var (
 	targetVersions = []string{"1", "2"}
+
+	source = types.DataSource{
+		ID:   vulnerability.Amazon,
+		Name: "Amazon Linux Security Center",
+		URL:  "https://alas.aws.amazon.com/",
+	}
 )
 
 type VulnSrc struct {
@@ -63,8 +70,8 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
-func (vs VulnSrc) Name() string {
-	return vulnerability.Amazon
+func (vs VulnSrc) Name() types.SourceID {
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -88,7 +95,7 @@ func (vs *VulnSrc) walkFunc(r io.Reader, path string) error {
 		return nil
 	}
 	version := paths[len(paths)-2]
-	if !utils.StringInSlice(version, targetVersions) {
+	if !ustrings.InSlice(version, targetVersions) {
 		log.Printf("unsupported Amazon version: %s\n", version)
 		return nil
 	}
@@ -115,14 +122,17 @@ func (vs VulnSrc) save() error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx) error {
 	for majorVersion, alasList := range vs.advisories {
+		platformName := fmt.Sprintf(platformFormat, majorVersion)
+		if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+			return xerrors.Errorf("failed to put data source: %w", err)
+		}
 		for _, alas := range alasList {
 			for _, cveID := range alas.CveIDs {
 				for _, pkg := range alas.Packages {
-					platformName := fmt.Sprintf(platformFormat, majorVersion)
 					advisory := types.Advisory{
 						FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 					}
-					if err := vs.dbc.PutAdvisoryDetail(tx, cveID, platformName, pkg.Name, advisory); err != nil {
+					if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkg.Name, []string{platformName}, advisory); err != nil {
 						return xerrors.Errorf("failed to save Amazon advisory: %w", err)
 					}
 
@@ -137,7 +147,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 						Description: alas.Description,
 						Title:       "",
 					}
-					if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.Amazon, vuln); err != nil {
+					if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, source.ID, vuln); err != nil {
 						return xerrors.Errorf("failed to save Amazon vulnerability detail: %w", err)
 					}
 

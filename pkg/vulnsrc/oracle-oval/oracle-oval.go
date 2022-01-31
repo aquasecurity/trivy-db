@@ -13,6 +13,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	version "github.com/knqyf263/go-rpm-version"
 	"golang.org/x/xerrors"
@@ -23,6 +24,12 @@ var (
 	platformFormat  = "Oracle Linux %s"
 	targetPlatforms = []string{"Oracle Linux 5", "Oracle Linux 6", "Oracle Linux 7", "Oracle Linux 8"}
 	oracleDir       = filepath.Join("oval", "oracle")
+
+	source = types.DataSource{
+		ID:   vulnerability.OracleOVAL,
+		Name: "Oracle Linux OVAL definitions",
+		URL:  "https://linux.oracle.com/security/oval/",
+	}
 )
 
 type VulnSrc struct {
@@ -35,8 +42,8 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
-func (vs VulnSrc) Name() string {
-	return vulnerability.OracleOVAL
+func (vs VulnSrc) Name() types.SourceID {
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -95,8 +102,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			}
 
 			platformName := fmt.Sprintf(platformFormat, affectedPkg.OSVer)
-			if !utils.StringInSlice(platformName, targetPlatforms) {
+			if !ustrings.InSlice(platformName, targetPlatforms) {
 				continue
+			}
+
+			if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+				return xerrors.Errorf("failed to put data source: %w", err)
 			}
 
 			advisory := types.Advisory{
@@ -104,7 +115,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			}
 
 			for _, vulnID := range vulnIDs {
-				if err := vs.dbc.PutAdvisoryDetail(tx, vulnID, platformName, affectedPkg.Package.Name, advisory); err != nil {
+				if err := vs.dbc.PutAdvisoryDetail(tx, vulnID, affectedPkg.Package.Name, []string{platformName}, advisory); err != nil {
 					return xerrors.Errorf("failed to save Oracle Linux OVAL: %w", err)
 				}
 			}
@@ -123,7 +134,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 				Severity:    severityFromThreat(oval.Severity),
 			}
 
-			if err := vs.dbc.PutVulnerabilityDetail(tx, vulnID, vulnerability.OracleOVAL, vuln); err != nil {
+			if err := vs.dbc.PutVulnerabilityDetail(tx, vulnID, source.ID, vuln); err != nil {
 				return xerrors.Errorf("failed to save Oracle Linux OVAL vulnerability: %w", err)
 			}
 
@@ -181,7 +192,7 @@ func referencesFromContains(sources []string, matches []string) []string {
 			}
 		}
 	}
-	return utils.Uniq(references)
+	return ustrings.Unique(references)
 }
 
 func severityFromThreat(sev string) types.Severity {

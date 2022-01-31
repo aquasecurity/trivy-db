@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func InitTestDB(t *testing.T, fixtureFiles []string) string {
+func InitDB(t *testing.T, fixtureFiles []string) string {
 	t.Helper()
 
 	// Create a temp dir

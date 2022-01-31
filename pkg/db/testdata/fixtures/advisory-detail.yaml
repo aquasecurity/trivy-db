@@ -1,0 +1,21 @@
+- bucket: advisory-detail
+  pairs:
+    - bucket: CVE-2019-14904
+      pairs:
+        - bucket: alpine 3.14
+          pairs:
+            - key: ansible
+              value:
+                FixedVersion: 2.9.3-r0
+        - bucket: debian 10
+          pairs:
+            - key: ansible
+              value:
+                FixedVersion: 2.3.4
+        - bucket: Red Hat
+          pairs:
+            - bucket: "cpe:/o:redhat:enterprise_linux:6::server"
+              pairs:
+                - key: ansible
+                  value:
+                    FixedVersion: 3.4.5
