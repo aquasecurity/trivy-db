@@ -30,9 +30,13 @@
     "Severity": "MODERATE",
     "Summary": "Moderate severity vulnerability that affects CLEditor",
     "UpdatedAt": "2019-10-24T01:33:56Z",
-    "WithdrawnAt": ""
+    "WithdrawnAt": "",
+    "CVSS": {
+      "Score": 0,
+      "VectorString": ""
+    }
   },
-  "VersionAdvisories": [
+  "Versions": [
     {
       "FirstPatchedVersion": {
         "Identifier": ""
