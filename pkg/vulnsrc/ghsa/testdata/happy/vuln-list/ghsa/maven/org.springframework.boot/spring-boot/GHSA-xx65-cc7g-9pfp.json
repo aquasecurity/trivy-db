@@ -12,6 +12,12 @@
     "References": [
       {
         "Url": "https://nvd.nist.gov/vuln/detail/CVE-2018-1196"
+      },
+      {
+        "Url": "https://github.com/advisories/GHSA-xx65-cc7g-9pfp"
+      },
+      {
+        "Url": "https://pivotal.io/security/cve-2018-1196"
       }
     ],
     "Identifiers": [
@@ -29,10 +35,14 @@
     "PublishedAt": "2018-10-18T18:05:57Z",
     "Severity": "MODERATE",
     "Summary": "Moderate severity vulnerability that affects org.springframework.boot:spring-boot",
-    "UpdatedAt": "2019-07-03T21:02:04Z",
-    "WithdrawnAt": ""
+    "UpdatedAt": "2021-09-22T18:26:44Z",
+    "WithdrawnAt": "",
+    "CVSS": {
+      "Score": 5.9,
+      "VectorString": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N"
+    }
   },
-  "VersionAdvisories": [
+  "Versions": [
     {
       "FirstPatchedVersion": {
         "Identifier": "1.5.10"

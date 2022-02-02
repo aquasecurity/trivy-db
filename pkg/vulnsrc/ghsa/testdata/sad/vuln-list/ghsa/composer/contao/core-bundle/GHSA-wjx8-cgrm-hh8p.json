@@ -15,6 +15,18 @@
       },
       {
         "Url": "https://nvd.nist.gov/vuln/detail/CVE-2019-19745"
+      },
+      {
+        "Url": "https://contao.org/en/news.html"
+      },
+      {
+        "Url": "https://contao.org/en/security-advisories/unrestricted-file-uploads.html"
+      },
+      {
+        "Url": "https://github.com/FriendsOfPHP/security-advisories/blob/master/contao/core-bundle/CVE-2019-19745.yaml"
+      },
+      {
+        "Url": "https://github.com/advisories/GHSA-wjx8-cgrm-hh8p"
       }
     ],
     "Identifiers": [
@@ -31,11 +43,15 @@
     "Origin": "UNSPECIFIED",
     "PublishedAt": "2019-12-17T22:53:10Z",
     "Severity": "HIGH",
-    "Summary": "High severity vulnerability that affects contao/core-bundle",
-    "UpdatedAt": "2019-12-17T22:53:10Z",
-    "WithdrawnAt": ""
+    "Summary": "Unrestricted file uploads in Contao",
+    "UpdatedAt": "2021-08-19T16:10:15Z",
+    "WithdrawnAt": "",
+    "CVSS": {
+      "Score": 8.8,
+      "VectorString": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    }
   },
-  "VersionAdvisories": [
+  "Versions": [
     {
       "FirstPatchedVersion": {
         "Identifier": "4.8.6"
@@ -49,4 +65,3 @@
       "VulnerableVersionRange": "\u003e= 4.0.0, \u003c 4.4.46"
     }
   ]
-}
