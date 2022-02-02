@@ -1,19 +1,18 @@
 package susecvrf
 
 import (
-	"errors"
 	"fmt"
+	fixtures "github.com/aquasecurity/bolt-fixtures"
+	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"os"
+	"path/filepath"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
-	bolt "go.etcd.io/bbolt"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMain(m *testing.M) {
@@ -21,712 +20,196 @@ func TestMain(m *testing.M) {
 }
 
 func TestVulnSrc_Update(t *testing.T) {
-	testCases := []struct {
-		name           string
-		dist           Distribution
-		cacheDir       string
-		batchUpdateErr error
-		wantErr        string
-	}{
-		{
-			name:     "happy path with SUSE Enterprise Linux",
-			dist:     SUSEEnterpriseLinux,
-			cacheDir: "testdata",
-		},
-		{
-			name:     "happy path with openSUSE",
-			dist:     OpenSUSE,
-			cacheDir: "testdata",
-		},
-		{
-			name:     "cache dir doesnt exist",
-			dist:     SUSEEnterpriseLinux,
-			cacheDir: "badpathdoesnotexist",
-			wantErr:  "lstat badpathdoesnotexist/vuln-list/cvrf/suse/suse: no such file or directory",
-		},
-		{
-			name:           "unable to save suse linux oval defintions",
-			dist:           SUSEEnterpriseLinux,
-			cacheDir:       "testdata",
-			batchUpdateErr: errors.New("unable to batch update"),
-			wantErr:        "unable to batch update",
-		},
+	type want struct {
+		key   []string
+		value interface{}
 	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.On("BatchUpdate", mock.Anything).Return(tc.batchUpdateErr)
-			ac := VulnSrc{dbc: mockDBConfig}
-
-			err := ac.Update(tc.cacheDir)
-			switch {
-			case tc.wantErr != "":
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), tc.wantErr, tc.name)
-			default:
-				assert.NoError(t, err, tc.name)
-			}
-		})
-	}
-}
-
-func TestVulnSrc_Commit(t *testing.T) {
-	testCases := []struct {
-		name                   string
-		cvrfs                  []SuseCvrf
-		putDataSource          []db.OperationPutDataSourceExpectation
-		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
-		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
-		putVulnerabilityID     []db.OperationPutVulnerabilityIDExpectation
-		expectedErrorMsg       string
+	tests := []struct {
+		name       string
+		dir        string
+		dist       Distribution
+		wantValues []want
+		wantErr    string
 	}{
-		{
-			name: "happy path with SUSE Enterprise Linux",
-			cvrfs: []SuseCvrf{
-				{
-					Title: "Security update for helm-mirror",
-					Tracking: DocumentTracking{
-						ID: "SUSE-SU-2019:0048-2",
-					},
-					Notes: []DocumentNote{
-						{
-							Text:  "Security update for helm-mirror",
-							Title: "Topic",
-							Type:  "Summary",
-						},
-						{
-							Text:  "This update for helm-mirror to version 0.2.1 fixes the following issues:\n\n\nSecurity issues fixed:\n\n- CVE-2018-16873: Fixed a remote command execution (bsc#1118897)\n- CVE-2018-16874: Fixed a directory traversal in \u0026quot;go get\u0026quot; via curly braces in import path (bsc#1118898)\n- CVE-2018-16875: Fixed a CPU denial of service (bsc#1118899)\n\nNon-security issue fixed:\n\n- Update to v0.2.1 (bsc#1120762)\n- Include helm-mirror into the containers module (bsc#1116182)\n",
-							Title: "Details",
-							Type:  "General",
-						},
-						{
-							Text:  "The CVRF data is provided by SUSE under the Creative Commons License 4.0 with Attribution for Non-Commercial usage (CC-BY-NC-4.0).",
-							Title: "Terms of Use",
-							Type:  "Legal Disclaimer",
-						},
-					},
-					ProductTree: ProductTree{
-						Relationships: []Relationship{
-							{
-								ProductReference:          "helm-mirror-0.2.1-1.7.1",
-								RelatesToProductReference: "SUSE Linux Enterprise Module for Containers 15 SP1",
-								RelationType:              "Default Component Of",
-							},
-						},
-					},
-					References: []Reference{
-						{
-							URL:         "https://www.suse.com/support/update/announcement/2019/suse-su-20190048-2/",
-							Description: "Link for SUSE-SU-2019:0048-2",
-						},
-						{
-							URL:         "http://lists.suse.com/pipermail/sle-security-updates/2019-July/005660.html",
-							Description: "E-Mail link for SUSE-SU-2019:0048-2",
-						},
-					},
-					Vulnerabilities: []Vulnerability{
-						{
-							CVE: "CVE-2018-16873",
-							Threats: []Threat{
-								{
-									Type:     "Impact",
-									Severity: "important",
-								},
-							},
-						},
-						{
-							CVE: "CVE-2018-16874",
-							Threats: []Threat{
-								{
-									Type:     "Impact",
-									Severity: "moderate",
-								},
-							},
-						},
-						{
-							CVE: "CVE-2018-16875",
-							Threats: []Threat{
-								{
-									Type:     "Impact",
-									Severity: "moderate",
-								},
-							},
-						},
-					},
-				},
-			},
-			putDataSource: []db.OperationPutDataSourceExpectation{
-				{
-					Args: db.OperationPutDataSourceArgs{
-						TxAnything: true,
-						BktName:    "SUSE Linux Enterprise 15.1",
-						Source: types.DataSource{
-							ID:   vulnerability.SuseCVRF,
-							Name: "SUSE CVRF",
-							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
-						},
-					},
-					Returns: db.OperationPutDataSourceReturns{},
-				},
-			},
-			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
-				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:      true,
-						NestedBktNames:  []string{"SUSE Linux Enterprise 15.1"},
-						PkgName:         "helm-mirror",
-						VulnerabilityID: "SUSE-SU-2019:0048-2",
-						Advisory: types.Advisory{
-							FixedVersion: "0.2.1-1.7.1",
-						},
-					},
-					Returns: db.OperationPutAdvisoryDetailReturns{},
-				},
-			},
-			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
-				{
-					Args: db.OperationPutVulnerabilityDetailArgs{
-						TxAnything:      true,
-						VulnerabilityID: "SUSE-SU-2019:0048-2",
-						Source:          "suse-cvrf",
-						Vulnerability: types.VulnerabilityDetail{
-							Title:       "Security update for helm-mirror",
-							Description: "This update for helm-mirror to version 0.2.1 fixes the following issues:\n\n\nSecurity issues fixed:\n\n- CVE-2018-16873: Fixed a remote command execution (bsc#1118897)\n- CVE-2018-16874: Fixed a directory traversal in \u0026quot;go get\u0026quot; via curly braces in import path (bsc#1118898)\n- CVE-2018-16875: Fixed a CPU denial of service (bsc#1118899)\n\nNon-security issue fixed:\n\n- Update to v0.2.1 (bsc#1120762)\n- Include helm-mirror into the containers module (bsc#1116182)\n",
-							References: []string{
-								"https://www.suse.com/support/update/announcement/2019/suse-su-20190048-2/",
-								"http://lists.suse.com/pipermail/sle-security-updates/2019-July/005660.html",
-							},
-							Severity: types.SeverityHigh,
-						},
-					},
-					Returns: db.OperationPutVulnerabilityDetailReturns{},
-				},
-			},
-			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
-				{
-					Args: db.OperationPutVulnerabilityIDArgs{
-						TxAnything:      true,
-						VulnerabilityID: "SUSE-SU-2019:0048-2",
-					},
-				},
-			},
-		},
 		{
 			name: "happy path with openSUSE",
-			cvrfs: []SuseCvrf{
+			dir:  filepath.Join("testdata", "happy", "openSUSE"),
+			dist: OpenSUSE,
+			wantValues: []want{
 				{
-					Title: "Security update for strongswan",
-					Tracking: DocumentTracking{
-						ID: "openSUSE-SU-2019:2598-1",
+					key: []string{"data-source", "openSUSE Leap 15.1"},
+					value: types.DataSource{
+						ID:   vulnerability.SuseCVRF,
+						Name: "SUSE CVRF",
+						URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
 					},
-					Notes: []DocumentNote{
-						{
-							Text:  "Security update for GraphicsMagick",
-							Title: "Topic",
-							Type:  "Summary",
-						},
-						{
-							Text:  "This update for GraphicsMagick fixes the following issues:\n\nSecurity vulnerabilities fixed:\n\n- CVE-2018-20184: Fixed heap-based buffer overflow in the WriteTGAImage function of tga.c (bsc#1119822)\n- CVE-2018-20189: Fixed denial of service vulnerability in ReadDIBImage function of coders/dib.c (bsc#1119790)\n\nThis update was imported from the openSUSE:Leap:15.0:Update update project.",
-							Title: "Details",
-							Type:  "General",
-						},
-						{
-							Text:  "The CVRF data is provided by SUSE under the Creative Commons License 4.0 with Attribution for Non-Commercial usage (CC-BY-NC-4.0).",
-							Title: "Terms of Use",
-							Type:  "Legal Disclaimer",
-						},
+				},
+				{
+					key: []string{"advisory-detail", "openSUSE-SU-2019:2598-1", "openSUSE Leap 15.1", "strongswan"},
+					value: types.Advisory{
+						FixedVersion: "5.6.0-lp151.4.3.1",
 					},
-					ProductTree: ProductTree{
-						Relationships: []Relationship{
-							{
-								ProductReference:          "strongswan-5.6.0-lp151.4.3.1",
-								RelatesToProductReference: "openSUSE Leap 15.1",
-								RelationType:              "Default Component Of",
-							},
-							{
-								ProductReference:          "strongswan-sqlite-5.6.0-lp151.4.3.1",
-								RelatesToProductReference: "openSUSE Leap 15.1",
-								RelationType:              "Default Component Of",
-							},
-						},
+				},
+				{
+					key: []string{"advisory-detail", "openSUSE-SU-2019:2598-1", "openSUSE Leap 15.1", "strongswan-sqlite"},
+					value: types.Advisory{
+						FixedVersion: "5.6.0-lp151.4.3.1",
 					},
-					References: []Reference{
-						{
-							URL:         "http://lists.opensuse.org/opensuse-security-announce/2019-12/msg00001.html",
-							Description: "E-Mail link for openSUSE-SU-2019:2598-1",
+				},
+				{
+					key: []string{"vulnerability-detail", "openSUSE-SU-2019:2598-1", "suse-cvrf"},
+					value: types.VulnerabilityDetail{
+						Title:       "Security update for strongswan",
+						Description: "This update for strongswan fixes the following issues:\n\nSecurity issues fixed: \n\n- CVE-2018-5388: Fixed a buffer underflow which may allow to a remote attacker \n  with local user credentials to resource exhaustion and denial of service while \n  reading from the socket (bsc#1094462).\n- CVE-2018-10811: Fixed a denial of service during  the IKEv2 key derivation if \n  the openssl plugin is used in FIPS mode and HMAC-MD5 is negotiated as PRF \n  (bsc#1093536).\n- CVE-2018-16151,CVE-2018-16152: Fixed multiple flaws in the gmp plugin which \n  might lead to authorization bypass (bsc#1107874).\n- CVE-2018-17540: Fixed an improper input validation in gmp plugin (bsc#1109845).  \n\nThis update was imported from the SUSE:SLE-15:Update update project.",
+						References: []string{
+							"https://lists.opensuse.org/opensuse-security-announce/2019-12/msg00001.html",
+							"https://www.suse.com/support/security/rating/",
 						},
-						{
-							URL:         "https://www.suse.com/support/security/rating/",
-							Description: "SUSE Security Ratings",
-						},
+						Severity: types.SeverityHigh,
 					},
-					Vulnerabilities: []Vulnerability{
-						{
-							CVE:         "CVE-2018-10811",
-							Description: "strongSwan 5.6.0 and older allows Remote Denial of Service because of Missing Initialization of a Variable.",
-							Threats:     []Threat{{Type: "Impact", Severity: "important"}},
-						},
-						{
-							CVE:         "CVE-2018-16151",
-							Description: "In verify_emsa_pkcs1_signature() in gmp_rsa_public_key.c in the gmp plugin in strongSwan 4.x and 5.x before 5.7.0, the RSA implementation based on GMP does not reject excess data after the encoded algorithm OID during PKCS#1 v1.5 signature verification. Similar to the flaw in the same version of strongSwan regarding digestAlgorithm.parameters, a remote attacker can forge signatures when small public exponents are being used, which could lead to impersonation when only an RSA signature is used for IKEv2 authentication.",
-							Threats:     []Threat{{Type: "Impact", Severity: "moderate"}},
-						},
-						{
-							CVE:         "CVE-2018-16152",
-							Description: "In verify_emsa_pkcs1_signature() in gmp_rsa_public_key.c in the gmp plugin in strongSwan 4.x and 5.x before 5.7.0, the RSA implementation based on GMP does not reject excess data in the digestAlgorithm.parameters field during PKCS#1 v1.5 signature verification. Consequently, a remote attacker can forge signatures when small public exponents are being used, which could lead to impersonation when only an RSA signature is used for IKEv2 authentication. This is a variant of CVE-2006-4790 and CVE-2014-1568.",
-							Threats:     []Threat{{Type: "Impact", Severity: "moderate"}},
-						},
-						{
-							CVE:         "CVE-2018-17540",
-							Description: "The gmp plugin in strongSwan before 5.7.1 has a Buffer Overflow via a crafted certificate.",
-							Threats:     []Threat{{Type: "Impact", Severity: "important"}},
-						},
-					},
+				},
+				{
+					key:   []string{"vulnerability-id", "openSUSE-SU-2019:2598-1"},
+					value: map[string]interface{}{},
 				},
 			},
-			putDataSource: []db.OperationPutDataSourceExpectation{
+		},
+		{
+			name: "happy path with SUSE Enterprise Linux",
+			dir:  filepath.Join("testdata", "happy", "SUSE Enterprise Linux"),
+			dist: SUSEEnterpriseLinux,
+			wantValues: []want{
 				{
-					Args: db.OperationPutDataSourceArgs{
-						TxAnything: true,
-						BktName:    "openSUSE Leap 15.1",
-						Source: types.DataSource{
-							ID:   vulnerability.SuseCVRF,
-							Name: "SUSE CVRF",
-							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
-						},
+					key: []string{"data-source", "SUSE Linux Enterprise 15.1"},
+					value: types.DataSource{
+						ID:   vulnerability.SuseCVRF,
+						Name: "SUSE CVRF",
+						URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
 					},
-					Returns: db.OperationPutDataSourceReturns{},
-				},
-			},
-			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
-				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:      true,
-						NestedBktNames:  []string{"openSUSE Leap 15.1"},
-						PkgName:         "strongswan",
-						VulnerabilityID: "openSUSE-SU-2019:2598-1",
-						Advisory: types.Advisory{
-							FixedVersion: "5.6.0-lp151.4.3.1",
-						},
-					},
-					Returns: db.OperationPutAdvisoryDetailReturns{},
 				},
 				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:      true,
-						NestedBktNames:  []string{"openSUSE Leap 15.1"},
-						PkgName:         "strongswan-sqlite",
-						VulnerabilityID: "openSUSE-SU-2019:2598-1",
-						Advisory: types.Advisory{
-							FixedVersion: "5.6.0-lp151.4.3.1",
-						},
+					key: []string{"advisory-detail", "SUSE-SU-2019:0048-2", "SUSE Linux Enterprise 15.1", "helm-mirror"},
+					value: types.Advisory{
+						FixedVersion: "0.2.1-1.7.1",
 					},
-					Returns: db.OperationPutAdvisoryDetailReturns{},
 				},
-			},
-			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.OperationPutVulnerabilityDetailArgs{
-						TxAnything:      true,
-						VulnerabilityID: "openSUSE-SU-2019:2598-1",
-						Source:          "suse-cvrf",
-						Vulnerability: types.VulnerabilityDetail{
-							Title:       "Security update for strongswan",
-							Description: "This update for GraphicsMagick fixes the following issues:\n\nSecurity vulnerabilities fixed:\n\n- CVE-2018-20184: Fixed heap-based buffer overflow in the WriteTGAImage function of tga.c (bsc#1119822)\n- CVE-2018-20189: Fixed denial of service vulnerability in ReadDIBImage function of coders/dib.c (bsc#1119790)\n\nThis update was imported from the openSUSE:Leap:15.0:Update update project.",
-							References: []string{
-								"http://lists.opensuse.org/opensuse-security-announce/2019-12/msg00001.html",
-								"https://www.suse.com/support/security/rating/",
-							},
-							Severity: types.SeverityHigh,
+					key: []string{"vulnerability-detail", "SUSE-SU-2019:0048-2", "suse-cvrf"},
+					value: types.VulnerabilityDetail{
+						Title:       "Security update for helm-mirror",
+						Description: "This update for helm-mirror to version 0.2.1 fixes the following issues:\n\n\nSecurity issues fixed:\n\n- CVE-2018-16873: Fixed a remote command execution (bsc#1118897)\n- CVE-2018-16874: Fixed a directory traversal in &quot;go get&quot; via curly braces in import path (bsc#1118898)\n- CVE-2018-16875: Fixed a CPU denial of service (bsc#1118899)\n\nNon-security issue fixed:\n\n- Update to v0.2.1 (bsc#1120762)\n- Include helm-mirror into the containers module (bsc#1116182)\n",
+						References: []string{
+							"https://www.suse.com/support/update/announcement/2019/suse-su-20190048-2/",
+							"http://lists.suse.com/pipermail/sle-security-updates/2019-July/005660.html",
+							"https://www.suse.com/support/security/rating/",
 						},
+						Severity: types.SeverityHigh,
 					},
-					Returns: db.OperationPutVulnerabilityDetailReturns{},
 				},
-			},
-			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutVulnerabilityIDArgs{
-						TxAnything:      true,
-						VulnerabilityID: "openSUSE-SU-2019:2598-1",
-					},
+					key:   []string{"vulnerability-id", "SUSE-SU-2019:0048-2"},
+					value: map[string]interface{}{},
 				},
 			},
 		},
 		{
 			name: "happy path with openSUSE CVRF including SUSE Linux Enterprise Linux",
-			cvrfs: []SuseCvrf{
+			dir:  filepath.Join("testdata", "happy", "openSUSE CVRF including SUSE Linux Enterprise Linux"),
+			dist: OpenSUSE,
+			wantValues: []want{
 				{
-					Title: "Security update for GraphicsMagick",
-					Tracking: DocumentTracking{
-						ID: "openSUSE-SU-2019:0003-1",
-					},
-					ProductTree: ProductTree{
-						Relationships: []Relationship{
-							{
-								ProductReference:          "GraphicsMagick-1.3.29-bp150.2.12.1",
-								RelatesToProductReference: "SUSE Package Hub for SUSE Linux Enterprise 15",
-								RelationType:              "Default Component Of",
-							},
-							{
-								ProductReference:          "GraphicsMagick-devel-1.3.29-bp150.2.12.1",
-								RelatesToProductReference: "SUSE Package Hub for SUSE Linux Enterprise 15",
-								RelationType:              "Default Component Of",
-							},
-						},
-					},
-					References: []Reference{
-						{
-							URL:         "http://lists.opensuse.org/opensuse-security-announce/2019-01/msg00001.html",
-							Description: "E-Mail link for openSUSE-SU-2019:0003-1",
-						},
-						{
-							URL:         "https://www.suse.com/support/security/rating/",
-							Description: "SUSE Security Ratings",
-						},
-					},
-					Vulnerabilities: []Vulnerability{
-						{
-							CVE: "CVE-2018-20184",
-							Threats: []Threat{
-								{
-									Type:     "Impact",
-									Severity: "moderate",
-								},
-							},
-						},
-						{
-							CVE:         "CVE-2018-20189",
-							Description: "In GraphicsMagick 1.3.31, the ReadDIBImage function of coders/dib.c has a vulnerability allowing a crash and denial of service via a dib file that is crafted to appear with direct pixel values and also colormapping (which is not available beyond 8-bits/sample), and therefore lacks indexes initialization.",
-							Threats: []Threat{
-								{
-									Type:     "Impact",
-									Severity: "low",
-								},
-							},
-						},
+					key: []string{"data-source", "SUSE Linux Enterprise 15"},
+					value: types.DataSource{
+						ID:   vulnerability.SuseCVRF,
+						Name: "SUSE CVRF",
+						URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
 					},
 				},
-			},
-			putDataSource: []db.OperationPutDataSourceExpectation{
 				{
-					Args: db.OperationPutDataSourceArgs{
-						TxAnything: true,
-						BktName:    "SUSE Linux Enterprise 15",
-						Source: types.DataSource{
-							ID:   vulnerability.SuseCVRF,
-							Name: "SUSE CVRF",
-							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
-						},
+					key: []string{"advisory-detail", "openSUSE-SU-2019:0003-1", "SUSE Linux Enterprise 15", "GraphicsMagick"},
+					value: types.Advisory{
+						FixedVersion: "1.3.29-bp150.2.12.1",
 					},
-					Returns: db.OperationPutDataSourceReturns{},
-				},
-			},
-			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
-				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:      true,
-						NestedBktNames:  []string{"SUSE Linux Enterprise 15"},
-						PkgName:         "GraphicsMagick",
-						VulnerabilityID: "openSUSE-SU-2019:0003-1",
-						Advisory: types.Advisory{
-							FixedVersion: "1.3.29-bp150.2.12.1",
-						},
-					},
-					Returns: db.OperationPutAdvisoryDetailReturns{},
 				},
 				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:      true,
-						NestedBktNames:  []string{"SUSE Linux Enterprise 15"},
-						PkgName:         "GraphicsMagick-devel",
-						VulnerabilityID: "openSUSE-SU-2019:0003-1",
-						Advisory: types.Advisory{
-							FixedVersion: "1.3.29-bp150.2.12.1",
-						},
+					key: []string{"advisory-detail", "openSUSE-SU-2019:0003-1", "SUSE Linux Enterprise 15", "GraphicsMagick-devel"},
+					value: types.Advisory{
+						FixedVersion: "1.3.29-bp150.2.12.1",
 					},
-					Returns: db.OperationPutAdvisoryDetailReturns{},
 				},
-			},
-			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
 				{
-					Args: db.OperationPutVulnerabilityDetailArgs{
-						TxAnything:      true,
-						VulnerabilityID: "openSUSE-SU-2019:0003-1",
-						Source:          "suse-cvrf",
-						Vulnerability: types.VulnerabilityDetail{
-							Title: "Security update for GraphicsMagick",
-							References: []string{
-								"http://lists.opensuse.org/opensuse-security-announce/2019-01/msg00001.html",
-								"https://www.suse.com/support/security/rating/",
-							},
-							Severity: types.SeverityMedium,
+					key: []string{"vulnerability-detail", "openSUSE-SU-2019:0003-1", "suse-cvrf"},
+					value: types.VulnerabilityDetail{
+						Title:       "Security update for GraphicsMagick",
+						Description: "This update for GraphicsMagick fixes the following issues:\n\nSecurity vulnerabilities fixed:\n\n- CVE-2018-20184: Fixed heap-based buffer overflow in the WriteTGAImage function of tga.c (bsc#1119822)\n- CVE-2018-20189: Fixed denial of service vulnerability in ReadDIBImage function of coders/dib.c (bsc#1119790)\n\nThis update was imported from the openSUSE:Leap:15.0:Update update project.",
+						References: []string{
+							"http://lists.opensuse.org/opensuse-security-announce/2019-01/msg00001.html",
+							"https://www.suse.com/support/security/rating/",
 						},
+						Severity: types.SeverityMedium,
 					},
-					Returns: db.OperationPutVulnerabilityDetailReturns{},
 				},
-			},
-			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
 				{
-					Args: db.OperationPutVulnerabilityIDArgs{
-						TxAnything:      true,
-						VulnerabilityID: "openSUSE-SU-2019:0003-1",
-					},
+					key:   []string{"vulnerability-id", "openSUSE-SU-2019:0003-1"},
+					value: map[string]interface{}{},
 				},
 			},
 		},
 		{
-			name: "PutAdvisory returns an error",
-			cvrfs: []SuseCvrf{
-				{
-					Title: "Security update for GraphicsMagick",
-					Tracking: DocumentTracking{
-						ID: "openSUSE-SU-2019:0003-1",
-					},
-					ProductTree: ProductTree{
-						Relationships: []Relationship{
-							{
-								ProductReference:          "GraphicsMagick-1.3.29-bp150.2.12.1",
-								RelatesToProductReference: "SUSE Package Hub for SUSE Linux Enterprise 15",
-								RelationType:              "Default Component Of",
-							},
-						},
-					},
-					Vulnerabilities: []Vulnerability{
-						{
-							CVE:     "CVE-2018-20184",
-							Threats: []Threat{{Type: "Impact", Severity: "moderate"}},
-						},
-					},
-				},
-			},
-			putDataSource: []db.OperationPutDataSourceExpectation{
-				{
-					Args: db.OperationPutDataSourceArgs{
-						TxAnything: true,
-						BktName:    "SUSE Linux Enterprise 15",
-						Source: types.DataSource{
-							ID:   vulnerability.SuseCVRF,
-							Name: "SUSE CVRF",
-							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
-						},
-					},
-					Returns: db.OperationPutDataSourceReturns{},
-				},
-			},
-			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
-				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:              true,
-						NestedBktNamesAnything:  true,
-						PkgNameAnything:         true,
-						VulnerabilityIDAnything: true,
-						AdvisoryAnything:        true,
-					},
-					Returns: db.OperationPutAdvisoryDetailReturns{
-						Err: errors.New("error"),
-					},
-				},
-			},
-			expectedErrorMsg: "unable to save SUSE Linux Enterprise 15 CVRF",
+			name:    "sad path (dir doesn't exist)",
+			dir:     filepath.Join("testdata", "badpathdoesnotexist"),
+			dist:    OpenSUSE,
+			wantErr: "no such file or directory",
 		},
 		{
-			name: "PutVulnerabilityDetail returns an error",
-			cvrfs: []SuseCvrf{
-				{
-					Title: "Security update for GraphicsMagick",
-					Tracking: DocumentTracking{
-						ID: "openSUSE-SU-2019:0003-1",
-					},
-					ProductTree: ProductTree{
-						Relationships: []Relationship{
-							{
-								ProductReference:          "GraphicsMagick-1.3.29-bp150.2.12.1",
-								RelatesToProductReference: "SUSE Package Hub for SUSE Linux Enterprise 15",
-								RelationType:              "Default Component Of",
-							},
-						},
-					},
-					Vulnerabilities: []Vulnerability{
-						{
-							CVE:     "CVE-2018-20184",
-							Threats: []Threat{{Type: "Impact", Severity: "moderate"}},
-						},
-					},
-				},
-			},
-			putDataSource: []db.OperationPutDataSourceExpectation{
-				{
-					Args: db.OperationPutDataSourceArgs{
-						TxAnything: true,
-						BktName:    "SUSE Linux Enterprise 15",
-						Source: types.DataSource{
-							ID:   vulnerability.SuseCVRF,
-							Name: "SUSE CVRF",
-							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
-						},
-					},
-					Returns: db.OperationPutDataSourceReturns{},
-				},
-			},
-			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
-				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:              true,
-						NestedBktNamesAnything:  true,
-						PkgNameAnything:         true,
-						VulnerabilityIDAnything: true,
-						AdvisoryAnything:        true,
-					},
-					Returns: db.OperationPutAdvisoryDetailReturns{},
-				},
-			},
-			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
-				{
-					Args: db.OperationPutVulnerabilityDetailArgs{
-						TxAnything:              true,
-						VulnerabilityIDAnything: true,
-						SourceAnything:          true,
-						VulnerabilityAnything:   true,
-					},
-					Returns: db.OperationPutVulnerabilityDetailReturns{
-						Err: errors.New("error"),
-					},
-				},
-			},
-			expectedErrorMsg: "failed to save SUSE CVRF vulnerability",
-		},
-		{
-			name: "PutVulnerabilityID returns an error",
-			cvrfs: []SuseCvrf{
-				{
-					Title: "Security update for GraphicsMagick",
-					Tracking: DocumentTracking{
-						ID: "openSUSE-SU-2019:0003-1",
-					},
-					ProductTree: ProductTree{
-						Relationships: []Relationship{
-							{
-								ProductReference:          "GraphicsMagick-1.3.29-bp150.2.12.1",
-								RelatesToProductReference: "SUSE Package Hub for SUSE Linux Enterprise 15",
-								RelationType:              "Default Component Of",
-							},
-						},
-					},
-					Vulnerabilities: []Vulnerability{
-						{
-							CVE:     "CVE-2018-20184",
-							Threats: []Threat{{Type: "Impact", Severity: "moderate"}},
-						},
-					},
-				},
-			},
-			putDataSource: []db.OperationPutDataSourceExpectation{
-				{
-					Args: db.OperationPutDataSourceArgs{
-						TxAnything: true,
-						BktName:    "SUSE Linux Enterprise 15",
-						Source: types.DataSource{
-							ID:   vulnerability.SuseCVRF,
-							Name: "SUSE CVRF",
-							URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
-						},
-					},
-					Returns: db.OperationPutDataSourceReturns{},
-				},
-			},
-			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
-				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:              true,
-						NestedBktNamesAnything:  true,
-						PkgNameAnything:         true,
-						VulnerabilityIDAnything: true,
-						AdvisoryAnything:        true,
-					},
-					Returns: db.OperationPutAdvisoryDetailReturns{},
-				},
-			},
-			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
-				{
-					Args: db.OperationPutVulnerabilityDetailArgs{
-						TxAnything:              true,
-						VulnerabilityIDAnything: true,
-						SourceAnything:          true,
-						VulnerabilityAnything:   true,
-					},
-					Returns: db.OperationPutVulnerabilityDetailReturns{},
-				},
-			},
-			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
-				{
-					Args: db.OperationPutVulnerabilityIDArgs{
-						TxAnything:              true,
-						VulnerabilityIDAnything: true,
-					},
-					Returns: db.OperationPutVulnerabilityIDReturns{
-						Err: errors.New("error"),
-					},
-				},
-			},
-			expectedErrorMsg: "failed to save the vulnerability ID",
+			name:    "sad path (failed to decode)",
+			dir:     filepath.Join("testdata", "sad"),
+			dist:    OpenSUSE,
+			wantErr: "failed to decode SUSE CVRF JSON",
 		},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tempDir := t.TempDir()
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			tx := &bolt.Tx{}
-			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyPutDataSourceExpectations(tc.putDataSource)
-			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tc.putAdvisoryDetail)
-			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tc.putVulnerabilityDetail)
-			mockDBConfig.ApplyPutVulnerabilityIDExpectations(tc.putVulnerabilityID)
+			err := db.Init(tempDir)
+			require.NoError(t, err)
+			defer db.Close()
 
-			ac := VulnSrc{dbc: mockDBConfig}
-			err := ac.commit(tx, tc.cvrfs)
-
-			switch {
-			case tc.expectedErrorMsg != "":
-				require.NotNil(t, err, tc.name)
-				assert.Contains(t, err.Error(), tc.expectedErrorMsg, tc.name)
-			default:
-				assert.NoError(t, err, tc.name)
+			vs := NewVulnSrc(tt.dist)
+			err = vs.Update(tt.dir)
+			if tt.wantErr != "" {
+				require.NotNil(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
+				return
 			}
-			mockDBConfig.AssertExpectations(t)
+
+			require.NoError(t, err)
+			require.NoError(t, db.Close()) // Need to close before dbtest.JSONEq is called
+			for _, w := range tt.wantValues {
+				dbtest.JSONEq(t, db.Path(tempDir), w.key, w.value, w.key)
+			}
 		})
 	}
 }
 
 func TestVulnSrc_Get(t *testing.T) {
-	testCases := []struct {
-		name          string
-		version       string
-		pkgName       string
-		dist          Distribution
-		getAdvisories db.OperationGetAdvisoriesExpectation
-		expectedError string
-		expectedVulns []types.Advisory
+	tests := []struct {
+		name     string
+		fixtures []string
+		version  string
+		pkgName  string
+		dist     Distribution
+		want     []types.Advisory
+		wantErr  string
 	}{
 		{
-			name:    "happy path with openSUSE",
-			version: "13.1",
-			pkgName: "bind",
-			dist:    OpenSUSE,
-			getAdvisories: db.OperationGetAdvisoriesExpectation{
-				Args: db.OperationGetAdvisoriesArgs{
-					Source:  "openSUSE Leap 13.1",
-					PkgName: "bind",
-				},
-				Returns: db.OperationGetAdvisoriesReturns{
-					Advisories: []types.Advisory{
-						{
-							VulnerabilityID: "openSUSE-SU-2019:0003-1",
-							FixedVersion:    "1.3.29-bp150.2.12.1",
-						},
-					},
-				},
-			},
-			expectedVulns: []types.Advisory{
+			name:     "happy path",
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			version:  "13.1",
+			pkgName:  "bind",
+			dist:     OpenSUSE,
+			want: []types.Advisory{
 				{
 					VulnerabilityID: "openSUSE-SU-2019:0003-1",
 					FixedVersion:    "1.3.29-bp150.2.12.1",
@@ -734,41 +217,41 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 		},
 		{
-			name:    "GetAdvisories returns an error",
-			version: "15.1",
-			pkgName: "bind",
-			dist:    SUSEEnterpriseLinux,
-			getAdvisories: db.OperationGetAdvisoriesExpectation{
-				Args: db.OperationGetAdvisoriesArgs{
-					SourceAnything:  true,
-					PkgNameAnything: true,
-				},
-				Returns: db.OperationGetAdvisoriesReturns{
-					Err: errors.New("error"),
-				},
-			},
-			expectedError: "failed to get SUSE advisories",
+			name:     "no advisories are returned",
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			version:  "15.1",
+			pkgName:  "bind",
+			dist:     OpenSUSE,
+			want:     nil,
+		},
+		{
+			name:     "GetAdvisories returns an error",
+			fixtures: []string{"testdata/fixtures/sad.yaml"},
+			version:  "13.1",
+			pkgName:  "bind",
+			dist:     OpenSUSE,
+			wantErr:  "failed to unmarshal advisory JSON",
 		},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := initDB(t, tt.fixtures)
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyGetAdvisoriesExpectation(tc.getAdvisories)
+			// Initialize DB
+			require.NoError(t, db.Init(dir))
+			defer db.Close()
 
-			ac := VulnSrc{dist: tc.dist, dbc: mockDBConfig}
-			vuls, err := ac.Get(tc.version, tc.pkgName)
+			ac := NewVulnSrc(tt.dist)
+			vuls, err := ac.Get(tt.version, tt.pkgName)
 
-			switch {
-			case tc.expectedError != "":
-				require.NotNil(t, err, tc.name)
-				assert.Contains(t, err.Error(), tc.expectedError, tc.name)
-			default:
-				assert.NoError(t, err, tc.name)
+			if tt.wantErr != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
+				return
 			}
-			assert.Equal(t, tc.expectedVulns, vuls, tc.name)
 
-			mockDBConfig.AssertExpectations(t)
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, vuls)
 		})
 	}
 }
@@ -1085,4 +568,22 @@ func TestGetOSVersion(t *testing.T) {
 			assert.Equal(t, tc.expectedPlatformName, actual, fmt.Sprintf("input data: %s", tc.inputPlatformName))
 		})
 	}
+}
+
+func initDB(t *testing.T, fixtureFiles []string) string {
+	// Create a temp dir
+	dir := t.TempDir()
+
+	dbPath := db.Path(dir)
+	dbDir := filepath.Dir(dbPath)
+	err := os.MkdirAll(dbDir, 0700)
+	require.NoError(t, err)
+
+	// Load testdata into BoltDB
+	loader, err := fixtures.New(dbPath, fixtureFiles)
+	require.NoError(t, err)
+	require.NoError(t, loader.Load())
+	require.NoError(t, loader.Close())
+
+	return dir
 }
