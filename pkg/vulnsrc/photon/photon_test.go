@@ -1,9 +1,7 @@
 package photon
 
 import (
-	fixtures "github.com/aquasecurity/bolt-fixtures"
 	"github.com/aquasecurity/trivy-db/pkg/dbtest"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -130,10 +128,7 @@ func TestVulnSrc_Get(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dir := initDB(t, tt.fixtures)
-
-			// Initialize DB
-			require.NoError(t, db.Init(dir))
+			_ = dbtest.InitDB(t, tt.fixtures)
 			defer db.Close()
 
 			ac := NewVulnSrc()
@@ -149,22 +144,4 @@ func TestVulnSrc_Get(t *testing.T) {
 			assert.Equal(t, tt.want, vuls)
 		})
 	}
-}
-
-func initDB(t *testing.T, fixtureFiles []string) string {
-	// Create a temp dir
-	dir := t.TempDir()
-
-	dbPath := db.Path(dir)
-	dbDir := filepath.Dir(dbPath)
-	err := os.MkdirAll(dbDir, 0700)
-	require.NoError(t, err)
-
-	// Load testdata into BoltDB
-	loader, err := fixtures.New(dbPath, fixtureFiles)
-	require.NoError(t, err)
-	require.NoError(t, loader.Load())
-	require.NoError(t, loader.Close())
-
-	return dir
 }
