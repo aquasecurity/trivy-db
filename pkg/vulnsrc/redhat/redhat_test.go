@@ -1,18 +1,16 @@
 package redhat
 
 import (
-	"errors"
+	"github.com/aquasecurity/trivy-db/pkg/dbtest"
+	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	bolt "go.etcd.io/bbolt"
-
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
@@ -21,443 +19,243 @@ func TestMain(m *testing.M) {
 }
 
 func TestVulnSrc_Update(t *testing.T) {
-	testCases := []struct {
-		name             string
-		cacheDir         string
-		batchUpdate      db.OperationBatchUpdateExpectation
-		expectedErrorMsg string
-		expectedVulns    []types.Advisory
+	type want struct {
+		key   []string
+		value interface{}
+	}
+	tests := []struct {
+		name       string
+		dir        string
+		wantValues []want
+		wantErr    string
 	}{
 		{
-			name:     "happy1: AffectedRelease is an array",
-			cacheDir: filepath.Join("testdata", "happy1"),
-			batchUpdate: db.OperationBatchUpdateExpectation{
-				Args: db.OperationBatchUpdateArgs{FnAnything: true},
-			},
-		},
-		{
-			name:     "happy2: AffectedRelease is an object",
-			cacheDir: filepath.Join("testdata", "happy2"),
-			batchUpdate: db.OperationBatchUpdateExpectation{
-				Args: db.OperationBatchUpdateArgs{FnAnything: true},
-			},
-		},
-		{
-			name:     "happy3: PackageState is an array",
-			cacheDir: filepath.Join("testdata", "happy3"),
-			batchUpdate: db.OperationBatchUpdateExpectation{
-				Args: db.OperationBatchUpdateArgs{FnAnything: true},
-			},
-		},
-		{
-			name:     "happy4: PackageState is an object",
-			cacheDir: filepath.Join("testdata", "happy4"),
-			batchUpdate: db.OperationBatchUpdateExpectation{
-				Args: db.OperationBatchUpdateArgs{FnAnything: true},
-			},
-		},
-		{
-			name:     "sad1: AffectedRelease is an invalid array",
-			cacheDir: filepath.Join("testdata", "sad1"),
-			batchUpdate: db.OperationBatchUpdateExpectation{
-				Args: db.OperationBatchUpdateArgs{FnAnything: true},
-			},
-			expectedErrorMsg: "json: cannot unmarshal string into Go struct field RedhatCVEAffectedReleaseArray.affected_release of type redhat.RedhatAffectedRelease",
-		},
-		{
-			name:     "sad2: AffectedRelease is an invalid object",
-			cacheDir: filepath.Join("testdata", "sad2"),
-			batchUpdate: db.OperationBatchUpdateExpectation{
-				Args: db.OperationBatchUpdateArgs{FnAnything: true},
-			},
-			expectedErrorMsg: "json: cannot unmarshal number into Go struct field RedhatAffectedRelease.affected_release.product_name of type string",
-		},
-		{
-			name:     "sad3: PackageState is an invalid array",
-			cacheDir: filepath.Join("testdata", "sad3"),
-			batchUpdate: db.OperationBatchUpdateExpectation{
-				Args: db.OperationBatchUpdateArgs{FnAnything: true},
-			},
-			expectedErrorMsg: "json: cannot unmarshal string into Go struct field RedhatCVEPackageStateArray.package_state of type redhat.RedhatPackageState",
-		},
-		{
-			name:     "sad4: PackageState is an invalid object",
-			cacheDir: filepath.Join("testdata", "sad4"),
-			batchUpdate: db.OperationBatchUpdateExpectation{
-				Args: db.OperationBatchUpdateArgs{FnAnything: true},
-			},
-			expectedErrorMsg: "json: cannot unmarshal number into Go struct field RedhatPackageState.package_state.product_name of type string",
-		},
-		{
-			name:     "sad5: invalid JSON",
-			cacheDir: filepath.Join("testdata", "sad5"),
-			batchUpdate: db.OperationBatchUpdateExpectation{
-				Args: db.OperationBatchUpdateArgs{FnAnything: true},
-			},
-			expectedErrorMsg: "json: cannot unmarshal string into Go value of type redhat.RedhatCVE",
-		},
-		{
-			name:     "sad6: AffectedRelease is an unknown type",
-			cacheDir: filepath.Join("testdata", "sad6"),
-			batchUpdate: db.OperationBatchUpdateExpectation{
-				Args: db.OperationBatchUpdateArgs{FnAnything: true},
-			},
-			expectedErrorMsg: "unknown affected_release type",
-		},
-		{
-			name:     "sad7: PackageState is an unknown type",
-			cacheDir: filepath.Join("testdata", "sad7"),
-			batchUpdate: db.OperationBatchUpdateExpectation{
-				Args: db.OperationBatchUpdateArgs{FnAnything: true},
-			},
-			expectedErrorMsg: "unknown package_state type",
-		},
-		{
-			name:     "cache dir doesnt exist",
-			cacheDir: "badpathdoesnotexist",
-			batchUpdate: db.OperationBatchUpdateExpectation{
-				Args: db.OperationBatchUpdateArgs{FnAnything: true},
-			},
-			expectedErrorMsg: "lstat badpathdoesnotexist/vuln-list/redhat: no such file or directory",
-		},
-		{
-			name:     "unable to save redhat defintions",
-			cacheDir: filepath.Join("testdata", "happy1"),
-			batchUpdate: db.OperationBatchUpdateExpectation{
-				Args: db.OperationBatchUpdateArgs{FnAnything: true},
-				Returns: db.OperationBatchUpdateReturns{
-					Err: errors.New("unable to batch update"),
+			name: "happy1: AffectedRelease is an array",
+			dir:  filepath.Join("testdata", "happy1"),
+			wantValues: []want{
+				{
+					key: []string{"vulnerability-detail", "CVE-2019-0160", "redhat"},
+					value: types.VulnerabilityDetail{
+						CvssScoreV3:  5.9,
+						CvssVectorV3: "CVSS:3.0/AV:L/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
+						Severity:     types.SeverityMedium,
+						References: []string{
+							"https://access.redhat.com/security/cve/CVE-2019-0160",
+						},
+						Title:       "edk2: Buffer overflows in PartitionDxe and UdfDxe with long file names and invalid UDF media",
+						Description: "Buffer overflow in system firmware for EDK II may allow unauthenticated user to potentially enable escalation of privilege and/or denial of service via network access.\n    \nBuffer overflows were discovered in UDF-related codes under MdeModulePkg\\Universal\\Disk\\PartitionDxe\\Udf.c and MdeModulePkg\\Universal\\Disk\\UdfDxe, which could be triggered with long file names or invalid formatted UDF media.",
+					},
+				},
+				{
+					key:   []string{"vulnerability-id", "CVE-2019-0160"},
+					value: map[string]interface{}{},
 				},
 			},
-			expectedErrorMsg: "unable to batch update",
+		},
+		{
+			name: "happy2: AffectedRelease is an object",
+			dir:  filepath.Join("testdata", "happy2"),
+			wantValues: []want{
+				{
+					key: []string{"vulnerability-detail", "CVE-2018-6044", "redhat"},
+					value: types.VulnerabilityDetail{
+						CvssScoreV3:  4.3,
+						CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:L",
+						Severity:     types.SeverityLow,
+						References: []string{
+							"\nhttps://chromereleases.googleblog.com/2018/07/stable-channel-update-for-desktop.html\n    ",
+							"https://access.redhat.com/security/cve/CVE-2018-6044",
+						},
+						Title:       "chromium-browser: Request privilege escalation in Extensions",
+						Description: "** RESERVED ** This candidate has been reserved by an organization or individual that will use it when announcing a new security problem.  When the candidate has been publicized, the details for this candidate will be provided.",
+					},
+				},
+				{
+					key:   []string{"vulnerability-id", "CVE-2018-6044"},
+					value: map[string]interface{}{},
+				},
+			},
+		},
+		{
+			name: "happy3: PackageState is an array",
+			dir:  filepath.Join("testdata", "happy3"),
+			wantValues: []want{
+				{
+					key: []string{"vulnerability-detail", "CVE-2019-8559", "redhat"},
+					value: types.VulnerabilityDetail{
+						CvssScoreV3:  6.3,
+						CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:L",
+						Severity:     types.SeverityMedium,
+						References: []string{
+							"https://access.redhat.com/security/cve/CVE-2019-8559",
+						},
+						Title:       "webkitgtk: malicious web content leads to arbitrary code execution",
+						Description: "No description is available for this CVE.",
+					},
+				},
+				{
+					key:   []string{"vulnerability-id", "CVE-2019-8559"},
+					value: map[string]interface{}{},
+				},
+			},
+		},
+		{
+			name: "happy4: PackageState is an object",
+			dir:  filepath.Join("testdata", "happy4"),
+			wantValues: []want{
+				{
+					key: []string{"vulnerability-detail", "CVE-2004-2680", "redhat"},
+					value: types.VulnerabilityDetail{
+						Severity: types.SeverityLow,
+						References: []string{
+							"https://access.redhat.com/security/cve/CVE-2004-2680",
+						},
+						Title:       "mod_python arbitrary data disclosure flaw",
+						Description: "mod_python (libapache2-mod-python) 3.1.4 and earlier does not properly handle when output filters process more than 16384 bytes, which can cause filter.read to return portions of previously freed memory.",
+					},
+				},
+				{
+					key:   []string{"vulnerability-id", "CVE-2004-2680"},
+					value: map[string]interface{}{},
+				},
+			},
+		},
+		{
+			name: "happy5: PackageName is empty",
+			dir:  filepath.Join("testdata", "happy5"),
+			wantValues: []want{
+				{
+					key: []string{"vulnerability-detail", "CVE-2019-0160", "redhat"},
+					value: types.VulnerabilityDetail{
+						CvssScoreV3:  5.9,
+						CvssVectorV3: "CVSS:3.0/AV:L/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
+						Severity:     types.SeverityMedium,
+						References: []string{
+							"https://access.redhat.com/security/cve/CVE-2019-0160",
+						},
+						Title:       "edk2: Buffer overflows in PartitionDxe and UdfDxe with long file names and invalid UDF media",
+						Description: "Buffer overflow in system firmware for EDK II may allow unauthenticated user to potentially enable escalation of privilege and/or denial of service via network access.\n    \nBuffer overflows were discovered in UDF-related codes under MdeModulePkg\\Universal\\Disk\\PartitionDxe\\Udf.c and MdeModulePkg\\Universal\\Disk\\UdfDxe, which could be triggered with long file names or invalid formatted UDF media.",
+					},
+				},
+				{
+					key:   []string{"vulnerability-id", "CVE-2019-0160"},
+					value: map[string]interface{}{},
+				},
+			},
+		},
+		{
+			name: "happy6: unknown platform",
+			dir:  filepath.Join("testdata", "happy6"),
+			wantValues: []want{
+				{
+					key: []string{"vulnerability-detail", "CVE-2019-8559", "redhat"},
+					value: types.VulnerabilityDetail{
+						CvssScoreV3:  6.3,
+						CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:L",
+						Severity:     types.SeverityMedium,
+						References: []string{
+							"https://access.redhat.com/security/cve/CVE-2019-8559",
+						},
+						Title:       "webkitgtk: malicious web content leads to arbitrary code execution",
+						Description: "No description is available for this CVE.",
+					},
+				},
+				{
+					key:   []string{"vulnerability-id", "CVE-2019-8559"},
+					value: map[string]interface{}{},
+				},
+			},
+		},
+		{
+			name: "happy7: unknown status",
+			dir:  filepath.Join("testdata", "happy7"),
+			wantValues: []want{
+				{
+					key: []string{"vulnerability-detail", "CVE-2019-8559", "redhat"},
+					value: types.VulnerabilityDetail{
+						CvssScoreV3:  6.3,
+						CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:L",
+						Severity:     types.SeverityMedium,
+						References: []string{
+							"https://access.redhat.com/security/cve/CVE-2019-8559",
+						},
+						Title:       "webkitgtk: malicious web content leads to arbitrary code execution",
+						Description: "No description is available for this CVE.",
+					},
+				},
+				{
+					key:   []string{"vulnerability-id", "CVE-2019-8559"},
+					value: map[string]interface{}{},
+				},
+			},
+		},
+		{
+			name:    "sad1: AffectedRelease is an invalid array",
+			dir:     filepath.Join("testdata", "sad1"),
+			wantErr: "json: cannot unmarshal string into Go struct field RedhatCVEAffectedReleaseArray.affected_release of type redhat.RedhatAffectedRelease",
+		},
+		{
+			name:    "sad2: AffectedRelease is an invalid object",
+			dir:     filepath.Join("testdata", "sad2"),
+			wantErr: "json: cannot unmarshal number into Go struct field RedhatAffectedRelease.affected_release.product_name of type string",
+		},
+		{
+			name:    "sad3: PackageState is an invalid array",
+			dir:     filepath.Join("testdata", "sad3"),
+			wantErr: "json: cannot unmarshal string into Go struct field RedhatCVEPackageStateArray.package_state of type redhat.RedhatPackageState",
+		},
+		{
+			name:    "sad4: PackageState is an invalid object",
+			dir:     filepath.Join("testdata", "sad4"),
+			wantErr: "json: cannot unmarshal number into Go struct field RedhatPackageState.package_state.product_name of type string",
+		},
+		{
+			name:    "sad5: invalid JSON",
+			dir:     filepath.Join("testdata", "sad5"),
+			wantErr: "json: cannot unmarshal string into Go value of type redhat.RedhatCVE",
+		},
+		{
+			name:    "sad6: AffectedRelease is an unknown type",
+			dir:     filepath.Join("testdata", "sad6"),
+			wantErr: "unknown affected_release type",
+		},
+		{
+			name:    "sad7: PackageState is an unknown type",
+			dir:     filepath.Join("testdata", "sad7"),
+			wantErr: "unknown package_state type",
+		},
+		{
+			name:    "sad8: failed to decode",
+			dir:     filepath.Join("testdata", "sad8"),
+			wantErr: "failed to decode RedHat JSON",
+		},
+		{
+			name:    "sad9: dir doesn't exist",
+			dir:     filepath.Join("testdata", "badpathdoesnotexist"),
+			wantErr: "no such file or directory",
 		},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tempDir := t.TempDir()
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyBatchUpdateExpectation(tc.batchUpdate)
-			ac := VulnSrc{dbc: mockDBConfig}
+			err := db.Init(tempDir)
+			require.NoError(t, err)
+			defer db.Close()
 
-			err := ac.Update(tc.cacheDir)
-			switch {
-			case tc.expectedErrorMsg != "":
-				assert.Contains(t, err.Error(), tc.expectedErrorMsg, tc.name)
-			default:
-				assert.NoError(t, err, tc.name)
+			vs := NewVulnSrc()
+			err = vs.Update(tt.dir)
+			if tt.wantErr != "" {
+				require.NotNil(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
+				return
 			}
-		})
-	}
-}
 
-func TestVulnSrc_Commit(t *testing.T) {
-	testCases := []struct {
-		name                   string
-		cves                   []RedhatCVE
-		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
-		putVulnerabilityID     []db.OperationPutVulnerabilityIDExpectation
-		expectedErrorMsg       string
-	}{
-		{
-			name: "happy path",
-			cves: []RedhatCVE{
-				{
-					Name: "CVE-2019-0160",
-					PackageState: []RedhatPackageState{
-						{
-							PackageName: "package",
-							ProductName: "Red Hat Enterprise Linux 6",
-							FixState:    "Will not fix",
-						},
-					},
-					Cvss:           RedhatCvss{CvssBaseScore: "7.2", CvssScoringVector: "(AV:N/AC:L/Au:N/C:P/I:P/A:P)"},
-					Cvss3:          RedhatCvss3{Cvss3BaseScore: "4.0", Cvss3ScoringVector: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"},
-					ThreatSeverity: "Moderate",
-					References: []string{
-						"https://example.com",
-					},
-					Bugzilla: RedhatBugzilla{Description: "CVE-2019-0160 package: title   "},
-					Details:  []string{"detail1\n", "detail2"},
-				},
-			},
-			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
-				{
-					Args: db.OperationPutVulnerabilityDetailArgs{
-						TxAnything:      true,
-						VulnerabilityID: "CVE-2019-0160",
-						Source:          vulnerability.RedHat,
-						Vulnerability: types.VulnerabilityDetail{
-							CvssScore:    7.2,
-							CvssVector:   "(AV:N/AC:L/Au:N/C:P/I:P/A:P)",
-							CvssScoreV3:  4.0,
-							CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
-							Severity:     types.SeverityMedium,
-							References: []string{
-								"https://example.com",
-								"https://access.redhat.com/security/cve/CVE-2019-0160",
-							},
-							Title:       "package: title",
-							Description: "detail1\ndetail2",
-						},
-					},
-				},
-			},
-			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
-				{
-					Args: db.OperationPutVulnerabilityIDArgs{
-						TxAnything:      true,
-						VulnerabilityID: "CVE-2019-0160",
-					},
-				},
-			},
-		},
-		{
-			name: "empty package name",
-			cves: []RedhatCVE{
-				{
-					Name: "CVE-2019-9999",
-					PackageState: []RedhatPackageState{
-						{PackageName: ""}, // empty
-					},
-					Cvss:           RedhatCvss{CvssBaseScore: "invalid"}, // ignored
-					Cvss3:          RedhatCvss3{Cvss3BaseScore: "5.1"},
-					ThreatSeverity: "Low",
-					Bugzilla:       RedhatBugzilla{Description: "CVE-2019-9999 package: title!"},
-				},
-			},
-			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
-				{
-					Args: db.OperationPutVulnerabilityDetailArgs{
-						TxAnything:      true,
-						VulnerabilityID: "CVE-2019-9999",
-						Source:          vulnerability.RedHat,
-						Vulnerability: types.VulnerabilityDetail{
-							CvssScore:   0,
-							CvssScoreV3: 5.1,
-							Severity:    types.SeverityLow,
-							Title:       "package: title!",
-							References: []string{
-								"https://access.redhat.com/security/cve/CVE-2019-9999",
-							},
-						},
-					},
-				},
-			},
-			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
-				{
-					Args: db.OperationPutVulnerabilityIDArgs{
-						TxAnything:      true,
-						VulnerabilityID: "CVE-2019-9999",
-					},
-				},
-			},
-		},
-		{
-			name: "unknown platform",
-			cves: []RedhatCVE{
-				{
-					Name: "CVE-2019-0001",
-					PackageState: []RedhatPackageState{
-						{
-							PackageName: "test",
-							ProductName: "Red Hat Enterprise Linux 10000", // unknown
-						},
-					},
-					Cvss:           RedhatCvss{CvssBaseScore: "3.3"},
-					Cvss3:          RedhatCvss3{Cvss3BaseScore: "dummy"}, // ignored
-					ThreatSeverity: "Important",
-					Bugzilla:       RedhatBugzilla{Description: "CVE-2019-0001 package: title"},
-				},
-			},
-			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
-				{
-					Args: db.OperationPutVulnerabilityDetailArgs{
-						TxAnything:      true,
-						VulnerabilityID: "CVE-2019-0001",
-						Source:          vulnerability.RedHat,
-						Vulnerability: types.VulnerabilityDetail{
-							CvssScore:   3.3,
-							CvssScoreV3: 0,
-							Severity:    types.SeverityHigh,
-							Title:       "package: title",
-							References: []string{
-								"https://access.redhat.com/security/cve/CVE-2019-0001",
-							},
-						},
-					},
-				},
-			},
-			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
-				{
-					Args: db.OperationPutVulnerabilityIDArgs{
-						TxAnything:      true,
-						VulnerabilityID: "CVE-2019-0001",
-					},
-				},
-			},
-		},
-		{
-			name: "unknown status",
-			cves: []RedhatCVE{
-				{
-					Name: "CVE-2018-0001",
-					PackageState: []RedhatPackageState{
-						{
-							PackageName: "test",
-							ProductName: "Red Hat Enterprise Linux 6",
-							FixState:    "Danger", // unknown
-						},
-					},
-					Cvss:           RedhatCvss{CvssBaseScore: "10"},
-					Cvss3:          RedhatCvss3{Cvss3BaseScore: "9"},
-					ThreatSeverity: "Critical",
-					Bugzilla:       RedhatBugzilla{Description: "CVE-2018-0001 test: title"},
-				},
-			},
-			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
-				{
-					Args: db.OperationPutVulnerabilityDetailArgs{
-						TxAnything:      true,
-						VulnerabilityID: "CVE-2018-0001",
-						Source:          vulnerability.RedHat,
-						Vulnerability: types.VulnerabilityDetail{
-							CvssScore:   10,
-							CvssScoreV3: 9,
-							Severity:    types.SeverityCritical,
-							Title:       "test: title",
-							References: []string{
-								"https://access.redhat.com/security/cve/CVE-2018-0001",
-							},
-						},
-					},
-				},
-			},
-			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
-				{
-					Args: db.OperationPutVulnerabilityIDArgs{
-						TxAnything:      true,
-						VulnerabilityID: "CVE-2018-0001",
-					},
-				},
-			},
-		},
-		{
-			name: "PutVulnerabilityDetail returns an error",
-			cves: []RedhatCVE{
-				{
-					Name: "CVE-2019-0160",
-					PackageState: []RedhatPackageState{
-						{
-							PackageName: "package",
-							ProductName: "Red Hat Enterprise Linux 6",
-							FixState:    "Will not fix",
-						},
-					},
-					Cvss:           RedhatCvss{CvssBaseScore: "7.2"},
-					Cvss3:          RedhatCvss3{Cvss3BaseScore: "4.0"},
-					ThreatSeverity: "Moderate",
-					References:     []string{"https://example.com"},
-					Bugzilla:       RedhatBugzilla{Description: "CVE-2019-0160 package: title   "},
-					Details:        []string{"detail1\n", "detail2"},
-				},
-			},
-			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
-				{
-					Args: db.OperationPutVulnerabilityDetailArgs{
-						TxAnything:      true,
-						VulnerabilityID: "CVE-2019-0160",
-						Source:          vulnerability.RedHat,
-						Vulnerability: types.VulnerabilityDetail{
-							CvssScore:   7.2,
-							CvssScoreV3: 4.0,
-							Severity:    types.SeverityMedium,
-							References: []string{
-								"https://example.com",
-								"https://access.redhat.com/security/cve/CVE-2019-0160",
-							},
-							Title:       "package: title",
-							Description: "detail1\ndetail2",
-						},
-					},
-					Returns: db.OperationPutVulnerabilityDetailReturns{
-						Err: errors.New("failed to put vulnerability detail"),
-					},
-				},
-			},
-			expectedErrorMsg: "failed to put vulnerability detail",
-		},
-		{
-			name: "PutVulnerabilityID returns an error",
-			cves: []RedhatCVE{
-				{
-					Name: "CVE-2019-0160",
-					PackageState: []RedhatPackageState{
-						{
-							PackageName: "package",
-							ProductName: "Red Hat Enterprise Linux 6",
-							FixState:    "Will not fix",
-						},
-					},
-					Cvss:           RedhatCvss{CvssBaseScore: "7.2"},
-					Cvss3:          RedhatCvss3{Cvss3BaseScore: "4.0"},
-					ThreatSeverity: "Unknown",
-					References:     []string{"https://example.com"},
-					Bugzilla:       RedhatBugzilla{Description: "CVE-2019-0160 package: title   "},
-					Details:        []string{"detail1\n", "detail2"},
-				},
-			},
-			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
-				{
-					Args: db.OperationPutVulnerabilityDetailArgs{
-						TxAnything:      true,
-						VulnerabilityID: "CVE-2019-0160",
-						Source:          vulnerability.RedHat,
-						Vulnerability: types.VulnerabilityDetail{
-							CvssScore:   7.2,
-							CvssScoreV3: 4.0,
-							Severity:    types.SeverityUnknown,
-							References: []string{
-								"https://example.com",
-								"https://access.redhat.com/security/cve/CVE-2019-0160",
-							},
-							Title:       "package: title",
-							Description: "detail1\ndetail2",
-						},
-					},
-				},
-			},
-			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
-				{
-					Args: db.OperationPutVulnerabilityIDArgs{
-						TxAnything:      true,
-						VulnerabilityID: "CVE-2019-0160",
-					},
-					Returns: db.OperationPutVulnerabilityIDReturns{
-						Err: errors.New("failed to put severity"),
-					},
-				},
-			},
-			expectedErrorMsg: "failed to put severity",
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			tx := &bolt.Tx{}
-			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tc.putVulnerabilityDetail)
-			mockDBConfig.ApplyPutVulnerabilityIDExpectations(tc.putVulnerabilityID)
-
-			ac := VulnSrc{dbc: mockDBConfig}
-			err := ac.commit(tx, tc.cves)
-
-			switch {
-			case tc.expectedErrorMsg != "":
-				assert.Contains(t, err.Error(), tc.expectedErrorMsg, tc.name)
-			default:
-				assert.NoError(t, err, tc.name)
+			require.NoError(t, err)
+			require.NoError(t, db.Close()) // Need to close before dbtest.JSONEq is called
+			for _, w := range tt.wantValues {
+				dbtest.JSONEq(t, db.Path(tempDir), w.key, w.value, w.key)
 			}
-			mockDBConfig.AssertExpectations(t)
 		})
 	}
 }
