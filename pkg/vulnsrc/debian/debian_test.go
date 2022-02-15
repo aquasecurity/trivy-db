@@ -1,39 +1,30 @@
 package debian_test
 
 import (
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 	"path/filepath"
-	"sort"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"github.com/aquasecurity/trivy-db/pkg/db"
-	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
-	type wantKV struct {
-		key   []string
-		value interface{}
-	}
 	tests := []struct {
 		name       string
 		dir        string
-		wantValues []wantKV
+		wantValues []vulnsrctest.WantValues
 		noBuckets  [][]string
 		wantErr    string
 	}{
 		{
 			name: "happy path",
 			dir:  filepath.Join("testdata", "happy"),
-			wantValues: []wantKV{
+			wantValues: []vulnsrctest.WantValues{
 				{
-					key: []string{"data-source", "debian 9"},
-					value: types.DataSource{
+					Key: []string{"data-source", "debian 9"},
+					Value: types.DataSource{
 						ID:   vulnerability.Debian,
 						Name: "Debian Security Tracker",
 						URL:  "https://salsa.debian.org/security-tracker-team/security-tracker",
@@ -41,42 +32,42 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				// Ref. https://security-tracker.debian.org/tracker/CVE-2021-33560
 				{
-					key: []string{"advisory-detail", "CVE-2021-33560", "debian 9", "libgcrypt20"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "CVE-2021-33560", "debian 9", "libgcrypt20"},
+					Value: types.Advisory{
 						VendorIDs:    []string{"DLA-2691-1"},
 						FixedVersion: "1.7.6-2+deb9u4",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2021-33560", "debian 10", "libgcrypt20"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "CVE-2021-33560", "debian 10", "libgcrypt20"},
+					Value: types.Advisory{
 						FixedVersion: "1.8.4-5+deb10u1",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2021-33560", "debian 11", "libgcrypt20"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "CVE-2021-33560", "debian 11", "libgcrypt20"},
+					Value: types.Advisory{
 						FixedVersion: "1.8.7-6",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2021-29629", "debian 10", "dacs"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "CVE-2021-29629", "debian 10", "dacs"},
+					Value: types.Advisory{
 						State:    "ignored",
 						Severity: types.SeverityLow,
 					},
 				},
 				{
-					key: []string{"advisory-detail", "DSA-3714-1", "debian 8", "akonadi"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "DSA-3714-1", "debian 8", "akonadi"},
+					Value: types.Advisory{
 						VendorIDs:    []string{"DSA-3714-1"},
 						FixedVersion: "1.13.0-2+deb8u2",
 					},
 				},
 				{
 					// wrong no-dsa
-					key: []string{"advisory-detail", "CVE-2020-8631", "debian 11", "cloud-init"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "CVE-2020-8631", "debian 11", "cloud-init"},
+					Value: types.Advisory{
 						FixedVersion: "19.4-2",
 					},
 				},
@@ -104,28 +95,8 @@ func TestVulnSrc_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tmpDir := dbtest.InitDB(t, nil)
-			dbPath := db.Path(tmpDir)
-
 			vs := debian.NewVulnSrc()
-
-			err := vs.Update(tt.dir)
-			if tt.wantErr != "" {
-				require.NotNil(t, err)
-				assert.Contains(t, err.Error(), tt.wantErr)
-				return
-			}
-
-			require.NoError(t, err)
-			require.NoError(t, db.Close())
-
-			for _, want := range tt.wantValues {
-				dbtest.JSONEq(t, dbPath, want.key, want.value, want.key)
-			}
-
-			for _, noBucket := range tt.noBuckets {
-				dbtest.NoBucket(t, dbPath, noBucket, noBucket)
-			}
+			vulnsrctest.TestUpdate(t, vs.Update, tt.dir, tt.wantValues, tt.wantErr, tt.noBuckets)
 		})
 	}
 }
@@ -172,21 +143,8 @@ func TestVulnSrc_Get(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_ = dbtest.InitDB(t, tt.fixtures)
-			defer db.Close()
-
 			vs := debian.NewVulnSrc()
-			got, err := vs.Get(tt.args.release, tt.args.pkgName)
-			if tt.wantErr != "" {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.wantErr)
-				return
-			}
-			sort.Slice(got, func(i, j int) bool {
-				return got[i].VulnerabilityID < got[j].VulnerabilityID
-			})
-			assert.NoError(t, err)
-			assert.Equal(t, tt.want, got)
+			vulnsrctest.TestGet(t, vs.Get, tt.fixtures, tt.want, tt.args.release, tt.args.pkgName, tt.wantErr)
 		})
 	}
 }

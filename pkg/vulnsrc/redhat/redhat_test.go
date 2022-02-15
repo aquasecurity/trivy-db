@@ -1,16 +1,13 @@
 package redhat
 
 import (
-	"github.com/aquasecurity/trivy-db/pkg/dbtest"
-	"github.com/stretchr/testify/require"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
@@ -19,23 +16,19 @@ func TestMain(m *testing.M) {
 }
 
 func TestVulnSrc_Update(t *testing.T) {
-	type want struct {
-		key   []string
-		value interface{}
-	}
 	tests := []struct {
 		name       string
 		dir        string
-		wantValues []want
+		wantValues []vulnsrctest.WantValues
 		wantErr    string
 	}{
 		{
 			name: "happy1: AffectedRelease is an array",
 			dir:  filepath.Join("testdata", "happy1"),
-			wantValues: []want{
+			wantValues: []vulnsrctest.WantValues{
 				{
-					key: []string{"vulnerability-detail", "CVE-2019-0160", "redhat"},
-					value: types.VulnerabilityDetail{
+					Key: []string{"vulnerability-detail", "CVE-2019-0160", "redhat"},
+					Value: types.VulnerabilityDetail{
 						CvssScoreV3:  5.9,
 						CvssVectorV3: "CVSS:3.0/AV:L/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
 						Severity:     types.SeverityMedium,
@@ -47,18 +40,18 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key:   []string{"vulnerability-id", "CVE-2019-0160"},
-					value: map[string]interface{}{},
+					Key:   []string{"vulnerability-id", "CVE-2019-0160"},
+					Value: map[string]interface{}{},
 				},
 			},
 		},
 		{
 			name: "happy2: AffectedRelease is an object",
 			dir:  filepath.Join("testdata", "happy2"),
-			wantValues: []want{
+			wantValues: []vulnsrctest.WantValues{
 				{
-					key: []string{"vulnerability-detail", "CVE-2018-6044", "redhat"},
-					value: types.VulnerabilityDetail{
+					Key: []string{"vulnerability-detail", "CVE-2018-6044", "redhat"},
+					Value: types.VulnerabilityDetail{
 						CvssScoreV3:  4.3,
 						CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:L",
 						Severity:     types.SeverityLow,
@@ -71,18 +64,18 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key:   []string{"vulnerability-id", "CVE-2018-6044"},
-					value: map[string]interface{}{},
+					Key:   []string{"vulnerability-id", "CVE-2018-6044"},
+					Value: map[string]interface{}{},
 				},
 			},
 		},
 		{
 			name: "happy3: PackageState is an array",
 			dir:  filepath.Join("testdata", "happy3"),
-			wantValues: []want{
+			wantValues: []vulnsrctest.WantValues{
 				{
-					key: []string{"vulnerability-detail", "CVE-2019-8559", "redhat"},
-					value: types.VulnerabilityDetail{
+					Key: []string{"vulnerability-detail", "CVE-2019-8559", "redhat"},
+					Value: types.VulnerabilityDetail{
 						CvssScoreV3:  6.3,
 						CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:L",
 						Severity:     types.SeverityMedium,
@@ -94,18 +87,18 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key:   []string{"vulnerability-id", "CVE-2019-8559"},
-					value: map[string]interface{}{},
+					Key:   []string{"vulnerability-id", "CVE-2019-8559"},
+					Value: map[string]interface{}{},
 				},
 			},
 		},
 		{
 			name: "happy4: PackageState is an object",
 			dir:  filepath.Join("testdata", "happy4"),
-			wantValues: []want{
+			wantValues: []vulnsrctest.WantValues{
 				{
-					key: []string{"vulnerability-detail", "CVE-2004-2680", "redhat"},
-					value: types.VulnerabilityDetail{
+					Key: []string{"vulnerability-detail", "CVE-2004-2680", "redhat"},
+					Value: types.VulnerabilityDetail{
 						Severity: types.SeverityLow,
 						References: []string{
 							"https://access.redhat.com/security/cve/CVE-2004-2680",
@@ -115,18 +108,18 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key:   []string{"vulnerability-id", "CVE-2004-2680"},
-					value: map[string]interface{}{},
+					Key:   []string{"vulnerability-id", "CVE-2004-2680"},
+					Value: map[string]interface{}{},
 				},
 			},
 		},
 		{
 			name: "happy5: PackageName is empty",
 			dir:  filepath.Join("testdata", "happy5"),
-			wantValues: []want{
+			wantValues: []vulnsrctest.WantValues{
 				{
-					key: []string{"vulnerability-detail", "CVE-2019-0160", "redhat"},
-					value: types.VulnerabilityDetail{
+					Key: []string{"vulnerability-detail", "CVE-2019-0160", "redhat"},
+					Value: types.VulnerabilityDetail{
 						CvssScoreV3:  5.9,
 						CvssVectorV3: "CVSS:3.0/AV:L/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
 						Severity:     types.SeverityMedium,
@@ -138,18 +131,18 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key:   []string{"vulnerability-id", "CVE-2019-0160"},
-					value: map[string]interface{}{},
+					Key:   []string{"vulnerability-id", "CVE-2019-0160"},
+					Value: map[string]interface{}{},
 				},
 			},
 		},
 		{
 			name: "happy6: unknown platform",
 			dir:  filepath.Join("testdata", "happy6"),
-			wantValues: []want{
+			wantValues: []vulnsrctest.WantValues{
 				{
-					key: []string{"vulnerability-detail", "CVE-2019-8559", "redhat"},
-					value: types.VulnerabilityDetail{
+					Key: []string{"vulnerability-detail", "CVE-2019-8559", "redhat"},
+					Value: types.VulnerabilityDetail{
 						CvssScoreV3:  6.3,
 						CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:L",
 						Severity:     types.SeverityMedium,
@@ -161,18 +154,18 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key:   []string{"vulnerability-id", "CVE-2019-8559"},
-					value: map[string]interface{}{},
+					Key:   []string{"vulnerability-id", "CVE-2019-8559"},
+					Value: map[string]interface{}{},
 				},
 			},
 		},
 		{
 			name: "happy7: unknown status",
 			dir:  filepath.Join("testdata", "happy7"),
-			wantValues: []want{
+			wantValues: []vulnsrctest.WantValues{
 				{
-					key: []string{"vulnerability-detail", "CVE-2019-8559", "redhat"},
-					value: types.VulnerabilityDetail{
+					Key: []string{"vulnerability-detail", "CVE-2019-8559", "redhat"},
+					Value: types.VulnerabilityDetail{
 						CvssScoreV3:  6.3,
 						CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:L",
 						Severity:     types.SeverityMedium,
@@ -184,8 +177,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key:   []string{"vulnerability-id", "CVE-2019-8559"},
-					value: map[string]interface{}{},
+					Key:   []string{"vulnerability-id", "CVE-2019-8559"},
+					Value: map[string]interface{}{},
 				},
 			},
 		},
@@ -231,31 +224,14 @@ func TestVulnSrc_Update(t *testing.T) {
 		},
 		{
 			name:    "sad9: dir doesn't exist",
-			dir:     filepath.Join("testdata", "badpathdoesnotexist"),
+			dir:     filepath.Join("testdata", "badPath"),
 			wantErr: "no such file or directory",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tempDir := t.TempDir()
-
-			err := db.Init(tempDir)
-			require.NoError(t, err)
-			defer db.Close()
-
 			vs := NewVulnSrc()
-			err = vs.Update(tt.dir)
-			if tt.wantErr != "" {
-				require.NotNil(t, err)
-				assert.Contains(t, err.Error(), tt.wantErr)
-				return
-			}
-
-			require.NoError(t, err)
-			require.NoError(t, db.Close()) // Need to close before dbtest.JSONEq is called
-			for _, w := range tt.wantValues {
-				dbtest.JSONEq(t, db.Path(tempDir), w.key, w.value, w.key)
-			}
+			vulnsrctest.TestUpdate(t, vs.Update, tt.dir, tt.wantValues, tt.wantErr, nil)
 		})
 	}
 }

@@ -1,15 +1,10 @@
 package mariner_test
 
 import (
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 	"path/filepath"
-	"sort"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"github.com/aquasecurity/trivy-db/pkg/db"
-	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/mariner"
 	cbl "github.com/aquasecurity/trivy-db/pkg/vulnsrc/mariner"
@@ -17,51 +12,47 @@ import (
 )
 
 func TestVulnSrc_Update(t *testing.T) {
-	type want struct {
-		key   []string
-		value interface{}
-	}
 	tests := []struct {
 		name       string
 		dir        string
-		wantValues []want
+		wantValues []vulnsrctest.WantValues
 		wantErr    string
 	}{
 		{
 			name: "happy path",
 			dir:  filepath.Join("testdata", "happy"),
-			wantValues: []want{
+			wantValues: []vulnsrctest.WantValues{
 				{
-					key: []string{"data-source", "CBL-Mariner 1.0"},
-					value: types.DataSource{
+					Key: []string{"data-source", "CBL-Mariner 1.0"},
+					Value: types.DataSource{
 						ID:   vulnerability.CBLMariner,
 						Name: "CBL-Mariner Vulnerability Data",
 						URL:  "https://github.com/microsoft/CBL-MarinerVulnerabilityData",
 					},
 				},
 				{
-					key: []string{"data-source", "CBL-Mariner 2.0"},
-					value: types.DataSource{
+					Key: []string{"data-source", "CBL-Mariner 2.0"},
+					Value: types.DataSource{
 						ID:   vulnerability.CBLMariner,
 						Name: "CBL-Mariner Vulnerability Data",
 						URL:  "https://github.com/microsoft/CBL-MarinerVulnerabilityData",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2008-3914", "CBL-Mariner 1.0", "clamav"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "CVE-2008-3914", "CBL-Mariner 1.0", "clamav"},
+					Value: types.Advisory{
 						FixedVersion: "0:0.103.2-1.cm1",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2021-39924", "CBL-Mariner 2.0", "wireshark"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "CVE-2021-39924", "CBL-Mariner 2.0", "wireshark"},
+					Value: types.Advisory{
 						FixedVersion: "",
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "CVE-2008-3914", "cbl-mariner"},
-					value: types.VulnerabilityDetail{
+					Key: []string{"vulnerability-detail", "CVE-2008-3914", "cbl-mariner"},
+					Value: types.VulnerabilityDetail{
 						Severity:    types.SeverityCritical,
 						Title:       "CVE-2008-3914 affecting package clamav 0.101.2",
 						Description: "CVE-2008-3914 affecting package clamav 0.101.2. An upgraded version of the package is available that resolves this issue.",
@@ -69,8 +60,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "CVE-2021-39924", "cbl-mariner"},
-					value: types.VulnerabilityDetail{
+					Key: []string{"vulnerability-detail", "CVE-2021-39924", "cbl-mariner"},
+					Value: types.VulnerabilityDetail{
 						Severity:    types.SeverityHigh,
 						Title:       "CVE-2021-39924 affecting package wireshark 3.4.4",
 						Description: "CVE-2021-39924 affecting package wireshark 3.4.4. No patch is available currently.",
@@ -78,12 +69,12 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key:   []string{"vulnerability-id", "CVE-2008-3914"},
-					value: map[string]interface{}{},
+					Key:   []string{"vulnerability-id", "CVE-2008-3914"},
+					Value: map[string]interface{}{},
 				},
 				{
-					key:   []string{"vulnerability-id", "CVE-2021-39924"},
-					value: map[string]interface{}{},
+					Key:   []string{"vulnerability-id", "CVE-2021-39924"},
+					Value: map[string]interface{}{},
 				},
 			},
 		},
@@ -115,25 +106,8 @@ func TestVulnSrc_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tempDir := t.TempDir()
-
-			err := db.Init(tempDir)
-			require.NoError(t, err)
-			defer db.Close()
-
 			vs := cbl.NewVulnSrc()
-			err = vs.Update(tt.dir)
-			if tt.wantErr != "" {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.wantErr)
-				return
-			}
-
-			require.NoError(t, err)
-			require.NoError(t, db.Close()) // Need to close before dbtest.JSONEq is called
-			for _, w := range tt.wantValues {
-				dbtest.JSONEq(t, db.Path(tempDir), w.key, w.value, w.key)
-			}
+			vulnsrctest.TestUpdate(t, vs.Update, tt.dir, tt.wantValues, tt.wantErr, nil)
 		})
 	}
 }
@@ -187,25 +161,8 @@ func TestVulnSrc_Get(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_ = dbtest.InitDB(t, tt.fixtures)
-			defer db.Close()
-
 			vs := mariner.NewVulnSrc()
-			got, err := vs.Get(tt.release, tt.pkgName)
-
-			if tt.wantErr != "" {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.wantErr)
-				return
-			}
-
-			sort.Slice(got, func(i, j int) bool {
-				return got[i].VulnerabilityID < got[j].VulnerabilityID
-			})
-
-			// Compare
-			assert.NoError(t, err)
-			assert.Equal(t, tt.want, got)
+			vulnsrctest.TestGet(t, vs.Get, tt.fixtures, tt.want, tt.release, tt.pkgName, tt.wantErr)
 		})
 	}
 }

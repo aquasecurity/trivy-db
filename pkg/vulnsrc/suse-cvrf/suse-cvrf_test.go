@@ -2,16 +2,14 @@ package susecvrf
 
 import (
 	"fmt"
-	"github.com/aquasecurity/trivy-db/pkg/dbtest"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMain(m *testing.M) {
@@ -19,45 +17,41 @@ func TestMain(m *testing.M) {
 }
 
 func TestVulnSrc_Update(t *testing.T) {
-	type want struct {
-		key   []string
-		value interface{}
-	}
 	tests := []struct {
 		name       string
 		dir        string
 		dist       Distribution
-		wantValues []want
+		wantValues []vulnsrctest.WantValues
 		wantErr    string
 	}{
 		{
 			name: "happy path with openSUSE",
 			dir:  filepath.Join("testdata", "happy", "openSUSE"),
 			dist: OpenSUSE,
-			wantValues: []want{
+			wantValues: []vulnsrctest.WantValues{
 				{
-					key: []string{"data-source", "openSUSE Leap 15.1"},
-					value: types.DataSource{
+					Key: []string{"data-source", "openSUSE Leap 15.1"},
+					Value: types.DataSource{
 						ID:   vulnerability.SuseCVRF,
 						Name: "SUSE CVRF",
 						URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "openSUSE-SU-2019:2598-1", "openSUSE Leap 15.1", "strongswan"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "openSUSE-SU-2019:2598-1", "openSUSE Leap 15.1", "strongswan"},
+					Value: types.Advisory{
 						FixedVersion: "5.6.0-lp151.4.3.1",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "openSUSE-SU-2019:2598-1", "openSUSE Leap 15.1", "strongswan-sqlite"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "openSUSE-SU-2019:2598-1", "openSUSE Leap 15.1", "strongswan-sqlite"},
+					Value: types.Advisory{
 						FixedVersion: "5.6.0-lp151.4.3.1",
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "openSUSE-SU-2019:2598-1", "suse-cvrf"},
-					value: types.VulnerabilityDetail{
+					Key: []string{"vulnerability-detail", "openSUSE-SU-2019:2598-1", "suse-cvrf"},
+					Value: types.VulnerabilityDetail{
 						Title:       "Security update for strongswan",
 						Description: "This update for strongswan fixes the following issues:\n\nSecurity issues fixed: \n\n- CVE-2018-5388: Fixed a buffer underflow which may allow to a remote attacker \n  with local user credentials to resource exhaustion and denial of service while \n  reading from the socket (bsc#1094462).\n- CVE-2018-10811: Fixed a denial of service during  the IKEv2 key derivation if \n  the openssl plugin is used in FIPS mode and HMAC-MD5 is negotiated as PRF \n  (bsc#1093536).\n- CVE-2018-16151,CVE-2018-16152: Fixed multiple flaws in the gmp plugin which \n  might lead to authorization bypass (bsc#1107874).\n- CVE-2018-17540: Fixed an improper input validation in gmp plugin (bsc#1109845).  \n\nThis update was imported from the SUSE:SLE-15:Update update project.",
 						References: []string{
@@ -68,8 +62,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key:   []string{"vulnerability-id", "openSUSE-SU-2019:2598-1"},
-					value: map[string]interface{}{},
+					Key:   []string{"vulnerability-id", "openSUSE-SU-2019:2598-1"},
+					Value: map[string]interface{}{},
 				},
 			},
 		},
@@ -77,24 +71,24 @@ func TestVulnSrc_Update(t *testing.T) {
 			name: "happy path with SUSE Enterprise Linux",
 			dir:  filepath.Join("testdata", "happy", "SUSE Enterprise Linux"),
 			dist: SUSEEnterpriseLinux,
-			wantValues: []want{
+			wantValues: []vulnsrctest.WantValues{
 				{
-					key: []string{"data-source", "SUSE Linux Enterprise 15.1"},
-					value: types.DataSource{
+					Key: []string{"data-source", "SUSE Linux Enterprise 15.1"},
+					Value: types.DataSource{
 						ID:   vulnerability.SuseCVRF,
 						Name: "SUSE CVRF",
 						URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "SUSE-SU-2019:0048-2", "SUSE Linux Enterprise 15.1", "helm-mirror"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "SUSE-SU-2019:0048-2", "SUSE Linux Enterprise 15.1", "helm-mirror"},
+					Value: types.Advisory{
 						FixedVersion: "0.2.1-1.7.1",
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "SUSE-SU-2019:0048-2", "suse-cvrf"},
-					value: types.VulnerabilityDetail{
+					Key: []string{"vulnerability-detail", "SUSE-SU-2019:0048-2", "suse-cvrf"},
+					Value: types.VulnerabilityDetail{
 						Title:       "Security update for helm-mirror",
 						Description: "This update for helm-mirror to version 0.2.1 fixes the following issues:\n\n\nSecurity issues fixed:\n\n- CVE-2018-16873: Fixed a remote command execution (bsc#1118897)\n- CVE-2018-16874: Fixed a directory traversal in &quot;go get&quot; via curly braces in import path (bsc#1118898)\n- CVE-2018-16875: Fixed a CPU denial of service (bsc#1118899)\n\nNon-security issue fixed:\n\n- Update to v0.2.1 (bsc#1120762)\n- Include helm-mirror into the containers module (bsc#1116182)\n",
 						References: []string{
@@ -106,8 +100,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key:   []string{"vulnerability-id", "SUSE-SU-2019:0048-2"},
-					value: map[string]interface{}{},
+					Key:   []string{"vulnerability-id", "SUSE-SU-2019:0048-2"},
+					Value: map[string]interface{}{},
 				},
 			},
 		},
@@ -115,30 +109,30 @@ func TestVulnSrc_Update(t *testing.T) {
 			name: "happy path with openSUSE CVRF including SUSE Linux Enterprise Linux",
 			dir:  filepath.Join("testdata", "happy", "openSUSE CVRF including SUSE Linux Enterprise Linux"),
 			dist: OpenSUSE,
-			wantValues: []want{
+			wantValues: []vulnsrctest.WantValues{
 				{
-					key: []string{"data-source", "SUSE Linux Enterprise 15"},
-					value: types.DataSource{
+					Key: []string{"data-source", "SUSE Linux Enterprise 15"},
+					Value: types.DataSource{
 						ID:   vulnerability.SuseCVRF,
 						Name: "SUSE CVRF",
 						URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "openSUSE-SU-2019:0003-1", "SUSE Linux Enterprise 15", "GraphicsMagick"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "openSUSE-SU-2019:0003-1", "SUSE Linux Enterprise 15", "GraphicsMagick"},
+					Value: types.Advisory{
 						FixedVersion: "1.3.29-bp150.2.12.1",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "openSUSE-SU-2019:0003-1", "SUSE Linux Enterprise 15", "GraphicsMagick-devel"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "openSUSE-SU-2019:0003-1", "SUSE Linux Enterprise 15", "GraphicsMagick-devel"},
+					Value: types.Advisory{
 						FixedVersion: "1.3.29-bp150.2.12.1",
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "openSUSE-SU-2019:0003-1", "suse-cvrf"},
-					value: types.VulnerabilityDetail{
+					Key: []string{"vulnerability-detail", "openSUSE-SU-2019:0003-1", "suse-cvrf"},
+					Value: types.VulnerabilityDetail{
 						Title:       "Security update for GraphicsMagick",
 						Description: "This update for GraphicsMagick fixes the following issues:\n\nSecurity vulnerabilities fixed:\n\n- CVE-2018-20184: Fixed heap-based buffer overflow in the WriteTGAImage function of tga.c (bsc#1119822)\n- CVE-2018-20189: Fixed denial of service vulnerability in ReadDIBImage function of coders/dib.c (bsc#1119790)\n\nThis update was imported from the openSUSE:Leap:15.0:Update update project.",
 						References: []string{
@@ -149,14 +143,14 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key:   []string{"vulnerability-id", "openSUSE-SU-2019:0003-1"},
-					value: map[string]interface{}{},
+					Key:   []string{"vulnerability-id", "openSUSE-SU-2019:0003-1"},
+					Value: map[string]interface{}{},
 				},
 			},
 		},
 		{
 			name:    "sad path (dir doesn't exist)",
-			dir:     filepath.Join("testdata", "badpathdoesnotexist"),
+			dir:     filepath.Join("testdata", "badPath"),
 			dist:    OpenSUSE,
 			wantErr: "no such file or directory",
 		},
@@ -169,25 +163,8 @@ func TestVulnSrc_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tempDir := t.TempDir()
-
-			err := db.Init(tempDir)
-			require.NoError(t, err)
-			defer db.Close()
-
 			vs := NewVulnSrc(tt.dist)
-			err = vs.Update(tt.dir)
-			if tt.wantErr != "" {
-				require.NotNil(t, err)
-				assert.Contains(t, err.Error(), tt.wantErr)
-				return
-			}
-
-			require.NoError(t, err)
-			require.NoError(t, db.Close()) // Need to close before dbtest.JSONEq is called
-			for _, w := range tt.wantValues {
-				dbtest.JSONEq(t, db.Path(tempDir), w.key, w.value, w.key)
-			}
+			vulnsrctest.TestUpdate(t, vs.Update, tt.dir, tt.wantValues, tt.wantErr, nil)
 		})
 	}
 }
@@ -234,20 +211,8 @@ func TestVulnSrc_Get(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_ = dbtest.InitDB(t, tt.fixtures)
-			defer db.Close()
-
-			ac := NewVulnSrc(tt.dist)
-			vuls, err := ac.Get(tt.version, tt.pkgName)
-
-			if tt.wantErr != "" {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.wantErr)
-				return
-			}
-
-			require.NoError(t, err)
-			assert.Equal(t, tt.want, vuls)
+			vs := NewVulnSrc(tt.dist)
+			vulnsrctest.TestGet(t, vs.Get, tt.fixtures, tt.want, tt.version, tt.pkgName, tt.wantErr)
 		})
 	}
 }

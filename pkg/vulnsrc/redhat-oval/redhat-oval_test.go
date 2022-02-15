@@ -1,6 +1,7 @@
 package redhatoval_test
 
 import (
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 	"os"
 	"path/filepath"
 	"sort"
@@ -23,68 +24,63 @@ func TestMain(m *testing.M) {
 }
 
 func TestVulnSrc_Update(t *testing.T) {
-	type want struct {
-		key   []string
-		value interface{}
-	}
-
 	tests := []struct {
 		name     string
 		cacheDir string
-		wants    []want
+		wants    []vulnsrctest.WantValues
 		wantErr  string
 	}{
 		{
 			name:     "happy path",
 			cacheDir: filepath.Join("testdata", "happy"),
-			wants: []want{
+			wants: []vulnsrctest.WantValues{
 				{
-					key: []string{"data-source", "Red Hat"},
-					value: types.DataSource{
+					Key: []string{"data-source", "Red Hat"},
+					Value: types.DataSource{
 						ID:   vulnerability.RedHatOVAL,
 						Name: "Red Hat OVAL v2",
 						URL:  "https://www.redhat.com/security/data/oval/v2/",
 					},
 				},
 				{
-					key:   []string{"Red Hat CPE", "cpe", "0"},
-					value: "cpe:/a:redhat:enterprise_linux:7",
+					Key:   []string{"Red Hat CPE", "cpe", "0"},
+					Value: "cpe:/a:redhat:enterprise_linux:7",
 				},
 				{
-					key:   []string{"Red Hat CPE", "cpe", "1"},
-					value: "cpe:/a:redhat:enterprise_linux:8",
+					Key:   []string{"Red Hat CPE", "cpe", "1"},
+					Value: "cpe:/a:redhat:enterprise_linux:8",
 				},
 				{
-					key:   []string{"Red Hat CPE", "cpe", "2"},
-					value: "cpe:/a:redhat:enterprise_linux:8::appstream",
+					Key:   []string{"Red Hat CPE", "cpe", "2"},
+					Value: "cpe:/a:redhat:enterprise_linux:8::appstream",
 				},
 				{
-					key:   []string{"Red Hat CPE", "cpe", "3"},
-					value: "cpe:/a:redhat:enterprise_linux:8::crb",
+					Key:   []string{"Red Hat CPE", "cpe", "3"},
+					Value: "cpe:/a:redhat:enterprise_linux:8::crb",
 				},
 				{
-					key:   []string{"Red Hat CPE", "cpe", "4"},
-					value: "cpe:/a:redhat:rhel_eus:8.1",
+					Key:   []string{"Red Hat CPE", "cpe", "4"},
+					Value: "cpe:/a:redhat:rhel_eus:8.1",
 				},
 				{
-					key:   []string{"Red Hat CPE", "cpe", "5"},
-					value: "cpe:/o:redhat:enterprise_linux:7::server",
+					Key:   []string{"Red Hat CPE", "cpe", "5"},
+					Value: "cpe:/o:redhat:enterprise_linux:7::server",
 				},
 				{
-					key:   []string{"Red Hat CPE", "cpe", "6"},
-					value: "cpe:/o:redhat:enterprise_linux:8::baseos",
+					Key:   []string{"Red Hat CPE", "cpe", "6"},
+					Value: "cpe:/o:redhat:enterprise_linux:8::baseos",
 				},
 				{
-					key:   []string{"Red Hat CPE", "repository", "rhel-8-for-x86_64-baseos-rpms"},
-					value: []int{6},
+					Key:   []string{"Red Hat CPE", "repository", "rhel-8-for-x86_64-baseos-rpms"},
+					Value: []int{6},
 				},
 				{
-					key:   []string{"Red Hat CPE", "nvr", "3scale-amp-apicast-gateway-container-1.11-1-x86_64"},
-					value: []int{5},
+					Key:   []string{"Red Hat CPE", "nvr", "3scale-amp-apicast-gateway-container-1.11-1-x86_64"},
+					Value: []int{5},
 				},
 				{
-					key: []string{"advisory-detail", "RHSA-2020:5624", "Red Hat", "thunderbird"},
-					value: redhat.Advisory{
+					Key: []string{"advisory-detail", "RHSA-2020:5624", "Red Hat", "thunderbird"},
+					Value: redhat.Advisory{
 						Entries: []redhat.Entry{
 							{
 								FixedVersion:       "0:78.6.0-1.el8_3",
@@ -104,8 +100,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key: []string{"advisory-detail", "RHSA-2020:5624", "Red Hat", "thunderbird-debugsource"},
-					value: redhat.Advisory{
+					Key: []string{"advisory-detail", "RHSA-2020:5624", "Red Hat", "thunderbird-debugsource"},
+					Value: redhat.Advisory{
 						Entries: []redhat.Entry{
 							{
 								FixedVersion:       "0:78.6.0-1.el8_3",
@@ -125,8 +121,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key: []string{"advisory-detail", "RHSA-2020:4751", "Red Hat", "httpd:2.4::httpd"},
-					value: redhat.Advisory{
+					Key: []string{"advisory-detail", "RHSA-2020:4751", "Red Hat", "httpd:2.4::httpd"},
+					Value: redhat.Advisory{
 						Entries: []redhat.Entry{
 							{
 								FixedVersion:       "0:2.4.37-30.module+el7.3.0+7001+0766b9e7",
@@ -152,8 +148,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2020-14342", "Red Hat", "cifs-utils"},
-					value: redhat.Advisory{
+					Key: []string{"advisory-detail", "CVE-2020-14342", "Red Hat", "cifs-utils"},
+					Value: redhat.Advisory{
 						Entries: []redhat.Entry{
 							{
 								FixedVersion:       "",
@@ -168,8 +164,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key: []string{"advisory-detail", "RHSA-2020:9999", "Red Hat", "thunderbird"},
-					value: redhat.Advisory{
+					Key: []string{"advisory-detail", "RHSA-2020:9999", "Red Hat", "thunderbird"},
+					Value: redhat.Advisory{
 						Entries: []redhat.Entry{
 							{
 								FixedVersion:       "0:999.el8_3",
@@ -213,23 +209,8 @@ func TestVulnSrc_Update(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dir := t.TempDir()
-			require.NoError(t, db.Init(dir))
-
 			vs := redhat.NewVulnSrc()
-			err := vs.Update(tt.cacheDir)
-			if tt.wantErr != "" {
-				require.NotNil(t, err)
-				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
-				return
-			}
-
-			require.NoError(t, err)
-			require.NoError(t, db.Close())
-
-			for _, w := range tt.wants {
-				dbtest.JSONEq(t, db.Path(dir), w.key, w.value, w.key)
-			}
+			vulnsrctest.TestUpdate(t, vs.Update, tt.cacheDir, tt.wants, tt.wantErr, nil)
 		})
 	}
 }

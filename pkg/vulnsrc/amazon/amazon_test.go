@@ -1,15 +1,11 @@
 package amazon_test
 
 import (
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"github.com/aquasecurity/trivy-db/pkg/db"
-	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/amazon"
@@ -22,63 +18,59 @@ func TestMain(m *testing.M) {
 }
 
 func TestVulnSrc_Update(t *testing.T) {
-	type wantKV struct {
-		key   []string
-		value interface{}
-	}
 	tests := []struct {
 		name       string
 		dir        string
-		wantValues []wantKV
+		wantValues []vulnsrctest.WantValues
 		wantErr    string
 	}{
 		{
 			name: "happy path",
 			dir:  filepath.Join("testdata", "happy"),
-			wantValues: []wantKV{
+			wantValues: []vulnsrctest.WantValues{
 				{
-					key: []string{"data-source", "amazon linux 1"},
-					value: types.DataSource{
+					Key: []string{"data-source", "amazon linux 1"},
+					Value: types.DataSource{
 						ID:   vulnerability.Amazon,
 						Name: "Amazon Linux Security Center",
 						URL:  "https://alas.aws.amazon.com/",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2018-17456", "amazon linux 1", "git"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "CVE-2018-17456", "amazon linux 1", "git"},
+					Value: types.Advisory{
 						FixedVersion: "2.14.5-1.59.amzn1",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2018-17456", "amazon linux 1", "git-debuginfo"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "CVE-2018-17456", "amazon linux 1", "git-debuginfo"},
+					Value: types.Advisory{
 						FixedVersion: "1:2.14.5-1.59.amzn1",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2021-22543", "amazon linux 2", "kernel"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "CVE-2021-22543", "amazon linux 2", "kernel"},
+					Value: types.Advisory{
 						FixedVersion: "4.14.243-185.433.amzn2",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2021-22543", "amazon linux 2", "kernel-headers"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "CVE-2021-22543", "amazon linux 2", "kernel-headers"},
+					Value: types.Advisory{
 						FixedVersion: "4.14.243-185.433.amzn2",
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "CVE-2018-17456", "amazon"},
-					value: types.VulnerabilityDetail{
+					Key: []string{"vulnerability-detail", "CVE-2018-17456", "amazon"},
+					Value: types.VulnerabilityDetail{
 						Severity:    3,
 						Description: "Package updates are available for Amazon Linux AMI that fix the following vulnerabilities:\nCVE-2018-17456:\n\tGit before 2.14.5, 2.15.x before 2.15.3, 2.16.x before 2.16.5, 2.17.x before 2.17.2, 2.18.x before 2.18.1, and 2.19.x before 2.19.1 allows remote code execution during processing of a recursive &quot;git clone&quot; of a superproject if a .gitmodules file has a URL field beginning with a &#039;-&#039; character.\n1636619: \nCVE-2018-17456 git: arbitrary code execution via .gitmodules\n",
 						References:  []string{"http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-17456"},
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "CVE-2021-22543", "amazon"},
-					value: types.VulnerabilityDetail{
+					Key: []string{"vulnerability-detail", "CVE-2021-22543", "amazon"},
+					Value: types.VulnerabilityDetail{
 						Severity:    1,
 						Description: "Package updates are available for Amazon Linux 2 that fix the following vulnerabilities:\nCVE-2021-22543:\n\tA flaw was found in the Linux kernel's KVM implementation, where improper handing of the VM_IO|VM_PFNMAP VMAs in KVM bypasses RO checks and leads to pages being freed while still accessible by the VMM and guest. This flaw allows users who can start and control a VM to read/write random pages of memory, resulting in local privilege escalation. The highest threat from this vulnerability is to confidentiality, integrity, and system availability.\n1965461: CVE-2021-22543 kernel: Improper handling of VM_IO|VM_PFNMAP vmas in KVM can bypass RO checks\n",
 						References:  []string{"http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-22543"},
@@ -99,26 +91,8 @@ func TestVulnSrc_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tempDir := t.TempDir()
-
-			err := db.Init(tempDir)
-			require.NoError(t, err)
-			defer db.Close()
-
 			vs := amazon.NewVulnSrc()
-			err = vs.Update(tt.dir)
-			if tt.wantErr != "" {
-				require.NotNil(t, err)
-				assert.Contains(t, err.Error(), tt.wantErr)
-				return
-			}
-
-			require.NoError(t, err)
-			require.NoError(t, db.Close())
-
-			for _, want := range tt.wantValues {
-				dbtest.JSONEq(t, db.Path(tempDir), want.key, want.value)
-			}
+			vulnsrctest.TestUpdate(t, vs.Update, tt.dir, tt.wantValues, tt.wantErr, nil)
 		})
 	}
 }
@@ -156,20 +130,8 @@ func TestVulnSrc_Get(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_ = dbtest.InitDB(t, tt.fixtures)
-			defer db.Close()
-
-			ac := amazon.NewVulnSrc()
-			vuls, err := ac.Get(tt.version, tt.pkgName)
-
-			if tt.wantErr != "" {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.wantErr)
-				return
-			}
-
-			require.NoError(t, err)
-			assert.Equal(t, tt.want, vuls)
+			vs := amazon.NewVulnSrc()
+			vulnsrctest.TestGet(t, vs.Get, tt.fixtures, tt.want, tt.version, tt.pkgName, tt.wantErr)
 		})
 	}
 }
