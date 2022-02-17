@@ -122,7 +122,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.VulnerabilityDetail{
 						CvssScoreV3:  5.9,
 						CvssVectorV3: "CVSS:3.0/AV:L/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
-						Severity:     types.SeverityMedium,
+						Severity:     types.SeverityCritical,
 						References: []string{
 							"https://access.redhat.com/security/cve/CVE-2019-0160",
 						},
@@ -145,7 +145,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.VulnerabilityDetail{
 						CvssScoreV3:  6.3,
 						CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:L",
-						Severity:     types.SeverityMedium,
+						Severity:     types.SeverityHigh,
 						References: []string{
 							"https://access.redhat.com/security/cve/CVE-2019-8559",
 						},
@@ -168,7 +168,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.VulnerabilityDetail{
 						CvssScoreV3:  6.3,
 						CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:L",
-						Severity:     types.SeverityMedium,
+						Severity:     types.SeverityUnknown,
 						References: []string{
 							"https://access.redhat.com/security/cve/CVE-2019-8559",
 						},
