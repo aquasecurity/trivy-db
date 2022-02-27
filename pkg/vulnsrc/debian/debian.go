@@ -226,9 +226,6 @@ func (vs VulnSrc) parseCVE(dir string) error {
 				FixedVersion: ann.Version, // It might be empty because of no-dsa.
 				Severity:     severities[ann.Package],
 			}
-			if cveID == "CVE-1999-0199" {
-				fmt.Printf("Advisory: %v\n", advisory)
-			}
 
 			if ann.Version == "" {
 				// Populate State only when FixedVersion is empty.
