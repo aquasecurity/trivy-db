@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	version "github.com/knqyf263/go-deb-version"
 	bolt "go.etcd.io/bbolt"
@@ -15,7 +16,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
-	"github.com/aquasecurity/trivy-db/pkg/utils/strings"
+	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -66,6 +67,10 @@ type VulnSrc struct {
 	// e.g. "buster" => "10"
 	distributions map[string]string
 
+	// Hold vulnerability details per vulnerability id
+	// e.g. {"CVE-2021-33560": "Libgcrypt before 1.8.8 and 1.9.x before 1.9.3 mishandles ElGamal encry ..."}
+	details map[string]VulnerabilityDetail
+
 	// Hold the latest versions of each codename in Sources.json
 	// e.g. {"buster", "bash"} => "5.0-4"
 	pkgVersions map[bucket]string
@@ -89,6 +94,7 @@ func NewVulnSrc(opts ...Option) VulnSrc {
 		put:              defaultPut,
 		dbc:              db.Config{},
 		distributions:    map[string]string{},
+		details:          map[string]VulnerabilityDetail{},
 		pkgVersions:      map[bucket]string{},
 		sidFixedVersions: map[bucket]string{},
 		bktAdvisories:    map[bucket]Advisory{},
@@ -179,6 +185,9 @@ func (vs VulnSrc) parseCVE(dir string) error {
 		// Hold severities per the packages
 		severities := map[string]string{}
 		cveID := bug.Header.ID
+		vs.details[cveID] = VulnerabilityDetail{
+			Description: strings.Trim(bug.Header.Description, "()"),
+		}
 
 		for _, ann := range bug.Annotations {
 			if ann.Type != packageType {
@@ -192,7 +201,7 @@ func (vs VulnSrc) parseCVE(dir string) error {
 			}
 
 			// Skip not-affected, removed or undetermined advisories
-			if strings.InSlice(ann.Kind, skipStatuses) {
+			if ustrings.InSlice(ann.Kind, skipStatuses) {
 				vs.notAffected[bkt] = struct{}{}
 				continue
 			}
@@ -256,6 +265,10 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 	return vs.parseBug(dir, func(bug bug) error {
 		var cveIDs []string
 		advisoryID := bug.Header.ID
+		vs.details[advisoryID] = VulnerabilityDetail{
+			Description: strings.Trim(bug.Header.Description, "()"),
+		}
+
 		for _, ann := range bug.Annotations {
 			// DLA/DSA is associated with CVE-IDs
 			// e.g. "DSA-4931-1" => "{CVE-2021-0089 CVE-2021-26313 CVE-2021-28690 CVE-2021-28692}"
@@ -282,7 +295,7 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 				}
 
 				// Skip not-affected, removed or undetermined advisories
-				if strings.InSlice(ann.Kind, skipStatuses) {
+				if ustrings.InSlice(ann.Kind, skipStatuses) {
 					vs.notAffected[bkt] = struct{}{}
 					continue
 				}
@@ -299,7 +312,7 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 					// Replace the fixed version with the newer version.
 					if res > 0 {
 						adv.FixedVersion = ann.Version
-						adv.State = "" // State should be empty because this advisory has fixed version actually.
+						adv.State = "" // State should be empty because this advisory has fixed version, actually.
 					}
 					adv.VendorIDs = append(adv.VendorIDs, advisoryID)
 				} else {
@@ -421,6 +434,7 @@ func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt bucket, advisory Advisory) error 
 	advisory.VulnerabilityID = bkt.vulnID
 	advisory.PkgName = bkt.pkgName
 	advisory.Platform = fmt.Sprintf(platformFormat, majorVersion)
+	advisory.Title = vs.details[bkt.vulnID].Description // The Debian description is short, so we'll use it as a title.
 
 	if err := vs.put(vs.dbc, tx, advisory); err != nil {
 		return xerrors.Errorf("put error: %w", err)
@@ -445,6 +459,13 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 
 	if err := dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.PkgName, []string{adv.Platform}, detail); err != nil {
 		return xerrors.Errorf("failed to save Debian advisory: %w", err)
+	}
+
+	vuln := types.VulnerabilityDetail{
+		Title: adv.Title,
+	}
+	if err := dbc.PutVulnerabilityDetail(tx, adv.VulnerabilityID, source.ID, vuln); err != nil {
+		return xerrors.Errorf("failed to save Debian vulnerability detail: %w", err)
 	}
 
 	// for optimization
