@@ -83,13 +83,13 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					key: []string{"vulnerability-detail", "CVE-2021-33560", string(vulnerability.Debian)},
 					value: types.VulnerabilityDetail{
-						Title: "(Libgcrypt before 1.8.8 and 1.9.x before 1.9.3 mishandles ElGamal encry ...)",
+						Title: "Libgcrypt before 1.8.8 and 1.9.x before 1.9.3 mishandles ElGamal encry ...",
 					},
 				},
 				{
 					key: []string{"vulnerability-detail", "CVE-2021-29629", string(vulnerability.Debian)},
 					value: types.VulnerabilityDetail{
-						Title: "(In FreeBSD 13.0-STABLE before n245765-bec0d2c9c841, 12.2-STABLE before ...)",
+						Title: "In FreeBSD 13.0-STABLE before n245765-bec0d2c9c841, 12.2-STABLE before ...",
 					},
 				},
 				{
