@@ -58,7 +58,9 @@ func TestVulnSrc_Update(t *testing.T) {
 							"https://github.com/FriendsOfPHP/security-advisories/blob/master/contao/core-bundle/CVE-2019-19745.yaml",
 							"https://github.com/advisories/GHSA-wjx8-cgrm-hh8p",
 						},
-						Severity: types.SeverityHigh,
+						Severity:     types.SeverityHigh,
+						CvssScoreV3:  8.8,
+						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
 					},
 				},
 				{
@@ -91,7 +93,9 @@ func TestVulnSrc_Update(t *testing.T) {
 							"https://github.com/advisories/GHSA-xx65-cc7g-9pfp",
 							"https://pivotal.io/security/cve-2018-1196",
 						},
-						Severity: types.SeverityMedium,
+						Severity:     types.SeverityMedium,
+						CvssScoreV3:  5.9,
+						CvssVectorV3: "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N",
 					},
 				},
 				{
@@ -193,7 +197,9 @@ func TestVulnSrc_Update(t *testing.T) {
 							"http://www.securityfocus.com/bid/104970",
 							"http://www.securitytracker.com/id/1041403",
 						},
-						Severity: types.SeverityMedium,
+						Severity:     types.SeverityMedium,
+						CvssScoreV3:  6.1,
+						CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
 					},
 				},
 				{
@@ -227,7 +233,9 @@ func TestVulnSrc_Update(t *testing.T) {
 							"https://groups.google.com/d/msg/rubyonrails-security/3KQRnXDIuLg/mByx5KkqBAAJ",
 							"https://weblog.rubyonrails.org/2018/11/27/Rails-4-2-5-0-5-1-5-2-have-been-released/",
 						},
-						Severity: types.SeverityMedium,
+						Severity:     types.SeverityMedium,
+						CvssScoreV3:  6.5,
+						CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N",
 					},
 				},
 				{
