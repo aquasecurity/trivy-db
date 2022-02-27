@@ -55,7 +55,14 @@ func NewVulnSrc(dist Distribution) VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return source.ID
+	suffix := ""
+	switch vs.dist {
+	case SUSEEnterpriseLinux:
+		suffix = "suse"
+	case OpenSUSE:
+		suffix = "opensuse"
+	}
+	return types.SourceID(fmt.Sprintf("%s-%s", source.ID, suffix))
 }
 
 func (vs VulnSrc) Update(dir string) error {
