@@ -9,6 +9,7 @@ type Advisory struct {
 	State        string
 	Severity     string
 	FixedVersion string
+	Description  string // It actually looks like a title
 }
 
 type bucket struct {

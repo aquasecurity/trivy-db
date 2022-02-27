@@ -216,6 +216,7 @@ func (vs VulnSrc) parseCVE(dir string) error {
 			advisory := Advisory{
 				FixedVersion: ann.Version, // It might be empty because of no-dsa.
 				Severity:     severities[ann.Package],
+				Description:  bug.Header.Description,
 			}
 
 			if ann.Version == "" {
@@ -299,13 +300,14 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 					// Replace the fixed version with the newer version.
 					if res > 0 {
 						adv.FixedVersion = ann.Version
-						adv.State = "" // State should be empty because this advisory has fixed version actually.
+						adv.State = "" // State should be empty because this advisory has fixed version, actually.
 					}
 					adv.VendorIDs = append(adv.VendorIDs, advisoryID)
 				} else {
 					adv = Advisory{
 						FixedVersion: ann.Version,
 						VendorIDs:    []string{advisoryID},
+						Description:  bug.Header.Description,
 					}
 				}
 
@@ -445,6 +447,13 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 
 	if err := dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.PkgName, []string{adv.Platform}, detail); err != nil {
 		return xerrors.Errorf("failed to save Debian advisory: %w", err)
+	}
+
+	vuln := types.VulnerabilityDetail{
+		Title: adv.Description, // The Debian description is short and looks like a title in our case.
+	}
+	if err := dbc.PutVulnerabilityDetail(tx, adv.VulnerabilityID, source.ID, vuln); err != nil {
+		return xerrors.Errorf("failed to save Debian vulnerability detail: %w", err)
 	}
 
 	// for optimization
