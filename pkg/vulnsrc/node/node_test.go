@@ -1,12 +1,12 @@
 package node
 
 import (
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 	"path/filepath"
 	"testing"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
@@ -87,22 +87,8 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
-			name: "happy-(ish) path, core node includes CVSS score and a severity string",
-			dir:  filepath.Join("testdata", "happy", "core_cvssnumberandstring"),
-			wantValues: []vulnsrctest.WantValues{
-				{
-					Key: []string{"data-source", "npm::Node.js Ecosystem Security Working Group"},
-					Value: types.DataSource{
-						ID:   vulnerability.NodejsSecurityWg,
-						Name: "Node.js Ecosystem Security Working Group",
-						URL:  "https://github.com/nodejs/security-wg",
-					},
-				},
-			},
-		},
-		{
-			name: "happy-(ish) path, core node includes no cvss and no severity",
-			dir:  filepath.Join("testdata", "happy", "core_nocvssscorepresent"),
+			name: "happy-(ish) path, node.js core is skipped",
+			dir:  filepath.Join("testdata", "happy", "core"),
 			wantValues: []vulnsrctest.WantValues{
 				{
 					Key: []string{"data-source", "npm::Node.js Ecosystem Security Working Group"},
