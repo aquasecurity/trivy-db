@@ -1,387 +1,88 @@
 package photon
 
 import (
-	"errors"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
+	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
-	type args struct {
-		dir string
-	}
 	tests := []struct {
-		name        string
-		args        args
-		batchUpdate []db.OperationBatchUpdateExpectation
-		wantErr     string
+		name       string
+		dir        string
+		wantValues []vulnsrctest.WantValues
+		wantErr    string
 	}{
 		{
 			name: "happy path",
-			args: args{
-				dir: "testdata",
-			},
-			batchUpdate: []db.OperationBatchUpdateExpectation{
+			dir:  filepath.Join("testdata", "happy"),
+			wantValues: []vulnsrctest.WantValues{
 				{
-					Args: db.OperationBatchUpdateArgs{
-						FnAnything: true,
+					Key: []string{"data-source", "Photon OS 3.0"},
+					Value: types.DataSource{
+						ID:   vulnerability.Photon,
+						Name: "Photon OS CVE metadata",
+						URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
 					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2019-0199", "Photon OS 3.0", "apache-tomcat"},
+					Value: types.Advisory{
+						FixedVersion: "8.5.40-1.ph3",
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "CVE-2019-0199", "photon"},
+					Value: types.VulnerabilityDetail{
+						CvssScoreV3: 7.5,
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-2019-0199"},
+					Value: map[string]interface{}{},
 				},
 			},
 		},
 		{
-			name: "cache dir doesnt exist",
-			args: args{
-				dir: "badpathdoesnotexist",
-			},
+			name:    "sad path (dir doesn't exist)",
+			dir:     filepath.Join("testdata", "badPath"),
 			wantErr: "no such file or directory",
 		},
 		{
-			name: "BatchUpdate returns an error",
-			args: args{
-				dir: "testdata",
-			},
-			batchUpdate: []db.OperationBatchUpdateExpectation{
-				{
-					Args: db.OperationBatchUpdateArgs{
-						FnAnything: true,
-					},
-					Returns: db.OperationBatchUpdateReturns{
-						Err: errors.New("error"),
-					},
-				},
-			},
-			wantErr: "unable to save Photon advisories",
+			name:    "sad path (failed to decode)",
+			dir:     filepath.Join("testdata", "sad"),
+			wantErr: "failed to decode Photon JSON",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyBatchUpdateExpectations(tt.batchUpdate)
-
-			vs := VulnSrc{
-				dbc: mockDBConfig,
-			}
-			err := vs.Update(tt.args.dir)
-			if tt.wantErr != "" {
-				require.NotNil(t, err, tt.name)
-				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
-			} else {
-				assert.NoError(t, err, tt.name)
-			}
-			mockDBConfig.AssertExpectations(t)
-		})
-	}
-}
-
-func TestVulnSrc_commit(t *testing.T) {
-	type args struct {
-		cves []PhotonCVE
-	}
-	tests := []struct {
-		name                   string
-		args                   args
-		putDataSource          []db.OperationPutDataSourceExpectation
-		putAdvisoryDetail      []db.OperationPutAdvisoryDetailExpectation
-		putVulnerabilityDetail []db.OperationPutVulnerabilityDetailExpectation
-		putVulnerabilityID     []db.OperationPutVulnerabilityIDExpectation
-		wantErr                string
-	}{
-		{
-			name: "happy path",
-			args: args{
-				cves: []PhotonCVE{
-					{
-						OSVersion: "1.0",
-						CveID:     "CVE-2019-10156",
-						Pkg:       "ansible",
-						CveScore:  5.4,
-						AffVer:    "all versions before 2.8.3-1.ph3 are vulnerable",
-						ResVer:    "2.8.3-1.ph3",
-					},
-				},
-			},
-			putDataSource: []db.OperationPutDataSourceExpectation{
-				{
-					Args: db.OperationPutDataSourceArgs{
-						TxAnything: true,
-						BktName:    "Photon OS 1.0",
-						Source: types.DataSource{
-							ID:   vulnerability.Photon,
-							Name: "Photon OS CVE metadata",
-							URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
-						},
-					},
-					Returns: db.OperationPutDataSourceReturns{},
-				},
-			},
-			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
-				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:      true,
-						NestedBktNames:  []string{"Photon OS 1.0"},
-						PkgName:         "ansible",
-						VulnerabilityID: "CVE-2019-10156",
-						Advisory: types.Advisory{
-							FixedVersion: "2.8.3-1.ph3",
-						},
-					},
-				},
-			},
-			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
-				{
-					Args: db.OperationPutVulnerabilityDetailArgs{
-						TxAnything:      true,
-						Source:          vulnerability.Photon,
-						VulnerabilityID: "CVE-2019-10156",
-						Vulnerability: types.VulnerabilityDetail{
-							CvssScoreV3: 5.4,
-						},
-					},
-				},
-			},
-			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
-				{
-					Args: db.OperationPutVulnerabilityIDArgs{
-						TxAnything:      true,
-						VulnerabilityID: "CVE-2019-10156",
-					},
-				},
-			},
-		},
-		{
-			name: "putAdvisoryDetail returns an error",
-			args: args{
-				cves: []PhotonCVE{
-					{
-						OSVersion: "1.0",
-						CveID:     "CVE-2019-10156",
-						Pkg:       "ansible",
-						CveScore:  5.4,
-						AffVer:    "all versions before 2.8.3-1.ph3 are vulnerable",
-						ResVer:    "2.8.3-1.ph3",
-					},
-				},
-			},
-			putDataSource: []db.OperationPutDataSourceExpectation{
-				{
-					Args: db.OperationPutDataSourceArgs{
-						TxAnything: true,
-						BktName:    "Photon OS 1.0",
-						Source: types.DataSource{
-							ID:   vulnerability.Photon,
-							Name: "Photon OS CVE metadata",
-							URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
-						},
-					},
-					Returns: db.OperationPutDataSourceReturns{},
-				},
-			},
-			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
-				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:      true,
-						NestedBktNames:  []string{"Photon OS 1.0"},
-						PkgName:         "ansible",
-						VulnerabilityID: "CVE-2019-10156",
-						Advisory: types.Advisory{
-							FixedVersion: "2.8.3-1.ph3",
-						},
-					},
-					Returns: db.OperationPutAdvisoryDetailReturns{
-						Err: errors.New("error"),
-					},
-				},
-			},
-			wantErr: "failed to save Photon advisory",
-		},
-		{
-			name: "PutVulnerabilityDetail returns an error",
-			args: args{
-				cves: []PhotonCVE{
-					{
-						OSVersion: "1.0",
-						CveID:     "CVE-2019-10156",
-						Pkg:       "ansible",
-						CveScore:  5.4,
-						AffVer:    "all versions before 2.8.3-1.ph3 are vulnerable",
-						ResVer:    "2.8.3-1.ph3",
-					},
-				},
-			},
-			putDataSource: []db.OperationPutDataSourceExpectation{
-				{
-					Args: db.OperationPutDataSourceArgs{
-						TxAnything: true,
-						BktName:    "Photon OS 1.0",
-						Source: types.DataSource{
-							ID:   vulnerability.Photon,
-							Name: "Photon OS CVE metadata",
-							URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
-						},
-					},
-					Returns: db.OperationPutDataSourceReturns{},
-				},
-			},
-			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
-				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:      true,
-						NestedBktNames:  []string{"Photon OS 1.0"},
-						PkgName:         "ansible",
-						VulnerabilityID: "CVE-2019-10156",
-						Advisory: types.Advisory{
-							FixedVersion: "2.8.3-1.ph3",
-						},
-					},
-				},
-			},
-			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
-				{
-					Args: db.OperationPutVulnerabilityDetailArgs{
-						TxAnything:      true,
-						Source:          vulnerability.Photon,
-						VulnerabilityID: "CVE-2019-10156",
-						Vulnerability: types.VulnerabilityDetail{
-							CvssScoreV3: 5.4,
-						},
-					},
-					Returns: db.OperationPutVulnerabilityDetailReturns{
-						Err: errors.New("error"),
-					},
-				},
-			},
-			wantErr: "failed to save Photon vulnerability detail",
-		},
-		{
-			name: "happy path",
-			args: args{
-				cves: []PhotonCVE{
-					{
-						OSVersion: "1.0",
-						CveID:     "CVE-2019-10156",
-						Pkg:       "ansible",
-						CveScore:  5.4,
-						AffVer:    "all versions before 2.8.3-1.ph3 are vulnerable",
-						ResVer:    "2.8.3-1.ph3",
-					},
-				},
-			},
-			putDataSource: []db.OperationPutDataSourceExpectation{
-				{
-					Args: db.OperationPutDataSourceArgs{
-						TxAnything: true,
-						BktName:    "Photon OS 1.0",
-						Source: types.DataSource{
-							ID:   vulnerability.Photon,
-							Name: "Photon OS CVE metadata",
-							URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
-						},
-					},
-					Returns: db.OperationPutDataSourceReturns{},
-				},
-			},
-			putAdvisoryDetail: []db.OperationPutAdvisoryDetailExpectation{
-				{
-					Args: db.OperationPutAdvisoryDetailArgs{
-						TxAnything:      true,
-						NestedBktNames:  []string{"Photon OS 1.0"},
-						PkgName:         "ansible",
-						VulnerabilityID: "CVE-2019-10156",
-						Advisory: types.Advisory{
-							FixedVersion: "2.8.3-1.ph3",
-						},
-					},
-				},
-			},
-			putVulnerabilityDetail: []db.OperationPutVulnerabilityDetailExpectation{
-				{
-					Args: db.OperationPutVulnerabilityDetailArgs{
-						TxAnything:      true,
-						Source:          vulnerability.Photon,
-						VulnerabilityID: "CVE-2019-10156",
-						Vulnerability: types.VulnerabilityDetail{
-							CvssScoreV3: 5.4,
-						},
-					},
-				},
-			},
-			putVulnerabilityID: []db.OperationPutVulnerabilityIDExpectation{
-				{
-					Args: db.OperationPutVulnerabilityIDArgs{
-						TxAnything:      true,
-						VulnerabilityID: "CVE-2019-10156",
-					},
-					Returns: db.OperationPutVulnerabilityIDReturns{
-						Err: errors.New("error"),
-					},
-				},
-			},
-			wantErr: "failed to save the vulnerability ID",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyPutDataSourceExpectations(tt.putDataSource)
-			mockDBConfig.ApplyPutAdvisoryDetailExpectations(tt.putAdvisoryDetail)
-			mockDBConfig.ApplyPutVulnerabilityDetailExpectations(tt.putVulnerabilityDetail)
-			mockDBConfig.ApplyPutVulnerabilityIDExpectations(tt.putVulnerabilityID)
-
-			vs := VulnSrc{
-				dbc: mockDBConfig,
-			}
-			err := vs.commit(nil, tt.args.cves)
-
-			if tt.wantErr != "" {
-				require.NotNil(t, err, tt.name)
-				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
-			} else {
-				assert.NoError(t, err, tt.name)
-			}
-			mockDBConfig.AssertExpectations(t)
+			vs := NewVulnSrc()
+			vulnsrctest.TestUpdate(t, vs, vulnsrctest.TestUpdateArgs{
+				Dir:        tt.dir,
+				WantValues: tt.wantValues,
+				WantErr:    tt.wantErr,
+			})
 		})
 	}
 }
 
 func TestVulnSrc_Get(t *testing.T) {
-	type args struct {
-		release string
-		pkgName string
-	}
 	tests := []struct {
-		name          string
-		args          args
-		getAdvisories db.OperationGetAdvisoriesExpectation
-		want          []types.Advisory
-		wantErr       string
+		name     string
+		fixtures []string
+		release  string
+		pkgName  string
+		want     []types.Advisory
+		wantErr  string
 	}{
 		{
-			name: "happy path",
-			args: args{
-				release: "1.0",
-				pkgName: "ansible",
-			},
-			getAdvisories: db.OperationGetAdvisoriesExpectation{
-				Args: db.OperationGetAdvisoriesArgs{
-					Source:  "Photon OS 1.0",
-					PkgName: "ansible",
-				},
-				Returns: db.OperationGetAdvisoriesReturns{
-					Advisories: []types.Advisory{
-						{
-							VulnerabilityID: "CVE-2019-3828",
-							FixedVersion:    "2.7.6-2.ph3",
-						},
-					},
-				},
-			},
+			name:     "happy path",
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			release:  "1.0",
+			pkgName:  "ansible",
 			want: []types.Advisory{
 				{
 					VulnerabilityID: "CVE-2019-3828",
@@ -390,38 +91,30 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 		},
 		{
-			name: "GetAdvisories returns an error",
-			args: args{
-				release: "2.0",
-				pkgName: "bash",
-			},
-			getAdvisories: db.OperationGetAdvisoriesExpectation{
-				Args: db.OperationGetAdvisoriesArgs{
-					Source:  "Photon OS 2.0",
-					PkgName: "bash",
-				},
-				Returns: db.OperationGetAdvisoriesReturns{
-					Advisories: nil,
-					Err:        errors.New("error"),
-				},
-			},
-			wantErr: "failed to get Photon advisories",
+			name:     "no advisories are returned",
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			release:  "2.0",
+			pkgName:  "ansible",
+			want:     nil,
+		},
+		{
+			name:     "GetAdvisories returns an error",
+			fixtures: []string{"testdata/fixtures/sad.yaml"},
+			release:  "1.0",
+			pkgName:  "ansible",
+			wantErr:  "failed to unmarshal advisory JSON",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockDBConfig := new(db.MockOperation)
-			mockDBConfig.ApplyGetAdvisoriesExpectation(tt.getAdvisories)
-
-			vs := VulnSrc{dbc: mockDBConfig}
-			got, err := vs.Get(tt.args.release, tt.args.pkgName)
-			if tt.wantErr != "" {
-				require.NotNil(t, err, tt.name)
-				assert.Contains(t, err.Error(), tt.wantErr, tt.name)
-			} else {
-				assert.NoError(t, err, tt.name)
-			}
-			assert.Equal(t, tt.want, got, tt.name)
+			vs := NewVulnSrc()
+			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
+				Fixtures:   tt.fixtures,
+				WantValues: tt.want,
+				Release:    tt.release,
+				PkgName:    tt.pkgName,
+				WantErr:    tt.wantErr,
+			})
 		})
 	}
 }

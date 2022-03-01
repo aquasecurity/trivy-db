@@ -1,57 +1,49 @@
 package alpine_test
 
 import (
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"github.com/aquasecurity/trivy-db/pkg/db"
-	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
-	type want struct {
-		key   []string
-		value interface{}
-	}
 	tests := []struct {
 		name       string
 		dir        string
-		wantValues []want
+		wantValues []vulnsrctest.WantValues
 		wantErr    string
 	}{
 		{
 			name: "happy path",
 			dir:  filepath.Join("testdata", "happy"),
-			wantValues: []want{
+			wantValues: []vulnsrctest.WantValues{
 				{
-					key: []string{"data-source", "alpine 3.12"},
-					value: types.DataSource{
+					Key: []string{"data-source", "alpine 3.12"},
+					Value: types.DataSource{
 						ID:   vulnerability.Alpine,
 						Name: "Alpine Secdb",
 						URL:  "https://secdb.alpinelinux.org/",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2019-14904", "alpine 3.12", "ansible"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "CVE-2019-14904", "alpine 3.12", "ansible"},
+					Value: types.Advisory{
 						FixedVersion: "2.9.3-r0",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2019-14905", "alpine 3.12", "ansible"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "CVE-2019-14905", "alpine 3.12", "ansible"},
+					Value: types.Advisory{
 						FixedVersion: "2.9.3-r0",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2020-1737", "alpine 3.12", "ansible"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "CVE-2020-1737", "alpine 3.12", "ansible"},
+					Value: types.Advisory{
 						FixedVersion: "2.9.6-r0",
 					},
 				},
@@ -65,25 +57,12 @@ func TestVulnSrc_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tempDir := t.TempDir()
-
-			err := db.Init(tempDir)
-			require.NoError(t, err)
-			defer db.Close()
-
 			vs := alpine.NewVulnSrc()
-			err = vs.Update(tt.dir)
-			if tt.wantErr != "" {
-				require.NotNil(t, err)
-				assert.Contains(t, err.Error(), tt.wantErr)
-				return
-			}
-
-			require.NoError(t, err)
-			require.NoError(t, db.Close()) // Need to close before dbtest.JSONEq is called
-			for _, want := range tt.wantValues {
-				dbtest.JSONEq(t, db.Path(tempDir), want.key, want.value)
-			}
+			vulnsrctest.TestUpdate(t, vs, vulnsrctest.TestUpdateArgs{
+				Dir:        tt.dir,
+				WantValues: tt.wantValues,
+				WantErr:    tt.wantErr,
+			})
 		})
 	}
 }

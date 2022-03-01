@@ -1,0 +1,6 @@
+- bucket: Photon OS 1.0
+  pairs:
+    - bucket: ansible
+      pairs:
+        - key: CVE-2019-3828
+          value: "2.7.6-2.ph3"

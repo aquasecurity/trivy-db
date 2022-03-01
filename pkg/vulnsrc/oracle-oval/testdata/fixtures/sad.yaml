@@ -1,0 +1,6 @@
+- bucket: Oracle Linux 8
+  pairs:
+    - bucket: bind
+      pairs:
+        - key: ELSA-2019-1145
+          value: "32:9.11.4-17.P2.el8_0"
