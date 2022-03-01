@@ -11,7 +11,7 @@ import (
 )
 
 func TestVulnSrc_Update(t *testing.T) {
-	testCases := []struct {
+	tests := []struct {
 		name       string
 		dir        string
 		wantValues []vulnsrctest.WantValues
@@ -51,10 +51,14 @@ func TestVulnSrc_Update(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			vs := NewVulnSrc()
-			vulnsrctest.TestUpdate(t, vs.Update, tc.dir, tc.wantValues, tc.wantErr, nil)
+			vulnsrctest.TestUpdate(t, vs, vulnsrctest.TestUpdateArgs{
+				Dir:        tt.dir,
+				WantValues: tt.wantValues,
+				WantErr:    tt.wantErr,
+			})
 		})
 	}
 }

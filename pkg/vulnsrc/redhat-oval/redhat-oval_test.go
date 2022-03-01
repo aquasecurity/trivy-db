@@ -25,15 +25,15 @@ func TestMain(m *testing.M) {
 
 func TestVulnSrc_Update(t *testing.T) {
 	tests := []struct {
-		name     string
-		cacheDir string
-		wants    []vulnsrctest.WantValues
-		wantErr  string
+		name       string
+		dir        string
+		wantValues []vulnsrctest.WantValues
+		wantErr    string
 	}{
 		{
-			name:     "happy path",
-			cacheDir: filepath.Join("testdata", "happy"),
-			wants: []vulnsrctest.WantValues{
+			name: "happy path",
+			dir:  filepath.Join("testdata", "happy"),
+			wantValues: []vulnsrctest.WantValues{
 				{
 					Key: []string{"data-source", "Red Hat"},
 					Value: types.DataSource{
@@ -187,30 +187,34 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
-			name:     "no definitions dir",
-			cacheDir: filepath.Join("testdata", "no-definitions"),
+			name: "no definitions dir",
+			dir:  filepath.Join("testdata", "no-definitions"),
 		},
 		{
-			name:     "repository-to-cpe is unavailable",
-			cacheDir: filepath.Join("testdata", "no-repo-to-cpe"),
-			wantErr:  "no such file or directory",
+			name:    "repository-to-cpe is unavailable",
+			dir:     filepath.Join("testdata", "no-repo-to-cpe"),
+			wantErr: "no such file or directory",
 		},
 		{
-			name:     "broken repo-to-cpe",
-			cacheDir: filepath.Join("testdata", "broken-repo-to-cpe"),
-			wantErr:  "JSON parse error",
+			name:    "broken repo-to-cpe",
+			dir:     filepath.Join("testdata", "broken-repo-to-cpe"),
+			wantErr: "JSON parse error",
 		},
 		{
-			name:     "broken JSON",
-			cacheDir: filepath.Join("testdata", "sad"),
-			wantErr:  "failed to decode",
+			name:    "broken JSON",
+			dir:     filepath.Join("testdata", "sad"),
+			wantErr: "failed to decode",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			vs := redhat.NewVulnSrc()
-			vulnsrctest.TestUpdate(t, vs.Update, tt.cacheDir, tt.wants, tt.wantErr, nil)
+			vulnsrctest.TestUpdate(t, vs, vulnsrctest.TestUpdateArgs{
+				Dir:        tt.dir,
+				WantValues: tt.wantValues,
+				WantErr:    tt.wantErr,
+			})
 		})
 	}
 }

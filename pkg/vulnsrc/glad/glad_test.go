@@ -80,7 +80,11 @@ func TestVulnSrc_Update(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			vs := glad.NewVulnSrc()
-			vulnsrctest.TestUpdate(t, vs.Update, tt.dir, tt.wantValues, tt.wantErr, nil)
+			vulnsrctest.TestUpdate(t, vs, vulnsrctest.TestUpdateArgs{
+				Dir:        tt.dir,
+				WantValues: tt.wantValues,
+				WantErr:    tt.wantErr,
+			})
 		})
 	}
 }

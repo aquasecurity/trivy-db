@@ -266,7 +266,11 @@ func TestVulnSrc_Update(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			vs := NewVulnSrc()
-			vulnsrctest.TestUpdate(t, vs.Update, tt.dir, tt.wantValues, tt.wantErr, nil)
+			vulnsrctest.TestUpdate(t, vs, vulnsrctest.TestUpdateArgs{
+				Dir:        tt.dir,
+				WantValues: tt.wantValues,
+				WantErr:    tt.wantErr,
+			})
 		})
 	}
 }
@@ -310,7 +314,13 @@ func TestVulnSrc_Get(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			vs := NewVulnSrc()
-			vulnsrctest.TestGet(t, vs.Get, tt.fixtures, tt.want, tt.version, tt.pkgName, tt.wantErr)
+			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
+				Fixtures:   tt.fixtures,
+				WantValues: tt.want,
+				Release:    tt.version,
+				PkgName:    tt.pkgName,
+				WantErr:    tt.wantErr,
+			})
 		})
 	}
 }

@@ -1,13 +1,13 @@
 package debian_test
 
 import (
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 	"path/filepath"
 	"testing"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
@@ -126,7 +126,12 @@ func TestVulnSrc_Update(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			vs := debian.NewVulnSrc()
-			vulnsrctest.TestUpdate(t, vs.Update, tt.dir, tt.wantValues, tt.wantErr, tt.noBuckets)
+			vulnsrctest.TestUpdate(t, vs, vulnsrctest.TestUpdateArgs{
+				Dir:        tt.dir,
+				WantValues: tt.wantValues,
+				WantErr:    tt.wantErr,
+				NoBuckets:  tt.noBuckets,
+			})
 		})
 	}
 }
@@ -174,7 +179,13 @@ func TestVulnSrc_Get(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			vs := debian.NewVulnSrc()
-			vulnsrctest.TestGet(t, vs.Get, tt.fixtures, tt.want, tt.args.release, tt.args.pkgName, tt.wantErr)
+			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
+				Fixtures:   tt.fixtures,
+				WantValues: tt.want,
+				Release:    tt.args.release,
+				PkgName:    tt.args.pkgName,
+				WantErr:    tt.wantErr,
+			})
 		})
 	}
 }
