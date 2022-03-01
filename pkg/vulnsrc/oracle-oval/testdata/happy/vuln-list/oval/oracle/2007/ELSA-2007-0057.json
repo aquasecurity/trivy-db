@@ -11,6 +11,11 @@
       "ID": "ELSA-2007-0057"
     },
     {
+      "Source": "elsa",
+      "URI": "http://linux.oracle.com/errata/ELSA-2007-0057.html",
+      "ID": "ELSA-2007-0057"
+    },
+    {
       "Source": "CVE",
       "URI": "http://linux.oracle.com/cve/CVE-2007-0493.html",
       "ID": "CVE-2007-0493"
@@ -29,7 +34,6 @@
         "Criterias": [
           {
             "Operator": "AND",
-            "Criterias": null,
             "Criterions": [
               {
                 "Comment": "bind-devel is earlier than 30:9.3.3-8.el5"
@@ -41,13 +45,23 @@
           },
           {
             "Operator": "AND",
-            "Criterias": null,
             "Criterions": [
               {
                 "Comment": "bind-sdb is earlier than 30:9.3.3-8.el5"
               },
               {
                 "Comment": "bind-sdb is signed with the Oracle Linux 5 key"
+              }
+            ]
+          },
+          {
+            "Operator": "AND",
+            "Criterions": [
+              {
+                "Comment": " is earlier than 30:9.3.3-8.el5"
+              },
+              {
+                "Comment": " is signed with the Oracle Linux 5 key"
               }
             ]
           }
