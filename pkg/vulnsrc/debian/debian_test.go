@@ -71,6 +71,36 @@ func TestVulnSrc_Update(t *testing.T) {
 						FixedVersion: "19.4-2",
 					},
 				},
+				{
+					key: []string{"vulnerability-detail", "CVE-2021-33560", string(vulnerability.Debian)},
+					value: types.VulnerabilityDetail{
+						Title: "Libgcrypt before 1.8.8 and 1.9.x before 1.9.3 mishandles ElGamal encry ...",
+					},
+				},
+				{
+					key: []string{"vulnerability-detail", "CVE-2021-29629", string(vulnerability.Debian)},
+					value: types.VulnerabilityDetail{
+						Title: "In FreeBSD 13.0-STABLE before n245765-bec0d2c9c841, 12.2-STABLE before ...",
+					},
+				},
+				{
+					key: []string{"vulnerability-detail", "DSA-3714-1", string(vulnerability.Debian)},
+					value: types.VulnerabilityDetail{
+						Title: "akonadi - update",
+					},
+				},
+				{
+					key:   []string{"vulnerability-id", "CVE-2021-33560"},
+					value: map[string]interface{}{},
+				},
+				{
+					key:   []string{"vulnerability-id", "CVE-2021-29629"},
+					value: map[string]interface{}{},
+				},
+				{
+					key:   []string{"vulnerability-id", "DSA-3714-1"},
+					value: map[string]interface{}{},
+				},
 			},
 			noBuckets: [][]string{
 				{"advisory-detail", "CVE-2021-29629", "debian 9"}, // not-affected in debian stretch

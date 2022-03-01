@@ -55,6 +55,9 @@ func NewVulnSrc(dist Distribution) VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
+	if vs.dist == OpenSUSE {
+		return "opensuse-cvrf"
+	}
 	return source.ID
 }
 
