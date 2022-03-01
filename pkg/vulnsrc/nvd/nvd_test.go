@@ -40,28 +40,6 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
-			name: "happy path (**REJECT** in description)",
-			dir:  filepath.Join("testdata", "reject in description"),
-			wantValues: []vulnsrctest.WantValues{
-				{
-					Key: []string{"vulnerability-detail", "CVE-2020-0001", nvdDir},
-					Value: types.VulnerabilityDetail{
-						Description:      "** REJECT ** test description",
-						CvssScore:        7.2,
-						CvssVector:       "AV:L/AC:L/Au:N/C:C/I:C/A:C",
-						CvssScoreV3:      7.8,
-						CvssVectorV3:     "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
-						Severity:         types.SeverityHigh,
-						SeverityV3:       types.SeverityHigh,
-						CweIDs:           []string{"CWE-269"},
-						References:       []string{"https://source.android.com/security/bulletin/2020-01-01"},
-						LastModifiedDate: utils.MustTimeParse("2020-01-01T01:01:00Z"),
-						PublishedDate:    utils.MustTimeParse("2001-01-01T01:01:00Z"),
-					},
-				},
-			},
-		},
-		{
 			name:    "sad path (dir doesn't exist)",
 			dir:     filepath.Join("testdata", "badPath"),
 			wantErr: "no such file or directory",
