@@ -1,0 +1,66 @@
+{
+  "id": "FEDORA-EPEL-2022-2f3bfb7a61"
+  "title": "prosody-0.11.12-1.el8",
+  "type": "security",
+  "issued": {
+    "date": "2022-01-23 00:42:19"
+  },
+  "updated": {
+    "date": "2022-01-14 11:23:16"
+  },
+  "severity": "Moderate",
+  "description": "# Prosody 0.11.12\n\nUpstream is pleased to announce a new minor release from their stable branch.\n\nThis is a security release that addresses a denial-of-service vulnerability in Prosody’s mod_websocket. For more information, refer to the [20220113 advisory](https://prosody.im/security/advisory_20220113/).\n\n## Security\n  * util.xml: Do not allow doctypes, comments or processing instructions\n",
+  "packages": [
+    {
+      "name": "prosody",
+      "epoch": "0",
+      "version": "0.11.12",
+      "release": "1.el8",
+      "arch": "x86_64",
+      "src": "https://download.fedoraproject.org/pub/fedora/linux/updates/8/x86_64/p/prosody-0.11.12-1.el8.x86_64.rpm",
+      "filename": "prosody-0.11.12-1.el8.x86_64.rpm"
+    },
+    {
+      "name": "prosody-debugsource",
+      "epoch": "0",
+      "version": "0.11.12",
+      "release": "1.el8",
+      "arch": "x86_64",
+      "src": "https://download.fedoraproject.org/pub/fedora/linux/updates/8/x86_64/p/prosody-debugsource-0.11.12-1.el8.x86_64.rpm",
+      "filename": "prosody-debugsource-0.11.12-1.el8.x86_64.rpm"
+    },
+    {
+      "name": "prosody-debuginfo",
+      "epoch": "0",
+      "version": "0.11.12",
+      "release": "1.el8",
+      "arch": "x86_64",
+      "src": "https://download.fedoraproject.org/pub/fedora/linux/updates/8/x86_64/p/prosody-debuginfo-0.11.12-1.el8.x86_64.rpm",
+      "filename": "prosody-debuginfo-0.11.12-1.el8.x86_64.rpm"
+    }
+  ],
+  "module": {},
+  "references": [
+    {
+      "href": "https://bugzilla.redhat.com/show_bug.cgi?id=2040350",
+      "id": "2040350",
+      "title": "prosody-0.11.12 is available",
+      "type": "bugzilla"
+    },
+    {
+      "href": "https://bugzilla.redhat.com/show_bug.cgi?id=2040639",
+      "id": "2040639",
+      "title": "CVE-2022-0217 prosody: unauthenticated remote Denial of Service Attack",
+      "type": "bugzilla"
+    },
+    {
+      "href": "https://bugzilla.redhat.com/show_bug.cgi?id=2040641",
+      "id": "2040641",
+      "title": "CVE-2022-0217 prosody: unauthenticated remote Denial of Service Attack [epel-all]",
+      "type": "bugzilla"
+    }
+  ],
+  "cveids": [
+    "CVE-2022-0217"
+  ]
+}
