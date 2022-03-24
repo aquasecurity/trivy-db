@@ -45,6 +45,10 @@ var (
 		"groovy":  "20.10",
 		"hirsute": "21.04",
 		"impish":  "21.10",
+		// ESM versions:
+		"precise/esm":      "12.04-ESM",
+		"trusty/esm":       "14.04-ESM",
+		"esm-infra/xenial": "16.04-ESM",
 	}
 
 	source = types.DataSource{
