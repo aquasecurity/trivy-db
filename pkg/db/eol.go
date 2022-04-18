@@ -11,7 +11,7 @@ const eofBucket = "eol"
 
 func (dbc Config) PutEndOfLifeDates(tx *bolt.Tx, os string, dateList map[string]time.Time) error {
 	if err := dbc.put(tx, []string{eofBucket}, os, dateList); err != nil {
-		return xerrors.Errorf("failed to put end-of-life date list: %w", err)
+		return xerrors.Errorf("failed to put list of end-of-life dates: %w", err)
 	}
 	return nil
 }

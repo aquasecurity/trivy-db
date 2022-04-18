@@ -43,7 +43,7 @@ func (es EolSrc) Update(dir string) (err error) {
 	}
 
 	if err := json.Unmarshal(f, &eolDates); err != nil {
-		return xerrors.Errorf("failed to decode end-of-life date list: %w", err)
+		return xerrors.Errorf("failed to decode list of end-of-life dates: %w", err)
 	}
 
 	return es.save(eolDates)

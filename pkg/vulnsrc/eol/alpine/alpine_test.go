@@ -31,7 +31,7 @@ func TestEolSrc_Update(t *testing.T) {
 		{
 			name:    "sad path",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "failed to decode end-of-life date list",
+			wantErr: "failed to decode list of end-of-life dates",
 		},
 	}
 
