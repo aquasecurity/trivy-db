@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime/debug"
 	"strings"
+	"time"
 
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
@@ -46,6 +47,10 @@ type Operation interface {
 	DeleteAdvisoryDetailBucket() error
 
 	PutDataSource(tx *bolt.Tx, bktName string, source types.DataSource) (err error)
+
+	// EOL
+	PutEndOfLifeDates(tx *bolt.Tx, os string, dateList map[string]time.Time) (err error)
+	GetEndOfLifeDates(os string) (dateList map[string]time.Time, err error)
 
 	// For Red Hat
 	PutRedHatRepositories(tx *bolt.Tx, repository string, cpeIndices []int) (err error)
