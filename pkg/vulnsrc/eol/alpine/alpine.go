@@ -50,7 +50,7 @@ func (es EolSrc) Update(dir string) (err error) {
 }
 
 func (es EolSrc) save(eolDates map[string]time.Time) error {
-	log.Println("Alpine EOL batch update")
+	log.Println("Alpine EOL dates batch update")
 	err := es.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		return es.commit(tx, eolDates)
 	})
