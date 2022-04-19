@@ -2,15 +2,16 @@ package alpine
 
 import (
 	"encoding/json"
+	"log"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
-	"log"
-	"os"
-	"path/filepath"
-	"time"
 )
 
 const (
@@ -65,4 +66,8 @@ func (es EolSrc) commit(tx *bolt.Tx, eolDates map[string]time.Time) error {
 		return xerrors.Errorf("failed to save Alpine EOL dates: %w", err)
 	}
 	return nil
+}
+
+func (es EolSrc) GetEolDates(osName string) (map[string]time.Time, error) {
+	return es.dbc.GetEndOfLifeDates(osName)
 }

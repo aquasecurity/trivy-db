@@ -17,19 +17,10 @@ func (dbc Config) PutEndOfLifeDates(tx *bolt.Tx, os string, dateList map[string]
 }
 
 func (dbc Config) GetEndOfLifeDates(os string) (dateList map[string]time.Time, err error) {
-	err = db.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte(eofBucket))
-		value := bucket.Get([]byte(os))
-		if value == nil {
-			return xerrors.Errorf("no list of end-of-life dates for %q", os)
-		}
-		if err = json.Unmarshal(value, &dateList); err != nil {
-			return xerrors.Errorf("failed to unmarshal JSON: %w", err)
-		}
-		return nil
-	})
-	if err != nil {
+	value, err := dbc.get([]string{eofBucket}, os)
+	if err = json.Unmarshal(value, &dateList); err != nil {
 		return make(map[string]time.Time), xerrors.Errorf("failed to get list of end-of-life dates for %q: %w", os, err)
 	}
+
 	return dateList, nil
 }
