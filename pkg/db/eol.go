@@ -21,7 +21,7 @@ func (dbc Config) GetEndOfLifeDates(os string) (dateList map[string]time.Time, e
 		bucket := tx.Bucket([]byte(eofBucket))
 		value := bucket.Get([]byte(os))
 		if value == nil {
-			return xerrors.Errorf("no end-of-life date list for %q", os)
+			return xerrors.Errorf("no list of end-of-life dates for %q", os)
 		}
 		if err = json.Unmarshal(value, &dateList); err != nil {
 			return xerrors.Errorf("failed to unmarshal JSON: %w", err)
@@ -29,7 +29,7 @@ func (dbc Config) GetEndOfLifeDates(os string) (dateList map[string]time.Time, e
 		return nil
 	})
 	if err != nil {
-		return make(map[string]time.Time), xerrors.Errorf("failed to get end-of-life date list for %q: %w", os, err)
+		return make(map[string]time.Time), xerrors.Errorf("failed to get list of end-of-life dates for %q: %w", os, err)
 	}
 	return dateList, nil
 }

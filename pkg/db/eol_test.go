@@ -30,7 +30,7 @@ func TestConfig_GetEndOfLifeDates(t *testing.T) {
 			name:     "missing OS",
 			os:       "unknown",
 			fixtures: []string{"testdata/fixtures/eol.yaml"},
-			wantErr:  `failed to get end-of-life date list for "unknown"`,
+			wantErr:  `failed to get list of end-of-life dates for "unknown"`,
 		},
 	}
 	for _, test := range tests {
