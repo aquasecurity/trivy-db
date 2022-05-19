@@ -20,6 +20,7 @@ const (
 	// GitLab Advisory Database
 	gladDir = "glad"
 
+	Alpine    packageType = "Alpine"
 	Conan     packageType = "Conan"
 	Gem       packageType = "Gem"
 	Go        packageType = "Go"
@@ -32,7 +33,7 @@ const (
 
 var (
 	// TODO: support Conan, Npm, NuGet, PyPI and Packagist
-	supportedPkgTypes   = []packageType{Go, Maven}
+	supportedPkgTypes   = []packageType{Alpine, Conan, Gem, Go, Maven, Npm, Nuget, Packagist, PyPI}
 	supportedIDPrefixes = []string{"CVE", "GMS"}
 
 	source = types.DataSource{
