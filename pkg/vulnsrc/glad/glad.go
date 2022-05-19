@@ -17,18 +17,18 @@ import (
 )
 
 const (
-	// GitLab Advisory Database
-	gladDir = "glad"
+    // GitLab Advisory Database
+    gladDir = "glad"
 
-	Alpine    packageType = "Alpine"
-	Conan     packageType = "Conan"
-	Gem       packageType = "Gem"
-	Go        packageType = "Go"
-	Maven     packageType = "Maven"
-	Npm       packageType = "Npm"
-	Nuget     packageType = "Nuget"
-	Packagist packageType = "Packagist"
-	PyPI      packageType = "PyPI"
+    Alpine    packageType = "Alpine"
+    Conan     packageType = "Conan"
+    Gem       packageType = "Gem"
+    Go        packageType = "Go"
+    Maven     packageType = "Maven"
+    Npm       packageType = "Npm"
+    Nuget     packageType = "Nuget"
+    Packagist packageType = "Packagist"
+    PyPI      packageType = "PyPI"
 )
 
 var (
