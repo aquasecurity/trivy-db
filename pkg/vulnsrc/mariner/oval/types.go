@@ -25,7 +25,7 @@ type Metadata struct {
 	Title        string
 	Affected     Affected
 	Reference    Reference
-	Patchable    bool `json:",string"`
+	Patchable    string
 	AdvisoryDate string
 	AdvisoryID   string
 	Severity     string
