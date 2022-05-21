@@ -17,6 +17,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		dir        string
 		wantValues []vulnsrctest.WantValues
 		wantErr    string
+		noBuckets  [][]string
 	}{
 		{
 			name: "happy path",
@@ -79,19 +80,18 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
-			name:       "happy path not applicable",
-			dir:        filepath.Join("testdata", "not-applicable-definition"),
-			wantValues: []vulnsrctest.WantValues{},
+			name: "happy path not applicable",
+			dir:  filepath.Join("testdata", "not-applicable-definition"),
+			noBuckets: [][]string{
+				{"advisory-detail"},
+				{"vulnerability-id"},
+				{"vulnerability-detail"},
+			},
 		},
 		{
 			name:    "sad path invalid objects",
 			dir:     filepath.Join("testdata", "sad", "invalid-objects"),
 			wantErr: "failed to parse objects",
-		},
-		{
-			name:    "sad path invalid patchable",
-			dir:     filepath.Join("testdata", "sad", "invalid-patchable"),
-			wantErr: "invalid use of ,string struct tag, trying to unmarshal",
 		},
 		{
 			name:    "sad path invalid states",
@@ -121,6 +121,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				Dir:        tt.dir,
 				WantValues: tt.wantValues,
 				WantErr:    tt.wantErr,
+				NoBuckets:  tt.noBuckets,
 			})
 		})
 	}

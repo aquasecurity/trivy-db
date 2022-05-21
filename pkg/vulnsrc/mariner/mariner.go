@@ -206,8 +206,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, entries []Entry) erro
 	for _, entry := range entries {
 		cveID := entry.Metadata.Reference.RefID
 		advisory := types.Advisory{}
-		if entry.Metadata.Patchable {
+		// Definition.Metadata.Patchable has a bool and "Not Applicable" string.
+		if entry.Metadata.Patchable == "true" {
 			advisory.FixedVersion = entry.Version
+		} else if entry.Metadata.Patchable == "Not Applicable" {
+			continue
 		}
 
 		if err := vs.dbc.PutAdvisoryDetail(tx, cveID, entry.PkgName, []string{platformName}, advisory); err != nil {
