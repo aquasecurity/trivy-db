@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"path/filepath"
+	"strings"
 
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 
@@ -21,6 +22,11 @@ func ParseDefinitions(dir string) ([]Definition, error) {
 	err := utils.FileWalk(dir, func(r io.Reader, path string) error {
 		var def Definition
 		if err := json.NewDecoder(r).Decode(&def); err != nil {
+			// Definition.Metadata.Patchable has a bool and "Not Applicable".
+			// Workaround: Ignore "Not Applicable"
+			if strings.HasSuffix(err.Error(), "unmarshal \"Not Applicable\" into bool") {
+				return nil
+			}
 			return xerrors.Errorf("failed to decode %s: %w", path, err)
 		}
 		defs = append(defs, def)
