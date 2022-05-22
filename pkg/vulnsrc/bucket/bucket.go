@@ -13,6 +13,8 @@ const separator = "::"
 func Name(ecosystem, dataSource string) string {
 	var prefix types.Ecosystem
 	switch strings.ToLower(ecosystem) {
+	case "alpine", "apk":
+		prefix = vulnerability.Apk
 	case "go", "golang":
 		prefix = vulnerability.Go
 	case "maven", "gradle":
