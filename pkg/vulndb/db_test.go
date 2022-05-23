@@ -2,6 +2,7 @@ package vulndb_test
 
 import (
 	"encoding/json"
+	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"os"
 	"path/filepath"
 	"strings"
@@ -121,9 +122,6 @@ func TestTrivyDB_Insert(t *testing.T) {
 }
 
 func TestTrivyDB_Build(t *testing.T) {
-	modified := time.Date(2020, 8, 24, 17, 37, 0, 0, time.UTC)
-	published := time.Date(2019, 4, 7, 0, 29, 0, 0, time.UTC)
-
 	type wantKV struct {
 		key   []string
 		value interface{}
@@ -140,6 +138,7 @@ func TestTrivyDB_Build(t *testing.T) {
 				"testdata/fixtures/happy/vulnid.yaml",
 				"testdata/fixtures/happy/vulnerability-detail.yaml",
 				"testdata/fixtures/happy/advisory-detail.yaml",
+				"testdata/fixtures/happy/vulnerability-exploitable.yaml",
 			},
 			wantValues: []wantKV{
 				{
@@ -158,8 +157,21 @@ func TestTrivyDB_Build(t *testing.T) {
 							vulnerability.NVD:    types.SeverityHigh,
 							vulnerability.RedHat: types.SeverityCritical,
 						},
-						PublishedDate:    &published,
-						LastModifiedDate: &modified,
+						Exploitables: map[types.SourceID]types.VulnerabilityExploitable{
+							vulnerability.KnownExploitedVulnerabilityCatalog: {
+								DataSource: &types.DataSource{
+									ID:   vulnerability.KnownExploitedVulnerabilityCatalog,
+									Name: "Known Exploited Vulnerability Catalog",
+									URL:  "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+								},
+								Description:    "In Pallets Jinja before 2.10.1, str.format_map allows a sandbox escape.",
+								RequiredAction: "Apply updates per vendor instructions.",
+								DateAdded:      utils.MustTimeParse("2019-04-07T00:00:00Z"),
+								DueDate:        utils.MustTimeParse("2019-04-08T00:00:00Z"),
+							},
+						},
+						PublishedDate:    utils.MustTimeParse("2019-04-07T00:29:00Z"),
+						LastModifiedDate: utils.MustTimeParse("2020-08-24T17:37:00Z"),
 					},
 				},
 			},
@@ -208,6 +220,7 @@ func TestTrivyDB_Build(t *testing.T) {
 			dbtest.NoBucket(t, dbPath, []string{"advisory-detail"})
 			dbtest.NoBucket(t, dbPath, []string{"vulnerability-detail"})
 			dbtest.NoBucket(t, dbPath, []string{"vulnerability-id"})
+			dbtest.NoBucket(t, dbPath, []string{"vulnerability-exploitable"})
 		})
 	}
 }

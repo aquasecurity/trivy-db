@@ -141,7 +141,8 @@ func (t TrivyDB) optimize() error {
 			return nil
 		}
 
-		vuln := t.vulnClient.Normalize(details)
+		exploitables := t.vulnClient.GetExploitables(cveID)
+		vuln := t.vulnClient.Normalize(details, exploitables)
 		if err := t.dbc.PutVulnerability(tx, cveID, vuln); err != nil {
 			return xerrors.Errorf("failed to put vulnerability: %w", err)
 		}
@@ -167,6 +168,10 @@ func (t TrivyDB) cleanup() error {
 
 	if err := t.dbc.DeleteAdvisoryDetailBucket(); err != nil {
 		return xerrors.Errorf("failed to delete advisory detail bucket: %w", err)
+	}
+
+	if err := t.dbc.DeleteVulnerabilityExploitableBucket(); err != nil {
+		return xerrors.Errorf("failed to delete vulnerability exploitable bucket: %w", err)
 	}
 
 	return nil

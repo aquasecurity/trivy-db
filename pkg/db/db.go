@@ -45,6 +45,10 @@ type Operation interface {
 	PutAdvisoryDetail(tx *bolt.Tx, vulnerabilityID, pkgName string, nestedBktNames []string, advisory interface{}) (err error)
 	DeleteAdvisoryDetailBucket() error
 
+	PutVulnerabilityExploitable(tx *bolt.Tx, cveID string, source types.SourceID, exploitable types.VulnerabilityExploitable) error
+	GetVulnerabilityExploitable(cveID string) (map[types.SourceID]types.VulnerabilityExploitable, error)
+	DeleteVulnerabilityExploitableBucket() error
+
 	PutDataSource(tx *bolt.Tx, bktName string, source types.DataSource) (err error)
 
 	// For Red Hat
