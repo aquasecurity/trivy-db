@@ -270,6 +270,7 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 				advisory := types.Advisory{
 					Severity:     cve.Severity,
 					FixedVersion: entry.FixedVersion,
+					Arch:         entry.Arch,
 				}
 
 				if strings.HasPrefix(vulnID, "CVE-") {
@@ -357,6 +358,7 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 						Cves:            cveEntries,
 						FixedVersion:    affectedPkg.FixedVersion,
 						AffectedCPEList: advisory.Metadata.Advisory.AffectedCpeList,
+						Arch:            affectedPkg.Arch,
 					},
 				}
 			} else { // For unpatched vulnerabilities
@@ -374,6 +376,7 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 							},
 							FixedVersion:    affectedPkg.FixedVersion,
 							AffectedCPEList: advisory.Metadata.Advisory.AffectedCpeList,
+							Arch:            affectedPkg.Arch,
 						},
 					}
 				}
@@ -411,6 +414,7 @@ func walkCriterion(cri criteria, tests map[string]rpmInfoTest) (string, []pkg) {
 		packages = append(packages, pkg{
 			Name:         t.Name,
 			FixedVersion: t.FixedVersion,
+			Arch:         t.Arch,
 		})
 	}
 
