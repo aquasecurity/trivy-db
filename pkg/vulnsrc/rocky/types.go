@@ -6,7 +6,7 @@ type RLSA struct {
 	Title       string      `json:"title,omitempty"`
 	Severity    string      `json:"severity,omitempty"`
 	Description string      `json:"description,omitempty"`
-	Packages    []Package   `json:"packages,omitempty"`
+	PkgLists    []PkgList   `json:"pkglists,omitempty"`
 	References  []Reference `json:"references,omitempty"`
 	CveIDs      []string    `json:"cveids,omitempty"`
 }
@@ -19,6 +19,12 @@ type Reference struct {
 	Type  string `json:"type,omitempty"`
 }
 
+// PkgList has modular package information
+type PkgList struct {
+	Packages []Package `json:"packages,omitempty"`
+	Module   Module    `json:"module,omitempty"`
+}
+
 // Package has affected package information
 type Package struct {
 	Name     string `json:"name,omitempty"`
@@ -27,4 +33,13 @@ type Package struct {
 	Release  string `json:"release,omitempty"`
 	Arch     string `json:"arch,omitempty"`
 	Filename string `json:"filename,omitempty"`
+}
+
+// Module has module information
+type Module struct {
+	Stream  string `json:"stream,omitempty"`
+	Name    string `json:"name,omitempty"`
+	Version int64  `json:"version,omitempty"`
+	Arch    string `json:"arch,omitempty"`
+	Context string `json:"context,omitempty"`
 }

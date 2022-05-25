@@ -113,25 +113,28 @@ func (vs VulnSrc) save(errataVer map[string][]RLSA) error {
 func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error {
 	for _, erratum := range errata {
 		for _, cveID := range erratum.CveIDs {
-			putAdvisoryCount := 0
-			for _, pkg := range erratum.Packages {
+			for _, pkglist := range erratum.PkgLists {
 				// Skip the modular packages until the following bug is fixed.
 				// https://forums.rockylinux.org/t/some-errata-missing-in-comparison-with-rhel-and-almalinux/3843/8
-				if strings.Contains(pkg.Release, ".module+el") {
+				// If erratum.Pkglists is 0, it fails to use modules.yaml to break down the affected package into modules.
+				if len(erratum.PkgLists) == 0 {
 					continue
 				}
 
-				advisory := types.Advisory{
-					FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
-				}
-				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkg.Name, []string{platformName}, advisory); err != nil {
-					return xerrors.Errorf("failed to save Rocky advisory: %w", err)
+				for _, pkg := range pkglist.Packages {
+					pkgName := pkg.Name
+					if pkglist.Module.Name != "" && pkglist.Module.Stream != "" {
+						pkgName = fmt.Sprintf("%s:%s::%s", pkglist.Module.Name, pkglist.Module.Stream, pkg.Name)
+					}
+
+					advisory := types.Advisory{
+						FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
+					}
+					if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkgName, []string{platformName}, advisory); err != nil {
+						return xerrors.Errorf("failed to save Rocky advisory: %w", err)
+					}
 				}
 
-				putAdvisoryCount++
-			}
-
-			if putAdvisoryCount > 0 {
 				var references []string
 				for _, ref := range erratum.References {
 					references = append(references, ref.Href)
