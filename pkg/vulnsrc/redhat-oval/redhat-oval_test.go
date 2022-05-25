@@ -86,7 +86,7 @@ func TestVulnSrc_Update(t *testing.T) {
 							{
 								FixedVersion:       "0:78.6.0-1.el8_3",
 								AffectedCPEIndices: []int{1, 2, 6},
-								Arch:               "aarch64|ppc64le|x86_64",
+								Arch:               []string{"aarch64", "ppc64le", "x86_64"},
 								Cves: []redhat.CveEntry{
 									{
 										ID:       "CVE-2020-16042",
@@ -108,7 +108,7 @@ func TestVulnSrc_Update(t *testing.T) {
 							{
 								FixedVersion:       "0:78.6.0-1.el8_3",
 								AffectedCPEIndices: []int{1, 2, 6},
-								Arch:               "aarch64|ppc64le|x86_64",
+								Arch:               []string{"aarch64", "ppc64le", "x86_64"},
 								Cves: []redhat.CveEntry{
 									{
 										ID:       "CVE-2020-16042",
@@ -130,7 +130,7 @@ func TestVulnSrc_Update(t *testing.T) {
 							{
 								FixedVersion:       "0:2.4.37-30.module+el7.3.0+7001+0766b9e7",
 								AffectedCPEIndices: []int{0, 5},
-								Arch:               "aarch64|ppc64le|s390x|x86_64",
+								Arch:               []string{"aarch64", "ppc64le", "s390x", "x86_64"},
 								Cves: []redhat.CveEntry{
 									{
 										ID:       "CVE-2018-17189",
@@ -141,7 +141,7 @@ func TestVulnSrc_Update(t *testing.T) {
 							{
 								FixedVersion:       "0:2.4.37-30.module+el8.3.0+7001+0766b9e7",
 								AffectedCPEIndices: []int{1, 2},
-								Arch:               "aarch64|ppc64le|s390x|x86_64",
+								Arch:               []string{"aarch64", "ppc64le", "s390x", "x86_64"},
 								Cves: []redhat.CveEntry{
 									{
 										ID:       "CVE-2018-17189",
@@ -159,6 +159,7 @@ func TestVulnSrc_Update(t *testing.T) {
 							{
 								FixedVersion:       "",
 								AffectedCPEIndices: []int{3, 5},
+								Arch:               []string{""},
 								Cves: []redhat.CveEntry{
 									{
 										Severity: types.SeverityLow,
@@ -175,7 +176,7 @@ func TestVulnSrc_Update(t *testing.T) {
 							{
 								FixedVersion:       "0:999.el8_3",
 								AffectedCPEIndices: []int{4},
-								Arch:               "aarch64|ppc64le|x86_64",
+								Arch:               []string{"aarch64", "ppc64le", "x86_64"},
 								Cves: []redhat.CveEntry{
 									{
 										ID:       "CVE-2020-26971",
@@ -251,7 +252,7 @@ func TestVulnSrc_Get(t *testing.T) {
 					VendorIDs:       []string{"RHSA-2018:0488"},
 					Severity:        types.SeverityHigh,
 					FixedVersion:    "32:9.9.4-29.el7_2.8",
-					Arch:            "i386|ppc64|x86_64",
+					Arch:            []string{"i386", "ppc64", "x86_64"},
 				},
 				{
 					VulnerabilityID: "CVE-2020-8625",
@@ -272,7 +273,28 @@ func TestVulnSrc_Get(t *testing.T) {
 					VendorIDs:       []string{"RHSA-2018:0488"},
 					Severity:        types.SeverityHigh,
 					FixedVersion:    "32:9.9.4-29.el7_2.8",
-					Arch:            "i386|ppc64|x86_64",
+					Arch:            []string{"i386", "ppc64", "x86_64"},
+				},
+				{
+					VulnerabilityID: "CVE-2020-8625",
+					Severity:        types.SeverityLow,
+				},
+			},
+		},
+		{
+			name: "nvr",
+			args: args{
+				pkgName: "bind",
+				nvrs:    []string{"ubi8-init-container-8.0-7-x86_64"},
+			},
+			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/cpe.yaml"},
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2017-3145",
+					VendorIDs:       []string{"RHSA-2018:0488"},
+					Severity:        types.SeverityHigh,
+					FixedVersion:    "32:9.9.4-29.el7_2.8",
+					Arch:            []string{"i386", "ppc64", "x86_64"},
 				},
 				{
 					VulnerabilityID: "CVE-2020-8625",

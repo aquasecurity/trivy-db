@@ -100,7 +100,7 @@ type Advisory struct {
 
 	// Rpm packages have advisories for different architectures with same package name
 	// This field is required to separate these packages.
-	Arch string `json:"-"`
+	Arch []string `json:"-"`
 
 	// It is filled only when FixedVersion is empty since it is obvious the state is "Fixed" when FixedVersion is not empty.
 	// e.g. Will not fix and Affected
