@@ -158,10 +158,10 @@ func TestTrivyDB_Build(t *testing.T) {
 							vulnerability.RedHat: types.SeverityCritical,
 						},
 						Exploitables: map[types.SourceID]types.VulnerabilityExploitable{
-							vulnerability.KnownExploitedVulnerabilityCatalog: {
+							vulnerability.KnownExploitedVulnerabilitiesCatalog: {
 								DataSource: &types.DataSource{
-									ID:   vulnerability.KnownExploitedVulnerabilityCatalog,
-									Name: "Known Exploited Vulnerability Catalog",
+									ID:   vulnerability.KnownExploitedVulnerabilitiesCatalog,
+									Name: "Known Exploited Vulnerabilities Catalog",
 									URL:  "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
 								},
 								Description:    "In Pallets Jinja before 2.10.1, str.format_map allows a sandbox escape.",

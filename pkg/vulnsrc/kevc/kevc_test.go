@@ -22,19 +22,19 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []vulnsrctest.WantValues{
 				{
-					Key: []string{"data-source", "Known Exploited Vulnerability Catalog"},
+					Key: []string{"data-source", "Known Exploited Vulnerabilities Catalog"},
 					Value: types.DataSource{
-						ID:   vulnerability.KnownExploitedVulnerabilityCatalog,
-						Name: "Known Exploited Vulnerability Catalog",
+						ID:   vulnerability.KnownExploitedVulnerabilitiesCatalog,
+						Name: "Known Exploited Vulnerabilities Catalog",
 						URL:  "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
 					},
 				},
 				{
-					Key: []string{"vulnerability-exploitable", "CVE-2022-0609", "known-exploited-vulnerability-catalog"},
+					Key: []string{"vulnerability-exploitable", "CVE-2022-0609", "known-exploited-vulnerabilities-catalog"},
 					Value: types.VulnerabilityExploitable{
 						DataSource: &types.DataSource{
-							ID:   vulnerability.KnownExploitedVulnerabilityCatalog,
-							Name: "Known Exploited Vulnerability Catalog",
+							ID:   vulnerability.KnownExploitedVulnerabilitiesCatalog,
+							Name: "Known Exploited Vulnerabilities Catalog",
 							URL:  "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
 						},
 						Description:    "The vulnerability exists due to a use-after-free error within the Animation component in Google Chrome.",

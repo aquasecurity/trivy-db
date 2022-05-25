@@ -16,14 +16,14 @@ import (
 var (
 	kevcDir = filepath.Join("kevc")
 	source  = types.DataSource{
-		ID:   vulnerability.KnownExploitedVulnerabilityCatalog,
-		Name: "Known Exploited Vulnerability Catalog",
+		ID:   vulnerability.KnownExploitedVulnerabilitiesCatalog,
+		Name: "Known Exploited Vulnerabilities Catalog",
 		URL:  "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
 	}
 )
 
 const (
-	platformName = "Known Exploited Vulnerability Catalog"
+	platformName = "Known Exploited Vulnerabilities Catalog"
 	DateFormat   = "2006-01-02"
 )
 
@@ -101,7 +101,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, exploitables []Exploitable) error {
 		}
 
 		if err := vs.dbc.PutVulnerabilityID(tx, exploitable.CveID); err != nil {
-			return xerrors.Errorf("failed to put Known Exploited Vulnerability ID: %w", err)
+			return xerrors.Errorf("failed to put Known Exploited Vulnerabilities ID: %w", err)
 		}
 
 		if err := vs.dbc.PutVulnerabilityExploitable(tx, exploitable.CveID, source.ID, e); err != nil {
@@ -114,7 +114,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, exploitables []Exploitable) error {
 func (vs VulnSrc) Get(cveID string) (map[types.SourceID]types.VulnerabilityExploitable, error) {
 	exploitables, err := vs.dbc.GetVulnerabilityExploitable(cveID)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get Known Exploited Vulnerability Catalog: %w", err)
+		return nil, xerrors.Errorf("failed to get Known Exploited Vulnerabilities Catalog: %w", err)
 	}
 	return exploitables, nil
 }
