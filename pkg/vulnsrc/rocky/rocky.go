@@ -62,7 +62,12 @@ func (vs VulnSrc) Update(dir string) error {
 			return nil
 		}
 
-		majorVer, repo, arch := dirs[0], dirs[1], dirs[2]
+		// vulnerabilities are contained in directories with a minor version(like 8.5)
+		majorVer := dirs[0]
+		if strings.Count(dirs[0], ".") > 0 {
+			majorVer = dirs[0][:strings.Index(dirs[0], ".")]
+		}
+		repo, arch := dirs[1], dirs[2]
 		if !ustrings.InSlice(repo, targetRepos) {
 			log.Printf("Unsupported Rocky repo: %s", repo)
 			return nil
