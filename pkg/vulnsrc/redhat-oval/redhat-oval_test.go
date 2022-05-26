@@ -159,7 +159,6 @@ func TestVulnSrc_Update(t *testing.T) {
 							{
 								FixedVersion:       "",
 								AffectedCPEIndices: []int{3, 5},
-								Arch:               []string{""},
 								Cves: []redhat.CveEntry{
 									{
 										Severity: types.SeverityLow,

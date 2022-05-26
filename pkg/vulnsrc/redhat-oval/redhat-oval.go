@@ -411,10 +411,15 @@ func walkCriterion(cri criteria, tests map[string]rpmInfoTest) (string, []pkg) {
 			continue
 		}
 
+		var arch []string
+		if t.Arch != "" {
+			arch = strings.Split(t.Arch, "|") // affected arches are merged with '|'(e.g. 'aarch64|ppc64le|x86_64')
+		}
+
 		packages = append(packages, pkg{
 			Name:         t.Name,
 			FixedVersion: t.FixedVersion,
-			Arch:         strings.Split(t.Arch, "|"), // affected arches are merged with '|'(e.g. 'aarch64|ppc64le|x86_64')
+			Arch:         arch,
 		})
 	}
 
