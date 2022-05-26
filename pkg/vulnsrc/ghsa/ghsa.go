@@ -146,11 +146,13 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ecosystem types.Ecosystem, entries []Entry
 		}
 
 		vuln := types.VulnerabilityDetail{
-			ID:          vulnID,
-			Severity:    severityFromThreat(entry.Severity),
-			References:  references,
-			Title:       entry.Advisory.Summary,
-			Description: entry.Advisory.Description,
+			ID:           vulnID,
+			Severity:     severityFromThreat(entry.Severity),
+			References:   references,
+			Title:        entry.Advisory.Summary,
+			Description:  entry.Advisory.Description,
+			CvssScoreV3:  entry.Advisory.CVSS.Score,
+			CvssVectorV3: entry.Advisory.CVSS.VectorString,
 		}
 
 		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, vulnerability.GHSA, vuln); err != nil {
