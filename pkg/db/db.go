@@ -95,6 +95,10 @@ func Path(cacheDir string) string {
 }
 
 func Close() error {
+	// Skip closing the database if the connection is not established.
+	if db == nil {
+		return nil
+	}
 	if err := db.Close(); err != nil {
 		return xerrors.Errorf("failed to close DB: %w", err)
 	}

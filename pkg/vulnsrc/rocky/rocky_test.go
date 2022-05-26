@@ -1,56 +1,48 @@
 package rocky
 
 import (
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"github.com/aquasecurity/trivy-db/pkg/db"
-	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
-	type want struct {
-		key   []string
-		value interface{}
-	}
 	tests := []struct {
 		name       string
 		dir        string
-		wantValues []want
+		wantValues []vulnsrctest.WantValues
 		wantErr    string
 	}{
 		{
 			name: "happy path",
 			dir:  filepath.Join("testdata", "happy"),
-			wantValues: []want{
+			wantValues: []vulnsrctest.WantValues{
 				{
-					key: []string{"data-source", "rocky 8"},
-					value: types.DataSource{
+					Key: []string{"data-source", "rocky 8"},
+					Value: types.DataSource{
 						ID:   vulnerability.Rocky,
 						Name: "Rocky Linux updateinfo",
 						URL:  "https://download.rockylinux.org/pub/rocky/",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2021-25215", "rocky 8", "bind-export-libs"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "CVE-2021-25215", "rocky 8", "bind-export-libs"},
+					Value: types.Advisory{
 						FixedVersion: "32:9.11.26-4.el8_4",
 					},
 				},
 				{
-					key: []string{"advisory-detail", "CVE-2021-25215", "rocky 8", "bind-export-devel"},
-					value: types.Advisory{
+					Key: []string{"advisory-detail", "CVE-2021-25215", "rocky 8", "bind-export-devel"},
+					Value: types.Advisory{
 						FixedVersion: "32:9.11.26-4.el8_4",
 					},
 				},
 				{
-					key: []string{"vulnerability-detail", "CVE-2021-25215", string(vulnerability.Rocky)},
-					value: types.VulnerabilityDetail{
+					Key: []string{"vulnerability-detail", "CVE-2021-25215", string(vulnerability.Rocky)},
+					Value: types.VulnerabilityDetail{
 						Severity: types.SeverityHigh,
 						References: []string{
 							"https://access.redhat.com/hydra/rest/securitydata/cve/CVE-2021-25215.json",
@@ -60,15 +52,15 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					key:   []string{"vulnerability-id", "CVE-2021-25215"},
-					value: map[string]interface{}{},
+					Key:   []string{"vulnerability-id", "CVE-2021-25215"},
+					Value: map[string]interface{}{},
 				},
 			},
 		},
 		{
 			name:       "skip advisories for modular package",
 			dir:        filepath.Join("testdata", "modular"),
-			wantValues: []want{},
+			wantValues: []vulnsrctest.WantValues{},
 		},
 		{
 			name:    "sad path",
@@ -78,25 +70,12 @@ func TestVulnSrc_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tempDir := t.TempDir()
-
-			err := db.Init(tempDir)
-			require.NoError(t, err)
-			defer db.Close()
-
 			vs := NewVulnSrc()
-			err = vs.Update(tt.dir)
-			if tt.wantErr != "" {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.wantErr)
-				return
-			}
-
-			require.NoError(t, err)
-			require.NoError(t, db.Close()) // Need to close before dbtest.JSONEq is called
-			for _, want := range tt.wantValues {
-				dbtest.JSONEq(t, db.Path(tempDir), want.key, want.value)
-			}
+			vulnsrctest.TestUpdate(t, vs, vulnsrctest.TestUpdateArgs{
+				Dir:        tt.dir,
+				WantValues: tt.wantValues,
+				WantErr:    tt.wantErr,
+			})
 		})
 	}
 }

@@ -3,6 +3,8 @@ package ghsa
 import (
 	"encoding/json"
 	"fmt"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"io"
 	"log"
 	"path/filepath"
@@ -85,7 +87,8 @@ func (vs VulnSrc) save(ecosystem types.Ecosystem, entries []Entry) error {
 }
 
 func (vs VulnSrc) commit(tx *bolt.Tx, ecosystem types.Ecosystem, entries []Entry) error {
-	sourceName := fmt.Sprintf(platformFormat, strings.Title(string(ecosystem)))
+	ecosystemName := cases.Title(language.English).String(string(ecosystem))
+	sourceName := fmt.Sprintf(platformFormat, ecosystemName)
 	bucketName := bucket.Name(string(ecosystem), sourceName)
 	err := vs.dbc.PutDataSource(tx, bucketName, types.DataSource{
 		ID:   sourceID,

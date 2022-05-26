@@ -2,10 +2,9 @@ package oval
 
 import (
 	"encoding/json"
+	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"io"
 	"path/filepath"
-
-	"github.com/aquasecurity/trivy-db/pkg/utils"
 
 	"golang.org/x/xerrors"
 )

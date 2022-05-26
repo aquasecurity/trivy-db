@@ -1,0 +1,16 @@
+{
+  "RpminfoTests": [
+    {
+      "Check": "at least one",
+      "Comment": "Package libnotify is installed with version 0.7.9 or earlier",
+      "ID": "oval:com.microsoft.cbl-mariner:tst:1653048070000135",
+      "Version": "0",
+      "Object": {
+        "ObjectRef": "oval:com.microsoft.cbl-mariner:obj:1653048070000136"
+      },
+      "State": {
+        "StateRef": "oval:com.microsoft.cbl-mariner:ste:1653048070000137"
+      }
+    }
+  ]
+}

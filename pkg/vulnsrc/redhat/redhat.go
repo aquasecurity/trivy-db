@@ -3,6 +3,8 @@ package redhat
 import (
 	"encoding/json"
 	"fmt"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"io"
 	"io/ioutil"
 	"log"
@@ -150,7 +152,8 @@ func (vs VulnSrc) putVulnerabilityDetail(tx *bolt.Tx, cve RedhatCVE) error {
 }
 
 func severityFromThreat(sev string) types.Severity {
-	switch strings.Title(sev) {
+	severity := cases.Title(language.English).String(sev)
+	switch severity {
 	case "Low":
 		return types.SeverityLow
 	case "Moderate":

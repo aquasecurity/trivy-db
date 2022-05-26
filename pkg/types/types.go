@@ -3,8 +3,6 @@ package types
 import (
 	"fmt"
 	"time"
-
-	"github.com/fatih/color"
 )
 
 type Severity int
@@ -41,13 +39,6 @@ var (
 		"HIGH",
 		"CRITICAL",
 	}
-	SeverityColor = []func(a ...interface{}) string{
-		color.New(color.FgCyan).SprintFunc(),
-		color.New(color.FgBlue).SprintFunc(),
-		color.New(color.FgYellow).SprintFunc(),
-		color.New(color.FgHiRed).SprintFunc(),
-		color.New(color.FgRed).SprintFunc(),
-	}
 )
 
 func NewSeverity(severity string) (Severity, error) {
@@ -63,15 +54,6 @@ func CompareSeverityString(sev1, sev2 string) int {
 	s1, _ := NewSeverity(sev1)
 	s2, _ := NewSeverity(sev2)
 	return int(s2) - int(s1)
-}
-
-func ColorizeSeverity(severity string) string {
-	for i, name := range SeverityNames {
-		if severity == name {
-			return SeverityColor[i](severity)
-		}
-	}
-	return color.New(color.FgBlue).SprintFunc()(severity)
 }
 
 func (s Severity) String() string {

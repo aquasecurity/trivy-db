@@ -1,0 +1,48 @@
+{
+  "Title": "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)",
+  "Description": "[0:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229",
+  "Platform": [
+    "Oracle Linux 5"
+  ],
+  "References": [
+    {
+      "Source": "elsa",
+      "URI": "http://linux.oracle.com/errata/ELSA-2007-0057.html",
+      "ID": "ELSA-2007-0057"
+    },
+    {
+      "Source": "CVE",
+      "URI": "http://linux.oracle.com/cve/CVE-2007-0493.html",
+      "ID": "CVE-2007-0493"
+    }
+  ],
+  "Criteria": {
+    "Operator": "AND",
+    "Criterias": [
+      {
+        "Operator": "OR",
+        "Criterias": [
+          {
+            "Operator": "AND",
+            "Criterias": null,
+            "Criterions": [
+              {
+                "Comment": "bind-devel is earlier than 0:9.3.3-8.el5"
+              },
+              {
+                "Comment": "bind-devel is signed with the Oracle Linux 5 key"
+              }
+            ]
+          }
+        ],
+        "Criterions": null
+      }
+    ],
+    "Criterions": [
+      {
+        "Comment": "Oracle Linux 5 is installed"
+      }
+    ]
+  },
+  "Severity": "MODERATE"
+}
