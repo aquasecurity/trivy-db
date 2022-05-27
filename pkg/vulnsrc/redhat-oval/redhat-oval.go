@@ -146,8 +146,8 @@ func (vs VulnSrc) mergeAdvisories(advisories map[bucket]Advisory, defs map[bucke
 		if old, ok := advisories[bkt]; ok {
 			found := false
 			for i := range old.Entries {
-				// New advisory should contain a single fixed version.
-				if old.Entries[i].FixedVersion == def.Entry.FixedVersion {
+				// New advisory should contain a single fixed version and list of arches.
+				if old.Entries[i].FixedVersion == def.Entry.FixedVersion && archSliceEqual(old.Entries[i].Arch, def.Entry.Arch) {
 					found = true
 					old.Entries[i].AffectedCPEList = ustrings.Merge(old.Entries[i].AffectedCPEList, def.Entry.AffectedCPEList)
 				}
@@ -471,4 +471,22 @@ func severityFromImpact(sev string) types.Severity {
 		return types.SeverityCritical
 	}
 	return types.SeverityUnknown
+}
+
+func archSliceEqual(a, b []string) bool {
+	switch {
+	case a == nil && b == nil:
+		return true
+	case a == nil || b == nil:
+		return false
+	case len(a) != len(b):
+		return false
+	default:
+		for i := range a {
+			if a[i] != b[i] {
+				return false
+			}
+		}
+	}
+	return true
 }
