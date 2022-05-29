@@ -33,7 +33,7 @@ const (
 var (
 	// TODO: support Conan, Npm, NuGet, PyPI and Packagist
 	supportedPkgTypes   = []packageType{Go, Maven}
-	supportedIDPrefixes = []string{"CVE", "GMS"}
+	supportedIDPrefixes = []string{"CVE", "GHSA", "GMS"}
 
 	source = types.DataSource{
 		ID:   vulnerability.GLAD,
