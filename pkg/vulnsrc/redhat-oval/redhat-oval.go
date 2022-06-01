@@ -474,18 +474,12 @@ func severityFromImpact(sev string) types.Severity {
 }
 
 func archSliceEqual(a, b []string) bool {
-	switch {
-	case a == nil && b == nil:
-		return true
-	case a == nil || b == nil:
+	if len(a) != len(b) {
 		return false
-	case len(a) != len(b):
-		return false
-	default:
-		for i := range a {
-			if a[i] != b[i] {
-				return false
-			}
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
 		}
 	}
 	return true
