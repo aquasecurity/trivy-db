@@ -140,6 +140,7 @@ type evr struct {
 type pkg struct {
 	Name         string
 	FixedVersion string
+	Arches       []string
 }
 
 type bucket struct {
@@ -159,6 +160,7 @@ type Definition struct {
 type Entry struct {
 	FixedVersion string `json:",omitempty"`
 	Cves         []CveEntry
+	Arches       []string `json:"Arch,omitempty"`
 
 	// For DB size optimization, CPE names will not be stored.
 	// CPE indices are stored instead.

@@ -98,6 +98,10 @@ type Advisory struct {
 	VulnerabilityID string   `json:",omitempty"` // CVE-ID or vendor ID
 	VendorIDs       []string `json:",omitempty"` // e.g. RHSA-ID and DSA-ID
 
+	// Rpm packages have advisories for different architectures with same package name
+	// This field is required to separate these packages.
+	Arches []string `json:"-"`
+
 	// It is filled only when FixedVersion is empty since it is obvious the state is "Fixed" when FixedVersion is not empty.
 	// e.g. Will not fix and Affected
 	State string `json:",omitempty"`
