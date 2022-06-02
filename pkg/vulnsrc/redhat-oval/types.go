@@ -160,7 +160,7 @@ type Definition struct {
 type Entry struct {
 	FixedVersion string `json:",omitempty"`
 	Cves         []CveEntry
-	Arches       []string `json:"Arch,omitempty"`
+	Arches       []string `json:",omitempty"`
 
 	// For DB size optimization, CPE names will not be stored.
 	// CPE indices are stored instead.
