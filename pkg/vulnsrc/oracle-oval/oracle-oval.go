@@ -88,8 +88,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 		elsaID := strings.Split(oval.Title, ":")[0]
 
 		var vulnIDs []string
+		var cveIDs []string
 		for _, cve := range oval.Cves {
 			vulnIDs = append(vulnIDs, cve.ID)
+			cveIDs = append(cveIDs, cve.ID)
 		}
 		if len(vulnIDs) == 0 {
 			vulnIDs = append(vulnIDs, elsaID)
@@ -110,15 +112,18 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 				return xerrors.Errorf("failed to put data source: %w", err)
 			}
 
-			advisory := types.Advisory{
+			advisory := Advisory{
 				FixedVersion: affectedPkg.Package.FixedVersion,
+				Cves:         cveIDs,
 			}
 
-			for _, vulnID := range vulnIDs {
-				if err := vs.dbc.PutAdvisoryDetail(tx, vulnID, affectedPkg.Package.Name, []string{platformName}, advisory); err != nil {
-					return xerrors.Errorf("failed to save Oracle Linux OVAL: %w", err)
-				}
+			if err := vs.dbc.PutAdvisoryDetail(tx, elsaID, affectedPkg.Package.Name, []string{platformName}, advisory); err != nil {
+				return xerrors.Errorf("failed to save Oracle Linux OVAL: %w", err)
 			}
+		}
+
+		if err := vs.dbc.PutVulnerabilityID(tx, elsaID); err != nil {
+			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 		}
 
 		var references []string
@@ -128,19 +133,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 
 		for _, vulnID := range vulnIDs {
 			vuln := types.VulnerabilityDetail{
-				Description: oval.Description,
-				References:  referencesFromContains(references, []string{elsaID, vulnID}),
-				Title:       oval.Title,
-				Severity:    severityFromThreat(oval.Severity),
+				References: referencesFromContains(references, []string{elsaID, vulnID}),
+				Severity:   severityFromThreat(oval.Severity),
 			}
 
 			if err := vs.dbc.PutVulnerabilityDetail(tx, vulnID, source.ID, vuln); err != nil {
 				return xerrors.Errorf("failed to save Oracle Linux OVAL vulnerability: %w", err)
-			}
-
-			// for optimization
-			if err := vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
-				return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 			}
 		}
 	}
@@ -150,10 +148,37 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 
 func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
 	bucket := fmt.Sprintf(platformFormat, release)
-	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
+	rawAdvisories, err := vs.dbc.ForEachAdvisory([]string{bucket}, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get Oracle Linux advisories: %w", err)
+		return nil, xerrors.Errorf("unable to iterate advisories: %w", err)
 	}
+
+	var advisories []types.Advisory
+	for vulnID, v := range rawAdvisories {
+		if len(v.Content) == 0 {
+			continue
+		}
+
+		var adv Advisory
+		if err = json.Unmarshal(v.Content, &adv); err != nil {
+			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
+		}
+
+		for _, cveID := range adv.Cves {
+			advisory := types.Advisory{
+				FixedVersion: adv.FixedVersion,
+			}
+			if strings.HasPrefix(vulnID, "CVE-") {
+				advisory.VulnerabilityID = vulnID
+			} else {
+				advisory.VulnerabilityID = cveID
+				advisory.VendorIDs = []string{vulnID}
+			}
+
+			advisories = append(advisories, advisory)
+		}
+	}
+
 	return advisories, nil
 }
 

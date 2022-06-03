@@ -41,3 +41,8 @@ type AffectedPackage struct {
 	Package Package
 	OSVer   string
 }
+
+type Advisory struct {
+	FixedVersion string `json:",omitempty"`
+	Cves         []string
+}

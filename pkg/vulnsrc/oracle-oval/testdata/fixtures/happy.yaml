@@ -1,7 +1,11 @@
-- bucket: Oracle Linux 8
+- bucket: Oracle Linux 7
   pairs:
-    - bucket: bind
+    - bucket: java-11-openjdk
       pairs:
-        - key: ELSA-2019-1145
+        - key: ELSA-2019-0778
           value:
-            FixedVersion: "32:9.11.4-17.P2.el8_0"
+            FixedVersion: "1:11.0.3.7-0.0.1.el7_6"
+            Cves: [
+              "CVE-2019-2602",
+              "CVE-2019-2684"
+            ]

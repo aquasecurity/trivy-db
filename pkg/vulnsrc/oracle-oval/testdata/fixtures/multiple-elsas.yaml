@@ -1,0 +1,20 @@
+- bucket: Oracle Linux 8
+  pairs:
+    - bucket: gnutls
+      pairs:
+        - key: ELSA-2021-4451
+          value:
+            FixedVersion: "3.6.16-4.el8"
+            Cves: [
+              "CVE-2021-20232",
+              "CVE-2021-3580",
+              "CVE-2021-20231"
+            ]
+        - key: ELSA-2022-9221
+          value:
+            FixedVersion: "10:3.6.16-4.0.1.el8_fips"
+            Cves: [
+              "CVE-2021-20232",
+              "CVE-2021-3580",
+              "CVE-2021-20231"
+            ]
