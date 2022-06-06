@@ -84,6 +84,7 @@ func (vs VulnSrc) save(ovals []OracleOVAL) error {
 }
 
 func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
+	advisories := map[bucket]Advisory{}
 	for _, oval := range ovals {
 		elsaID := strings.Split(oval.Title, ":")[0]
 
@@ -110,14 +111,13 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 				return xerrors.Errorf("failed to put data source: %w", err)
 			}
 
-			advisory := types.Advisory{
-				FixedVersion: affectedPkg.Package.FixedVersion,
-			}
-
 			for _, vulnID := range vulnIDs {
-				if err := vs.dbc.PutAdvisoryDetail(tx, vulnID, affectedPkg.Package.Name, []string{platformName}, advisory); err != nil {
-					return xerrors.Errorf("failed to save Oracle Linux OVAL: %w", err)
+				bucket := bucket{
+					platform: platformName,
+					pkgName:  affectedPkg.Package.Name,
+					vulnID:   vulnID,
 				}
+				advisories = mergeAdvisories(advisories, bucket, affectedPkg.Package.FixedVersion)
 			}
 		}
 
@@ -144,8 +144,14 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			}
 		}
 	}
-	return nil
 
+	for b, adv := range advisories {
+		if err := vs.dbc.PutAdvisoryDetail(tx, b.vulnID, b.pkgName, []string{b.platform}, adv); err != nil {
+			return xerrors.Errorf("failed to save Oracle Linux OVAL: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
@@ -207,4 +213,14 @@ func severityFromThreat(sev string) types.Severity {
 		return types.SeverityCritical
 	}
 	return types.SeverityUnknown
+}
+
+func mergeAdvisories(advisories map[bucket]Advisory, b bucket, ver string) map[bucket]Advisory {
+	if adv, ok := advisories[b]; ok {
+		if ustrings.InSlice(ver, adv.FixedVersions) {
+			return advisories
+		}
+	}
+	advisories[b] = Advisory{FixedVersions: append(advisories[b].FixedVersions, ver)}
+	return advisories
 }

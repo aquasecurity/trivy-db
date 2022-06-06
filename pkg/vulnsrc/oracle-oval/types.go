@@ -41,3 +41,13 @@ type AffectedPackage struct {
 	Package Package
 	OSVer   string
 }
+
+type Advisory struct {
+	FixedVersions []string `json:",omitempty"`
+}
+
+type bucket struct {
+	platform string
+	pkgName  string
+	vulnID   string
+}
