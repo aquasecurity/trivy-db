@@ -175,6 +175,14 @@ func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) 
 				advisory.VendorIDs = []string{vulnID}
 			}
 
+			if v.Source != (types.DataSource{}) {
+				advisory.DataSource = &types.DataSource{
+					ID:   v.Source.ID,
+					Name: v.Source.Name,
+					URL:  v.Source.URL,
+				}
+			}
+
 			advisories = append(advisories, advisory)
 		}
 	}
