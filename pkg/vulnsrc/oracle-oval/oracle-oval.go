@@ -146,6 +146,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 	}
 
 	for b, adv := range advisories {
+		if len(adv.FixedVersions) >= 4 {
+			fmt.Println()
+		}
 		if err := vs.dbc.PutAdvisoryDetail(tx, b.vulnID, b.pkgName, []string{b.platform}, adv); err != nil {
 			return xerrors.Errorf("failed to save Oracle Linux OVAL: %w", err)
 		}
@@ -156,9 +159,30 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 
 func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
 	bucket := fmt.Sprintf(platformFormat, release)
-	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
+	rawAdvisories, err := vs.dbc.ForEachAdvisory([]string{bucket}, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get Oracle Linux advisories: %w", err)
+		return nil, xerrors.Errorf("unable to iterate advisories: %w", err)
+	}
+
+	var advisories []types.Advisory
+	for cveID, v := range rawAdvisories {
+		if len(v.Content) == 0 {
+			continue
+		}
+
+		var adv Advisory
+		if err = json.Unmarshal(v.Content, &adv); err != nil {
+			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
+		}
+
+		for _, fVer := range adv.FixedVersions {
+			advisory := types.Advisory{
+				VulnerabilityID: cveID,
+				FixedVersion:    fVer,
+			}
+			advisories = append(advisories, advisory)
+		}
+
 	}
 	return advisories, nil
 }

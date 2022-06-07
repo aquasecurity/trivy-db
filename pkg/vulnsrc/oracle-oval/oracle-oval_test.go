@@ -252,17 +252,18 @@ func TestVulnSrc_Update(t *testing.T) {
 						},
 					},
 				},
-				//{
-				//	Key: []string{"vulnerability-detail", "CVE-2021-20232", "oracle-oval"},
-				//	Value: types.VulnerabilityDetail{
-				//		Title:       "ELSA-2022-9221:  gnutls security update (MODERATE)",
-				//		Description: "[3.6.16-4.0.1_fips]\n- Allow RSA keygen with modulus sizes bigger than 3072 bits and validate the seed length\n  as defined in FIPS 186-4 section B.3.2 [Orabug: 33200526]\n- Allow bigger known RSA modulus sizes when calling\n  rsa_generate_fips186_4_keypair directly [Orabug: 33200526]\n- Change Epoch from 1 to 10\n\n[3.6.16-4]\n- p11tool: Document ID reuse behavior when importing certs (#1776250)\n\n[3.6.16-3]\n- Treat SHA-1 signed CA in the trusted set differently (#1965445)\n\n[3.6.16-2]\n- Filter certificate_types in TLS 1.2 CR based on signature algorithms (#1942216)\n\n[3.6.16-1]\n- Update to upstream 3.6.16 release (#1956783)\n- Fix potential use-after-free in key_share handling (#1927597)\n- Fix potential use-after-free in pre_shared_key handling (#1927593)\n- Stop gnutls-serv relying on AI_ADDRCONFIG to decide listening address (#1908334)\n- Fix cert expiration issue in tests (#1908110)\n\n[3.6.14-10]\n- Port fixes for potential miscalculation in ecdsa_verify (#1942931)\n\n[3.6.14-9]\n- Revert the previous change\", \"References\": []interface{}{\"https://linux.oracle.com/cve/CVE-2021-20232.html\", \"https://linux.oracle.com/errata/ELSA-2022-9221.html\"}, \"Severity\": 2, \"Title\": \"ELSA-2022-9221:  gnutls security update (MODERATE)",
-				//		References: []string{
-				//			"https://linux.oracle.com/errata/ELSA-2022-9221.html",
-				//		},
-				//		Severity: types.SeverityMedium,
-				//	},
-				//},
+				{
+					Key: []string{"vulnerability-detail", "CVE-2021-20232", "oracle-oval"},
+					Value: types.VulnerabilityDetail{
+						Title:       "ELSA-2022-9221:  gnutls security update (MODERATE)",
+						Description: "[3.6.16-4.0.1_fips]\n- Allow RSA keygen with modulus sizes bigger than 3072 bits and validate the seed length\n  as defined in FIPS 186-4 section B.3.2 [Orabug: 33200526]\n- Allow bigger known RSA modulus sizes when calling\n  rsa_generate_fips186_4_keypair directly [Orabug: 33200526]\n- Change Epoch from 1 to 10\n\n[3.6.16-4]\n- p11tool: Document ID reuse behavior when importing certs (#1776250)\n\n[3.6.16-3]\n- Treat SHA-1 signed CA in the trusted set differently (#1965445)\n\n[3.6.16-2]\n- Filter certificate_types in TLS 1.2 CR based on signature algorithms (#1942216)\n\n[3.6.16-1]\n- Update to upstream 3.6.16 release (#1956783)\n- Fix potential use-after-free in key_share handling (#1927597)\n- Fix potential use-after-free in pre_shared_key handling (#1927593)\n- Stop gnutls-serv relying on AI_ADDRCONFIG to decide listening address (#1908334)\n- Fix cert expiration issue in tests (#1908110)\n\n[3.6.14-10]\n- Port fixes for potential miscalculation in ecdsa_verify (#1942931)\n\n[3.6.14-9]\n- Revert the previous change",
+						References: []string{
+							"https://linux.oracle.com/cve/CVE-2021-20232.html",
+							"https://linux.oracle.com/errata/ELSA-2022-9221.html",
+						},
+						Severity: types.SeverityMedium,
+					},
+				},
 			},
 		},
 		{
@@ -328,6 +329,30 @@ func TestVulnSrc_Get(t *testing.T) {
 				{
 					VulnerabilityID: "ELSA-2019-1145",
 					FixedVersion:    "32:9.11.4-17.P2.el8_0",
+				},
+			},
+		},
+		{
+			name:     "happy path. Fips and ksplice packages",
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			version:  "8",
+			pkgName:  "glibc",
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2016-10228",
+					FixedVersion:    "glibc-2.28-151.0.1.ksplice2.el8.src.rpm",
+				},
+				{
+					VulnerabilityID: "CVE-2016-10228",
+					FixedVersion:    "glibc-2.28-151.0.1.ksplice1.el8.src.rpm",
+				},
+				{
+					VulnerabilityID: "CVE-2016-10228",
+					FixedVersion:    "glibc-2.28-151.0.1.fips.el8.src.rpm",
+				},
+				{
+					VulnerabilityID: "CVE-2016-10228",
+					FixedVersion:    "glibc-2.28-151.0.1.el8.src.rpm",
 				},
 			},
 		},
