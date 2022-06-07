@@ -43,6 +43,11 @@ type AffectedPackage struct {
 }
 
 type Advisory struct {
-	FixedVersion string `json:",omitempty"`
-	Cves         []string
+	Entries []Entry `json:",omitempty"`
+}
+
+// Entry holds the unique advisory information per package flavor
+type Entry struct {
+	FixedVersion string   `json:",omitempty"`
+	VendorIDs    []string `json:",omitempty"`
 }

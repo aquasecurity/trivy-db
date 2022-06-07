@@ -2,19 +2,31 @@
   pairs:
     - bucket: gnutls
       pairs:
-        - key: ELSA-2021-4451
+        - key: CVE-2021-20232
           value:
-            FixedVersion: "3.6.16-4.el8"
-            Cves: [
-              "CVE-2021-20232",
-              "CVE-2021-3580",
-              "CVE-2021-20231"
-            ]
-        - key: ELSA-2022-9221
+            Entries:
+              - FixedVersion: "3.6.16-4.el8"
+                VendorIDs:
+                  - ELSA-2021-4451
+              - FixedVersion: "10:3.6.16-4.0.1.el8_fips"
+                VendorIDs:
+                  - ELSA-2022-9221
+        - key: CVE-2021-3580
           value:
-            FixedVersion: "10:3.6.16-4.0.1.el8_fips"
-            Cves: [
-              "CVE-2021-20232",
-              "CVE-2021-3580",
-              "CVE-2021-20231"
-            ]
+            Entries:
+              - FixedVersion: "3.6.16-4.el8"
+                VendorIDs:
+                  - ELSA-2021-4451
+              - FixedVersion: "10:3.6.16-4.0.1.el8_fips"
+                VendorIDs:
+                  - ELSA-2022-9221
+        - key: CVE-2021-20231
+          value:
+            Entries:
+              - FixedVersion: "3.6.16-4.el8"
+                VendorIDs:
+                  - ELSA-2021-4451
+              - FixedVersion: "10:3.6.16-4.0.1.el8_fips"
+                VendorIDs:
+                  - ELSA-2022-9221
+              
