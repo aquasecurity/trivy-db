@@ -236,10 +236,11 @@ func mergeVulnerabilityDetails(detail types.VulnerabilityDetail, oval OracleOVAL
 }
 
 func mergeEntries(advisory Advisory, pkg AffectedPackage, elsaID string) Advisory {
+	affectedFlavor := GetPackageFlavor(pkg.Package.FixedVersion)
+
 	found := false
 	for i, entry := range advisory.Entries {
-		entryFlavor := getFlavor(entry.FixedVersion)
-		affectedFlavor := getFlavor(pkg.Package.FixedVersion)
+		entryFlavor := GetPackageFlavor(entry.FixedVersion)
 
 		if entryFlavor == affectedFlavor {
 			found = true
@@ -277,22 +278,22 @@ func referencesFromContains(source string, matches []string) bool {
 	return false
 }
 
-// Determine the "flavor" of the package:
-// - "normal"
-// - FIPS validated
-// - ksplice userspace.  there can be "ksplice1" and "ksplice2"
-func getFlavor(version string) string {
+// GetPackageFlavor Determine the package "flavor" based on its version string
+//   - normal
+//   - FIPS validated
+//   - ksplice userspace
+func GetPackageFlavor(version string) PackageFlavor {
 	version = strings.ToLower(version)
 	if strings.HasSuffix(version, "_fips") {
-		return "fips"
+		return PackageFlavorFips
 	} else {
 		subs := strings.Split(version, ".")
 		for _, s := range subs {
 			if strings.HasPrefix(s, "ksplice") {
-				return s
+				return PackageFlavorKsplice
 			}
 		}
-		return ""
+		return PackageFlavorNormal
 	}
 }
 

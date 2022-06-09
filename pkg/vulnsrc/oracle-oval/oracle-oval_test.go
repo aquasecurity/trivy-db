@@ -1287,6 +1287,49 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
+			name: "multiple ksplice builds",
+			dir:  filepath.Join("testdata", "ksplice"),
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "Oracle Linux 8"},
+					Value: types.DataSource{
+						ID:   vulnerability.OracleOVAL,
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2016-10228", "Oracle Linux 8", "glibc"},
+					Value: Advisory{
+						Entries: []Entry{
+							{
+								FixedVersion: "2:2.28-151.0.1.ksplice2.el8",
+								VendorIDs: []string{
+									"ELSA-2021-9280",
+									"ELSA-2021-9344",
+								},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "CVE-2016-10228", "oracle-oval"},
+					Value: types.VulnerabilityDetail{
+						References: []string{
+							"https://linux.oracle.com/errata/ELSA-2021-9280.html",
+							"https://linux.oracle.com/cve/CVE-2016-10228.html",
+							"https://linux.oracle.com/errata/ELSA-2021-9344.html",
+						},
+						Severity: types.SeverityHigh,
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-2016-10228"},
+					Value: map[string]interface{}{},
+				},
+			},
+		},
+		{
 			name:    "sad path (dir doesn't exist)",
 			dir:     filepath.Join("testdata", "badPath"),
 			wantErr: "no such file or directory",

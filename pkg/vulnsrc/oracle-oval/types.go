@@ -57,3 +57,11 @@ type Entry struct {
 	FixedVersion string   `json:",omitempty"`
 	VendorIDs    []string `json:",omitempty"`
 }
+
+type PackageFlavor int
+
+const (
+	PackageFlavorNormal PackageFlavor = iota
+	PackageFlavorFips
+	PackageFlavorKsplice
+)
