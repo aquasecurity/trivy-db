@@ -1,5 +1,11 @@
 package oracleoval
 
+type bucket struct {
+	platform string
+	vulnID   string
+	pkgName  string
+}
+
 type OracleOVAL struct {
 	Title       string
 	Description string

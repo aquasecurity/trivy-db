@@ -84,12 +84,8 @@ func (vs VulnSrc) save(ovals []OracleOVAL) error {
 }
 
 func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
-	advisories := make(map[string]map[string]map[string]Advisory)
-	for _, platform := range targetPlatforms {
-		advisories[platform] = make(map[string]map[string]Advisory)
-	}
-
-	vulnerabilityDetails := make(map[string]types.VulnerabilityDetail)
+	advisories := map[bucket]Advisory{}
+	vulnerabilityDetails := map[string]types.VulnerabilityDetail{}
 
 	for _, oval := range ovals {
 		elsaID := strings.Split(oval.Title, ":")[0]
@@ -97,9 +93,13 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 		var vulnIDs []string
 		for _, cve := range oval.Cves {
 			vulnIDs = append(vulnIDs, cve.ID)
+
+			vulnerabilityDetails[cve.ID] = mergeVulnerabilityDetails(vulnerabilityDetails[cve.ID], oval, []string{elsaID, cve.ID})
 		}
 		if len(vulnIDs) == 0 {
 			vulnIDs = append(vulnIDs, elsaID)
+
+			vulnerabilityDetails[elsaID] = mergeVulnerabilityDetails(vulnerabilityDetails[elsaID], oval, []string{elsaID})
 		}
 
 		affectedPkgs := walkOracle(oval.Criteria, "", []AffectedPackage{})
@@ -117,77 +117,14 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 				return xerrors.Errorf("failed to put data source: %w", err)
 			}
 
-			platformAdvisories := advisories[platformName]
-
-			packageAdvisories, exists := platformAdvisories[affectedPkg.Package.Name]
-			if !exists {
-				packageAdvisories = make(map[string]Advisory)
-				platformAdvisories[affectedPkg.Package.Name] = packageAdvisories
-			}
-
 			for _, vulnID := range vulnIDs {
-				cveAdvisory, cveAdvisoryExists := packageAdvisories[vulnID]
-				if !cveAdvisoryExists {
-					cveAdvisory = Advisory{
-						Entries: []Entry{},
-					}
+				bkt := bucket{
+					platform: platformName,
+					vulnID:   vulnID,
+					pkgName:  affectedPkg.Package.Name,
 				}
-
-				found := false
-				for i, entry := range cveAdvisory.Entries {
-					entryFlavor := getFlavor(entry.FixedVersion)
-					affectedFlavor := getFlavor(affectedPkg.Package.FixedVersion)
-
-					if entryFlavor == affectedFlavor {
-						found = true
-						// This fixed version is newer than the previously found fixed version
-						if version.NewVersion(entry.FixedVersion).Compare(version.NewVersion(affectedPkg.Package.FixedVersion)) < 0 {
-							cveAdvisory.Entries[i].FixedVersion = affectedPkg.Package.FixedVersion
-						}
-
-						// Add the ELSA ID to the vendor ID list
-						if !ustrings.InSlice(elsaID, entry.VendorIDs) {
-							cveAdvisory.Entries[i].VendorIDs = append(entry.VendorIDs, elsaID)
-						}
-					}
-				}
-
-				if !found {
-					cveAdvisory.Entries = append(cveAdvisory.Entries, Entry{
-						FixedVersion: affectedPkg.Package.FixedVersion,
-						VendorIDs:    []string{elsaID},
-					})
-				}
-
-				packageAdvisories[vulnID] = cveAdvisory
+				advisories[bkt] = mergeEntries(advisories[bkt], affectedPkg, elsaID)
 			}
-		}
-
-		// Collect vulnerability details - references and severity
-		// A CVE can be present in multiple ELSAs.  Collect all the applicable references as we process them, later when done we'll insert
-		// the references.
-		for _, vulnID := range vulnIDs {
-			convertedSeverity := severityFromThreat(oval.Severity)
-
-			vulDetails, found := vulnerabilityDetails[vulnID]
-			if !found {
-				vulDetails = types.VulnerabilityDetail{
-					References: []string{},
-					Severity:   convertedSeverity,
-				}
-			}
-
-			// If multple ELSAs for the same CVE have differing severities, use the highest one
-			if convertedSeverity > vulDetails.Severity {
-				vulDetails.Severity = convertedSeverity
-			}
-
-			for _, ref := range oval.References {
-				if referencesFromContains(ref.URI, []string{elsaID, vulnID}) && !ustrings.InSlice(ref.URI, vulDetails.References) {
-					vulDetails.References = append(vulDetails.References, ref.URI)
-				}
-			}
-			vulnerabilityDetails[vulnID] = vulDetails
 		}
 	}
 
@@ -202,18 +139,13 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 		}
 	}
 
-	for platformName, cveEntries := range advisories {
-		for packageName, packageEntry := range cveEntries {
-			for cveId, advisory := range packageEntry {
-				if err := vs.dbc.PutAdvisoryDetail(tx, cveId, packageName, []string{platformName}, advisory); err != nil {
-					return xerrors.Errorf("failed to save Oracle Linux OVAL: %w", err)
-				}
-			}
+	for bkt, advisory := range advisories {
+		if err := vs.dbc.PutAdvisoryDetail(tx, bkt.vulnID, bkt.pkgName, []string{bkt.platform}, advisory); err != nil {
+			return xerrors.Errorf("failed to save Oracle Linux OVAL: %w", err)
 		}
 	}
 
 	return nil
-
 }
 
 func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
@@ -283,6 +215,59 @@ func walkOracle(cri Criteria, osVer string, pkgs []AffectedPackage) []AffectedPa
 	return pkgs
 }
 
+func mergeVulnerabilityDetails(detail types.VulnerabilityDetail, oval OracleOVAL, vulnIDs []string) types.VulnerabilityDetail {
+	// Collect vulnerability details - references and severity
+	// A CVE can be present in multiple ELSAs.  Collect all the applicable references as we process them, later when done we'll insert
+	// the references.
+	convertedSeverity := severityFromThreat(oval.Severity)
+
+	// If multiple ELSAs for the same CVE have differing severities, use the highest one
+	if convertedSeverity > detail.Severity {
+		detail.Severity = convertedSeverity
+	}
+
+	for _, ref := range oval.References {
+		if referencesFromContains(ref.URI, vulnIDs) && !ustrings.InSlice(ref.URI, detail.References) {
+			detail.References = append(detail.References, ref.URI)
+		}
+	}
+
+	return detail
+}
+
+func mergeEntries(advisory Advisory, pkg AffectedPackage, elsaID string) Advisory {
+	found := false
+	for i, entry := range advisory.Entries {
+		entryFlavor := getFlavor(entry.FixedVersion)
+		affectedFlavor := getFlavor(pkg.Package.FixedVersion)
+
+		if entryFlavor == affectedFlavor {
+			found = true
+			// This fixed version is newer than the previously found fixed version
+			if version.NewVersion(entry.FixedVersion).LessThan(version.NewVersion(pkg.Package.FixedVersion)) {
+				advisory.Entries[i].FixedVersion = pkg.Package.FixedVersion
+			}
+
+			// Add the ELSA ID to the vendor ID list
+			if !ustrings.InSlice(elsaID, entry.VendorIDs) {
+				advisory.Entries[i].VendorIDs = append(entry.VendorIDs, elsaID)
+			}
+
+			break
+		}
+	}
+
+	if !found {
+		entry := Entry{
+			FixedVersion: pkg.Package.FixedVersion,
+			VendorIDs:    []string{elsaID},
+		}
+		advisory.Entries = append(advisory.Entries, entry)
+	}
+
+	return advisory
+}
+
 func referencesFromContains(source string, matches []string) bool {
 	for _, m := range matches {
 		if strings.Contains(source, m) {
@@ -297,10 +282,11 @@ func referencesFromContains(source string, matches []string) bool {
 // - FIPS validated
 // - ksplice userspace.  there can be "ksplice1" and "ksplice2"
 func getFlavor(version string) string {
-	if strings.HasSuffix(strings.ToLower(version), "_fips") {
+	version = strings.ToLower(version)
+	if strings.HasSuffix(version, "_fips") {
 		return "fips"
 	} else {
-		subs := strings.Split(strings.ToLower(version), ".")
+		subs := strings.Split(version, ".")
 		for _, s := range subs {
 			if strings.HasPrefix(s, "ksplice") {
 				return s
