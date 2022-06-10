@@ -238,12 +238,10 @@ func mergeVulnerabilityDetails(detail types.VulnerabilityDetail, oval OracleOVAL
 func mergeEntries(advisory Advisory, pkg AffectedPackage, elsaID string) Advisory {
 	affectedFlavor := GetPackageFlavor(pkg.Package.FixedVersion)
 
-	found := false
 	for i, entry := range advisory.Entries {
 		entryFlavor := GetPackageFlavor(entry.FixedVersion)
 
 		if entryFlavor == affectedFlavor {
-			found = true
 			// This fixed version is newer than the previously found fixed version
 			if version.NewVersion(entry.FixedVersion).LessThan(version.NewVersion(pkg.Package.FixedVersion)) {
 				advisory.Entries[i].FixedVersion = pkg.Package.FixedVersion
@@ -254,17 +252,15 @@ func mergeEntries(advisory Advisory, pkg AffectedPackage, elsaID string) Advisor
 				advisory.Entries[i].VendorIDs = append(entry.VendorIDs, elsaID)
 			}
 
-			break
+			return advisory
 		}
 	}
 
-	if !found {
-		entry := Entry{
-			FixedVersion: pkg.Package.FixedVersion,
-			VendorIDs:    []string{elsaID},
-		}
-		advisory.Entries = append(advisory.Entries, entry)
+	entry := Entry{
+		FixedVersion: pkg.Package.FixedVersion,
+		VendorIDs:    []string{elsaID},
 	}
+	advisory.Entries = append(advisory.Entries, entry)
 
 	return advisory
 }
