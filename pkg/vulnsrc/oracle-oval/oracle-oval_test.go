@@ -39,6 +39,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2007-0493", "Oracle Linux 5", "bind-devel"},
 					Value: Advisory{
+						FixedVersion: "30:9.3.3-8.el5",
 						Entries: []Entry{
 							{
 								FixedVersion: "30:9.3.3-8.el5",
@@ -50,6 +51,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2007-0494", "Oracle Linux 5", "bind-devel"},
 					Value: Advisory{
+						FixedVersion: "30:9.3.3-8.el5",
 						Entries: []Entry{
 							{
 								FixedVersion: "30:9.3.3-8.el5",
@@ -61,6 +63,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2007-0493", "Oracle Linux 5", "bind-sdb"},
 					Value: Advisory{
+						FixedVersion: "30:9.3.3-8.el5",
 						Entries: []Entry{
 							{
 								FixedVersion: "30:9.3.3-8.el5",
@@ -72,6 +75,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2007-0494", "Oracle Linux 5", "bind-sdb"},
 					Value: Advisory{
+						FixedVersion: "30:9.3.3-8.el5",
 						Entries: []Entry{
 							{
 								FixedVersion: "30:9.3.3-8.el5",
@@ -134,6 +138,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 6", "kernel-uek"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el6uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el6uek",
@@ -145,6 +150,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 6", "kernel-uek"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el6uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el6uek",
@@ -157,6 +163,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 6", "kernel-uek-debug"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el6uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el6uek",
@@ -168,6 +175,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 6", "kernel-uek-debug"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el6uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el6uek",
@@ -180,6 +188,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 6", "kernel-uek-debug-devel"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el6uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el6uek",
@@ -191,6 +200,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 6", "kernel-uek-debug-devel"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el6uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el6uek",
@@ -203,6 +213,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 6", "kernel-uek-devel"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el6uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el6uek",
@@ -214,6 +225,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 6", "kernel-uek-devel"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el6uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el6uek",
@@ -226,6 +238,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 6", "kernel-uek-doc"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el6uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el6uek",
@@ -237,6 +250,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 6", "kernel-uek-doc"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el6uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el6uek",
@@ -249,6 +263,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 6", "kernel-uek-firmware"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el6uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el6uek",
@@ -260,6 +275,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 6", "kernel-uek-firmware"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el6uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el6uek",
@@ -272,6 +288,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 7", "kernel-uek"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el7uek",
@@ -283,6 +300,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 7", "kernel-uek"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el7uek",
@@ -295,6 +313,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 7", "kernel-uek-debug"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el7uek",
@@ -306,6 +325,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 7", "kernel-uek-debug"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el7uek",
@@ -318,6 +338,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 7", "kernel-uek-debug-devel"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el7uek",
@@ -329,6 +350,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 7", "kernel-uek-debug-devel"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el7uek",
@@ -341,6 +363,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 7", "kernel-uek-devel"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el7uek",
@@ -352,6 +375,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 7", "kernel-uek-devel"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el7uek",
@@ -364,6 +388,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 7", "kernel-uek-doc"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el7uek",
@@ -375,6 +400,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 7", "kernel-uek-doc"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el7uek",
@@ -387,6 +413,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 7", "kernel-uek-firmware"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el7uek",
@@ -398,6 +425,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 7", "kernel-uek-firmware"},
 					Value: Advisory{
+						FixedVersion: "4.1.12-124.24.3.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "4.1.12-124.24.3.el7uek",
@@ -453,6 +481,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-20232", "Oracle Linux 8", "gnutls"},
 					Value: Advisory{
+						FixedVersion: "3.6.16-4.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.6.16-4.el8",
@@ -468,6 +497,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-3580", "Oracle Linux 8", "gnutls"},
 					Value: Advisory{
+						FixedVersion: "3.6.16-4.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.6.16-4.el8",
@@ -483,6 +513,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-20231", "Oracle Linux 8", "gnutls"},
 					Value: Advisory{
+						FixedVersion: "3.6.16-4.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.6.16-4.el8",
@@ -499,6 +530,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-20232", "Oracle Linux 8", "nettle"},
 					Value: Advisory{
+						FixedVersion: "3.4.1-7.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.4.1-7.el8",
@@ -510,6 +542,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-3580", "Oracle Linux 8", "nettle"},
 					Value: Advisory{
+						FixedVersion: "3.4.1-7.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.4.1-7.el8",
@@ -521,6 +554,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-20231", "Oracle Linux 8", "nettle"},
 					Value: Advisory{
+						FixedVersion: "3.4.1-7.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.4.1-7.el8",
@@ -533,6 +567,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-20232", "Oracle Linux 8", "gnutls-c++"},
 					Value: Advisory{
+						FixedVersion: "3.6.16-4.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.6.16-4.el8",
@@ -548,6 +583,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-3580", "Oracle Linux 8", "gnutls-c++"},
 					Value: Advisory{
+						FixedVersion: "3.6.16-4.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.6.16-4.el8",
@@ -563,6 +599,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-20231", "Oracle Linux 8", "gnutls-c++"},
 					Value: Advisory{
+						FixedVersion: "3.6.16-4.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.6.16-4.el8",
@@ -579,6 +616,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-20232", "Oracle Linux 8", "gnutls-dane"},
 					Value: Advisory{
+						FixedVersion: "3.6.16-4.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.6.16-4.el8",
@@ -594,6 +632,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-3580", "Oracle Linux 8", "gnutls-dane"},
 					Value: Advisory{
+						FixedVersion: "3.6.16-4.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.6.16-4.el8",
@@ -609,6 +648,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-20231", "Oracle Linux 8", "gnutls-dane"},
 					Value: Advisory{
+						FixedVersion: "3.6.16-4.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.6.16-4.el8",
@@ -625,6 +665,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-20232", "Oracle Linux 8", "gnutls-devel"},
 					Value: Advisory{
+						FixedVersion: "3.6.16-4.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.6.16-4.el8",
@@ -640,6 +681,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-3580", "Oracle Linux 8", "gnutls-devel"},
 					Value: Advisory{
+						FixedVersion: "3.6.16-4.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.6.16-4.el8",
@@ -655,6 +697,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-20231", "Oracle Linux 8", "gnutls-devel"},
 					Value: Advisory{
+						FixedVersion: "3.6.16-4.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.6.16-4.el8",
@@ -671,6 +714,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-20232", "Oracle Linux 8", "gnutls-utils"},
 					Value: Advisory{
+						FixedVersion: "3.6.16-4.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.6.16-4.el8",
@@ -686,6 +730,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-3580", "Oracle Linux 8", "gnutls-utils"},
 					Value: Advisory{
+						FixedVersion: "3.6.16-4.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.6.16-4.el8",
@@ -701,6 +746,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-20231", "Oracle Linux 8", "gnutls-utils"},
 					Value: Advisory{
+						FixedVersion: "3.6.16-4.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.6.16-4.el8",
@@ -717,6 +763,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-20232", "Oracle Linux 8", "nettle-devel"},
 					Value: Advisory{
+						FixedVersion: "3.4.1-7.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.4.1-7.el8",
@@ -728,6 +775,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-3580", "Oracle Linux 8", "nettle-devel"},
 					Value: Advisory{
+						FixedVersion: "3.4.1-7.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.4.1-7.el8",
@@ -739,6 +787,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-20231", "Oracle Linux 8", "nettle-devel"},
 					Value: Advisory{
+						FixedVersion: "3.4.1-7.el8",
 						Entries: []Entry{
 							{
 								FixedVersion: "3.4.1-7.el8",
@@ -812,6 +861,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-23133", "Oracle Linux 7", "kernel-uek"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el7uek",
@@ -823,6 +873,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-33034", "Oracle Linux 7", "kernel-uek"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el7uek",
@@ -834,6 +885,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2020-36310", "Oracle Linux 7", "kernel-uek"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.202.5.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.202.5.el7uek",
@@ -846,6 +898,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-23133", "Oracle Linux 7", "kernel-uek-debug"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el7uek",
@@ -857,6 +910,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-33034", "Oracle Linux 7", "kernel-uek-debug"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el7uek",
@@ -868,6 +922,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2020-36310", "Oracle Linux 7", "kernel-uek-debug"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.202.5.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.202.5.el7uek",
@@ -880,6 +935,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-23133", "Oracle Linux 7", "kernel-uek-debug-devel"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el7uek",
@@ -891,6 +947,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-33034", "Oracle Linux 7", "kernel-uek-debug-devel"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el7uek",
@@ -902,6 +959,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2020-36310", "Oracle Linux 7", "kernel-uek-debug-devel"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.202.5.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.202.5.el7uek",
@@ -914,6 +972,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-23133", "Oracle Linux 7", "kernel-uek-devel"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el7uek",
@@ -925,6 +984,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-33034", "Oracle Linux 7", "kernel-uek-devel"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el7uek",
@@ -936,6 +996,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2020-36310", "Oracle Linux 7", "kernel-uek-devel"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.202.5.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.202.5.el7uek",
@@ -948,6 +1009,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-23133", "Oracle Linux 7", "kernel-uek-doc"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el7uek",
@@ -959,6 +1021,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-33034", "Oracle Linux 7", "kernel-uek-doc"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el7uek",
@@ -970,6 +1033,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2020-36310", "Oracle Linux 7", "kernel-uek-doc"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.202.5.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.202.5.el7uek",
@@ -982,6 +1046,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-23133", "Oracle Linux 7", "kernel-uek-tools"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el7uek",
@@ -993,6 +1058,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-33034", "Oracle Linux 7", "kernel-uek-tools"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el7uek",
@@ -1004,6 +1070,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2020-36310", "Oracle Linux 7", "kernel-uek-tools"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.202.5.el7uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.202.5.el7uek",
@@ -1016,6 +1083,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-23133", "Oracle Linux 8", "kernel-uek"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el8uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el8uek",
@@ -1027,6 +1095,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-33034", "Oracle Linux 8", "kernel-uek"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el8uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el8uek",
@@ -1038,6 +1107,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2020-36310", "Oracle Linux 8", "kernel-uek"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.202.5.el8uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.202.5.el8uek",
@@ -1050,6 +1120,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-23133", "Oracle Linux 8", "kernel-uek-debug"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el8uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el8uek",
@@ -1061,6 +1132,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-33034", "Oracle Linux 8", "kernel-uek-debug"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el8uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el8uek",
@@ -1072,6 +1144,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2020-36310", "Oracle Linux 8", "kernel-uek-debug"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.202.5.el8uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.202.5.el8uek",
@@ -1084,6 +1157,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-23133", "Oracle Linux 8", "kernel-uek-debug-devel"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el8uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el8uek",
@@ -1095,6 +1169,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-33034", "Oracle Linux 8", "kernel-uek-debug-devel"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el8uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el8uek",
@@ -1106,6 +1181,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2020-36310", "Oracle Linux 8", "kernel-uek-debug-devel"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.202.5.el8uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.202.5.el8uek",
@@ -1118,6 +1194,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-23133", "Oracle Linux 8", "kernel-uek-devel"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el8uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el8uek",
@@ -1129,6 +1206,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-33034", "Oracle Linux 8", "kernel-uek-devel"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el8uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el8uek",
@@ -1140,6 +1218,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2020-36310", "Oracle Linux 8", "kernel-uek-devel"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.202.5.el8uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.202.5.el8uek",
@@ -1152,6 +1231,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-23133", "Oracle Linux 8", "kernel-uek-doc"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el8uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el8uek",
@@ -1163,6 +1243,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2021-33034", "Oracle Linux 8", "kernel-uek-doc"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.203.5.el8uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.203.5.el8uek",
@@ -1174,6 +1255,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2020-36310", "Oracle Linux 8", "kernel-uek-doc"},
 					Value: Advisory{
+						FixedVersion: "5.4.17-2102.202.5.el8uek",
 						Entries: []Entry{
 							{
 								FixedVersion: "5.4.17-2102.202.5.el8uek",
@@ -1243,6 +1325,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "ELSA-2007-0057", "Oracle Linux 5", "bind-devel"},
 					Value: Advisory{
+						FixedVersion: "9.3.3-8.el5",
 						Entries: []Entry{
 							{
 								FixedVersion: "9.3.3-8.el5",

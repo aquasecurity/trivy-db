@@ -238,6 +238,13 @@ func mergeVulnerabilityDetails(detail types.VulnerabilityDetail, oval OracleOVAL
 func mergeEntries(advisory Advisory, pkg AffectedPackage, elsaID string) Advisory {
 	affectedFlavor := GetPackageFlavor(pkg.Package.FixedVersion)
 
+	// Persist the normal flavor package version in FixedVersion for backwards compatibility.
+	// Eventually could be removed
+	if affectedFlavor == PackageFlavorNormal &&
+		version.NewVersion(advisory.FixedVersion).LessThan(version.NewVersion(pkg.Package.FixedVersion)) {
+		advisory.FixedVersion = pkg.Package.FixedVersion
+	}
+
 	for i, entry := range advisory.Entries {
 		entryFlavor := GetPackageFlavor(entry.FixedVersion)
 

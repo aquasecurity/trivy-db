@@ -50,6 +50,8 @@ type AffectedPackage struct {
 
 type Advisory struct {
 	Entries []Entry `json:",omitempty"`
+	// Backwards compatibility.  Eventually could be removed
+	FixedVersion string `json:",omitempty"`
 }
 
 // Entry holds the unique advisory information per package flavor
