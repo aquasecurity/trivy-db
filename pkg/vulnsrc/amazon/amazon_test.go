@@ -140,7 +140,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:     "GetAdvisories returns an error",
-			version:  "2022",
+			version:  "1",
 			pkgName:  "curl",
 			fixtures: []string{"testdata/fixtures/sad.yaml"},
 			wantErr:  "failed to unmarshal advisory JSON",
