@@ -1,10 +1,11 @@
 package amazon_test
 
 import (
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
@@ -76,6 +77,20 @@ func TestVulnSrc_Update(t *testing.T) {
 						References:  []string{"http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-22543"},
 					},
 				},
+				{
+					Key: []string{"data-source", "amazon linux 2022"},
+					Value: types.DataSource{
+						ID:   vulnerability.Amazon,
+						Name: "Amazon Linux Security Center",
+						URL:  "https://alas.aws.amazon.com/",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2021-44228", "amazon linux 2022", "log4j"},
+					Value: types.Advisory{
+						FixedVersion: "2.15.0-1.amzn2022.0.1",
+					},
+				},
 			},
 		},
 		{
@@ -125,7 +140,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:     "GetAdvisories returns an error",
-			version:  "1",
+			version:  "2022",
 			pkgName:  "curl",
 			fixtures: []string{"testdata/fixtures/sad.yaml"},
 			wantErr:  "failed to unmarshal advisory JSON",
