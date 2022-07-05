@@ -114,7 +114,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, errata []Erratum) err
 			// https://github.com/aquasecurity/fanal/issues/186#issuecomment-931523102
 			advisories := map[string]types.Advisory{}
 
-			cveID := ref.Title
+			cveID := ref.ID
 			for _, pkg := range erratum.Pkglist.Packages {
 				if pkg.Arch != "noarch" && pkg.Arch != "x86_64" {
 					continue
