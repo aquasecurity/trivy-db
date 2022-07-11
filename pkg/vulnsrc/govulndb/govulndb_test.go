@@ -1,8 +1,9 @@
 package govulndb_test
 
 import (
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 	"testing"
+
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/govulndb"
@@ -50,7 +51,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"advisory-detail", "CVE-2020-26160", "go::The Go Vulnerability Database", "github.com/dgrijalva/jwt-go/v4"},
 					Value: types.Advisory{
 						PatchedVersions:    []string{"4.0.0-preview1"},
-						VulnerableVersions: []string{">=0, <4.0.0-preview1"},
+						VulnerableVersions: []string{">=0.0.0-0, <4.0.0-preview1"},
 					},
 				},
 				{
