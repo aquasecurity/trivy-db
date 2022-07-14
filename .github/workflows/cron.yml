@@ -51,9 +51,12 @@ jobs:
 
       - name: Upload assets to GHCR
         run: |
+          curl -LO https://github.com/oras-project/oras/releases/download/v0.12.0/oras_0.12.0_linux_amd64.tar.gz
+          tar -xvf ./oras_0.12.0_linux_amd64.tar.gz
+          ./oras version
           tags=(latest ${{ env.VERSION }})
           for tag in ${tags[@]}; do
-            oras push ghcr.io/${{ github.repository }}:${tag} \
+            ./oras push ghcr.io/${{ github.repository }}:${tag} \
               --manifest-config /dev/null:application/vnd.aquasec.trivy.config.v1+json \
               db.tar.gz:application/vnd.aquasec.trivy.db.layer.v1.tar+gzip
           done
