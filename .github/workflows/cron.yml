@@ -51,7 +51,7 @@ jobs:
 
       - name: Install oras
         run: |
-          # oras was rollbacked to v0.12.0, because now v0.13.0 (the latest version) contains bugs https://github.com/oras-project/oras/issues/447
+          # oras was rollbacked to v0.12.0, because now v0.13.0 (the latest version) contains bugs: https://github.com/oras-project/oras/issues/447
           curl -LO https://github.com/oras-project/oras/releases/download/v0.12.0/oras_0.12.0_linux_amd64.tar.gz
           tar -xvf ./oras_0.12.0_linux_amd64.tar.gz
 
