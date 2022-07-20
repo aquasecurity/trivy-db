@@ -49,6 +49,11 @@ jobs:
           username: ${{ env.GH_USER }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@main
+        with:
+          cosign-release: 'v1.9.0'
+
       - name: Install oras
         run: |
           # oras was rollbacked to v0.12.0, because now v0.13.0 (the latest version) contains bugs: https://github.com/oras-project/oras/issues/447
@@ -64,3 +69,9 @@ jobs:
               --manifest-config /dev/null:application/vnd.aquasec.trivy.config.v1+json \
               db.tar.gz:application/vnd.aquasec.trivy.db.layer.v1.tar+gzip
           done
+
+      - name: Sign DB and push signature to GHCR
+        env:
+          COSIGN_REPOSITORY: "ghcr.io/${{ github.repository_owner }}/trivy-db-signatures"
+        run: |
+          echo -n "${{ secrets.COSIGN_PRIVATE_KEY_PASSWORD }}" | cosign sign --key <(echo -n "${{ secrets.COSIGN_PRIVATE_KEY }}") ghcr.io/${{ github.repository }}:latest
