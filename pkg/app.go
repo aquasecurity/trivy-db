@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"github.com/aquasecurity/trivy-db/pkg/k8ssrc"
 	"time"
 
 	"github.com/aquasecurity/trivy-db/pkg/utils"
@@ -29,6 +30,9 @@ func (ac *AppConfig) NewApp(version string) *cli.App {
 					Value: func() *cli.StringSlice {
 						var targets cli.StringSlice
 						for _, v := range vulnsrc.All {
+							targets = append(targets, string(v.Name()))
+						}
+						for _, v := range k8ssrc.All {
 							targets = append(targets, string(v.Name()))
 						}
 						return &targets
