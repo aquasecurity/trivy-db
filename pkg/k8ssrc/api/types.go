@@ -1,11 +1,12 @@
 package api
 
-type advisory struct {
-	PkgName       string              `json:"name"`
-	Secfixes      map[string][]string `json:"secfixes"`
-	Apkurl        string              `json:"apkurl"`
-	Archs         []string            `json:"archs"`
-	Urlprefix     string              `json:"urlprefix"`
-	Reponame      string              `json:"reponame"`
-	Distroversion string              `json:"distroversion"`
+type Advisory []OutDatedAPIData
+
+type OutDatedAPIData struct {
+	description       string `json:"description"`
+	DeprecatedVersion string `json:"deprecated-version"`
+	RemovedVersion    string `json:"removed-version"`
+	Group             string `json:"group"`
+	Version           string `json:"version"`
+	Kind              string `json:"kind"`
 }

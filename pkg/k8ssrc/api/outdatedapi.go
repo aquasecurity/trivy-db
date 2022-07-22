@@ -2,14 +2,11 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/aquasecurity/trivy-db/pkg/k8ssrc"
-	"io"
-	"path/filepath"
-	"strings"
-
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
+	"io"
+	"path/filepath"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
@@ -17,11 +14,11 @@ import (
 )
 
 const (
-	k8sOutdatedAPiDir = "alpine"
+	k8sOutdatedAPiDir = "api"
 )
 
 var (
-	platformFormat = "alpine %s"
+	dataType = "outdated-api"
 
 	source = types.DataSource{
 		ID:   k8ssrc.K8sOutdatedAPI,
@@ -45,12 +42,12 @@ func (vs OutDatedAPI) Name() types.SourceID {
 }
 
 func (vs OutDatedAPI) Update(dir string) error {
-	rootDir := filepath.Join(dir, "k8s", "api", k8sOutdatedAPiDir)
-	var advisories []advisory
+	rootDir := filepath.Join(dir, "k8s", k8sOutdatedAPiDir)
+	var advisories []Advisory
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-		var advisory advisory
+		var advisory Advisory
 		if err := json.NewDecoder(r).Decode(&advisory); err != nil {
-			return xerrors.Errorf("failed to decode outdated api advisory: %w", err)
+			return xerrors.Errorf("failed to decode Alpine Advisory: %w", err)
 		}
 		advisories = append(advisories, advisory)
 		return nil
@@ -66,12 +63,10 @@ func (vs OutDatedAPI) Update(dir string) error {
 	return nil
 }
 
-func (vs OutDatedAPI) save(advisories []advisory) error {
+func (vs OutDatedAPI) save(advisories []Advisory) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for _, adv := range advisories {
-			version := strings.TrimPrefix(adv.Distroversion, "v")
-			platformName := fmt.Sprintf(platformFormat, version)
-			if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+			if err := vs.dbc.AddK8sOutdatedAPI(tx, dataType, adv); err != nil {
 				return xerrors.Errorf("failed to put data source: %w", err)
 			}
 		}
@@ -83,11 +78,10 @@ func (vs OutDatedAPI) save(advisories []advisory) error {
 	return nil
 }
 
-func (vs OutDatedAPI) Get(release, pkgName string) ([]types.Advisory, error) {
-	bucket := fmt.Sprintf(platformFormat, release)
-	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
+func (vs OutDatedAPI) Get() (*OutDatedAPIData, error) {
+	outDatedAPIData, err := vs.dbc.GetOutdatedAPI(dataType)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get Alpine advisories: %w", err)
 	}
-	return advisories, nil
+	return outDatedAPIData, nil
 }

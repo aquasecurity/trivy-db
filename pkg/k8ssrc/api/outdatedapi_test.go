@@ -30,19 +30,19 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2019-14904", "alpine 3.12", "ansible"},
+					Key: []string{"Advisory-detail", "CVE-2019-14904", "alpine 3.12", "ansible"},
 					Value: types.Advisory{
 						FixedVersion: "2.9.3-r0",
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2019-14905", "alpine 3.12", "ansible"},
+					Key: []string{"Advisory-detail", "CVE-2019-14905", "alpine 3.12", "ansible"},
 					Value: types.Advisory{
 						FixedVersion: "2.9.3-r0",
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2020-1737", "alpine 3.12", "ansible"},
+					Key: []string{"Advisory-detail", "CVE-2020-1737", "alpine 3.12", "ansible"},
 					Value: types.Advisory{
 						FixedVersion: "2.9.6-r0",
 					},
@@ -52,7 +52,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad path",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "failed to decode Alpine advisory",
+			wantErr: "failed to decode Alpine Advisory",
 		},
 	}
 	for _, tt := range tests {

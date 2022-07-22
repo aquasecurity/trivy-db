@@ -3,6 +3,7 @@ package db
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/aquasecurity/trivy-db/pkg/k8ssrc/api"
 	"os"
 	"path/filepath"
 	"runtime/debug"
@@ -53,6 +54,9 @@ type Operation interface {
 	PutRedHatCPEs(tx *bolt.Tx, cpeIndex int, cpe string) (err error)
 	RedHatRepoToCPEs(repository string) (cpeIndices []int, err error)
 	RedHatNVRToCPEs(nvr string) (cpeIndices []int, err error)
+	//for K8s
+	GetOutdatedAPI(key string) (outdatedapi *api.OutDatedAPIData, err error)
+	AddK8sOutdatedAPI(tx *bolt.Tx, key string, apis interface{}) (err error)
 }
 
 type Config struct {
