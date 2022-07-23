@@ -19,3 +19,5 @@ cache
 
 # trivy-db Outputs
 trivy-db
+.vscode
+vendor
