@@ -1,6 +1,4 @@
-package api
-
-type Advisory []OutDatedAPIData
+package types
 
 type OutDatedAPIData struct {
 	description       string `json:"description"`

@@ -85,6 +85,6 @@ db-clean:
 .PHONY: db-fetch-vuln-list
 db-fetch-vuln-list:
 	mkdir -p cache/vuln-list
-	mkdir -p cache/trivy-db-data
-	wget -qO - https://github.com/aquasecurity/vuln-list/archive/main.tar.gz | tar xz -C cache/vuln-list	wget -qO - https://github.com/aquasecurity/trivy-db-data/archive/main.tar.gz | tar xz -C cache/trivy-db-data --strip-components=1
-	wget -qO - https://github.com/aquasecurity/trivy-db-data/archive/main.tar.gz | tar xz -C cache/trivy-db-data --strip-components=1
+	wget -qO - https://github.com/aquasecurity/vuln-list/archive/main.tar.gz | tar xz -C cache/vuln-list
+	##mkdir -p cache/trivy-db-data
+	##wget -qO - https://github.com/aquasecurity/trivy-db-data/archive/main.tar.gz | tar xz -C cache/trivy-db-data --strip-components=1

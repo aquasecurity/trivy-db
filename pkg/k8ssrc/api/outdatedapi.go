@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/aquasecurity/trivy-db/pkg/k8ssrc"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 	"io"
@@ -14,14 +13,19 @@ import (
 )
 
 const (
-	k8sOutdatedAPiDir = "api"
+	k8sOutdatedAPiDir                = "api"
+	K8sOutdatedAPI    types.SourceID = "outdated-api"
 )
+
+type Advisory []types.OutDatedAPIData
+
+//k8s
 
 var (
 	dataType = "outdated-api"
 
 	source = types.DataSource{
-		ID:   k8ssrc.K8sOutdatedAPI,
+		ID:   K8sOutdatedAPI,
 		Name: "Kubernetes GitHub docs",
 		URL:  "https://github/kubernetes/kubernetes",
 	}
@@ -78,7 +82,7 @@ func (vs OutDatedAPI) save(advisories []Advisory) error {
 	return nil
 }
 
-func (vs OutDatedAPI) Get() (*OutDatedAPIData, error) {
+func (vs OutDatedAPI) Get() (*types.OutDatedAPIData, error) {
 	outDatedAPIData, err := vs.dbc.GetOutdatedAPI(dataType)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get Alpine advisories: %w", err)

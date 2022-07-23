@@ -2,7 +2,7 @@ package db
 
 import (
 	"encoding/json"
-	"github.com/aquasecurity/trivy-db/pkg/k8ssrc/api"
+	"github.com/aquasecurity/trivy-db/pkg/types"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 )
@@ -16,8 +16,8 @@ func (dbc Config) AddK8sOutdatedAPI(tx *bolt.Tx, key string, apis interface{}) (
 	return nil
 }
 
-func (dbc Config) GetOutdatedAPI(key string) (*api.OutDatedAPIData, error) {
-	var outdatedapi api.OutDatedAPIData
+func (dbc Config) GetOutdatedAPI(key string) (*types.OutDatedAPIData, error) {
+	var outdatedapi types.OutDatedAPIData
 	err := db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(k8sBucket))
 		value := bucket.Get([]byte(key))
@@ -30,7 +30,7 @@ func (dbc Config) GetOutdatedAPI(key string) (*api.OutDatedAPIData, error) {
 		return nil
 	})
 	if err != nil {
-		return &api.OutDatedAPIData{}, xerrors.Errorf("failed to get the outdated-api %q: %w", key, err)
+		return &types.OutDatedAPIData{}, xerrors.Errorf("failed to get the outdated-api %q: %w", key, err)
 	}
 	return &outdatedapi, nil
 }
