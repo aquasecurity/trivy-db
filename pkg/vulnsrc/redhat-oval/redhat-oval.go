@@ -85,7 +85,7 @@ func (vs VulnSrc) Update(dir string) error {
 				continue
 			}
 
-			definitions, err := parseOVALStream(filepath.Join(versionDir, f.Name()), uniqCPEs)
+			definitions, err := vs.parseOVALStream(filepath.Join(versionDir, f.Name()), uniqCPEs)
 			if err != nil {
 				return xerrors.Errorf("failed to parse OVAL stream: %w", err)
 			}
@@ -288,7 +288,7 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 	return advisories, nil
 }
 
-func parseOVALStream(dir string, uniqCPEs CPEMap) (map[bucket]Definition, error) {
+func (vs VulnSrc) parseOVALStream(dir string, uniqCPEs CPEMap) (map[bucket]Definition, error) {
 	log.Printf("    Parsing %s", dir)
 
 	// Parse tests
@@ -316,10 +316,10 @@ func parseOVALStream(dir string, uniqCPEs CPEMap) (map[bucket]Definition, error)
 		return nil, xerrors.Errorf("Red Hat OVAL walk error: %w", err)
 	}
 
-	return parseDefinitions(advisories, tests, uniqCPEs), nil
+	return vs.parseDefinitions(advisories, tests, uniqCPEs)
 }
 
-func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uniqCPEs CPEMap) map[bucket]Definition {
+func (vs VulnSrc) parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uniqCPEs CPEMap) (map[bucket]Definition, error) {
 	defs := map[bucket]Definition{}
 
 	for _, advisory := range advisories {
@@ -342,6 +342,15 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 
 			var cveEntries []CveEntry
 			for _, cve := range advisory.Metadata.Advisory.Cves {
+				// get details from NVD
+				details, err := vs.dbc.GetVulnerabilityDetail(cve.CveID)
+				if err != nil {
+					return nil, xerrors.Errorf("Failed to get vulnerability detail: %s", err)
+				}
+				// don't use rejected vulnerabilities
+				if vulnerability.IsRejected(details) {
+					continue
+				}
 				cveEntries = append(cveEntries, CveEntry{
 					ID:       cve.CveID,
 					Severity: severityFromImpact(cve.Impact),
@@ -386,7 +395,7 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 		updateCPEs(advisory.Metadata.Advisory.AffectedCpeList, uniqCPEs)
 	}
 
-	return defs
+	return defs, nil
 }
 
 func walkCriterion(cri criteria, tests map[string]rpmInfoTest) (string, []pkg) {
