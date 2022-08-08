@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/aquasecurity/trivy-db/pkg/utils/ints"
+	redhatovaltypes "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval/types"
 
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
@@ -72,7 +73,7 @@ func (vs VulnSrc) Update(dir string) error {
 		return xerrors.Errorf("unable to list directory entries (%s): %w", rootDir, err)
 	}
 
-	advisories := map[bucket]Advisory{}
+	advisories := map[redhatovaltypes.Bucket]redhatovaltypes.Advisory{}
 	for _, ver := range versions {
 		versionDir := filepath.Join(rootDir, ver.Name())
 		streams, err := os.ReadDir(versionDir)
@@ -85,7 +86,7 @@ func (vs VulnSrc) Update(dir string) error {
 				continue
 			}
 
-			definitions, err := vs.parseOVALStream(filepath.Join(versionDir, f.Name()), uniqCPEs)
+			definitions, err := parseOVALStream(filepath.Join(versionDir, f.Name()), uniqCPEs)
 			if err != nil {
 				return xerrors.Errorf("failed to parse OVAL stream: %w", err)
 			}
@@ -141,7 +142,7 @@ func (vs VulnSrc) parseNvrCpeMapping(dir string, uniqCPEs CPEMap) (map[string][]
 	return nvrToCpe, nil
 }
 
-func (vs VulnSrc) mergeAdvisories(advisories map[bucket]Advisory, defs map[bucket]Definition) map[bucket]Advisory {
+func (vs VulnSrc) mergeAdvisories(advisories map[redhatovaltypes.Bucket]redhatovaltypes.Advisory, defs map[redhatovaltypes.Bucket]redhatovaltypes.Definition) map[redhatovaltypes.Bucket]redhatovaltypes.Advisory {
 	for bkt, def := range defs {
 		if old, ok := advisories[bkt]; ok {
 			found := false
@@ -157,8 +158,8 @@ func (vs VulnSrc) mergeAdvisories(advisories map[bucket]Advisory, defs map[bucke
 			}
 			advisories[bkt] = old
 		} else {
-			advisories[bkt] = Advisory{
-				Entries: []Entry{def.Entry},
+			advisories[bkt] = redhatovaltypes.Advisory{
+				Entries: []redhatovaltypes.Entry{def.Entry},
 			}
 		}
 	}
@@ -166,7 +167,7 @@ func (vs VulnSrc) mergeAdvisories(advisories map[bucket]Advisory, defs map[bucke
 	return advisories
 }
 
-func (vs VulnSrc) save(repoToCpe, nvrToCpe map[string][]string, advisories map[bucket]Advisory, uniqCPEs CPEMap) error {
+func (vs VulnSrc) save(repoToCpe, nvrToCpe map[string][]string, advisories map[redhatovaltypes.Bucket]redhatovaltypes.Advisory, uniqCPEs CPEMap) error {
 	cpeList := uniqCPEs.List()
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		if err := vs.dbc.PutDataSource(tx, rootBucket, source); err != nil {
@@ -189,16 +190,30 @@ func (vs VulnSrc) save(repoToCpe, nvrToCpe map[string][]string, advisories map[b
 
 		//  Store advisories
 		for bkt, advisory := range advisories {
+			var cveList []string
 			for i := range advisory.Entries {
 				// Convert CPE names to indices.
 				advisory.Entries[i].AffectedCPEIndices = cpeList.Indices(advisory.Entries[i].AffectedCPEList)
+				// save all CVEs for advisory
+				// this is necessary to detect rejected CVEs during optimization
+				for _, cve := range advisory.Entries[i].Cves {
+					cveList = append(cveList, cve.ID)
+				}
 			}
 
-			if err := vs.dbc.PutAdvisoryDetail(tx, bkt.vulnID, bkt.pkgName, []string{rootBucket}, advisory); err != nil {
+			vulnerabilityDetails := types.VulnerabilityDetail{
+				CveIDs: cveList,
+			}
+
+			if err := vs.dbc.PutVulnerabilityDetail(tx, bkt.VulnID, source.ID, vulnerabilityDetails); err != nil {
 				return xerrors.Errorf("failed to save Red Hat OVAL advisory: %w", err)
 			}
 
-			if err := vs.dbc.PutVulnerabilityID(tx, bkt.vulnID); err != nil {
+			if err := vs.dbc.PutAdvisoryDetail(tx, bkt.VulnID, bkt.PkgName, []string{rootBucket}, advisory); err != nil {
+				return xerrors.Errorf("failed to save Red Hat OVAL advisory: %w", err)
+			}
+
+			if err := vs.dbc.PutVulnerabilityID(tx, bkt.VulnID); err != nil {
 				return xerrors.Errorf("failed to put severity: %w", err)
 			}
 		}
@@ -256,7 +271,7 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 			continue
 		}
 
-		var adv Advisory
+		var adv redhatovaltypes.Advisory
 		if err = json.Unmarshal(v.Content, &adv); err != nil {
 			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
 		}
@@ -288,7 +303,7 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 	return advisories, nil
 }
 
-func (vs VulnSrc) parseOVALStream(dir string, uniqCPEs CPEMap) (map[bucket]Definition, error) {
+func parseOVALStream(dir string, uniqCPEs CPEMap) (map[redhatovaltypes.Bucket]redhatovaltypes.Definition, error) {
 	log.Printf("    Parsing %s", dir)
 
 	// Parse tests
@@ -297,14 +312,14 @@ func (vs VulnSrc) parseOVALStream(dir string, uniqCPEs CPEMap) (map[bucket]Defin
 		return nil, xerrors.Errorf("failed to parse ovalTests: %w", err)
 	}
 
-	var advisories []redhatOVAL
+	var advisories []redhatovaltypes.RedhatOVAL
 	definitionsDir := filepath.Join(dir, "definitions")
 	if exists, _ := utils.Exists(definitionsDir); !exists {
 		return nil, nil
 	}
 
 	err = utils.FileWalk(definitionsDir, func(r io.Reader, path string) error {
-		var definition redhatOVAL
+		var definition redhatovaltypes.RedhatOVAL
 		if err := json.NewDecoder(r).Decode(&definition); err != nil {
 			return xerrors.Errorf("failed to decode %s: %w", path, err)
 		}
@@ -316,11 +331,11 @@ func (vs VulnSrc) parseOVALStream(dir string, uniqCPEs CPEMap) (map[bucket]Defin
 		return nil, xerrors.Errorf("Red Hat OVAL walk error: %w", err)
 	}
 
-	return vs.parseDefinitions(advisories, tests, uniqCPEs)
+	return parseDefinitions(advisories, tests, uniqCPEs), nil
 }
 
-func (vs VulnSrc) parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uniqCPEs CPEMap) (map[bucket]Definition, error) {
-	defs := map[bucket]Definition{}
+func parseDefinitions(advisories []redhatovaltypes.RedhatOVAL, tests map[string]rpmInfoTest, uniqCPEs CPEMap) map[redhatovaltypes.Bucket]redhatovaltypes.Definition {
+	defs := map[redhatovaltypes.Bucket]redhatovaltypes.Definition{}
 
 	for _, advisory := range advisories {
 		// Skip unaffected vulnerabilities
@@ -328,7 +343,7 @@ func (vs VulnSrc) parseDefinitions(advisories []redhatOVAL, tests map[string]rpm
 			continue
 		}
 
-		// Parse criteria
+		// Parse Criteria
 		moduleName, affectedPkgs := walkCriterion(advisory.Criteria, tests)
 		for _, affectedPkg := range affectedPkgs {
 			pkgName := affectedPkg.Name
@@ -340,30 +355,21 @@ func (vs VulnSrc) parseDefinitions(advisories []redhatOVAL, tests map[string]rpm
 
 			rhsaID := vendorID(advisory.Metadata.References)
 
-			var cveEntries []CveEntry
+			var cveEntries []redhatovaltypes.CveEntry
 			for _, cve := range advisory.Metadata.Advisory.Cves {
-				// get details from NVD
-				details, err := vs.dbc.GetVulnerabilityDetail(cve.CveID)
-				if err != nil {
-					return nil, xerrors.Errorf("Failed to get vulnerability detail: %s", err)
-				}
-				// don't use rejected vulnerabilities
-				if vulnerability.IsRejected(details) {
-					continue
-				}
-				cveEntries = append(cveEntries, CveEntry{
+				cveEntries = append(cveEntries, redhatovaltypes.CveEntry{
 					ID:       cve.CveID,
 					Severity: severityFromImpact(cve.Impact),
 				})
 			}
 
 			if rhsaID != "" { // For patched vulnerabilities
-				bkt := bucket{
-					pkgName: pkgName,
-					vulnID:  rhsaID,
+				bkt := redhatovaltypes.Bucket{
+					PkgName: pkgName,
+					VulnID:  rhsaID,
 				}
-				defs[bkt] = Definition{
-					Entry: Entry{
+				defs[bkt] = redhatovaltypes.Definition{
+					Entry: redhatovaltypes.Entry{
 						Cves:            cveEntries,
 						FixedVersion:    affectedPkg.FixedVersion,
 						AffectedCPEList: advisory.Metadata.Advisory.AffectedCpeList,
@@ -372,13 +378,13 @@ func (vs VulnSrc) parseDefinitions(advisories []redhatOVAL, tests map[string]rpm
 				}
 			} else { // For unpatched vulnerabilities
 				for _, cve := range cveEntries {
-					bkt := bucket{
-						pkgName: pkgName,
-						vulnID:  cve.ID,
+					bkt := redhatovaltypes.Bucket{
+						PkgName: pkgName,
+						VulnID:  cve.ID,
 					}
-					defs[bkt] = Definition{
-						Entry: Entry{
-							Cves: []CveEntry{
+					defs[bkt] = redhatovaltypes.Definition{
+						Entry: redhatovaltypes.Entry{
+							Cves: []redhatovaltypes.CveEntry{
 								{
 									Severity: cve.Severity,
 								},
@@ -395,12 +401,12 @@ func (vs VulnSrc) parseDefinitions(advisories []redhatOVAL, tests map[string]rpm
 		updateCPEs(advisory.Metadata.Advisory.AffectedCpeList, uniqCPEs)
 	}
 
-	return defs, nil
+	return defs
 }
 
-func walkCriterion(cri criteria, tests map[string]rpmInfoTest) (string, []pkg) {
+func walkCriterion(cri redhatovaltypes.Criteria, tests map[string]rpmInfoTest) (string, []redhatovaltypes.Pkg) {
 	var moduleName string
-	var packages []pkg
+	var packages []redhatovaltypes.Pkg
 
 	for _, c := range cri.Criterions {
 		// Parse module name
@@ -425,7 +431,7 @@ func walkCriterion(cri criteria, tests map[string]rpmInfoTest) (string, []pkg) {
 			arches = strings.Split(t.Arch, "|") // affected arches are merged with '|'(e.g. 'aarch64|ppc64le|x86_64')
 		}
 
-		packages = append(packages, pkg{
+		packages = append(packages, redhatovaltypes.Pkg{
 			Name:         t.Name,
 			FixedVersion: t.FixedVersion,
 			Arches:       arches,
@@ -458,7 +464,7 @@ func updateCPEs(cpes []string, uniqCPEs CPEMap) {
 	}
 }
 
-func vendorID(refs []reference) string {
+func vendorID(refs []redhatovaltypes.Reference) string {
 	for _, ref := range refs {
 		switch ref.Source {
 		case "RHSA", "RHBA":

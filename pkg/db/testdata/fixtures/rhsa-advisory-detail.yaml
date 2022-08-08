@@ -1,0 +1,18 @@
+- bucket: advisory-detail
+  pairs:
+    - bucket: RHSA-2021:4151
+      pairs:
+        - bucket: Red Hat
+          pairs:
+            - key: python2
+              value:
+                Entries:
+                  - Cves:
+                      -
+                        ID: CVE-2020-28493
+                        Severity: 1
+                      -
+                        ID: CVE-2021-20095
+                        Severity: 2
+
+

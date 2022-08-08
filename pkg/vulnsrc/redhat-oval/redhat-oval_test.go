@@ -6,6 +6,7 @@ import (
 	"sort"
 	"testing"
 
+	redhatovaltypes "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 
 	"github.com/stretchr/testify/assert"
@@ -81,13 +82,13 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{"advisory-detail", "RHSA-2020:5624", "Red Hat", "thunderbird"},
-					Value: redhat.Advisory{
-						Entries: []redhat.Entry{
+					Value: redhatovaltypes.Advisory{
+						Entries: []redhatovaltypes.Entry{
 							{
 								FixedVersion:       "0:78.6.0-1.el8_3",
 								AffectedCPEIndices: []int{1, 2, 6},
 								Arches:             []string{"aarch64", "ppc64le", "x86_64"},
-								Cves: []redhat.CveEntry{
+								Cves: []redhatovaltypes.CveEntry{
 									{
 										ID:       "CVE-2020-16042",
 										Severity: types.SeverityHigh,
@@ -103,13 +104,13 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{"advisory-detail", "RHSA-2020:5624", "Red Hat", "thunderbird-debugsource"},
-					Value: redhat.Advisory{
-						Entries: []redhat.Entry{
+					Value: redhatovaltypes.Advisory{
+						Entries: []redhatovaltypes.Entry{
 							{
 								FixedVersion:       "0:78.6.0-1.el8_3",
 								AffectedCPEIndices: []int{1, 2, 6},
 								Arches:             []string{"aarch64", "ppc64le", "x86_64"},
-								Cves: []redhat.CveEntry{
+								Cves: []redhatovaltypes.CveEntry{
 									{
 										ID:       "CVE-2020-16042",
 										Severity: types.SeverityHigh,
@@ -125,13 +126,13 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{"advisory-detail", "RHSA-2020:4751", "Red Hat", "httpd:2.4::httpd"},
-					Value: redhat.Advisory{
-						Entries: []redhat.Entry{
+					Value: redhatovaltypes.Advisory{
+						Entries: []redhatovaltypes.Entry{
 							{
 								FixedVersion:       "0:2.4.37-30.module+el7.3.0+7001+0766b9e7",
 								AffectedCPEIndices: []int{0, 5},
 								Arches:             []string{"aarch64", "ppc64le", "s390x", "x86_64"},
-								Cves: []redhat.CveEntry{
+								Cves: []redhatovaltypes.CveEntry{
 									{
 										ID:       "CVE-2018-17189",
 										Severity: types.SeverityCritical,
@@ -142,7 +143,7 @@ func TestVulnSrc_Update(t *testing.T) {
 								FixedVersion:       "0:2.4.37-30.module+el8.3.0+7001+0766b9e7",
 								AffectedCPEIndices: []int{1, 2},
 								Arches:             []string{"aarch64", "ppc64le", "s390x", "x86_64"},
-								Cves: []redhat.CveEntry{
+								Cves: []redhatovaltypes.CveEntry{
 									{
 										ID:       "CVE-2018-17189",
 										Severity: types.SeverityLow,
@@ -154,12 +155,12 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2020-14342", "Red Hat", "cifs-utils"},
-					Value: redhat.Advisory{
-						Entries: []redhat.Entry{
+					Value: redhatovaltypes.Advisory{
+						Entries: []redhatovaltypes.Entry{
 							{
 								FixedVersion:       "",
 								AffectedCPEIndices: []int{3, 5},
-								Cves: []redhat.CveEntry{
+								Cves: []redhatovaltypes.CveEntry{
 									{
 										Severity: types.SeverityLow,
 									},
@@ -170,13 +171,13 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{"advisory-detail", "RHSA-2020:9999", "Red Hat", "thunderbird"},
-					Value: redhat.Advisory{
-						Entries: []redhat.Entry{
+					Value: redhatovaltypes.Advisory{
+						Entries: []redhatovaltypes.Entry{
 							{
 								FixedVersion:       "0:999.el8_3",
 								AffectedCPEIndices: []int{4},
 								Arches:             []string{"aarch64", "ppc64le", "x86_64"},
-								Cves: []redhat.CveEntry{
+								Cves: []redhatovaltypes.CveEntry{
 									{
 										ID:       "CVE-2020-26971",
 										Severity: types.SeverityCritical,

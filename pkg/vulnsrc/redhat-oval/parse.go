@@ -5,12 +5,13 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval/types"
 	"golang.org/x/xerrors"
 )
 
 type rpmInfoTest struct {
 	Name           string
-	SignatureKeyID signatureKeyID
+	SignatureKeyID types.SignatureKeyID
 	FixedVersion   string
 	Arch           string
 }
@@ -29,7 +30,7 @@ func unmarshalJSONFile(v interface{}, fileName string) error {
 }
 
 func parseObjects(dir string) (map[string]string, error) {
-	var objects ovalObjects
+	var objects types.OvalObjects
 	if err := unmarshalJSONFile(&objects, filepath.Join(dir, "objects", "objects.json")); err != nil {
 		return nil, xerrors.Errorf("failed to unmarshal objects: %w", err)
 	}
@@ -40,13 +41,13 @@ func parseObjects(dir string) (map[string]string, error) {
 	return objs, nil
 }
 
-func parseStates(dir string) (map[string]rpminfoState, error) {
-	var ss ovalStates
+func parseStates(dir string) (map[string]types.RpminfoState, error) {
+	var ss types.OvalStates
 	if err := unmarshalJSONFile(&ss, filepath.Join(dir, "states", "states.json")); err != nil {
 		return nil, xerrors.Errorf("failed to unmarshal states: %w", err)
 	}
 
-	states := map[string]rpminfoState{}
+	states := map[string]types.RpminfoState{}
 	for _, state := range ss.RpminfoState {
 		states[state.ID] = state
 	}
@@ -64,7 +65,7 @@ func parseTests(dir string) (map[string]rpmInfoTest, error) {
 		return nil, xerrors.Errorf("failed to parse states: %w", err)
 	}
 
-	var tt ovalTests
+	var tt types.OvalTests
 	if err := unmarshalJSONFile(&tt, filepath.Join(dir, "tests", "tests.json")); err != nil {
 		return nil, xerrors.Errorf("failed to unmarshal states: %w", err)
 	}
@@ -85,7 +86,7 @@ func parseTests(dir string) (map[string]rpmInfoTest, error) {
 	return tests, nil
 }
 
-func followTestRefs(test rpminfoTest, objects map[string]string, states map[string]rpminfoState) (rpmInfoTest, error) {
+func followTestRefs(test types.RpminfoTest, objects map[string]string, states map[string]types.RpminfoState) (rpmInfoTest, error) {
 	var t rpmInfoTest
 
 	// Follow object ref
