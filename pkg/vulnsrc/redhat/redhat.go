@@ -166,17 +166,3 @@ func severityFromThreat(sev string) types.Severity {
 	}
 	return types.SeverityUnknown
 }
-
-func normalizeStatus(status string) types.Status {
-	switch status {
-	case "Affected":
-		return types.StatusAffected
-	case "Fix deferred":
-		return types.StatusDeferred
-	case "Will not fix", "Out of support scope":
-		return types.StatusWillNotFix
-	case "Fixed":
-		return types.StatusFixed
-	}
-	return ""
-}

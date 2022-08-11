@@ -9,10 +9,6 @@ type Severity int
 
 type VendorSeverity map[SourceID]Severity
 
-type Status string
-
-type VendorStatus map[SourceID]Status
-
 type CVSS struct {
 	V2Vector string  `json:"V2Vector,omitempty"`
 	V3Vector string  `json:"V3Vector,omitempty"`
@@ -33,12 +29,6 @@ const (
 	SeverityMedium
 	SeverityHigh
 	SeverityCritical
-
-	StatusFixed      Status = "fixed"
-	StatusAffected   Status = "affected"
-	StatusWillNotFix Status = "will-not-fix"
-	StatusDeferred   Status = "deferred"
-	StatusRejected   Status = "rejected"
 )
 
 var (
@@ -87,7 +77,7 @@ type VulnerabilityDetail struct {
 	Description      string     `json:",omitempty"`
 	PublishedDate    *time.Time `json:",omitempty"` // Take from NVD
 	LastModifiedDate *time.Time `json:",omitempty"` // Take from NVD
-	Status           Status     `json:",omitempty"` // e.g. Fixed, Affected
+	Rejected         bool       `json:",omitempty"` // Take from NVD
 }
 
 type AdvisoryDetail struct {
@@ -146,11 +136,11 @@ type Vulnerability struct {
 	Severity         string         `json:",omitempty"` // Selected from VendorSeverity, depending on a scan target
 	CweIDs           []string       `json:",omitempty"` // e.g. CWE-78, CWE-89
 	VendorSeverity   VendorSeverity `json:",omitempty"`
-	VendorStatus     VendorStatus   `json:",omitempty"`
 	CVSS             VendorCVSS     `json:",omitempty"`
 	References       []string       `json:",omitempty"`
 	PublishedDate    *time.Time     `json:",omitempty"` // Take from NVD
 	LastModifiedDate *time.Time     `json:",omitempty"` // Take from NVD
+	Rejected         bool           `json:",omitempty"` // Take from NVD
 
 	// Custom is basically for extensibility and is not supposed to be used in OSS
 	Custom interface{} `json:",omitempty"`

@@ -158,10 +158,6 @@ func TestTrivyDB_Build(t *testing.T) {
 							vulnerability.NVD:    types.SeverityHigh,
 							vulnerability.RedHat: types.SeverityCritical,
 						},
-						VendorStatus: types.VendorStatus{
-							vulnerability.NVD:    "",
-							vulnerability.RedHat: "",
-						},
 						PublishedDate:    &published,
 						LastModifiedDate: &modified,
 					},
