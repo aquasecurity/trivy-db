@@ -110,7 +110,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, items []Item) error {
 			Description:      description,
 			PublishedDate:    &publishedDate,
 			LastModifiedDate: &lastModifiedDate,
-			Rejected:         vulnerability.IsRejected(description),
+			Status:           vulnerability.IsRejected(description),
 		}
 
 		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.NVD, vuln); err != nil {
