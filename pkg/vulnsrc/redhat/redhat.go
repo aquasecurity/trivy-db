@@ -3,14 +3,15 @@ package redhat
 import (
 	"encoding/json"
 	"fmt"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"io"
 	"io/ioutil"
 	"log"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
@@ -164,4 +165,18 @@ func severityFromThreat(sev string) types.Severity {
 		return types.SeverityCritical
 	}
 	return types.SeverityUnknown
+}
+
+func normalizeStatus(status string) types.Status {
+	switch status {
+	case "Affected":
+		return types.StatusAffected
+	case "Fix deferred":
+		return types.StatusDeferred
+	case "Will not fix", "Out of support scope":
+		return types.StatusWillNotFix
+	case "Fixed":
+		return types.StatusFixed
+	}
+	return ""
 }
