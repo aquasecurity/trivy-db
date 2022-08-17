@@ -16,7 +16,6 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
-	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -32,8 +31,6 @@ const (
 
 var (
 	suseDir = filepath.Join("cvrf", "suse")
-
-	versionReplacer = strings.NewReplacer("-SECURITY", "", "-LTSS", "", "-TERADATA", "")
 
 	source = types.DataSource{
 		ID:   vulnerability.SuseCVRF,
@@ -202,29 +199,31 @@ func getOSVersion(platformName string) string {
 		return fmt.Sprintf(platformOpenSUSEFormat, ss[2])
 	}
 	if strings.Contains(platformName, "SUSE Linux Enterprise") {
-		// e.g. SUSE Linux Enterprise Server 12 SP1-LTSS
-		ss := strings.Fields(platformName)
-		if strings.HasPrefix(ss[len(ss)-1], "SP") || ustrings.IsInt(ss[len(ss)-2]) {
-			// Remove suffix such as -TERADATA, -LTSS
-			sps := strings.Split(ss[len(ss)-1], "-")
-			// Remove "SP" prefix
-			sp := strings.TrimPrefix(sps[0], "SP")
-			// Check if the version is integer
-			spVersion, err := strconv.Atoi(sp)
+		// e.g. SUSE Linux Enterprise Storage 7, SUSE Linux Enterprise Micro 5.1
+		if strings.HasPrefix(platformName, "SUSE Linux Enterprise Storage") || strings.HasPrefix(platformName, "SUSE Linux Enterprise Micro") {
+			return ""
+		}
+
+		ss := strings.Fields(strings.ReplaceAll(platformName, "-", " "))
+		vs := make([]string, 0, 2)
+		for i := len(ss) - 1; i > 0; i-- {
+			v, err := strconv.Atoi(strings.TrimPrefix(ss[i], "SP"))
 			if err != nil {
-				log.Printf("invalid SP version: %s, err: %s", platformName, err)
-				return ""
+				continue
 			}
-			osVer := fmt.Sprintf("%s.%d", ss[len(ss)-2], spVersion)
-			return fmt.Sprintf(platformSUSELinuxFormat, osVer)
-		} else {
-			// e.g. SUSE Linux Enterprise Server 11-SECURITY
-			ver := versionReplacer.Replace(ss[len(ss)-1])
-			if _, err := version.NewVersion(ver); err != nil {
-				log.Printf("invalid OS version: %s, err: %s", platformName, err)
-				return ""
+			vs = append(vs, fmt.Sprintf("%d", v))
+			if len(vs) == 2 {
+				break
 			}
-			return fmt.Sprintf(platformSUSELinuxFormat, ver)
+		}
+		switch len(vs) {
+		case 0:
+			log.Printf("failed to detect version: %s", platformName)
+			return ""
+		case 1:
+			return fmt.Sprintf(platformSUSELinuxFormat, vs[0])
+		case 2:
+			return fmt.Sprintf(platformSUSELinuxFormat, fmt.Sprintf("%s.%s", vs[1], vs[0]))
 		}
 	}
 
