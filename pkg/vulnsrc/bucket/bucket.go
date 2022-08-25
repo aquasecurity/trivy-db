@@ -29,7 +29,7 @@ func Name(ecosystem, dataSource string) string {
 		prefix = vulnerability.NuGet
 	case "conan":
 		prefix = vulnerability.Conan
-	case "cargo":
+	case "cargo", "rust":
 		prefix = vulnerability.Cargo
 	default:
 		return ""
