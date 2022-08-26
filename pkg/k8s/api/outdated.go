@@ -20,13 +20,12 @@ const (
 type Advisory types.OutDatedAPIData
 
 var (
-	dataSource = "outdatedapi-data-source"
-	dataType   = "outdated-api"
+	dataType = "outdated-api"
 
 	source = types.DataSource{
 		ID:   K8sOutdatedAPI,
 		Name: "Kubernetes GitHub docs",
-		URL:  "https://github/kubernetes/kubernetes",
+		URL:  "https://github.com/kubernetes/kubernetes",
 	}
 )
 
@@ -68,11 +67,11 @@ func (vs Outdated) Update(dir string) error {
 
 func (vs Outdated) save(advisories []Advisory) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		if err := vs.dbc.PutK8sDataSource(tx, dataSource, source); err != nil {
+		if err := vs.dbc.PutK8sDataSource(tx, dataType, source); err != nil {
 			return err
 		}
 		for _, adv := range advisories {
-			if err := vs.dbc.PutK8sOutdatedAPI(tx, dataType, adv); err != nil {
+			if err := vs.dbc.PutK8sDb(tx, dataType, adv); err != nil {
 				return xerrors.Errorf("failed to put data source: %w", err)
 			}
 		}
@@ -85,9 +84,10 @@ func (vs Outdated) save(advisories []Advisory) error {
 }
 
 func (vs Outdated) Get() (types.OutDatedAPIData, error) {
-	outDatedAPIData, err := vs.dbc.GetK8sOutdatedAPI(dataType)
+	var outdatedAPI types.OutDatedAPIData
+	err := vs.dbc.GetK8sDb(dataType, &outdatedAPI)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get outdated api data: %w", err)
 	}
-	return outDatedAPIData, nil
+	return outdatedAPI, err
 }

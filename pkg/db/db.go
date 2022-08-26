@@ -54,8 +54,8 @@ type Operation interface {
 	RedHatRepoToCPEs(repository string) (cpeIndices []int, err error)
 	RedHatNVRToCPEs(nvr string) (cpeIndices []int, err error)
 	//for K8s
-	GetK8sOutdatedAPI(key string) (outdatedapi types.OutDatedAPIData, err error)
-	PutK8sOutdatedAPI(tx *bolt.Tx, key string, apis interface{}) (err error)
+	GetK8sDb(key string, data interface{}) error
+	PutK8sDb(tx *bolt.Tx, key string, apis interface{}) (err error)
 	PutK8sDataSource(tx *bolt.Tx, bktName string, source types.DataSource) (err error)
 }
 
