@@ -5,6 +5,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/k8s/api"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/stretchr/testify/assert"
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -39,6 +40,7 @@ func TestK8sSrc_Update_Get(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			db.Init(tt.dir)
+			defer os.RemoveAll(filepath.Join(tt.dir, "db"))
 			vs := api.NewOutdated()
 			err := vs.Update(tt.dir)
 			if tt.expectError {
