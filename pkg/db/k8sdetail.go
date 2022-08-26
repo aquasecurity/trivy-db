@@ -28,7 +28,7 @@ func (dbc Config) PutK8sDataSource(tx *bolt.Tx, bktName string, source types.Dat
 	return dataSource.Put([]byte(bktName), value)
 }
 
-func (dbc Config) PutK8sOutdatedAPI(tx *bolt.Tx, key string, apis interface{}) (err error) {
+func (dbc Config) PutK8sDb(tx *bolt.Tx, key string, k8sData interface{}) (err error) {
 	rootBucket, err := tx.CreateBucketIfNotExists([]byte(k8sRootBucket))
 	if err != nil {
 		return xerrors.Errorf("failed to create %s bucket: %w", k8sRootBucket, err)
@@ -37,7 +37,7 @@ func (dbc Config) PutK8sOutdatedAPI(tx *bolt.Tx, key string, apis interface{}) (
 	if err != nil {
 		return xerrors.Errorf("failed to create %s bucket: %w", DbBucket, err)
 	}
-	value, err := json.Marshal(apis)
+	value, err := json.Marshal(k8sData)
 	if err != nil {
 		return xerrors.Errorf("JSON marshal error: %w", err)
 	}
@@ -47,21 +47,13 @@ func (dbc Config) PutK8sOutdatedAPI(tx *bolt.Tx, key string, apis interface{}) (
 	return nil
 }
 
-func (dbc Config) GetK8sOutdatedAPI(key string) (types.OutDatedAPIData, error) {
-	var outdatedapi types.OutDatedAPIData
-	err := db.View(func(tx *bolt.Tx) error {
+func (dbc Config) GetK8sDb(key string, k8sData interface{}) error {
+	return db.View(func(tx *bolt.Tx) error {
 		dbBucket := tx.Bucket([]byte(k8sRootBucket)).Bucket([]byte(DbBucket))
 		value := dbBucket.Get([]byte(key))
 		if value == nil {
-			return xerrors.Errorf("no outdated-api details for %s", key)
+			return xerrors.Errorf("no k8s Data details for %s", key)
 		}
-		if err := json.Unmarshal(value, &outdatedapi); err != nil {
-			return xerrors.Errorf("failed to unmarshal JSON: %w", err)
-		}
-		return nil
+		return json.Unmarshal(value, &k8sData)
 	})
-	if err != nil {
-		return nil, xerrors.Errorf("failed to get the outdated-api %q: %w", key, err)
-	}
-	return outdatedapi, nil
 }
