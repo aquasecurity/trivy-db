@@ -14,10 +14,10 @@ import (
 
 const (
 	k8sOutdatedAPiDir                = "api"
-	K8sOutdatedAPI    types.SourceID = "outdated-api"
+	K8sOutdatedAPI    types.SourceID = "k8s-outdated-api"
 )
 
-type Advisory types.OutDatedAPIData
+type OutdatedApiDb types.OutDatedAPIData
 
 var (
 	dataType = "outdated-api"
@@ -45,31 +45,28 @@ func (vs Outdated) Name() types.SourceID {
 
 func (vs Outdated) Update(dir string) error {
 	rootDir := filepath.Join(dir, "trivy-db-data", "k8s", k8sOutdatedAPiDir)
-	var advisories []Advisory
+	var outdatedApiDbs []OutdatedApiDb
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-		var advisory Advisory
-		if err := json.NewDecoder(r).Decode(&advisory); err != nil {
+		var outdatedApiDb OutdatedApiDb
+		if err := json.NewDecoder(r).Decode(&outdatedApiDb); err != nil {
 			return xerrors.Errorf("failed to decode k8s outdated api Advisory: %w", err)
 		}
-		advisories = append(advisories, advisory)
+		outdatedApiDbs = append(outdatedApiDbs, outdatedApiDb)
 		return nil
 	})
 	if err != nil {
 		return xerrors.Errorf("error in outdated api walk: %w", err)
 	}
 
-	if err = vs.save(advisories); err != nil {
+	if err = vs.save(outdatedApiDbs); err != nil {
 		return xerrors.Errorf("error in outdated api save: %w", err)
 	}
 
 	return nil
 }
 
-func (vs Outdated) save(advisories []Advisory) error {
+func (vs Outdated) save(advisories []OutdatedApiDb) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		if err := vs.dbc.PutK8sDataSource(tx, dataType, source); err != nil {
-			return err
-		}
 		for _, adv := range advisories {
 			if err := vs.dbc.PutK8sDb(tx, dataType, adv); err != nil {
 				return xerrors.Errorf("failed to put data source: %w", err)

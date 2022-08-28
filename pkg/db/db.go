@@ -56,7 +56,6 @@ type Operation interface {
 	//for K8s
 	GetK8sDb(key string, data interface{}) error
 	PutK8sDb(tx *bolt.Tx, key string, apis interface{}) (err error)
-	PutK8sDataSource(tx *bolt.Tx, bktName string, source types.DataSource) (err error)
 }
 
 type Config struct {

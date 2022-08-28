@@ -27,8 +27,8 @@ jobs:
         with:
           ref: "github-releases"
 
-      - name: Download vuln-list and advisories
-        run: make db-fetch-langs db-fetch-vuln-list-main
+      - name: Download vuln-list, advisories and k8s-db
+        run: make db-fetch-langs db-fetch-vuln-list-main trivy-db-data
 
       - name: Build the binary
         run: make build

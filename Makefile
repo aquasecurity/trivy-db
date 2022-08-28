@@ -86,7 +86,7 @@ db-clean:
 db-fetch-vuln-list:
 	mkdir -p cache/vuln-list
 	wget -qO - https://github.com/aquasecurity/vuln-list/archive/main.tar.gz | tar xz -C cache/vuln-list --strip-components=1
-
+# trivy-db-data is a general encapsulation of db which will support various types of data such as vulnerabilities,k8s and etc
 .PHONY: trivy-db-data
 trivy-db-data:
 	mkdir -p cache/trivy-db-data

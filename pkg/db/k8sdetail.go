@@ -2,31 +2,12 @@ package db
 
 import (
 	"encoding/json"
-	"github.com/aquasecurity/trivy-db/pkg/types"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 )
 
 const k8sRootBucket = "k8s"
 const DbBucket = "db"
-const DataSourceBucket = "data-source"
-
-func (dbc Config) PutK8sDataSource(tx *bolt.Tx, bktName string, source types.DataSource) (err error) {
-	rootBucket, err := tx.CreateBucketIfNotExists([]byte(k8sRootBucket))
-	if err != nil {
-		return xerrors.Errorf("failed to create %s bucket: %w", k8sRootBucket, err)
-	}
-	dataSource, err := rootBucket.CreateBucketIfNotExists([]byte(DataSourceBucket))
-	if err != nil {
-		return xerrors.Errorf("failed to create %s bucket: %w", DataSourceBucket, err)
-	}
-	value, err := json.Marshal(source)
-	if err != nil {
-		return xerrors.Errorf("JSON marshal error: %w", err)
-	}
-
-	return dataSource.Put([]byte(bktName), value)
-}
 
 func (dbc Config) PutK8sDb(tx *bolt.Tx, key string, k8sData interface{}) (err error) {
 	rootBucket, err := tx.CreateBucketIfNotExists([]byte(k8sRootBucket))
@@ -49,7 +30,14 @@ func (dbc Config) PutK8sDb(tx *bolt.Tx, key string, k8sData interface{}) (err er
 
 func (dbc Config) GetK8sDb(key string, k8sData interface{}) error {
 	return db.View(func(tx *bolt.Tx) error {
-		dbBucket := tx.Bucket([]byte(k8sRootBucket)).Bucket([]byte(DbBucket))
+		rootBucket := tx.Bucket([]byte(k8sRootBucket))
+		if rootBucket == nil {
+			return xerrors.Errorf("failed to fetch rootBucket %s, it does not exist", k8sRootBucket)
+		}
+		dbBucket := rootBucket.Bucket([]byte(DbBucket))
+		if rootBucket == nil {
+			return xerrors.Errorf("failed to fetch DbBucket %s, it does not exist under rootBucket %s", DbBucket, k8sRootBucket)
+		}
 		value := dbBucket.Get([]byte(key))
 		if value == nil {
 			return xerrors.Errorf("no k8s Data details for %s", key)
