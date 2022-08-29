@@ -22,7 +22,7 @@ import (
 var (
 	// cat /etc/os-release ORACLE_BUGZILLA_PRODUCT="Oracle Linux 8"
 	platformFormat  = "Oracle Linux %s"
-	targetPlatforms = []string{"Oracle Linux 5", "Oracle Linux 6", "Oracle Linux 7", "Oracle Linux 8"}
+	targetPlatforms = []string{"Oracle Linux 5", "Oracle Linux 6", "Oracle Linux 7", "Oracle Linux 8", "Oracle Linux 9"}
 	oracleDir       = filepath.Join("oval", "oracle")
 
 	source = types.DataSource{

@@ -2,13 +2,13 @@ package susecvrf
 
 import (
 	"fmt"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -246,7 +246,6 @@ func TestGetOSVersion(t *testing.T) {
 		inputPlatformName    string
 		expectedPlatformName string
 	}{
-
 		{
 			inputPlatformName:    "SUSE Linux Enterprise Workstation Extension 12 SP4",
 			expectedPlatformName: "SUSE Linux Enterprise 12.4",
@@ -444,6 +443,14 @@ func TestGetOSVersion(t *testing.T) {
 			expectedPlatformName: "SUSE Linux Enterprise 12.5",
 		},
 		{
+			inputPlatformName:    "SUSE Linux Enterprise Server 11-PUBCLOUD",
+			expectedPlatformName: "SUSE Linux Enterprise 11",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise High Performance Computing 15-ESPOS",
+			expectedPlatformName: "SUSE Linux Enterprise 15",
+		},
+		{
 			inputPlatformName:    "openSUSE Leap 42.3",
 			expectedPlatformName: "openSUSE Leap 42.3",
 		},
@@ -530,6 +537,14 @@ func TestGetOSVersion(t *testing.T) {
 		},
 		{
 			inputPlatformName:    "openSUSE Evergreen 11.4",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Storage 7",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Micro 5.1",
 			expectedPlatformName: "",
 		},
 	}

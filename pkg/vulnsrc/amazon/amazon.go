@@ -24,7 +24,7 @@ const (
 )
 
 var (
-	targetVersions = []string{"1", "2"}
+	targetVersions = []string{"1", "2", "2022"}
 
 	source = types.DataSource{
 		ID:   vulnerability.Amazon,

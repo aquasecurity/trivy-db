@@ -117,6 +117,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, item Entry) error {
 				if vulnerable != "" {
 					vulnerableVersions = append(vulnerableVersions, vulnerable)
 				}
+				if event.Introduced == "0" {
+					event.Introduced = "0.0.0-0"
+				}
 				vulnerable = fmt.Sprintf(">=%s", event.Introduced)
 			case event.Fixed != "":
 				// patched versions

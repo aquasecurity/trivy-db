@@ -1,10 +1,11 @@
 package amazon_test
 
 import (
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
@@ -74,6 +75,20 @@ func TestVulnSrc_Update(t *testing.T) {
 						Severity:    1,
 						Description: "Package updates are available for Amazon Linux 2 that fix the following vulnerabilities:\nCVE-2021-22543:\n\tA flaw was found in the Linux kernel's KVM implementation, where improper handing of the VM_IO|VM_PFNMAP VMAs in KVM bypasses RO checks and leads to pages being freed while still accessible by the VMM and guest. This flaw allows users who can start and control a VM to read/write random pages of memory, resulting in local privilege escalation. The highest threat from this vulnerability is to confidentiality, integrity, and system availability.\n1965461: CVE-2021-22543 kernel: Improper handling of VM_IO|VM_PFNMAP vmas in KVM can bypass RO checks\n",
 						References:  []string{"http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-22543"},
+					},
+				},
+				{
+					Key: []string{"data-source", "amazon linux 2022"},
+					Value: types.DataSource{
+						ID:   vulnerability.Amazon,
+						Name: "Amazon Linux Security Center",
+						URL:  "https://alas.aws.amazon.com/",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2021-44228", "amazon linux 2022", "log4j"},
+					Value: types.Advisory{
+						FixedVersion: "2.15.0-1.amzn2022.0.1",
 					},
 				},
 			},
