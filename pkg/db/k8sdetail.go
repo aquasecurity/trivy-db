@@ -42,6 +42,9 @@ func (dbc Config) GetK8sDb(key string, k8sData interface{}) error {
 		if value == nil {
 			return xerrors.Errorf("no k8s Data details for %s", key)
 		}
-		return json.Unmarshal(value, &k8sData)
+		if err := json.Unmarshal(value, &k8sData); err != nil {
+			return xerrors.Errorf("failed to unmarshal k8s api data for key %s: %w", key, err)
+		}
+		return nil
 	})
 }
