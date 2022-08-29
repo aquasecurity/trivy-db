@@ -21,12 +21,6 @@ type OutdatedApiDb types.OutDatedAPIData
 
 var (
 	dataType = "outdated-api"
-
-	source = types.DataSource{
-		ID:   K8sOutdatedAPI,
-		Name: "Kubernetes GitHub docs",
-		URL:  "https://github.com/kubernetes/kubernetes",
-	}
 )
 
 type Outdated struct {
@@ -37,10 +31,6 @@ func NewOutdated() Outdated {
 	return Outdated{
 		dbc: db.Config{},
 	}
-}
-
-func (vs Outdated) Name() types.SourceID {
-	return source.ID
 }
 
 func (vs Outdated) Update(dir string) error {
@@ -69,7 +59,7 @@ func (vs Outdated) save(advisories []OutdatedApiDb) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for _, adv := range advisories {
 			if err := vs.dbc.PutK8sDb(tx, dataType, adv); err != nil {
-				return xerrors.Errorf("failed to put data source: %w", err)
+				return xerrors.Errorf("failed to put outdated API data: %w", err)
 			}
 		}
 		return nil
