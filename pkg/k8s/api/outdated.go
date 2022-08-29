@@ -21,6 +21,12 @@ type OutdatedApiDb types.OutDatedAPIData
 
 var (
 	dataType = "outdated-api"
+
+	source = types.DataSource{
+		ID:   K8sOutdatedAPI,
+		Name: "Kubernetes GitHub docs",
+		URL:  "https://github.com/kubernetes/kubernetes",
+	}
 )
 
 type Outdated struct {
@@ -31,6 +37,10 @@ func NewOutdated() Outdated {
 	return Outdated{
 		dbc: db.Config{},
 	}
+}
+
+func (vs Outdated) Name() types.SourceID {
+	return source.ID
 }
 
 func (vs Outdated) Update(dir string) error {
