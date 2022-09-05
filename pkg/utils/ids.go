@@ -14,7 +14,7 @@ const (
 )
 
 func GetUniqueIDsFromReferences(refs []string, knownIDs []string) []string {
-	condidates := map[string]interface{}{}
+	candidates := map[string]interface{}{}
 	for _, ref := range refs {
 		u, err := url.Parse(ref)
 		if err != nil {
@@ -41,11 +41,11 @@ func GetUniqueIDsFromReferences(refs []string, knownIDs []string) []string {
 			continue
 		}
 		if id != "" && !strutil.InSlice(id, knownIDs) {
-			condidates[id] = struct{}{}
+			candidates[id] = struct{}{}
 		}
 	}
 	ids := []string{}
-	for k := range condidates {
+	for k := range candidates {
 		ids = append(ids, k)
 	}
 	return ids
