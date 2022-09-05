@@ -46,6 +46,14 @@ func TestGetUniqueIDsFromReferences(t *testing.T) {
 				"CVE-2022-24749",
 			},
 		},
+		{
+			title: "no references, but there is a known vuln",
+			known: []string{
+				"GHSA-4qrp-27r3-66fj",
+			},
+			references: []string{},
+			ids:        []string{},
+		},
 	}
 
 	for _, tt := range tests {
