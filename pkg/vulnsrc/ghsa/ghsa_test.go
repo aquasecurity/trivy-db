@@ -33,6 +33,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.Advisory{
 						PatchedVersions:    []string{"4.8.6", "4.4.46"},
 						VulnerableVersions: []string{"\u003e= 4.5.0, \u003c 4.8.6", "\u003e= 4.0.0, \u003c 4.4.46"},
+						VendorIDs:          []string{"GHSA-wjx8-cgrm-hh8p", "CVE-2019-19745"},
 					},
 				},
 				{
@@ -71,6 +72,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.Advisory{
 						PatchedVersions:    []string{"1.5.10"},
 						VulnerableVersions: []string{"\u003e= 1.5.0, \u003c 1.5.10"},
+						VendorIDs:          []string{"GHSA-xx65-cc7g-9pfp", "CVE-2018-1196"},
 					},
 				},
 				{
@@ -106,6 +108,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.Advisory{
 						PatchedVersions:    []string{"2.1.0"},
 						VulnerableVersions: []string{"\u003c 2.1.0"},
+						VendorIDs:          []string{"GHSA-8w4h-3cm3-2pm2", "CVE-2018-3745"},
 					},
 				},
 				{
@@ -139,6 +142,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"advisory-detail", "CVE-2019-1010113", "nuget::GitHub Security Advisory Nuget", "CLEditor"},
 					Value: types.Advisory{
 						VulnerableVersions: []string{"\u003c= 1.4.5"},
+						VendorIDs:          []string{"GHSA-hh56-x62g-gvhc", "CVE-2019-1010113"},
 					},
 				},
 				{
@@ -170,6 +174,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.Advisory{
 						PatchedVersions:    []string{"2.0.8", "1.11.15"},
 						VulnerableVersions: []string{"\u003e= 2.0, \u003c 2.0.8", "\u003e= 1.11.0, \u003c 1.11.15"},
+						VendorIDs:          []string{"GHSA-5hg3-6c2f-f3wr", "CVE-2018-14574"},
 					},
 				},
 				{
@@ -210,6 +215,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.Advisory{
 						PatchedVersions:    []string{"5.2.1.1"},
 						VulnerableVersions: []string{"\u003e= 5.2.0, \u003c= 5.2.1.0"},
+						VendorIDs:          []string{"GHSA-7rr7-rcjw-56vj", "CVE-2018-16477"},
 					},
 				},
 				{
