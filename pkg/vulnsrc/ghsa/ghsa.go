@@ -122,16 +122,28 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ecosystem types.Ecosystem, entries []Entry
 		}
 
 		vulnID := entry.Advisory.GhsaId
+		vendorIDs := []string{}
+
 		for _, identifier := range entry.Advisory.Identifiers {
+			if identifier.Value != "" {
+				vendorIDs = append(vendorIDs, identifier.Value)
+			}
 			if identifier.Type == "CVE" && identifier.Value != "" {
 				vulnID = identifier.Value
 			}
 		}
+		refs := []string{}
+		for _, ref := range entry.Advisory.References {
+			refs = append(refs, ref.Url)
+		}
+		vendorIDs = append(vendorIDs, utils.GetUniqueIDsFromReferences(refs, vendorIDs)...)
+
 		vulnID = strings.TrimSpace(vulnID)
 
 		a := types.Advisory{
 			PatchedVersions:    pvs,
 			VulnerableVersions: avs,
+			VendorIDs:          vendorIDs,
 		}
 
 		pkgName := vulnerability.NormalizePkgName(ecosystem, entry.Package.Name)
