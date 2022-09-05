@@ -27,19 +27,16 @@ func GetUniqueIDsFromReferences(refs []string, knownIDs []string) []string {
 			if strings.HasPrefix(u.Path, "/advisories/") {
 				id = strings.TrimSuffix(strings.TrimPrefix(u.Path, "/advisories/"), ".html")
 			}
-			break
-			// https://nvd.nist.gov/vuln/detail/CVE-2021-45708
+		// https://nvd.nist.gov/vuln/detail/CVE-2021-45708
 		case nvd:
 			if strings.HasPrefix(u.Path, "/vuln/detail/") {
 				id = strings.TrimPrefix(u.Path, "/vuln/detail/")
 			}
-			break
-			// https://github.com/advisories/GHSA-4qrp-27r3-66fj
+		// https://github.com/advisories/GHSA-4qrp-27r3-66fj
 		case ghsa:
 			if strings.HasPrefix(u.Path, "/advisories/") {
 				id = strings.TrimPrefix(u.Path, "/advisories/")
 			}
-			break
 		default:
 			continue
 		}
