@@ -58,7 +58,7 @@ jobs:
       - name: Upload assets to GHCR
         run: |
           ./oras version
-          tags=(latest ${{ env.VERSION }})
+          tags=(latest ${{ env.VERSION }} $(date +"%Y%m%d%H"))
           for tag in ${tags[@]}; do
             ./oras push ghcr.io/${{ github.repository }}:${tag} \
               --manifest-config /dev/null:application/vnd.aquasec.trivy.config.v1+json \
