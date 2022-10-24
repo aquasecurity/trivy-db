@@ -35,15 +35,19 @@ var ecosystems = []ecosystem{
 			URL:  "https://github.com/pypa/advisory-db",
 		},
 	},
-	{
-		dir:  "rust",
-		name: vulnerability.Cargo,
-		dataSource: types.DataSource{
-			ID:   sourceID,
-			Name: "RustSec Advisory Database",
-			URL:  "https://github.com/RustSec/advisory-db",
+	// Cargo ecosystem advisories in OSV were disabled,
+	// because GitHub Advisory Database contains almost all information.
+	/*
+		{
+			dir:  "rust",
+			name: vulnerability.Cargo,
+			dataSource: types.DataSource{
+				ID:   sourceID,
+				Name: "RustSec Advisory Database",
+				URL:  "https://github.com/RustSec/advisory-db",
+			},
 		},
-	},
+	*/
 
 	// We cannot use OSV for golang scanning until module names are included.
 	// See https://github.com/golang/go/issues/50006 for the detail.
