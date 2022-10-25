@@ -31,6 +31,7 @@ var (
 		vulnerability.NuGet,
 		vulnerability.Pip,
 		vulnerability.RubyGems,
+		vulnerability.Rust,
 	}
 	platformFormat = "GitHub Security Advisory %s"
 )

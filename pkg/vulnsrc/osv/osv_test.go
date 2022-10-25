@@ -30,14 +30,6 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"data-source", "cargo::Open Source Vulnerability"},
-					Value: types.DataSource{
-						ID:   vulnerability.OSV,
-						Name: "RustSec Advisory Database",
-						URL:  "https://github.com/RustSec/advisory-db",
-					},
-				},
-				{
 					Key: []string{"advisory-detail", "CVE-2018-10895", "pip::Open Source Vulnerability", "qutebrowser"},
 					Value: types.Advisory{
 						VulnerableVersions: []string{">=0, <1.4.1"},
@@ -57,30 +49,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2017-18587", "cargo::Open Source Vulnerability", "hyper"},
-					Value: types.Advisory{
-						VulnerableVersions: []string{">=0.0.0-0, <0.9.18", ">=0.10.0, <0.10.2"},
-						PatchedVersions:    []string{"0.9.18", "0.10.2"},
-					},
-				},
-				{
-					Key: []string{"vulnerability-detail", "CVE-2017-18587", string(vulnerability.OSV)},
-					Value: types.VulnerabilityDetail{
-						Title:       "headers containing newline characters can split messages",
-						Description: "Serializing of headers to the socket did not filter the values for newline bytes (`\\r` or `\\n`),\nwhich allowed for header values to split a request or response. People would not likely include\nnewlines in the headers in their own applications, so the way for most people to exploit this\nis if an application constructs headers based on unsanitized user input.\n\nThis issue was fixed by replacing all newline characters with a space during serialization of\na header value.",
-						References: []string{
-							"https://crates.io/crates/hyper",
-							"https://rustsec.org/advisories/RUSTSEC-2017-0002.html",
-							"https://github.com/hyperium/hyper/wiki/Security-001",
-						},
-					},
-				},
-				{
 					Key:   []string{"vulnerability-id", "CVE-2018-10895"},
-					Value: map[string]interface{}{},
-				},
-				{
-					Key:   []string{"vulnerability-id", "CVE-2017-18587"},
 					Value: map[string]interface{}{},
 				},
 			},
