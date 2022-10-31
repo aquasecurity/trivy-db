@@ -56,3 +56,28 @@ If you want to build a trivy integration test DB, please run `make create-test-d
 
 ## Update interval
 Every 6 hours
+
+## Download the vulnerability database
+### version 1 (deprecated)
+Trivy DB v1 is for backwards compatibility only. You can download it from [releases](https://github.com/aquasecurity/trivy-db/releases).
+
+### version 2
+You can download the actual compiled database via [Trivy](https://aquasecurity.github.io/trivy/) or [Oras CLI](https://oras.land/cli/).
+
+Trivy:
+```sh
+TRIVY_TEMP_DIR=$(mktemp -d)
+trivy --cache-dir $TRIVY_TEMP_DIR image --download-db-only
+tar -cf ./db.tar.gz -C $TRIVY_TEMP_DIR/db metadata.json trivy.db
+rm -rf $TRIVY_TEMP_DIR
+```
+oras >= v0.13.0:
+```sh
+$ oras pull ghcr.io/aquasecurity/trivy-db:2
+```
+
+oras < v0.13.0:
+```sh
+$ oras pull -a ghcr.io/aquasecurity/trivy-db:2
+```
+The database can be used for [Air-Gapped Environment](https://aquasecurity.github.io/trivy/latest/docs/advanced/air-gap/).
