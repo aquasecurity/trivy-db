@@ -9,6 +9,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bundler"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/composer"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/epel"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/glad"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/govulndb"
@@ -51,6 +52,7 @@ var (
 		susecvrf.NewVulnSrc(susecvrf.OpenSUSE),
 		photon.NewVulnSrc(),
 		mariner.NewVulnSrc(),
+		epel.NewVulnSrc(),
 
 		// Language-specific packages
 		bundler.NewVulnSrc(),
