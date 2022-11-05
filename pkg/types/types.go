@@ -9,6 +9,8 @@ type Severity int
 
 type VendorSeverity map[SourceID]Severity
 
+type Exploitable map[SourceID]VulnerabilityExploitable
+
 type CVSS struct {
 	V2Vector string  `json:"V2Vector,omitempty"`
 	V3Vector string  `json:"V3Vector,omitempty"`
@@ -140,8 +142,19 @@ type Vulnerability struct {
 	PublishedDate    *time.Time     `json:",omitempty"` // Take from NVD
 	LastModifiedDate *time.Time     `json:",omitempty"` // Take from NVD
 
+	Exploitables map[SourceID]VulnerabilityExploitable
+
 	// Custom is basically for extensibility and is not supposed to be used in OSS
 	Custom interface{} `json:",omitempty"`
+}
+
+// VulnerabilityExploitable represents Exploit Database
+type VulnerabilityExploitable struct {
+	DataSource     *DataSource `json:",omitempty"`
+	DateAdded      *time.Time
+	Description    string
+	RequiredAction string
+	DueDate        *time.Time
 }
 
 // Ecosystem represents language-specific ecosystem
