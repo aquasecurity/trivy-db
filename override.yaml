@@ -1,0 +1,5 @@
+- id: "CVE-2021-45708"
+  description: "abomonation transmutes &T to and from &[u8] without sufficient constraints"
+  aliases:
+  - "GHSA-hfxp-p695-629x"
+  severity: LOW

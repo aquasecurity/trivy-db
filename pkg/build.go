@@ -5,6 +5,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/overridedb"
 	"github.com/aquasecurity/trivy-db/pkg/vulndb"
 )
 
@@ -17,7 +18,9 @@ func build(c *cli.Context) error {
 	targets := c.StringSlice("only-update")
 	updateInterval := c.Duration("update-interval")
 
-	vdb := vulndb.New(cacheDir, updateInterval)
+	overriddenData := overridedb.UploadOverriddenDB(c.String("override-db"))
+
+	vdb := vulndb.New(cacheDir, updateInterval, overriddenData)
 	if err := vdb.Build(targets); err != nil {
 		return xerrors.Errorf("build error: %w", err)
 	}
