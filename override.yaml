@@ -3,3 +3,7 @@
   aliases:
   - "GHSA-hfxp-p695-629x"
   severity: LOW
+  affected:
+  - "<17"
+  fixed:
+  - "17"

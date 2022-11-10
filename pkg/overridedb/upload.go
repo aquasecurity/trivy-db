@@ -14,10 +14,21 @@ func UploadOverriddenDB(filename string) *OverriddenData {
 		return nil
 	}
 	defer f.Close()
-	result := &OverriddenData{}
-	if err := yaml.NewDecoder(f).Decode(result); err != nil {
+	overriddenAdvs := []OverriddenAdvisory{}
+	if err := yaml.NewDecoder(f).Decode(&overriddenAdvs); err != nil {
 		log.Printf("override db: can't decode data from %q: %v", filename, err)
 		return nil
+	}
+	result := &OverriddenData{
+		Advisories: map[string]OverriddenAdvisory{},
+		Aliases:    map[string]string{},
+	}
+	for _, adv := range overriddenAdvs {
+		result.Advisories[adv.Id] = adv
+		result.Aliases[adv.Id] = adv.Id
+		for _, alias := range adv.Aliases {
+			result.Aliases[alias] = adv.Id
+		}
 	}
 	return result
 }
