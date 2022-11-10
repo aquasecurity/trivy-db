@@ -1,6 +1,7 @@
 package vulnsrc
 
 import (
+	"github.com/aquasecurity/trivy-db/pkg/overridedb"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alma"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
@@ -28,6 +29,7 @@ import (
 type VulnSrc interface {
 	Name() types.SourceID
 	Update(dir string) (err error)
+	OverrideDb(db *overridedb.OverriddenData)
 }
 
 var (

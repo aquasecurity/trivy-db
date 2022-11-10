@@ -11,6 +11,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/overridedb"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/utils/strings"
@@ -69,8 +70,9 @@ func WithCustomPut(put db.CustomPut) Option {
 }
 
 type VulnSrc struct {
-	put db.CustomPut
-	dbc db.Operation
+	put          db.CustomPut
+	dbc          db.Operation
+	overriddenDb *overridedb.OverriddenData
 }
 
 func NewVulnSrc(opts ...Option) VulnSrc {
@@ -88,6 +90,10 @@ func NewVulnSrc(opts ...Option) VulnSrc {
 
 func (vs VulnSrc) Name() types.SourceID {
 	return source.ID
+}
+
+func (vs VulnSrc) OverrideDb(db *overridedb.OverriddenData) {
+	vs.overriddenDb = db
 }
 
 func (vs VulnSrc) Update(dir string) error {

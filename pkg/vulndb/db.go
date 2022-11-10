@@ -49,6 +49,7 @@ func New(cacheDir string, updateInterval time.Duration, overriddenDB *overridedb
 	// Initialize map
 	vulnSrcs := map[types.SourceID]vulnsrc.VulnSrc{}
 	for _, v := range vulnsrc.All {
+		v.OverrideDb(overriddenDB)
 		vulnSrcs[v.Name()] = v
 	}
 

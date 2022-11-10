@@ -14,6 +14,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/overridedb"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
@@ -23,13 +24,18 @@ const (
 )
 
 type VulnSrc struct {
-	dbc db.Operation
+	dbc          db.Operation
+	overriddenDb *overridedb.OverriddenData
 }
 
 func NewVulnSrc() VulnSrc {
 	return VulnSrc{
 		dbc: db.Config{},
 	}
+}
+
+func (vs VulnSrc) OverrideDb(db *overridedb.OverriddenData) {
+	vs.overriddenDb = db
 }
 
 func (vs VulnSrc) Name() types.SourceID {
