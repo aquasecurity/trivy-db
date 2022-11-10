@@ -53,11 +53,7 @@ func (vs VulnSrc) Name() types.SourceID {
 	return vulnerability.RedHatOVAL
 }
 
-func (vs VulnSrc) OverrideDb(db *overridedb.OverriddenData) {
-	vs.overriddenDb = db
-}
-
-func (vs VulnSrc) Update(dir string) error {
+func (vs VulnSrc) Update(dir string, db *overridedb.OverriddenData) error {
 	uniqCPEs := CPEMap{}
 
 	repoToCPE, err := vs.parseRepositoryCpeMapping(dir, uniqCPEs)

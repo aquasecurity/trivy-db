@@ -92,11 +92,7 @@ func (vs VulnSrc) Name() types.SourceID {
 	return source.ID
 }
 
-func (vs VulnSrc) OverrideDb(db *overridedb.OverriddenData) {
-	vs.overriddenDb = db
-}
-
-func (vs VulnSrc) Update(dir string) error {
+func (vs VulnSrc) Update(dir string, db *overridedb.OverriddenData) error {
 	rootDir := filepath.Join(dir, "vuln-list", ubuntuDir)
 	var cves []UbuntuCVE
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {

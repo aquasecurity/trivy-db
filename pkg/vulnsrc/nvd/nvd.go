@@ -34,15 +34,11 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
-func (vs VulnSrc) OverrideDb(db *overridedb.OverriddenData) {
-	vs.overriddenDb = db
-}
-
 func (vs VulnSrc) Name() types.SourceID {
 	return vulnerability.NVD
 }
 
-func (vs VulnSrc) Update(dir string) error {
+func (vs VulnSrc) Update(dir string, db *overridedb.OverriddenData) error {
 	rootDir := filepath.Join(dir, "vuln-list", nvdDir)
 
 	var items []Item

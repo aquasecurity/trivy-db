@@ -2,7 +2,7 @@ package overridedb
 
 type OverriddenData struct {
 	aliases    map[string]string
-	advisories map[string]OverriddenAdvisory
+	advisories map[string]*OverriddenAdvisory
 }
 
 type OverriddenAdvisory struct {
@@ -25,11 +25,10 @@ func (a *OverriddenAdvisory) SetAdded() {
 
 func (db *OverriddenData) GetOverriddenAdvisory(vulnId string) *OverriddenAdvisory {
 	if adv, ok := db.advisories[vulnId]; ok {
-		return &adv
+		return adv
 	}
 	if alias, ok := db.aliases[vulnId]; ok {
-		a := db.advisories[alias]
-		return &a
+		return db.advisories[alias]
 	}
 	return nil
 }

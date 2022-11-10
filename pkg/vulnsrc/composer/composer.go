@@ -60,11 +60,7 @@ func (vs VulnSrc) Name() types.SourceID {
 	return source.ID
 }
 
-func (vs VulnSrc) OverrideDb(db *overridedb.OverriddenData) {
-	vs.overriddenDb = db
-}
-
-func (vs VulnSrc) Update(dir string) (err error) {
+func (vs VulnSrc) Update(dir string, db *overridedb.OverriddenData) (err error) {
 	repoPath := filepath.Join(dir, composerDir)
 	if err := vs.update(repoPath); err != nil {
 		return xerrors.Errorf("failed to update compose vulnerabilities: %w", err)

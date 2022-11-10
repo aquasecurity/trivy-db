@@ -114,11 +114,7 @@ func (vs VulnSrc) Name() types.SourceID {
 	return source.ID
 }
 
-func (vs VulnSrc) OverrideDb(db *overridedb.OverriddenData) {
-	vs.overriddenDb = db
-}
-
-func (vs VulnSrc) Update(dir string) error {
+func (vs VulnSrc) Update(dir string, db *overridedb.OverriddenData) error {
 	if err := vs.parse(dir); err != nil {
 		return xerrors.Errorf("parse error: %w", err)
 	}

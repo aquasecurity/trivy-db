@@ -49,7 +49,6 @@ func New(cacheDir string, updateInterval time.Duration, overriddenDB *overridedb
 	// Initialize map
 	vulnSrcs := map[types.SourceID]vulnsrc.VulnSrc{}
 	for _, v := range vulnsrc.All {
-		v.OverrideDb(overriddenDB)
 		vulnSrcs[v.Name()] = v
 	}
 
@@ -81,7 +80,7 @@ func (t TrivyDB) Insert(targets []string) error {
 		}
 		log.Printf("Updating %s data...\n", target)
 
-		if err := src.Update(t.cacheDir); err != nil {
+		if err := src.Update(t.cacheDir, t.overriddenDB); err != nil {
 			return xerrors.Errorf("%s update error: %w", target, err)
 		}
 	}

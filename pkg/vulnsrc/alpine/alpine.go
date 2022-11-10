@@ -42,15 +42,11 @@ func NewVulnSrc() VulnSrc {
 	}
 }
 
-func (vs VulnSrc) OverrideDb(db *overridedb.OverriddenData) {
-	vs.overriddenDb = db
-}
-
 func (vs VulnSrc) Name() types.SourceID {
 	return source.ID
 }
 
-func (vs VulnSrc) Update(dir string) error {
+func (vs VulnSrc) Update(dir string, db *overridedb.OverriddenData) error {
 	rootDir := filepath.Join(dir, "vuln-list", alpineDir)
 	var advisories []advisory
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {

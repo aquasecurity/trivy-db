@@ -28,8 +28,7 @@ import (
 
 type VulnSrc interface {
 	Name() types.SourceID
-	Update(dir string) (err error)
-	OverrideDb(db *overridedb.OverriddenData)
+	Update(dir string, db *overridedb.OverriddenData) (err error)
 }
 
 var (

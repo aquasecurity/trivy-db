@@ -20,11 +20,11 @@ func UploadOverriddenDB(filename string) *OverriddenData {
 		return nil
 	}
 	result := &OverriddenData{
-		advisories: map[string]OverriddenAdvisory{},
+		advisories: map[string]*OverriddenAdvisory{},
 		aliases:    map[string]string{},
 	}
 	for _, adv := range overriddenAdvs {
-		result.advisories[adv.Id] = adv
+		result.advisories[adv.Id] = &adv
 		for _, alias := range adv.Aliases {
 			result.aliases[alias] = adv.Id
 		}
