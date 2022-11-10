@@ -25,7 +25,6 @@ func UploadOverriddenDB(filename string) *OverriddenData {
 	}
 	for _, adv := range overriddenAdvs {
 		result.Advisories[adv.Id] = adv
-		result.Aliases[adv.Id] = adv.Id
 		for _, alias := range adv.Aliases {
 			result.Aliases[alias] = adv.Id
 		}
