@@ -59,6 +59,12 @@ func WithCustomPut(put db.CustomPut) Option {
 	}
 }
 
+func WithDB(db db.Operation) Option {
+	return func(src *VulnSrc) {
+		src.dbc = db
+	}
+}
+
 type VulnSrc struct {
 	put db.CustomPut
 	dbc db.Operation
@@ -444,7 +450,8 @@ func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt bucket, advisory Advisory) error 
 }
 
 // defaultPut puts the advisory into Trivy DB, but it can be overwritten.
-func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
+func defaultPut(dbi interface{}, tx *bolt.Tx, advisory interface{}) error {
+	dbc := dbi.(db.Config)
 	adv, ok := advisory.(Advisory)
 	if !ok {
 		return xerrors.New("unknown type")

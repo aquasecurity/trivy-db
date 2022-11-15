@@ -15,7 +15,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/types"
 )
 
-type CustomPut func(dbc Operation, tx *bolt.Tx, adv interface{}) error
+type CustomPut func(dbc interface{}, tx *bolt.Tx, adv interface{}) error
 
 const SchemaVersion = 2
 

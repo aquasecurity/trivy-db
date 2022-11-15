@@ -68,6 +68,12 @@ func WithCustomPut(put db.CustomPut) Option {
 	}
 }
 
+func WithDB(db db.Operation) Option {
+	return func(src *VulnSrc) {
+		src.dbc = db
+	}
+}
+
 type VulnSrc struct {
 	put db.CustomPut
 	dbc db.Operation
@@ -145,7 +151,8 @@ func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) 
 	return advisories, nil
 }
 
-func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
+func defaultPut(dbi interface{}, tx *bolt.Tx, advisory interface{}) error {
+	dbc := dbi.(db.Config)
 	cve, ok := advisory.(UbuntuCVE)
 	if !ok {
 		return xerrors.New("unknown type")

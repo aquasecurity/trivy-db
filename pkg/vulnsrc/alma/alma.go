@@ -32,14 +32,36 @@ var (
 	}
 )
 
+type Option func(src *VulnSrc)
+
+func WithCustomPut(put db.CustomPut) Option {
+	return func(src *VulnSrc) {
+		src.put = put
+	}
+}
+
+func WithDB(db db.Operation) Option {
+	return func(src *VulnSrc) {
+		src.dbc = db
+	}
+}
+
 type VulnSrc struct {
+	put db.CustomPut
 	dbc db.Operation
 }
 
-func NewVulnSrc() VulnSrc {
-	return VulnSrc{
+func NewVulnSrc(opts ...Option) VulnSrc {
+	src := VulnSrc{
+		put: defaultPut,
 		dbc: db.Config{},
 	}
+
+	for _, o := range opts {
+		o(&src)
+	}
+
+	return src
 }
 
 func (vs VulnSrc) Name() types.SourceID {
@@ -78,15 +100,9 @@ func (vs VulnSrc) Update(dir string) error {
 
 func (vs VulnSrc) save(errataVer map[string][]Erratum) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		for majorVer, errata := range errataVer {
-			platformName := fmt.Sprintf(platformFormat, majorVer)
-			if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
-				return xerrors.Errorf("failed to put data source: %w", err)
-			}
-
-			if err := vs.commit(tx, platformName, errata); err != nil {
-				return xerrors.Errorf("Alma %s commit error: %w", majorVer, err)
-			}
+		err := vs.commit(tx, errataVer)
+		if err != nil {
+			return err
 		}
 		return nil
 	})
@@ -96,65 +112,84 @@ func (vs VulnSrc) save(errataVer map[string][]Erratum) error {
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, errata []Erratum) error {
-	for _, erratum := range errata {
-		var references []string
-		for _, ref := range erratum.References {
-			if ref.Type != "cve" {
-				references = append(references, ref.Href)
-			}
+func (vs VulnSrc) commit(tx *bolt.Tx, errataVer map[string][]Erratum) error {
+	if err := vs.put(vs.dbc, tx, errataVer); err != nil {
+		return xerrors.Errorf("put error: %w", err)
+	}
+	return nil
+}
+
+func defaultPut(dbi interface{}, tx *bolt.Tx, advisory interface{}) error {
+	dbc := dbi.(db.Config)
+	Erratum, ok := advisory.(map[string][]Erratum)
+	if !ok {
+		return xerrors.New("unknown type")
+	}
+	for majorVer, errata := range Erratum {
+		platformName := fmt.Sprintf(platformFormat, majorVer)
+		if err := dbc.PutDataSource(tx, platformName, source); err != nil {
+			return xerrors.Errorf("failed to put data source: %w", err)
 		}
 
-		for _, ref := range erratum.References {
-			if ref.Type != "cve" {
-				continue
+		for _, erratum := range errata {
+			var references []string
+			for _, ref := range erratum.References {
+				if ref.Type != "cve" {
+					references = append(references, ref.Href)
+				}
 			}
 
-			// We need to work around this issue for now.
-			// https://github.com/aquasecurity/fanal/issues/186#issuecomment-931523102
-			advisories := map[string]types.Advisory{}
-
-			cveID := ref.ID
-			for _, pkg := range erratum.Pkglist.Packages {
-				if pkg.Arch != "noarch" && pkg.Arch != "x86_64" {
+			for _, ref := range erratum.References {
+				if ref.Type != "cve" {
 					continue
 				}
 
-				pkgName := pkg.Name
-				if erratum.Pkglist.Module.Name != "" && erratum.Pkglist.Module.Stream != "" {
-					pkgName = fmt.Sprintf("%s:%s::%s", erratum.Pkglist.Module.Name, erratum.Pkglist.Module.Stream, pkg.Name)
-				}
+				// We need to work around this issue for now.
+				// https://github.com/aquasecurity/fanal/issues/186#issuecomment-931523102
+				advisories := map[string]types.Advisory{}
 
-				advisory := types.Advisory{
-					FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
-				}
-
-				if adv, ok := advisories[pkgName]; ok {
-					if version.NewVersion(advisory.FixedVersion).LessThan(version.NewVersion(adv.FixedVersion)) {
-						advisories[pkgName] = advisory
+				cveID := ref.ID
+				for _, pkg := range erratum.Pkglist.Packages {
+					if pkg.Arch != "noarch" && pkg.Arch != "x86_64" {
+						continue
 					}
-				} else {
-					advisories[pkgName] = advisory
+
+					pkgName := pkg.Name
+					if erratum.Pkglist.Module.Name != "" && erratum.Pkglist.Module.Stream != "" {
+						pkgName = fmt.Sprintf("%s:%s::%s", erratum.Pkglist.Module.Name, erratum.Pkglist.Module.Stream, pkg.Name)
+					}
+
+					dbAdvisory := types.Advisory{
+						FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
+					}
+
+					if adv, ok := advisories[pkgName]; ok {
+						if version.NewVersion(dbAdvisory.FixedVersion).LessThan(version.NewVersion(adv.FixedVersion)) {
+							advisories[pkgName] = dbAdvisory
+						}
+					} else {
+						advisories[pkgName] = dbAdvisory
+					}
+
+					vuln := types.VulnerabilityDetail{
+						Severity:    generalizeSeverity(erratum.Severity),
+						Title:       erratum.Title,
+						Description: erratum.Description,
+						References:  references,
+					}
+					if err := dbc.PutVulnerabilityDetail(tx, cveID, source.ID, vuln); err != nil {
+						return xerrors.Errorf("failed to save Alma vulnerability: %w", err)
+					}
+
+					if err := dbc.PutVulnerabilityID(tx, cveID); err != nil {
+						return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+					}
 				}
 
-				vuln := types.VulnerabilityDetail{
-					Severity:    generalizeSeverity(erratum.Severity),
-					Title:       erratum.Title,
-					Description: erratum.Description,
-					References:  references,
-				}
-				if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, source.ID, vuln); err != nil {
-					return xerrors.Errorf("failed to save Alma vulnerability: %w", err)
-				}
-
-				if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
-					return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
-				}
-			}
-
-			for pkgName, advisory := range advisories {
-				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkgName, []string{platformName}, advisory); err != nil {
-					return xerrors.Errorf("failed to save Alma advisory: %w", err)
+				for pkgName, advisory := range advisories {
+					if err := dbc.PutAdvisoryDetail(tx, cveID, pkgName, []string{platformName}, advisory); err != nil {
+						return xerrors.Errorf("failed to save Alma advisory: %w", err)
+					}
 				}
 			}
 		}
