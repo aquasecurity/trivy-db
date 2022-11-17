@@ -55,10 +55,22 @@ jobs:
           curl -LO https://github.com/oras-project/oras/releases/download/v0.12.0/oras_0.12.0_linux_amd64.tar.gz
           tar -xvf ./oras_0.12.0_linux_amd64.tar.gz
 
+      - name: Get the UpdatedAt timestamp
+        id: timestamp
+        run: |
+          set -x
+          trap "rm -rf" /tmp/trivy-db-extract
+          rm -rf /tmp/trivy-db-extract
+          mkdir -p /tmp/trivy-db-extract/db
+          tar -zxvf db.tar.gz -C /tmp/trivy-db-extract/db
+          echo "timestamp=$(./trivy-db timestamp --cache-dir=/tmp/trivy-db-extract)" >> $GITHUB_OUTPUT
+
       - name: Upload assets to GHCR
+        env:
+          TIMESTAMP_TAG: ${{ steps.timestamp.timestamp }}
         run: |
           ./oras version
-          tags=(latest ${{ env.VERSION }} $(date +"%Y%m%d%H"))
+          tags=(latest ${{ env.VERSION }} ${TIMESTAMP_TAG})
           for tag in ${tags[@]}; do
             ./oras push ghcr.io/${{ github.repository }}:${tag} \
               --manifest-config /dev/null:application/vnd.aquasec.trivy.config.v1+json \
