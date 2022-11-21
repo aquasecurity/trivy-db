@@ -42,7 +42,7 @@ const (
 var (
 	// NOTE: "removed" should not be marked as "not-affected".
 	// ref. https://security-team.debian.org/security_tracker.html#removed-packages
-	skipStatuses = []string{"not-affected", "undetermined"}
+	skipStatuses = []string{"not-affected", "undetermined", "ignored"}
 
 	source = types.DataSource{
 		ID:   vulnerability.Debian,
