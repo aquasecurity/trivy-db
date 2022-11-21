@@ -45,12 +45,6 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2021-33560", "debian 11", "libgcrypt20"},
-					Value: types.Advisory{
-						FixedVersion: "1.8.7-6",
-					},
-				},
-				{
 					Key: []string{"advisory-detail", "CVE-2021-29629", "debian 10", "dacs"},
 					Value: types.Advisory{
 						State:    "ignored",

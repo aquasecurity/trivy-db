@@ -369,7 +369,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 			// Check if the advisory already exists for the codename
 			// If yes, it will be inserted into DB later.
 			adv, ok := vs.bktAdvisories[bkt]
-			if ok && adv.State == "" {
+			if ok && adv.State == "" || !ok {
 				// "no-dsa" or "postponed" might be wrong, and it may have a fixed version.
 				// e.g.
 				//  - https://security-tracker.debian.org/tracker/CVE-2020-8631 (buster no-dsa is wrong)
@@ -400,15 +400,16 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 				adv.FixedVersion = sidVer
 				adv.State = "" // Overwrite state such as "no-dsa" and "postponed" because it is wrong.
 				delete(vs.bktAdvisories, bkt)
+
+				// Add severity
+				adv.Severity = sidBkt.severity
+
+				bkt.vulnID = cveID
+				if err = vs.putAdvisory(tx, bkt, adv); err != nil {
+					return xerrors.Errorf("put advisory error: %w", err)
+				}
 			}
 
-			// Add severity
-			adv.Severity = sidBkt.severity
-
-			bkt.vulnID = cveID
-			if err = vs.putAdvisory(tx, bkt, adv); err != nil {
-				return xerrors.Errorf("put advisory error: %w", err)
-			}
 		}
 	}
 
@@ -593,28 +594,31 @@ func (vs VulnSrc) parseSources(dir string) error {
 // There are 3 cases when the fixed version of each release is not stated in list files.
 //
 // Case 1
-//   When the latest version in the release is greater than the fixed version in sid,
-//   we can assume that the vulnerability was already fixed at the fixed version.
-//   e.g.
-//	   latest version (buster) : "5.0-4"
-//     fixed version (sid)     : "5.0-2"
-//      => the vulnerability was fixed at "5.0-2".
+//
+//	  When the latest version in the release is greater than the fixed version in sid,
+//	  we can assume that the vulnerability was already fixed at the fixed version.
+//	  e.g.
+//		   latest version (buster) : "5.0-4"
+//	    fixed version (sid)     : "5.0-2"
+//	     => the vulnerability was fixed at "5.0-2".
 //
 // Case 2
-//   When the latest version in the release less than the fixed version in sid,
-//   it means the vulnerability has not been fixed yet.
-//   e.g.
-//	   latest version (buster) : "5.0-4"
-//     fixed version (sid)     : "5.0-5"
-//      => the vulnerability hasn't been fixed yet.
+//
+//	  When the latest version in the release less than the fixed version in sid,
+//	  it means the vulnerability has not been fixed yet.
+//	  e.g.
+//		   latest version (buster) : "5.0-4"
+//	    fixed version (sid)     : "5.0-5"
+//	     => the vulnerability hasn't been fixed yet.
 //
 // Case 3
-//   When the fixed version in sid is empty,
-//   it means the vulnerability has not been fixed yet.
-//   e.g.
-//	   latest version (buster) : "5.0-4"
-//     fixed version (sid)     : ""
-//      => the vulnerability hasn't been fixed yet.
+//
+//	  When the fixed version in sid is empty,
+//	  it means the vulnerability has not been fixed yet.
+//	  e.g.
+//		   latest version (buster) : "5.0-4"
+//	    fixed version (sid)     : ""
+//	     => the vulnerability hasn't been fixed yet.
 func hasFixedVersion(sidVer, codeVer string) (bool, error) {
 	// No fixed version even in sid
 	if sidVer == "" {
