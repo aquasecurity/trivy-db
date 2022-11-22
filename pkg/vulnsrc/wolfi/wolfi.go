@@ -14,7 +14,7 @@ const (
 var (
 	source = types.DataSource{
 		ID:   vulnerability.Wolfi,
-		Name: "Wolfi security databases",
+		Name: "Wolfi security database",
 		URL:  "https://packages.wolfi.dev/os/security.json",
 	}
 )
