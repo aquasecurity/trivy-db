@@ -17,35 +17,63 @@ import (
 )
 
 const (
-	alpineDir = "alpine"
+	alpineDir      = "alpine"
+	platformFormat = "alpine %s"
 )
 
 var (
-	platformFormat = "alpine %s"
-
-	source = types.DataSource{
+	alpineSource = types.DataSource{
 		ID:   vulnerability.Alpine,
 		Name: "Alpine Secdb",
 		URL:  "https://secdb.alpinelinux.org/",
 	}
 )
 
-type VulnSrc struct {
-	dbc db.Operation
-}
+type option func(c *VulnSrc)
 
-func NewVulnSrc() VulnSrc {
-	return VulnSrc{
-		dbc: db.Config{},
+func WithPlatformFormat(frmt string) option {
+	return func(src *VulnSrc) {
+		src.platformFormat = frmt
+	}
+}
+func WithSource(dataSrc types.DataSource) option {
+	return func(src *VulnSrc) {
+		src.source = dataSrc
 	}
 }
 
+func WithDir(dir string) option {
+	return func(src *VulnSrc) {
+		src.distroDir = dir
+	}
+}
+
+type VulnSrc struct {
+	dbc            db.Operation
+	distroDir      string
+	source         types.DataSource
+	platformFormat string
+}
+
+func NewVulnSrc(options ...option) VulnSrc {
+	src := VulnSrc{
+		dbc:            db.Config{},
+		distroDir:      alpineDir,
+		source:         alpineSource,
+		platformFormat: platformFormat,
+	}
+	for _, opt := range options {
+		opt(&src)
+	}
+	return src
+}
+
 func (vs VulnSrc) Name() types.SourceID {
-	return source.ID
+	return vs.source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	rootDir := filepath.Join(dir, "vuln-list", alpineDir)
+	rootDir := filepath.Join(dir, "vuln-list", vs.distroDir)
 	var advisories []advisory
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		var advisory advisory
@@ -70,8 +98,8 @@ func (vs VulnSrc) save(advisories []advisory) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for _, adv := range advisories {
 			version := strings.TrimPrefix(adv.Distroversion, "v")
-			platformName := fmt.Sprintf(platformFormat, version)
-			if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+			platformName := fmt.Sprintf(vs.platformFormat, version)
+			if err := vs.dbc.PutDataSource(tx, platformName, vs.source); err != nil {
 				return xerrors.Errorf("failed to put data source: %w", err)
 			}
 			if err := vs.saveSecFixes(tx, platformName, adv.PkgName, adv.Secfixes); err != nil {
@@ -115,7 +143,7 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 }
 
 func (vs VulnSrc) Get(release, pkgName string) ([]types.Advisory, error) {
-	bucket := fmt.Sprintf(platformFormat, release)
+	bucket := fmt.Sprintf(vs.platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get Alpine advisories: %w", err)
