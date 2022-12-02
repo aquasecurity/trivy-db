@@ -26,6 +26,7 @@ var (
 	sourceID   = vulnerability.GHSA
 	ecosystems = []types.Ecosystem{
 		vulnerability.Composer,
+		vulnerability.Go,
 		vulnerability.Maven,
 		vulnerability.Npm,
 		vulnerability.NuGet,
@@ -136,9 +137,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ecosystem types.Ecosystem, entries []Entry
 		}
 
 		pkgName := vulnerability.NormalizePkgName(ecosystem, entry.Package.Name)
-		err = vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bucketName}, a)
-		if err != nil {
-			return xerrors.Errorf("failed to save GHSA: %w", err)
+		if ecosystem != vulnerability.Go { // we only keep vulnerability details for Go
+			err = vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bucketName}, a)
+			if err != nil {
+				return xerrors.Errorf("failed to save GHSA: %w", err)
+			}
 		}
 
 		var references []string
@@ -163,6 +166,21 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ecosystem types.Ecosystem, entries []Entry
 		// for optimization
 		if err = vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
 			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+		}
+
+		// govuln doesn't have severity for vulnerabilities
+		// we use this details for this(for CVE-xxx and GHSA-xxx)
+		if ecosystem == vulnerability.Go && vulnID != entry.Advisory.GhsaId {
+			vulnID = entry.Advisory.GhsaId
+			vuln.ID = vulnID
+			if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, vulnerability.GHSA, vuln); err != nil {
+				return xerrors.Errorf("failed to save GHSA vulnerability detail: %w", err)
+			}
+
+			// for optimization
+			if err = vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
+				return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+			}
 		}
 	}
 
