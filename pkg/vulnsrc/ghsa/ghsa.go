@@ -123,13 +123,16 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ecosystem types.Ecosystem, entries []Entry
 			avs = append(avs, va.VulnerableVersionRange)
 		}
 
-		vulnID := entry.Advisory.GhsaId
+		vulnIDs := []string{entry.Advisory.GhsaId}
 		for _, identifier := range entry.Advisory.Identifiers {
 			if identifier.Type == "CVE" && identifier.Value != "" {
-				vulnID = identifier.Value
+				if ecosystem == vulnerability.Go { // for Go save CVE-ID and GHSA-ID
+					vulnIDs = append(vulnIDs, identifier.Value)
+				} else { // for other ecosystems, if possible, save only CVE-ID
+					vulnIDs = []string{identifier.Value}
+				}
 			}
 		}
-		vulnID = strings.TrimSpace(vulnID)
 
 		a := types.Advisory{
 			PatchedVersions:    pvs,
@@ -137,46 +140,36 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ecosystem types.Ecosystem, entries []Entry
 		}
 
 		pkgName := vulnerability.NormalizePkgName(ecosystem, entry.Package.Name)
-		// ghsa doesn't have valid module name
-		// We are currently using `govuln` to detect vulnerabilities in `go`
-		// But `govuln` doesn't have severity and some other details
-		// We will use `ghsa` details for `govuln`
-		if ecosystem != vulnerability.Go {
-			err = vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bucketName}, a)
-			if err != nil {
-				return xerrors.Errorf("failed to save GHSA: %w", err)
-			}
-		}
 
 		var references []string
 		for _, ref := range entry.Advisory.References {
 			references = append(references, ref.Url)
 		}
 
-		vuln := types.VulnerabilityDetail{
-			ID:           vulnID,
-			Severity:     severityFromThreat(entry.Severity),
-			References:   references,
-			Title:        entry.Advisory.Summary,
-			Description:  entry.Advisory.Description,
-			CvssScoreV3:  entry.Advisory.CVSS.Score,
-			CvssVectorV3: entry.Advisory.CVSS.VectorString,
-		}
+		for _, vulnID := range vulnIDs {
+			vulnID = strings.TrimSpace(vulnID)
 
-		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, vulnerability.GHSA, vuln); err != nil {
-			return xerrors.Errorf("failed to save GHSA vulnerability detail: %w", err)
-		}
+			// ghsa doesn't have valid module name
+			// We are currently using `govuln` to detect vulnerabilities in `go`
+			// But `govuln` doesn't have severity and some other vulnerability details
+			// We will use `ghsa` vulnerability details for `govuln`
+			if ecosystem != vulnerability.Go {
+				err = vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bucketName}, a)
+				if err != nil {
+					return xerrors.Errorf("failed to save GHSA: %w", err)
+				}
+			}
 
-		// for optimization
-		if err = vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
-			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
-		}
+			vuln := types.VulnerabilityDetail{
+				ID:           vulnID,
+				Severity:     severityFromThreat(entry.Severity),
+				References:   references,
+				Title:        entry.Advisory.Summary,
+				Description:  entry.Advisory.Description,
+				CvssScoreV3:  entry.Advisory.CVSS.Score,
+				CvssVectorV3: entry.Advisory.CVSS.VectorString,
+			}
 
-		// govuln doesn't have severity for vulnerabilities
-		// we use this details for this(for CVE-xxx and GHSA-xxx)
-		if ecosystem == vulnerability.Go && vulnID != entry.Advisory.GhsaId {
-			vulnID = entry.Advisory.GhsaId
-			vuln.ID = vulnID
 			if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, vulnerability.GHSA, vuln); err != nil {
 				return xerrors.Errorf("failed to save GHSA vulnerability detail: %w", err)
 			}
