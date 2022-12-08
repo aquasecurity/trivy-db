@@ -95,11 +95,7 @@ func (vs VulnSrc) save(items []Entry) error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx, item Entry) error {
 	// Aliases contain CVE-IDs
-	vulnIDs := item.Aliases
-	if len(vulnIDs) == 0 {
-		// e.g. GO-2021-0064
-		vulnIDs = []string{item.ID}
-	}
+	vulnIDs := getVulnIDs(item.ID, item.Aliases)
 
 	// Take a single affected entry
 	affected := findAffected(item.Module, item.Affected)
@@ -172,6 +168,25 @@ func (vs VulnSrc) commit(tx *bolt.Tx, item Entry) error {
 	}
 
 	return nil
+}
+
+func getVulnIDs(id string, aliases []string) []string {
+	if len(aliases) == 0 {
+		return []string{id}
+	}
+	var cveIDs []string
+	for _, alias := range aliases {
+		// if aliases contain both CVE-ID and GHSA-ID, we should save only CVE-ID
+		// because GHSA-IDs is duplicates of CVE-IDs in this case
+		if strings.HasPrefix(alias, "CVE") {
+			cveIDs = append(cveIDs, alias)
+		}
+	}
+	// aliases contain only GHSA-IDs
+	if len(cveIDs) != 0 {
+		return cveIDs
+	}
+	return aliases
 }
 
 func findAffected(module string, affectedList []osv.Affected) osv.Affected {
