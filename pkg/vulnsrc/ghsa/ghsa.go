@@ -123,12 +123,15 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ecosystem types.Ecosystem, entries []Entry
 			avs = append(avs, va.VulnerableVersionRange)
 		}
 
+		// for Go use CVE-ID and GHSA-ID
+		// we will only save vulnerability details for them and use it in govuln
+		// for other ecosystem use only CVE-ID. GHSA-ID will be used if CVE-ID doesn't exist
 		vulnIDs := []string{entry.Advisory.GhsaId}
 		for _, identifier := range entry.Advisory.Identifiers {
 			if identifier.Type == "CVE" && identifier.Value != "" {
-				if ecosystem == vulnerability.Go { // for Go save CVE-ID and GHSA-ID
+				if ecosystem == vulnerability.Go {
 					vulnIDs = append(vulnIDs, identifier.Value)
-				} else { // for other ecosystems, if possible, save only CVE-ID
+				} else {
 					vulnIDs = []string{identifier.Value}
 				}
 			}
