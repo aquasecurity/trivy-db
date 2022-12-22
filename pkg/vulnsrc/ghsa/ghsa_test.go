@@ -271,6 +271,45 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key:   []string{"vulnerability-id", "CVE-2020-26235"},
 					Value: map[string]interface{}{},
 				},
+				///
+
+				{
+					Key: []string{"data-source", "erlang::GitHub Security Advisory Erlang"},
+					Value: types.DataSource{
+						ID:   vulnerability.GHSA,
+						Name: "GitHub Security Advisory Erlang",
+						URL:  "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Aerlang",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2017-1000212", "erlang::GitHub Security Advisory Erlang", "alchemist.vim"},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"1.3.2"},
+						VulnerableVersions: []string{"\u003c= 1.3.1"},
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "CVE-2017-1000212", ghsaDir},
+					Value: types.VulnerabilityDetail{
+						ID:          "CVE-2017-1000212",
+						Title:       "alchemist.vim vulnerable to remote code execution",
+						Description: "Elixir's vim plugin, alchemist.vim is vulnerable to remote code execution in the bundled alchemist-server. A malicious website can execute requests against an ephemeral port on localhost that are then evaluated as elixir code.",
+						References: []string{
+							"https://nvd.nist.gov/vuln/detail/CVE-2017-1000212",
+							"https://github.com/tonini/alchemist-server/issues/14",
+							"https://github.com/tonini/alchemist-server/pull/16",
+							"https://elixirforum.com/t/static-and-session-security-fixes-for-plug/3913",
+							"https://github.com/advisories/GHSA-6x65-vqp7-5r63",
+						},
+						Severity:     types.SeverityCritical,
+						CvssScoreV3:  9.8,
+						CvssVectorV3: "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-2017-1000212"},
+					Value: map[string]interface{}{},
+				},
 			},
 		},
 		{
