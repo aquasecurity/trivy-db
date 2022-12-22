@@ -271,8 +271,6 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key:   []string{"vulnerability-id", "CVE-2020-26235"},
 					Value: map[string]interface{}{},
 				},
-				///
-
 				{
 					Key: []string{"data-source", "erlang::GitHub Security Advisory Erlang"},
 					Value: types.DataSource{
