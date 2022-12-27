@@ -31,6 +31,8 @@ func Name(ecosystem, dataSource string) string {
 		prefix = vulnerability.Conan
 	case "cargo", "rust":
 		prefix = vulnerability.Cargo
+	case "erlang":
+		prefix = vulnerability.Erlang
 	default:
 		return ""
 	}
