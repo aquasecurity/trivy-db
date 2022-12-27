@@ -297,6 +297,45 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key:   []string{"vulnerability-id", "CVE-2020-8911"},
 					Value: map[string]interface{}{},
 				},
+				{
+					Key: []string{"data-source", "pub::GitHub Security Advisory Pub"},
+					Value: types.DataSource{
+						ID:   vulnerability.GHSA,
+						Name: "GitHub Security Advisory Pub",
+						URL:  "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Apub",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2020-35669", "pub::GitHub Security Advisory Pub", "http"},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"0.13.3"},
+						VulnerableVersions: []string{"\u003c 0.13.3"},
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "CVE-2020-35669", ghsaDir},
+					Value: types.VulnerabilityDetail{
+						ID:          "CVE-2020-35669",
+						Title:       "http before 0.13.3 vulnerable to header injection",
+						Description: `An issue was discovered in the http package before 0.13.3 for Dart. If the attacker controls the HTTP method and the app is using Request directly, it's possible to achieve CRLF injection in an HTTP request via HTTP header injection. This issue has been addressed in commit abb2bb182 by validating request methods.`,
+						References: []string{
+							"https://nvd.nist.gov/vuln/detail/CVE-2020-35669",
+							"https://github.com/dart-lang/http/issues/511",
+							"https://github.com/dart-lang/http/blob/master/CHANGELOG.md#0133",
+							"https://github.com/dart-lang/http/pull/512",
+							"https://github.com/dart-lang/http/commit/abb2bb182fbd7f03aafd1f889b902d7b3bdb8769",
+							"https://pub.dev/packages/http/changelog#0133",
+							"https://github.com/advisories/GHSA-4rgh-jx4f-qfcq",
+						},
+						Severity:     types.SeverityMedium,
+						CvssScoreV3:  6.1,
+						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-2020-35669"},
+					Value: map[string]interface{}{},
+				},
 			},
 		},
 		{
