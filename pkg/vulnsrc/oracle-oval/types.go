@@ -8,6 +8,7 @@ type OracleOVAL struct {
 	Criteria    Criteria
 	Severity    string
 	Cves        []Cve
+	IssuedDate  Date `json:"issued_date"`
 }
 
 type Reference struct {
@@ -40,4 +41,8 @@ type Package struct {
 type AffectedPackage struct {
 	Package Package
 	OSVer   string
+}
+
+type Date struct {
+	Date string `json:"$date"`
 }
