@@ -1,0 +1,74 @@
+{
+  "Title": "ELSA-2021-9280:  glibc security update (IMPORTANT)",
+  "Description": "[2.28-151.0.1.el8_4]\n- merge RH patches for ol8-u4 release\nReview-exception: Patch merge\n- Provide glibc.pthread.mutex_spin_count tunable for pthread adaptive\n- spin mutex\nOrabug: 27982358.\nReviewed-by: Qing Zhao \u003cqing.zhao@oracle.com\u003e\n- add Ampere emag  to tunable cpu list (Patrick McGehearty)\n- add optimized memset for emag\n- add an ASIMD variant of strlen for falkor\n- Orabug: 2700101.\n- Modify glibc-ora28849085.patch so it works with RHCK kernels.\n- Orabug: 28849085.\n- Make _IO_funlockfile match __funlockfile and _IO_flockfile match __flockfile\n- Both should test\n-   if (stream-\u003e_flags \u0026 _IO_USER_LOCK) == 0)\n-     _IO_lock_lock (*stream-\u003e_lock);\n- OraBug: 28481550.\nReviewed-by: Qing Zhao \u003cqing.zhao@oracle.com\u003e\n\n[2.28-153]\n- Support SEM_STAT_ANY via semctl. Return EINVAL for unknown commands to semctl,\n  msgctl, and shmctl. (#1912670)\n\n[2.28-151]\n- CVE-2019-9169: Fix buffer overread in regexec.c (#1685400).\n\n[2.28-150]\n- Rebuild glibc to update security markup metadata (#1931305)\n\n[2.28-149]\n- Fix NSS files and compat service upgrade defect (#1927040).\n\n[2.28-148]\n- CVE-2021-3326: iconv assertion failure in ISO-2022-JP-3 decoding (#1924919)\n\n[2.28-147]\n- x86-64: Fix FMA4 math routine selection after bug 1817513 (#1918115)\n\n[2.28-146]\n- CVE-2019-25013:Fix buffer overrun in EUC-KR conversion module (#1912544)\n\n[2.28-145]\n- Update glibc-hwcaps fix from upstream (#1817513)\n\n[2.28-144]\n- Support running libc.so.6 as a main program in more cases (#1882466)\n\n[2.28-142]\n- Add glibc-hwcaps support (#1817513)\n- Implement DT_AUDIT support (#1871385)\n\n[2.28-141]\n- Update Intel CET support (#1855790)\n\n[2.28-140]\n- Fix calling lazily-bound SVE-using functions on AArch64 (#1893662)\n\n[2.28-139]\n- CVE-2016-10228, CVE-2020-27618: Fix infinite loops in iconv (#1704868,\n\n[2.28-138]\n- Avoid comments after %endif in the RPM spec file (#1894340)\n\n[2.28-137]\n- x86: Further memcpy optimizations for AMD Zen (#1880670)\n\n[2.28-136]\n- Allow __getauxval in testsuite check (#1856398)\n\n[2.28-135]\n- Use -moutline-atomics for aarch64 (#1856398)\n\n[2.28-134]\n- resolv: Handle DNS transaction ID collisions (#1868106)\n\n[2.28-133]\n- x86: Update auto-tuning of memcpy non-temporal threshold (#1880670)\n\n[2.28-132]\n- Fix fgetsgent_r data corruption bug (#1871397)\n\n[2.28-131]\n- Improve IBM zSeries (s390x) Performance (#1871395)\n\n[2.28-130]\n- Fix avx2 strncmp offset compare condition check (#1871394)\n- Add strncmp and strcmp testcases for page boundary\n\n[2.28-129]\n- Improve IBM POWER9 architecture performance (#1871387)\n\n[2.28-128]\n- Enable glibc for POWER10 (#1845098)",
+  "Platform": [
+    "Oracle Linux 8"
+  ],
+  "References": [
+    {
+      "Source": "elsa",
+      "URI": "https://linux.oracle.com/errata/ELSA-2021-9280.html",
+      "ID": "ELSA-2021-9280"
+    },
+    {
+      "Source": "CVE",
+      "URI": "https://linux.oracle.com/cve/CVE-2016-10228.html",
+      "ID": "CVE-2016-10228"
+    }
+  ],
+  "Criteria": {
+    "Operator": "AND",
+    "Criterias": [
+      {
+        "Operator": "OR",
+        "Criterias": [
+          {
+            "Operator": "AND",
+            "Criterias": [
+              {
+                "Operator": "OR",
+                "Criterias": [
+                  {
+                    "Operator": "AND",
+                    "Criterias": null,
+                    "Criterions": [
+                      {
+                        "Comment": "glibc is earlier than 2:2.28-151.0.1.ksplice1.el8"
+                      },
+                      {
+                        "Comment": "glibc is signed with the Oracle Linux 8 key"
+                      },
+                      {
+                        "Comment": "glibc is ksplice-based"
+                      }
+                    ]
+                  }
+                ],
+                "Criterions": null
+              }
+            ],
+            "Criterions": [
+              {
+                "Comment": "Oracle Linux arch is x86_64"
+              }
+            ]
+          }
+        ],
+        "Criterions": null
+      }
+    ],
+    "Criterions": [
+      {
+        "Comment": "Oracle Linux 8 is installed"
+      }
+    ]
+  },
+  "Severity": "IMPORTANT",
+  "Cves": [
+    {
+      "Impact": "",
+      "Href": "https://linux.oracle.com/cve/CVE-2016-10228.html",
+      "ID": "CVE-2016-10228"
+    }
+  ]
+}

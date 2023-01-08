@@ -84,15 +84,22 @@ func (vs VulnSrc) save(ovals []OracleOVAL) error {
 }
 
 func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
+	advisories := map[bucket]Advisory{}
+	vulnerabilityDetails := map[string]types.VulnerabilityDetail{}
+
 	for _, oval := range ovals {
 		elsaID := strings.Split(oval.Title, ":")[0]
 
 		var vulnIDs []string
 		for _, cve := range oval.Cves {
 			vulnIDs = append(vulnIDs, cve.ID)
+
+			vulnerabilityDetails[cve.ID] = mergeVulnerabilityDetails(vulnerabilityDetails[cve.ID], oval, []string{elsaID, cve.ID})
 		}
 		if len(vulnIDs) == 0 {
 			vulnIDs = append(vulnIDs, elsaID)
+
+			vulnerabilityDetails[elsaID] = mergeVulnerabilityDetails(vulnerabilityDetails[elsaID], oval, []string{elsaID})
 		}
 
 		affectedPkgs := walkOracle(oval.Criteria, "", []AffectedPackage{})
@@ -110,50 +117,75 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 				return xerrors.Errorf("failed to put data source: %w", err)
 			}
 
-			advisory := types.Advisory{
-				FixedVersion: affectedPkg.Package.FixedVersion,
-			}
-
 			for _, vulnID := range vulnIDs {
-				if err := vs.dbc.PutAdvisoryDetail(tx, vulnID, affectedPkg.Package.Name, []string{platformName}, advisory); err != nil {
-					return xerrors.Errorf("failed to save Oracle Linux OVAL: %w", err)
+				bkt := bucket{
+					platform: platformName,
+					vulnID:   vulnID,
+					pkgName:  affectedPkg.Package.Name,
 				}
-			}
-		}
-
-		var references []string
-		for _, ref := range oval.References {
-			references = append(references, ref.URI)
-		}
-
-		for _, vulnID := range vulnIDs {
-			vuln := types.VulnerabilityDetail{
-				Description: oval.Description,
-				References:  referencesFromContains(references, []string{elsaID, vulnID}),
-				Title:       oval.Title,
-				Severity:    severityFromThreat(oval.Severity),
-			}
-
-			if err := vs.dbc.PutVulnerabilityDetail(tx, vulnID, source.ID, vuln); err != nil {
-				return xerrors.Errorf("failed to save Oracle Linux OVAL vulnerability: %w", err)
-			}
-
-			// for optimization
-			if err := vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
-				return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+				advisories[bkt] = mergeEntries(advisories[bkt], affectedPkg, elsaID)
 			}
 		}
 	}
-	return nil
 
+	// Now that we've processed all the reports, we can save the vulnerability and advisory information
+	for vulnID, details := range vulnerabilityDetails {
+		if err := vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
+			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+		}
+
+		if err := vs.dbc.PutVulnerabilityDetail(tx, vulnID, source.ID, details); err != nil {
+			return xerrors.Errorf("failed to save Oracle Linux OVAL vulnerability: %w", err)
+		}
+	}
+
+	for bkt, advisory := range advisories {
+		if err := vs.dbc.PutAdvisoryDetail(tx, bkt.vulnID, bkt.pkgName, []string{bkt.platform}, advisory); err != nil {
+			return xerrors.Errorf("failed to save Oracle Linux OVAL: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
 	bucket := fmt.Sprintf(platformFormat, release)
-	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
+	rawAdvisories, err := vs.dbc.ForEachAdvisory([]string{bucket}, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get Oracle Linux advisories: %w", err)
+		return nil, xerrors.Errorf("unable to iterate advisories: %w", err)
 	}
+
+	var advisories []types.Advisory
+	for vulnID, v := range rawAdvisories {
+		if len(v.Content) == 0 {
+			continue
+		}
+
+		var adv Advisory
+		if err = json.Unmarshal(v.Content, &adv); err != nil {
+			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
+		}
+
+		for _, entry := range adv.Entries {
+			advisory := types.Advisory{
+				FixedVersion:    entry.FixedVersion,
+				VulnerabilityID: vulnID,
+				VendorIDs:       entry.VendorIDs,
+			}
+
+			if v.Source != (types.DataSource{}) {
+				advisory.DataSource = &types.DataSource{
+					ID:   v.Source.ID,
+					Name: v.Source.Name,
+					URL:  v.Source.URL,
+				}
+			}
+
+			advisories = append(advisories, advisory)
+		}
+
+	}
+
 	return advisories, nil
 }
 
@@ -183,16 +215,89 @@ func walkOracle(cri Criteria, osVer string, pkgs []AffectedPackage) []AffectedPa
 	return pkgs
 }
 
-func referencesFromContains(sources []string, matches []string) []string {
-	references := []string{}
-	for _, s := range sources {
-		for _, m := range matches {
-			if strings.Contains(s, m) {
-				references = append(references, s)
-			}
+func mergeVulnerabilityDetails(detail types.VulnerabilityDetail, oval OracleOVAL, vulnIDs []string) types.VulnerabilityDetail {
+	// Collect vulnerability details - references and severity
+	// A CVE can be present in multiple ELSAs.  Collect all the applicable references as we process them, later when done we'll insert
+	// the references.
+	convertedSeverity := severityFromThreat(oval.Severity)
+
+	// If multiple ELSAs for the same CVE have differing severities, use the highest one
+	if convertedSeverity > detail.Severity {
+		detail.Severity = convertedSeverity
+	}
+
+	for _, ref := range oval.References {
+		if referencesFromContains(ref.URI, vulnIDs) && !ustrings.InSlice(ref.URI, detail.References) {
+			detail.References = append(detail.References, ref.URI)
 		}
 	}
-	return ustrings.Unique(references)
+
+	return detail
+}
+
+func mergeEntries(advisory Advisory, pkg AffectedPackage, elsaID string) Advisory {
+	affectedFlavor := GetPackageFlavor(pkg.Package.FixedVersion)
+
+	// Persist the normal flavor package version in FixedVersion for backwards compatibility.
+	// Eventually could be removed
+	if affectedFlavor == PackageFlavorNormal &&
+		version.NewVersion(advisory.FixedVersion).LessThan(version.NewVersion(pkg.Package.FixedVersion)) {
+		advisory.FixedVersion = pkg.Package.FixedVersion
+	}
+
+	for i, entry := range advisory.Entries {
+		entryFlavor := GetPackageFlavor(entry.FixedVersion)
+
+		if entryFlavor == affectedFlavor {
+			// This fixed version is newer than the previously found fixed version
+			if version.NewVersion(entry.FixedVersion).LessThan(version.NewVersion(pkg.Package.FixedVersion)) {
+				advisory.Entries[i].FixedVersion = pkg.Package.FixedVersion
+			}
+
+			// Add the ELSA ID to the vendor ID list
+			if !ustrings.InSlice(elsaID, entry.VendorIDs) {
+				advisory.Entries[i].VendorIDs = append(entry.VendorIDs, elsaID)
+			}
+
+			return advisory
+		}
+	}
+
+	entry := Entry{
+		FixedVersion: pkg.Package.FixedVersion,
+		VendorIDs:    []string{elsaID},
+	}
+	advisory.Entries = append(advisory.Entries, entry)
+
+	return advisory
+}
+
+func referencesFromContains(source string, matches []string) bool {
+	for _, m := range matches {
+		if strings.Contains(source, m) {
+			return true
+		}
+	}
+	return false
+}
+
+// GetPackageFlavor Determine the package "flavor" based on its version string
+//   - normal
+//   - FIPS validated
+//   - ksplice userspace
+func GetPackageFlavor(version string) PackageFlavor {
+	version = strings.ToLower(version)
+	if strings.HasSuffix(version, "_fips") {
+		return PackageFlavorFips
+	} else {
+		subs := strings.Split(version, ".")
+		for _, s := range subs {
+			if strings.HasPrefix(s, "ksplice") {
+				return PackageFlavorKsplice
+			}
+		}
+		return PackageFlavorNormal
+	}
 }
 
 func severityFromThreat(sev string) types.Severity {
