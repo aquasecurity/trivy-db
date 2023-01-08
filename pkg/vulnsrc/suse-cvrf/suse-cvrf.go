@@ -14,6 +14,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/overridedb"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -40,8 +41,9 @@ var (
 )
 
 type VulnSrc struct {
-	dist Distribution
-	dbc  db.Operation
+	dist         Distribution
+	dbc          db.Operation
+	overriddenDb *overridedb.OverriddenData
 }
 
 func NewVulnSrc(dist Distribution) VulnSrc {
@@ -58,7 +60,7 @@ func (vs VulnSrc) Name() types.SourceID {
 	return source.ID
 }
 
-func (vs VulnSrc) Update(dir string) error {
+func (vs VulnSrc) Update(dir string, db *overridedb.OverriddenData) error {
 	log.Println("Saving SUSE CVRF")
 
 	rootDir := filepath.Join(dir, "vuln-list", suseDir)

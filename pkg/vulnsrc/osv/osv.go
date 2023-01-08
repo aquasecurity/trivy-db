@@ -13,6 +13,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/overridedb"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
@@ -37,17 +38,15 @@ var ecosystems = []ecosystem{
 	},
 	// Cargo ecosystem advisories in OSV were disabled,
 	// because GitHub Advisory Database contains almost all information.
-	/*
-		{
-			dir:  "rust",
-			name: vulnerability.Cargo,
-			dataSource: types.DataSource{
-				ID:   sourceID,
-				Name: "RustSec Advisory Database",
-				URL:  "https://github.com/RustSec/advisory-db",
-			},
+	{
+		dir:  "rust",
+		name: vulnerability.Cargo,
+		dataSource: types.DataSource{
+			ID:   sourceID,
+			Name: "RustSec Advisory Database",
+			URL:  "https://github.com/RustSec/advisory-db",
 		},
-	*/
+	},
 
 	// We cannot use OSV for golang scanning until module names are included.
 	// See https://github.com/golang/go/issues/50006 for the detail.
@@ -61,7 +60,8 @@ type ecosystem struct {
 }
 
 type VulnSrc struct {
-	dbc db.Operation
+	dbc          db.Operation
+	overriddenDb *overridedb.OverriddenData
 }
 
 func NewVulnSrc() VulnSrc {
@@ -74,7 +74,8 @@ func (vs VulnSrc) Name() types.SourceID {
 	return sourceID
 }
 
-func (vs VulnSrc) Update(dir string) error {
+func (vs VulnSrc) Update(dir string, db *overridedb.OverriddenData) error {
+	vs.overriddenDb = db
 	for _, eco := range ecosystems {
 		log.Printf("    Updating Open Source Vulnerability %s", eco.name)
 		rootDir := filepath.Join(dir, "vuln-list", osvDir, eco.dir)
@@ -123,6 +124,21 @@ func (vs VulnSrc) save(eco ecosystem, entries []Entry) error {
 }
 
 func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
+	if adv := vs.overriddenDb.GetOverriddenAdvisory(entry.ID); adv != nil {
+		if adv.WasAdded() {
+			return nil
+		}
+
+		entry.ID = adv.Id
+		if adv.Description != "" {
+			entry.Summary = adv.Description
+		}
+		if adv.Severity != "" {
+		}
+
+		adv.SetAdded()
+	}
+
 	bktName := bucket.Name(string(eco.name), dataSource)
 
 	if err := vs.dbc.PutDataSource(tx, bktName, eco.dataSource); err != nil {

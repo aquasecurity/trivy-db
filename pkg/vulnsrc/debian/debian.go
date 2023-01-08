@@ -14,6 +14,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/overridedb"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
@@ -60,8 +61,9 @@ func WithCustomPut(put db.CustomPut) Option {
 }
 
 type VulnSrc struct {
-	put db.CustomPut
-	dbc db.Operation
+	put          db.CustomPut
+	dbc          db.Operation
+	overriddenDb *overridedb.OverriddenData
 
 	// Hold a map of codenames and major versions from distributions.json
 	// e.g. "buster" => "10"
@@ -112,7 +114,7 @@ func (vs VulnSrc) Name() types.SourceID {
 	return source.ID
 }
 
-func (vs VulnSrc) Update(dir string) error {
+func (vs VulnSrc) Update(dir string, db *overridedb.OverriddenData) error {
 	if err := vs.parse(dir); err != nil {
 		return xerrors.Errorf("parse error: %w", err)
 	}
@@ -593,28 +595,31 @@ func (vs VulnSrc) parseSources(dir string) error {
 // There are 3 cases when the fixed version of each release is not stated in list files.
 //
 // Case 1
-//   When the latest version in the release is greater than the fixed version in sid,
-//   we can assume that the vulnerability was already fixed at the fixed version.
-//   e.g.
-//	   latest version (buster) : "5.0-4"
-//     fixed version (sid)     : "5.0-2"
-//      => the vulnerability was fixed at "5.0-2".
+//
+//	  When the latest version in the release is greater than the fixed version in sid,
+//	  we can assume that the vulnerability was already fixed at the fixed version.
+//	  e.g.
+//		   latest version (buster) : "5.0-4"
+//	    fixed version (sid)     : "5.0-2"
+//	     => the vulnerability was fixed at "5.0-2".
 //
 // Case 2
-//   When the latest version in the release less than the fixed version in sid,
-//   it means the vulnerability has not been fixed yet.
-//   e.g.
-//	   latest version (buster) : "5.0-4"
-//     fixed version (sid)     : "5.0-5"
-//      => the vulnerability hasn't been fixed yet.
+//
+//	  When the latest version in the release less than the fixed version in sid,
+//	  it means the vulnerability has not been fixed yet.
+//	  e.g.
+//		   latest version (buster) : "5.0-4"
+//	    fixed version (sid)     : "5.0-5"
+//	     => the vulnerability hasn't been fixed yet.
 //
 // Case 3
-//   When the fixed version in sid is empty,
-//   it means the vulnerability has not been fixed yet.
-//   e.g.
-//	   latest version (buster) : "5.0-4"
-//     fixed version (sid)     : ""
-//      => the vulnerability hasn't been fixed yet.
+//
+//	  When the fixed version in sid is empty,
+//	  it means the vulnerability has not been fixed yet.
+//	  e.g.
+//		   latest version (buster) : "5.0-4"
+//	    fixed version (sid)     : ""
+//	     => the vulnerability hasn't been fixed yet.
 func hasFixedVersion(sidVer, codeVer string) (bool, error) {
 	// No fixed version even in sid
 	if sidVer == "" {

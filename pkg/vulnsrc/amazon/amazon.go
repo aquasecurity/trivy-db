@@ -12,6 +12,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/overridedb"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
@@ -34,8 +35,9 @@ var (
 )
 
 type VulnSrc struct {
-	dbc        db.Operation
-	advisories map[string][]ALAS
+	dbc          db.Operation
+	overriddenDb *overridedb.OverriddenData
+	advisories   map[string][]ALAS
 }
 
 // ALAS has detailed data of ALAS
@@ -74,7 +76,7 @@ func (vs VulnSrc) Name() types.SourceID {
 	return source.ID
 }
 
-func (vs VulnSrc) Update(dir string) error {
+func (vs VulnSrc) Update(dir string, db *overridedb.OverriddenData) error {
 	rootDir := filepath.Join(dir, "vuln-list", amazonDir)
 
 	err := utils.FileWalk(rootDir, vs.walkFunc)

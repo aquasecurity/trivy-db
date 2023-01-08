@@ -10,6 +10,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/overridedb"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -45,7 +46,8 @@ type Advisory struct {
 }
 
 type VulnSrc struct {
-	dbc db.Operation
+	dbc          db.Operation
+	overriddenDb *overridedb.OverriddenData
 }
 
 func NewVulnSrc() VulnSrc {
@@ -58,7 +60,7 @@ func (vs VulnSrc) Name() types.SourceID {
 	return source.ID
 }
 
-func (vs VulnSrc) Update(dir string) (err error) {
+func (vs VulnSrc) Update(dir string, db *overridedb.OverriddenData) (err error) {
 	repoPath := filepath.Join(dir, composerDir)
 	if err := vs.update(repoPath); err != nil {
 		return xerrors.Errorf("failed to update compose vulnerabilities: %w", err)

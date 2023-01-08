@@ -11,6 +11,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/overridedb"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -31,7 +32,8 @@ var (
 )
 
 type VulnSrc struct {
-	dbc db.Operation
+	dbc          db.Operation
+	overriddenDb *overridedb.OverriddenData
 }
 
 func NewVulnSrc() VulnSrc {
@@ -44,7 +46,7 @@ func (vs VulnSrc) Name() types.SourceID {
 	return source.ID
 }
 
-func (vs VulnSrc) Update(dir string) error {
+func (vs VulnSrc) Update(dir string, db *overridedb.OverriddenData) error {
 	rootDir := filepath.Join(dir, "vuln-list", alpineDir)
 	var advisories []advisory
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {

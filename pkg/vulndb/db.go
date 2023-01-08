@@ -10,6 +10,7 @@ import (
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/metadata"
+	"github.com/aquasecurity/trivy-db/pkg/overridedb"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -27,6 +28,7 @@ type TrivyDB struct {
 	cacheDir       string
 	updateInterval time.Duration
 	clock          clock.Clock
+	overriddenDB   *overridedb.OverriddenData
 }
 
 type Option func(*TrivyDB)
@@ -43,7 +45,7 @@ func WithVulnSrcs(srcs map[types.SourceID]vulnsrc.VulnSrc) Option {
 	}
 }
 
-func New(cacheDir string, updateInterval time.Duration, opts ...Option) *TrivyDB {
+func New(cacheDir string, updateInterval time.Duration, overriddenDB *overridedb.OverriddenData, opts ...Option) *TrivyDB {
 	// Initialize map
 	vulnSrcs := map[types.SourceID]vulnsrc.VulnSrc{}
 	for _, v := range vulnsrc.All {
@@ -59,6 +61,7 @@ func New(cacheDir string, updateInterval time.Duration, opts ...Option) *TrivyDB
 		cacheDir:       cacheDir,
 		updateInterval: updateInterval,
 		clock:          clock.RealClock{},
+		overriddenDB:   overriddenDB,
 	}
 
 	for _, opt := range opts {
@@ -77,7 +80,7 @@ func (t TrivyDB) Insert(targets []string) error {
 		}
 		log.Printf("Updating %s data...\n", target)
 
-		if err := src.Update(t.cacheDir); err != nil {
+		if err := src.Update(t.cacheDir, t.overriddenDB); err != nil {
 			return xerrors.Errorf("%s update error: %w", target, err)
 		}
 	}

@@ -14,6 +14,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/overridedb"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
@@ -40,7 +41,8 @@ var (
 )
 
 type VulnSrc struct {
-	dbc db.Operation
+	dbc          db.Operation
+	overriddenDb *overridedb.OverriddenData
 }
 
 func NewVulnSrc() VulnSrc {
@@ -53,7 +55,7 @@ func (vs VulnSrc) Name() types.SourceID {
 	return sourceID
 }
 
-func (vs VulnSrc) Update(dir string) error {
+func (vs VulnSrc) Update(dir string, overriddenDb *overridedb.OverriddenData) error {
 	rootDir := filepath.Join(dir, "vuln-list", ghsaDir)
 
 	for _, ecosystem := range ecosystems {
@@ -63,6 +65,22 @@ func (vs VulnSrc) Update(dir string) error {
 			if err := json.NewDecoder(r).Decode(&entry); err != nil {
 				return xerrors.Errorf("failed to decode GHSA: %w", err)
 			}
+
+			if adv := overriddenDb.GetOverriddenAdvisory(entry.Advisory.GhsaId); adv != nil {
+				if adv.WasAdded() {
+					return nil
+				}
+
+				entry.Advisory.GhsaId = adv.Id
+				if adv.Description != "" {
+					entry.Advisory.Description = adv.Description
+				}
+				if adv.Severity != "" {
+					entry.Severity = adv.Severity
+				}
+				adv.SetAdded()
+			}
+
 			entries = append(entries, entry)
 			return nil
 		})
@@ -182,7 +200,7 @@ func severityFromThreat(urgency string) types.Severity {
 	switch urgency {
 	case "LOW":
 		return types.SeverityLow
-	case "MODERATE":
+	case "MODERATE", "MEDIUM":
 		return types.SeverityMedium
 	case "HIGH":
 		return types.SeverityHigh

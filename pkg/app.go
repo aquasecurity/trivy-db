@@ -39,6 +39,11 @@ func (ac *AppConfig) NewApp(version string) *cli.App {
 					Usage: "cache directory path",
 					Value: utils.CacheDir(),
 				},
+				cli.StringFlag{
+					Name:  "override-db",
+					Usage: "path to yaml file with overridden data",
+					Value: "override.yaml",
+				},
 				cli.DurationFlag{
 					Name:   "update-interval",
 					Usage:  "update interval",
