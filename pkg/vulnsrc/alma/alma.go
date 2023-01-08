@@ -32,29 +32,32 @@ var (
 	}
 )
 
-type Parser interface {
-	Parse(rootDir string) (map[string][]Erratum, error)
+type PutInput struct {
+	platformName string
+	cveID        string
+	vuln         types.VulnerabilityDetail
+	advisories   map[string]types.Advisory
+	erratum      Erratum // for extensibility
 }
 
 type DB interface {
-	Put(map[string][]Erratum) error
+	db.Operation
+	Put(*bolt.Tx, PutInput) error
 	Get(release, pkgName string) ([]types.Advisory, error)
 }
 
 type VulnSrc struct {
-	Parser
-	DB
+	db DB // Those who want to customize Trivy DB can override put/get methods.
 }
 
+// Alma implements the DB interface
 type Alma struct {
-	dbc db.Operation
+	db.Operation
 }
 
 func NewVulnSrc() *VulnSrc {
-	alma := &Alma{dbc: db.Config{}}
 	return &VulnSrc{
-		Parser: alma,
-		DB:     alma,
+		db: &Alma{Operation: db.Config{}},
 	}
 }
 
@@ -64,20 +67,19 @@ func (vs *VulnSrc) Name() types.SourceID {
 
 func (vs *VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", almaDir)
-	errata, err := vs.Parse(rootDir)
+	errata, err := vs.parse(rootDir)
 	if err != nil {
 		return err
 	}
-	if err = vs.Put(errata); err != nil {
+	if err = vs.put(errata); err != nil {
 		return xerrors.Errorf("error in Alma save: %w", err)
 	}
 
 	return nil
 }
 
-// Parse parses all the advisories from Alma Linux.
-// It is exported for those who want to customize trivy-db.
-func (a *Alma) Parse(rootDir string) (map[string][]Erratum, error) {
+// parse parses all the advisories from Alma Linux.
+func (vs *VulnSrc) parse(rootDir string) (map[string][]Erratum, error) {
 	errata := map[string][]Erratum{}
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		var erratum Erratum
@@ -102,15 +104,15 @@ func (a *Alma) Parse(rootDir string) (map[string][]Erratum, error) {
 	return errata, nil
 }
 
-func (a *Alma) Put(errataVer map[string][]Erratum) error {
-	err := a.dbc.BatchUpdate(func(tx *bolt.Tx) error {
+func (vs *VulnSrc) put(errataVer map[string][]Erratum) error {
+	err := vs.db.BatchUpdate(func(tx *bolt.Tx) error {
 		for majorVer, errata := range errataVer {
 			platformName := fmt.Sprintf(platformFormat, majorVer)
-			if err := a.dbc.PutDataSource(tx, platformName, source); err != nil {
+			if err := vs.db.PutDataSource(tx, platformName, source); err != nil {
 				return xerrors.Errorf("failed to put data source: %w", err)
 			}
 
-			if err := a.commit(tx, platformName, errata); err != nil {
+			if err := vs.commit(tx, platformName, errata); err != nil {
 				return xerrors.Errorf("Alma %s commit error: %w", majorVer, err)
 			}
 		}
@@ -122,7 +124,7 @@ func (a *Alma) Put(errataVer map[string][]Erratum) error {
 	return nil
 }
 
-func (a *Alma) commit(tx *bolt.Tx, platformName string, errata []Erratum) error {
+func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []Erratum) error {
 	for _, erratum := range errata {
 		var references []string
 		for _, ref := range erratum.References {
@@ -162,27 +164,42 @@ func (a *Alma) commit(tx *bolt.Tx, platformName string, errata []Erratum) error 
 				} else {
 					advisories[pkgName] = advisory
 				}
-
-				vuln := types.VulnerabilityDetail{
-					Severity:    GeneralizeSeverity(erratum.Severity),
-					Title:       erratum.Title,
-					Description: erratum.Description,
-					References:  references,
-				}
-				if err := a.dbc.PutVulnerabilityDetail(tx, cveID, source.ID, vuln); err != nil {
-					return xerrors.Errorf("failed to save Alma vulnerability: %w", err)
-				}
-
-				if err := a.dbc.PutVulnerabilityID(tx, cveID); err != nil {
-					return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
-				}
 			}
 
-			for pkgName, advisory := range advisories {
-				if err := a.dbc.PutAdvisoryDetail(tx, cveID, pkgName, []string{platformName}, advisory); err != nil {
-					return xerrors.Errorf("failed to save Alma advisory: %w", err)
-				}
+			vuln := types.VulnerabilityDetail{
+				Severity:    generalizeSeverity(erratum.Severity),
+				Title:       erratum.Title,
+				Description: erratum.Description,
+				References:  references,
 			}
+
+			err := vs.db.Put(tx, PutInput{
+				platformName: platformName,
+				cveID:        cveID,
+				vuln:         vuln,
+				advisories:   advisories,
+				erratum:      erratum,
+			})
+			if err != nil {
+				return xerrors.Errorf("db put error: %w", err)
+			}
+		}
+	}
+	return nil
+}
+
+func (a *Alma) Put(tx *bolt.Tx, input PutInput) error {
+	if err := a.PutVulnerabilityDetail(tx, input.cveID, source.ID, input.vuln); err != nil {
+		return xerrors.Errorf("failed to save Alma vulnerability: %w", err)
+	}
+
+	if err := a.PutVulnerabilityID(tx, input.cveID); err != nil {
+		return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+	}
+
+	for pkgName, advisory := range input.advisories {
+		if err := a.PutAdvisoryDetail(tx, input.cveID, pkgName, []string{input.platformName}, advisory); err != nil {
+			return xerrors.Errorf("failed to save Alma advisory: %w", err)
 		}
 	}
 	return nil
@@ -190,14 +207,14 @@ func (a *Alma) commit(tx *bolt.Tx, platformName string, errata []Erratum) error 
 
 func (a *Alma) Get(release, pkgName string) ([]types.Advisory, error) {
 	bucket := fmt.Sprintf(platformFormat, release)
-	advisories, err := a.dbc.GetAdvisories(bucket, pkgName)
+	advisories, err := a.GetAdvisories(bucket, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get Alma advisories: %w", err)
 	}
 	return advisories, nil
 }
 
-func GeneralizeSeverity(severity string) types.Severity {
+func generalizeSeverity(severity string) types.Severity {
 	switch strings.ToLower(severity) {
 	case "low":
 		return types.SeverityLow
