@@ -33,11 +33,11 @@ var (
 )
 
 type PutInput struct {
-	platformName string
-	cveID        string
-	vuln         types.VulnerabilityDetail
-	advisories   map[string]types.Advisory
-	erratum      Erratum // for extensibility
+	PlatformName string
+	CveID        string
+	Vuln         types.VulnerabilityDetail
+	Advisories   map[string]types.Advisory
+	Erratum      Erratum // for extensibility
 }
 
 type DB interface {
@@ -174,11 +174,11 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []Erratum) er
 			}
 
 			err := vs.Put(tx, PutInput{
-				platformName: platformName,
-				cveID:        cveID,
-				vuln:         vuln,
-				advisories:   advisories,
-				erratum:      erratum,
+				PlatformName: platformName,
+				CveID:        cveID,
+				Vuln:         vuln,
+				Advisories:   advisories,
+				Erratum:      erratum,
 			})
 			if err != nil {
 				return xerrors.Errorf("db put error: %w", err)
@@ -189,16 +189,16 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []Erratum) er
 }
 
 func (a *Alma) Put(tx *bolt.Tx, input PutInput) error {
-	if err := a.PutVulnerabilityDetail(tx, input.cveID, source.ID, input.vuln); err != nil {
+	if err := a.PutVulnerabilityDetail(tx, input.CveID, source.ID, input.Vuln); err != nil {
 		return xerrors.Errorf("failed to save Alma vulnerability: %w", err)
 	}
 
-	if err := a.PutVulnerabilityID(tx, input.cveID); err != nil {
+	if err := a.PutVulnerabilityID(tx, input.CveID); err != nil {
 		return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 	}
 
-	for pkgName, advisory := range input.advisories {
-		if err := a.PutAdvisoryDetail(tx, input.cveID, pkgName, []string{input.platformName}, advisory); err != nil {
+	for pkgName, advisory := range input.Advisories {
+		if err := a.PutAdvisoryDetail(tx, input.CveID, pkgName, []string{input.PlatformName}, advisory); err != nil {
 			return xerrors.Errorf("failed to save Alma advisory: %w", err)
 		}
 	}
