@@ -47,7 +47,7 @@ type DB interface {
 }
 
 type VulnSrc struct {
-	db DB // Those who want to customize Trivy DB can override put/get methods.
+	DB // Those who want to customize Trivy DB can override put/get methods.
 }
 
 // Alma implements the DB interface
@@ -57,7 +57,7 @@ type Alma struct {
 
 func NewVulnSrc() *VulnSrc {
 	return &VulnSrc{
-		db: &Alma{Operation: db.Config{}},
+		DB: &Alma{Operation: db.Config{}},
 	}
 }
 
@@ -105,10 +105,10 @@ func (vs *VulnSrc) parse(rootDir string) (map[string][]Erratum, error) {
 }
 
 func (vs *VulnSrc) put(errataVer map[string][]Erratum) error {
-	err := vs.db.BatchUpdate(func(tx *bolt.Tx) error {
+	err := vs.BatchUpdate(func(tx *bolt.Tx) error {
 		for majorVer, errata := range errataVer {
 			platformName := fmt.Sprintf(platformFormat, majorVer)
-			if err := vs.db.PutDataSource(tx, platformName, source); err != nil {
+			if err := vs.PutDataSource(tx, platformName, source); err != nil {
 				return xerrors.Errorf("failed to put data source: %w", err)
 			}
 
@@ -173,7 +173,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []Erratum) er
 				References:  references,
 			}
 
-			err := vs.db.Put(tx, PutInput{
+			err := vs.Put(tx, PutInput{
 				platformName: platformName,
 				cveID:        cveID,
 				vuln:         vuln,
