@@ -33,6 +33,8 @@ func Name(ecosystem, dataSource string) string {
 		prefix = vulnerability.Cargo
 	case "erlang":
 		prefix = vulnerability.Erlang
+	case "pub":
+		prefix = vulnerability.Pub
 	default:
 		return ""
 	}
