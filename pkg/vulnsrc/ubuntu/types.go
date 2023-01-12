@@ -6,6 +6,7 @@ type UbuntuCVE struct {
 	Priority    string
 	Patches     map[PackageName]Patch
 	References  []string
+	PublicDate  string
 }
 
 type PackageName string
