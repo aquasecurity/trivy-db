@@ -34,6 +34,7 @@ var (
 		vulnerability.RubyGems,
 		vulnerability.Rust,
 		vulnerability.Erlang,
+		vulnerability.Pub,
 	}
 	platformFormat = "GitHub Security Advisory %s"
 )
