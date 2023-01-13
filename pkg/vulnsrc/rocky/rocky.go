@@ -38,6 +38,7 @@ type PutInput struct {
 	CveID        string
 	Vuln         types.VulnerabilityDetail
 	Advisories   map[string]types.Advisory // pkg name => advisory
+	Erratum      RLSA                      // for extensibility, not used in trivy-db
 }
 
 type DB interface {
@@ -177,7 +178,8 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 				PlatformName: platformName,
 				CveID:        cveID,
 				Vuln:         vuln,
-				Advisories:   nil,
+				Advisories:   advisories,
+				Erratum:      erratum,
 			})
 			if err != nil {
 				return xerrors.Errorf("db put error: %w", err)
