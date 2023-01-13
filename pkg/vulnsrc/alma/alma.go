@@ -193,6 +193,7 @@ func (a *Alma) Put(tx *bolt.Tx, input PutInput) error {
 		return xerrors.Errorf("failed to save Alma vulnerability: %w", err)
 	}
 
+	// for optimization
 	if err := a.PutVulnerabilityID(tx, input.CveID); err != nil {
 		return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 	}
