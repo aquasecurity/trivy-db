@@ -37,7 +37,7 @@ type PutInput struct {
 	CveID        string
 	Vuln         types.VulnerabilityDetail
 	Advisories   map[string]types.Advisory
-	Erratum      Erratum // for extensibility
+	Erratum      Erratum // for extensibility, not used in trivy-db
 }
 
 type DB interface {
@@ -193,6 +193,7 @@ func (a *Alma) Put(tx *bolt.Tx, input PutInput) error {
 		return xerrors.Errorf("failed to save Alma vulnerability: %w", err)
 	}
 
+	// for optimization
 	if err := a.PutVulnerabilityID(tx, input.CveID); err != nil {
 		return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 	}

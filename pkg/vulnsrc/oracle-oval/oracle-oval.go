@@ -8,15 +8,15 @@ import (
 	"path/filepath"
 	"strings"
 
+	version "github.com/knqyf263/go-rpm-version"
 	bolt "go.etcd.io/bbolt"
+	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
-	version "github.com/knqyf263/go-rpm-version"
-	"golang.org/x/xerrors"
 )
 
 var (
@@ -32,23 +32,53 @@ var (
 	}
 )
 
-type VulnSrc struct {
-	dbc db.Operation
+type PutInput struct {
+	VulnID     string                             // CVE-ID or ELSA-ID
+	Vuln       types.VulnerabilityDetail          // vulnerability detail such as CVSS and description
+	Advisories map[AffectedPackage]types.Advisory // pkg => advisory
+	OVAL       OracleOVAL                         // for extensibility, not used in trivy-db
 }
 
-func NewVulnSrc() VulnSrc {
-	return VulnSrc{
-		dbc: db.Config{},
+type DB interface {
+	db.Operation
+	Put(*bolt.Tx, PutInput) error
+	Get(release, pkgName string) ([]types.Advisory, error)
+}
+
+type VulnSrc struct {
+	DB // Those who want to customize Trivy DB can override put/get methods.
+}
+
+type Oracle struct {
+	db.Operation
+}
+
+func NewVulnSrc() *VulnSrc {
+	return &VulnSrc{
+		DB: &Oracle{Operation: db.Config{}},
 	}
 }
 
-func (vs VulnSrc) Name() types.SourceID {
+func (vs *VulnSrc) Name() types.SourceID {
 	return source.ID
 }
 
-func (vs VulnSrc) Update(dir string) error {
+func (vs *VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", oracleDir)
+	ovals, err := vs.parse(rootDir)
+	if err != nil {
+		return err
+	}
+	if err = vs.put(ovals); err != nil {
+		return xerrors.Errorf("error in Oracle Linux OVAL save: %w", err)
+	}
 
+	return nil
+}
+
+// Parse parses all the advisories from Alma Linux.
+// It is exported for those who want to customize trivy-db.
+func (vs *VulnSrc) parse(rootDir string) ([]OracleOVAL, error) {
 	var ovals []OracleOVAL
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		var oval OracleOVAL
@@ -59,20 +89,16 @@ func (vs VulnSrc) Update(dir string) error {
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in Oracle Linux OVAL walk: %w", err)
+		return nil, xerrors.Errorf("error in Oracle Linux OVAL walk: %w", err)
 	}
 
-	if err = vs.save(ovals); err != nil {
-		return xerrors.Errorf("error in Oracle Linux OVAL save: %w", err)
-	}
-
-	return nil
+	return ovals, nil
 }
 
-func (vs VulnSrc) save(ovals []OracleOVAL) error {
+func (vs *VulnSrc) put(ovals []OracleOVAL) error {
 	log.Println("Saving Oracle Linux OVAL")
 
-	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
+	err := vs.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, ovals)
 	})
 	if err != nil {
@@ -83,7 +109,7 @@ func (vs VulnSrc) save(ovals []OracleOVAL) error {
 
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
+func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 	for _, oval := range ovals {
 		elsaID := strings.Split(oval.Title, ":")[0]
 
@@ -95,29 +121,24 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			vulnIDs = append(vulnIDs, elsaID)
 		}
 
+		advisories := map[AffectedPackage]types.Advisory{}
 		affectedPkgs := walkOracle(oval.Criteria, "", []AffectedPackage{})
 		for _, affectedPkg := range affectedPkgs {
 			if affectedPkg.Package.Name == "" {
 				continue
 			}
 
-			platformName := fmt.Sprintf(platformFormat, affectedPkg.OSVer)
+			platformName := affectedPkg.PlatformName()
 			if !ustrings.InSlice(platformName, targetPlatforms) {
 				continue
 			}
 
-			if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+			if err := vs.PutDataSource(tx, platformName, source); err != nil {
 				return xerrors.Errorf("failed to put data source: %w", err)
 			}
 
-			advisory := types.Advisory{
+			advisories[affectedPkg] = types.Advisory{
 				FixedVersion: affectedPkg.Package.FixedVersion,
-			}
-
-			for _, vulnID := range vulnIDs {
-				if err := vs.dbc.PutAdvisoryDetail(tx, vulnID, affectedPkg.Package.Name, []string{platformName}, advisory); err != nil {
-					return xerrors.Errorf("failed to save Oracle Linux OVAL: %w", err)
-				}
 			}
 		}
 
@@ -134,23 +155,43 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 				Severity:    severityFromThreat(oval.Severity),
 			}
 
-			if err := vs.dbc.PutVulnerabilityDetail(tx, vulnID, source.ID, vuln); err != nil {
-				return xerrors.Errorf("failed to save Oracle Linux OVAL vulnerability: %w", err)
-			}
-
-			// for optimization
-			if err := vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
-				return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+			err := vs.Put(tx, PutInput{
+				VulnID:     vulnID,
+				Vuln:       vuln,
+				Advisories: advisories,
+				OVAL:       oval,
+			})
+			if err != nil {
+				return xerrors.Errorf("db put error: %w", err)
 			}
 		}
 	}
-	return nil
 
+	return nil
 }
 
-func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
+func (o *Oracle) Put(tx *bolt.Tx, input PutInput) error {
+	if err := o.PutVulnerabilityDetail(tx, input.VulnID, source.ID, input.Vuln); err != nil {
+		return xerrors.Errorf("failed to save Oracle Linux OVAL vulnerability: %w", err)
+	}
+
+	// for optimization
+	if err := o.PutVulnerabilityID(tx, input.VulnID); err != nil {
+		return xerrors.Errorf("failed to save %s: %w", input.VulnID, err)
+	}
+
+	for pkg, advisory := range input.Advisories {
+		platformName := pkg.PlatformName()
+		if err := o.PutAdvisoryDetail(tx, input.VulnID, pkg.Package.Name, []string{platformName}, advisory); err != nil {
+			return xerrors.Errorf("failed to save Oracle Linux advisory: %w", err)
+		}
+	}
+	return nil
+}
+
+func (o *Oracle) Get(release string, pkgName string) ([]types.Advisory, error) {
 	bucket := fmt.Sprintf(platformFormat, release)
-	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
+	advisories, err := o.GetAdvisories(bucket, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get Oracle Linux advisories: %w", err)
 	}
@@ -184,7 +225,7 @@ func walkOracle(cri Criteria, osVer string, pkgs []AffectedPackage) []AffectedPa
 }
 
 func referencesFromContains(sources []string, matches []string) []string {
-	references := []string{}
+	var references []string
 	for _, s := range sources {
 		for _, m := range matches {
 			if strings.Contains(s, m) {
