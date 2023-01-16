@@ -33,22 +33,54 @@ var (
 	}
 )
 
-type VulnSrc struct {
-	dbc db.Operation
+type PutInput struct {
+	PlatformName string
+	CveID        string
+	Vuln         types.VulnerabilityDetail
+	Advisories   map[string]types.Advisory // pkg name => advisory
+	Erratum      RLSA                      // for extensibility, not used in trivy-db
 }
 
-func NewVulnSrc() VulnSrc {
-	return VulnSrc{
-		dbc: db.Config{},
+type DB interface {
+	db.Operation
+	Put(*bolt.Tx, PutInput) error
+	Get(release, pkgName string) ([]types.Advisory, error)
+}
+
+type VulnSrc struct {
+	DB
+}
+
+type Rocky struct {
+	db.Operation
+}
+
+func NewVulnSrc() *VulnSrc {
+	return &VulnSrc{
+		DB: &Rocky{Operation: db.Config{}},
 	}
 }
 
-func (vs VulnSrc) Name() types.SourceID {
+func (vs *VulnSrc) Name() types.SourceID {
 	return source.ID
 }
 
-func (vs VulnSrc) Update(dir string) error {
+func (vs *VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", rockyDir)
+	errata, err := vs.parse(rootDir)
+	if err != nil {
+		return err
+	}
+	if err = vs.put(errata); err != nil {
+		return xerrors.Errorf("error in Rocky save: %w", err)
+	}
+
+	return nil
+}
+
+// parse parses all the advisories from Rocky Linux.
+// It is exported for those who want to customize trivy-db.
+func (vs *VulnSrc) parse(rootDir string) (map[string][]RLSA, error) {
 	errata := map[string][]RLSA{}
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		var erratum RLSA
@@ -86,21 +118,16 @@ func (vs VulnSrc) Update(dir string) error {
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in Rocky walk: %w", err)
+		return nil, xerrors.Errorf("error in Rocky walk: %w", err)
 	}
-
-	if err = vs.save(errata); err != nil {
-		return xerrors.Errorf("error in Rocky save: %w", err)
-	}
-
-	return nil
+	return errata, nil
 }
 
-func (vs VulnSrc) save(errataVer map[string][]RLSA) error {
-	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
+func (vs *VulnSrc) put(errataVer map[string][]RLSA) error {
+	err := vs.BatchUpdate(func(tx *bolt.Tx) error {
 		for majorVer, errata := range errataVer {
 			platformName := fmt.Sprintf(platformFormat, majorVer)
-			if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+			if err := vs.PutDataSource(tx, platformName, source); err != nil {
 				return xerrors.Errorf("failed to put data source: %w", err)
 			}
 			if err := vs.commit(tx, platformName, errata); err != nil {
@@ -115,10 +142,10 @@ func (vs VulnSrc) save(errataVer map[string][]RLSA) error {
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error {
+func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error {
 	for _, erratum := range errata {
 		for _, cveID := range erratum.CveIDs {
-			putAdvisoryCount := 0
+			advisories := map[string]types.Advisory{}
 			for _, pkg := range erratum.Packages {
 				// Skip the modular packages until the following bug is fixed.
 				// https://forums.rockylinux.org/t/some-errata-missing-in-comparison-with-rhel-and-almalinux/3843/8
@@ -126,44 +153,63 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error 
 					continue
 				}
 
-				advisory := types.Advisory{
+				advisories[pkg.Name] = types.Advisory{
 					FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 				}
-				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkg.Name, []string{platformName}, advisory); err != nil {
-					return xerrors.Errorf("failed to save Rocky advisory: %w", err)
-				}
-
-				putAdvisoryCount++
 			}
 
-			if putAdvisoryCount > 0 {
-				var references []string
-				for _, ref := range erratum.References {
-					references = append(references, ref.Href)
-				}
+			if len(advisories) == 0 {
+				continue
+			}
 
-				vuln := types.VulnerabilityDetail{
-					Severity:    generalizeSeverity(erratum.Severity),
-					References:  references,
-					Title:       erratum.Title,
-					Description: erratum.Description,
-				}
-				if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, source.ID, vuln); err != nil {
-					return xerrors.Errorf("failed to save Rocky vulnerability: %w", err)
-				}
+			var references []string
+			for _, ref := range erratum.References {
+				references = append(references, ref.Href)
+			}
 
-				if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
-					return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
-				}
+			vuln := types.VulnerabilityDetail{
+				Severity:    generalizeSeverity(erratum.Severity),
+				References:  references,
+				Title:       erratum.Title,
+				Description: erratum.Description,
+			}
+
+			err := vs.Put(tx, PutInput{
+				PlatformName: platformName,
+				CveID:        cveID,
+				Vuln:         vuln,
+				Advisories:   advisories,
+				Erratum:      erratum,
+			})
+			if err != nil {
+				return xerrors.Errorf("db put error: %w", err)
 			}
 		}
 	}
 	return nil
 }
 
-func (vs VulnSrc) Get(release, pkgName string) ([]types.Advisory, error) {
+func (r *Rocky) Put(tx *bolt.Tx, input PutInput) error {
+	if err := r.PutVulnerabilityDetail(tx, input.CveID, source.ID, input.Vuln); err != nil {
+		return xerrors.Errorf("failed to save Rocky vulnerability: %w", err)
+	}
+
+	// for optimization
+	if err := r.PutVulnerabilityID(tx, input.CveID); err != nil {
+		return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+	}
+
+	for pkgName, advisory := range input.Advisories {
+		if err := r.PutAdvisoryDetail(tx, input.CveID, pkgName, []string{input.PlatformName}, advisory); err != nil {
+			return xerrors.Errorf("failed to save Rocky advisory: %w", err)
+		}
+	}
+	return nil
+}
+
+func (r *Rocky) Get(release, pkgName string) ([]types.Advisory, error) {
 	bucket := fmt.Sprintf(platformFormat, release)
-	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
+	advisories, err := r.GetAdvisories(bucket, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get Rocky advisories: %w", err)
 	}
