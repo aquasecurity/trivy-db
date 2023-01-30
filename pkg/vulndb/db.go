@@ -1,6 +1,7 @@
 package vulndb
 
 import (
+	"github.com/aquasecurity/trivy-db/pkg/k8s"
 	"log"
 	"time"
 
@@ -24,6 +25,7 @@ type TrivyDB struct {
 	metadata       metadata.Client
 	vulnClient     vulnerability.Vulnerability
 	vulnSrcs       map[types.SourceID]vulnsrc.VulnSrc
+	k8sSrcs        map[types.SourceID]k8s.Src
 	cacheDir       string
 	updateInterval time.Duration
 	clock          clock.Clock
@@ -49,6 +51,10 @@ func New(cacheDir string, updateInterval time.Duration, opts ...Option) *TrivyDB
 	for _, v := range vulnsrc.All {
 		vulnSrcs[v.Name()] = v
 	}
+	k8sSrcs := map[types.SourceID]k8s.Src{}
+	for _, v := range k8s.All {
+		k8sSrcs[v.Name()] = v
+	}
 
 	dbc := db.Config{}
 	tdb := &TrivyDB{
@@ -56,6 +62,7 @@ func New(cacheDir string, updateInterval time.Duration, opts ...Option) *TrivyDB
 		metadata:       metadata.NewClient(cacheDir),
 		vulnClient:     vulnerability.New(dbc),
 		vulnSrcs:       vulnSrcs,
+		k8sSrcs:        k8sSrcs,
 		cacheDir:       cacheDir,
 		updateInterval: updateInterval,
 		clock:          clock.RealClock{},
@@ -69,17 +76,23 @@ func New(cacheDir string, updateInterval time.Duration, opts ...Option) *TrivyDB
 }
 
 func (t TrivyDB) Insert(targets []string) error {
-	log.Println("Updating vulnerability database...")
+	log.Println("Updating trivy database...")
 	for _, target := range targets {
-		src, ok := t.vulnSrc(target)
-		if !ok {
-			return xerrors.Errorf("%s is not supported", target)
+		if src, ok := t.vulnSrc(target); ok {
+			log.Printf("Updating %s data...\n", target)
+			if err := src.Update(t.cacheDir); err != nil {
+				return xerrors.Errorf("%s update error: %w", target, err)
+			}
+			continue
 		}
-		log.Printf("Updating %s data...\n", target)
-
-		if err := src.Update(t.cacheDir); err != nil {
-			return xerrors.Errorf("%s update error: %w", target, err)
+		if src, ok := t.k8sSrc(target); ok {
+			log.Printf("Updating %s data...\n", target)
+			if err := src.Update(t.cacheDir); err != nil {
+				return xerrors.Errorf("%s update error: %w", target, err)
+			}
+			continue
 		}
+		return xerrors.Errorf("%s is not supported", target)
 	}
 
 	md := metadata.Metadata{
@@ -116,6 +129,15 @@ func (t TrivyDB) Build(targets []string) error {
 
 func (t TrivyDB) vulnSrc(target string) (vulnsrc.VulnSrc, bool) {
 	for _, src := range t.vulnSrcs {
+		if target == string(src.Name()) {
+			return src, true
+		}
+	}
+	return nil, false
+}
+
+func (t TrivyDB) k8sSrc(target string) (k8s.Src, bool) {
+	for _, src := range t.k8sSrcs {
 		if target == string(src.Name()) {
 			return src, true
 		}

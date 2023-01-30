@@ -53,6 +53,9 @@ type Operation interface {
 	PutRedHatCPEs(tx *bolt.Tx, cpeIndex int, cpe string) (err error)
 	RedHatRepoToCPEs(repository string) (cpeIndices []int, err error)
 	RedHatNVRToCPEs(nvr string) (cpeIndices []int, err error)
+	//for K8s
+	GetK8sDb(key string, data interface{}) error
+	PutK8sDb(tx *bolt.Tx, key string, apis interface{}) (err error)
 }
 
 type Config struct {
