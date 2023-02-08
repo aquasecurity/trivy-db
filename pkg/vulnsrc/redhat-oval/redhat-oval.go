@@ -91,7 +91,6 @@ func (vs VulnSrc) Update(dir string) error {
 			}
 
 			advisories = vs.mergeAdvisories(advisories, definitions)
-
 		}
 	}
 
@@ -147,7 +146,7 @@ func (vs VulnSrc) mergeAdvisories(advisories map[bucket]Advisory, defs map[bucke
 			found := false
 			for i := range old.Entries {
 				// New advisory should contain a single fixed version and list of arches.
-				if old.Entries[i].FixedVersion == def.Entry.FixedVersion && archesEqual(old.Entries[i].Arches, def.Entry.Arches) {
+				if old.Entries[i].FixedVersion == def.Entry.FixedVersion && old.Entries[i].State == def.Entry.State && archesEqual(old.Entries[i].Arches, def.Entry.Arches) {
 					found = true
 					old.Entries[i].AffectedCPEList = ustrings.Merge(old.Entries[i].AffectedCPEList, def.Entry.AffectedCPEList)
 				}
@@ -271,6 +270,7 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 					Severity:     cve.Severity,
 					FixedVersion: entry.FixedVersion,
 					Arches:       entry.Arches,
+					State:        entry.State,
 				}
 
 				if strings.HasPrefix(vulnID, "CVE-") {
@@ -358,6 +358,7 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 						Cves:            cveEntries,
 						FixedVersion:    affectedPkg.FixedVersion,
 						AffectedCPEList: advisory.Metadata.Advisory.AffectedCpeList,
+						State:           advisory.Metadata.Advisory.Affected.Resolution.State,
 						Arches:          affectedPkg.Arches,
 					},
 				}
@@ -377,6 +378,7 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 							FixedVersion:    affectedPkg.FixedVersion,
 							AffectedCPEList: advisory.Metadata.Advisory.AffectedCpeList,
 							Arches:          affectedPkg.Arches,
+							State:           advisory.Metadata.Advisory.Affected.Resolution.State,
 						},
 					}
 				}
@@ -385,7 +387,6 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 
 		updateCPEs(advisory.Metadata.Advisory.AffectedCpeList, uniqCPEs)
 	}
-
 	return defs
 }
 

@@ -80,6 +80,24 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: []int{5},
 				},
 				{
+					Key: []string{"advisory-detail", "CVE-2020-11879", "Red Hat", "evolution"},
+					Value: redhat.Advisory{
+						Entries: []redhat.Entry{
+							{
+								State:              "Will not fix",
+								FixedVersion:       "",
+								AffectedCPEIndices: []int{1},
+								Cves: []redhat.CveEntry{
+									{
+										ID:       "",
+										Severity: types.SeverityMedium,
+									},
+								},
+							},
+						},
+					},
+				},
+				{
 					Key: []string{"advisory-detail", "RHSA-2020:5624", "Red Hat", "thunderbird"},
 					Value: redhat.Advisory{
 						Entries: []redhat.Entry{
