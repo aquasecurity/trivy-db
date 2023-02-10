@@ -59,7 +59,9 @@ Every 6 hours
 
 ## Download the vulnerability database
 ### version 1 (deprecated)
-Trivy DB v1 is for backwards compatibility only. You can download it from [releases](https://github.com/aquasecurity/trivy-db/releases).
+Trivy DB v1 reached the end of support on February 2023. Please upgrade Trivy to v0.23.0 or later.
+
+Read more about the Trivy DB v1 deprecation in [the discussion](https://github.com/aquasecurity/trivy/discussions/1653).
 
 ### version 2
 You can download the actual compiled database via [Trivy](https://aquasecurity.github.io/trivy/) or [Oras CLI](https://oras.land/cli/).
