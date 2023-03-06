@@ -16,7 +16,7 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v3
       - name: yaml-lint
-        uses: ibiqlik/action-yamllint@v3
+        uses: ibiqlik/action-yamllint@v3.1.1
       - name: Lint
         uses: golangci/golangci-lint-action@v3.1.0
         with:
