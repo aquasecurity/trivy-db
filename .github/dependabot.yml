@@ -1,0 +1,11 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+  - package-ecosystem: gomod
+    open-pull-requests-limit: 10
+    directory: /
+    schedule:
+      interval: monthly
