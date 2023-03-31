@@ -88,26 +88,23 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 		advisory := types.Advisory{
 			FixedVersion: fixedVersion,
 		}
-		for _, vulnID := range vulnIDs {
-			// See https://gitlab.alpinelinux.org/alpine/infra/docker/secdb/-/issues/3
-			// e.g. CVE-2017-2616 (+ regression fix)
-			ids := strings.Fields(vulnID)
-			for _, cveID := range ids {
-				cveID = strings.ReplaceAll(cveID, "CVE_", "CVE-")
-				if !strings.HasPrefix(cveID, "CVE-") {
-					continue
-				}
-				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkgName, []string{platform}, advisory); err != nil {
-					return xerrors.Errorf("failed to save Chainguard advisory: %w", err)
-				}
 
-				// for optimization
-				if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
-					return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
-				}
+		for _, vulnID := range vulnIDs {
+			if !strings.HasPrefix(vulnID, "CVE-") {
+				continue
+			}
+
+			if err := vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{platform}, advisory); err != nil {
+				return xerrors.Errorf("failed to save Chainguard advisory: %w", err)
+			}
+
+			// for optimization
+			if err := vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
+				return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 			}
 		}
 	}
+	
 	return nil
 }
 
