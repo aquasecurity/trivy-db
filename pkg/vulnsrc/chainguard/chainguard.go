@@ -23,7 +23,7 @@ const (
 var (
 	source = types.DataSource{
 		ID:   vulnerability.Chainguard,
-		Name: "Chainguard Secdb",
+		Name: "Chainguard Security Data",
 		URL:  "https://packages.cgr.dev/chainguard/security.json",
 	}
 )
@@ -104,7 +104,7 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 			}
 		}
 	}
-	
+
 	return nil
 }
 

@@ -26,7 +26,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"data-source", "chainguard"},
 					Value: types.DataSource{
 						ID:   vulnerability.Chainguard,
-						Name: "Chainguard Secdb",
+						Name: "Chainguard Security Data",
 						URL:  "https://packages.cgr.dev/chainguard/security.json",
 					},
 				},
