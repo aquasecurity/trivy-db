@@ -64,6 +64,9 @@ Trivy DB v1 reached the end of support on February 2023. Please upgrade Trivy to
 Read more about the Trivy DB v1 deprecation in [the discussion](https://github.com/aquasecurity/trivy/discussions/1653).
 
 ### version 2
+Trivy DB v2 is hosted on [GHCR](https://github.com/orgs/aquasecurity/packages/container/package/trivy-db).
+Although GitHub displays the `docker pull` command by default, please note that it cannot be downloaded using `docker pull` as it is not a container image.
+
 You can download the actual compiled database via [Trivy](https://aquasecurity.github.io/trivy/) or [Oras CLI](https://oras.land/cli/).
 
 Trivy:
