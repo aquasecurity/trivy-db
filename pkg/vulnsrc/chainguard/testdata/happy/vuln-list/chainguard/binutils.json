@@ -1,0 +1,17 @@
+{
+  "name": "binutils",
+  "secfixes": {
+    "2.39-r1": [
+      "CVE-2022-38126"
+    ],
+    "2.39-r2": [
+      "CVE-2022-38533"
+    ]
+  },
+  "apkurl": "{{urlprefix}}/{{reponame}}/{{arch}}/{{pkg.name}}-{{pkg.ver}}.apk",
+  "archs": [
+    "x86_64"
+  ],
+  "urlprefix": "https://packages.wolfi.dev",
+  "reponame": "chainguard"
+}
