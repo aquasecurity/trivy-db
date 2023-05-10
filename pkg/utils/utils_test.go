@@ -2,7 +2,6 @@ package utils
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -20,25 +19,25 @@ func touch(t *testing.T, name string) {
 }
 
 func write(t *testing.T, name string, content string) {
-	err := ioutil.WriteFile(name, []byte(content), 0666)
+	err := os.WriteFile(name, []byte(content), 0666)
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestFileWalk(t *testing.T) {
-	td, err := ioutil.TempDir("", "walktest")
+	td, err := os.CreateTemp("", "walktest")
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(td)
+	defer os.RemoveAll(td.Name())
 
-	if err := os.MkdirAll(filepath.Join(td, "dir"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(td.Name(), "dir"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	touch(t, filepath.Join(td, "dir/foo1"))
-	touch(t, filepath.Join(td, "dir/foo2"))
-	write(t, filepath.Join(td, "dir/foo3"), "foo3")
+	touch(t, filepath.Join(td.Name(), "dir/foo1"))
+	touch(t, filepath.Join(td.Name(), "dir/foo2"))
+	write(t, filepath.Join(td.Name(), "dir/foo3"), "foo3")
 
 	sawDir := false
 	sawFoo1 := false
@@ -55,7 +54,7 @@ func TestFileWalk(t *testing.T) {
 			sawFoo2 = true
 		}
 		if strings.HasSuffix(path, "foo3") {
-			contentFoo3, err = ioutil.ReadAll(r)
+			contentFoo3, err = io.ReadAll(r)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -63,7 +62,7 @@ func TestFileWalk(t *testing.T) {
 		return nil
 	}
 
-	err = FileWalk(td, walker)
+	err = FileWalk(td.Name(), walker)
 	if err != nil {
 		t.Fatal(err)
 	}

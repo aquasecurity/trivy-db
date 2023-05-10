@@ -2,7 +2,6 @@ package db_test
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -31,12 +30,12 @@ func TestInit(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tmpDir, err := ioutil.TempDir("", "test")
+			tmpDir, err := os.CreateTemp("", "test")
 			require.NoError(t, err)
-			defer os.RemoveAll(tmpDir)
+			defer os.RemoveAll(tmpDir.Name())
 
 			if tt.dbPath != "" {
-				dbPath := db.Path(tmpDir)
+				dbPath := db.Path(tmpDir.Name())
 				dbDir := filepath.Dir(dbPath)
 				err = os.MkdirAll(dbDir, 0700)
 				require.NoError(t, err)
@@ -45,7 +44,7 @@ func TestInit(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			err = db.Init(tmpDir)
+			err = db.Init(tmpDir.Name())
 			require.NoError(t, err)
 		})
 	}
