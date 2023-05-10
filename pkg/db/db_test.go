@@ -30,12 +30,12 @@ func TestInit(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tmpDir, err := os.CreateTemp("", "test")
+			tmpDir, err := os.MkdirTemp("", "test")
 			require.NoError(t, err)
-			defer os.RemoveAll(tmpDir.Name())
+			defer os.RemoveAll(tmpDir)
 
 			if tt.dbPath != "" {
-				dbPath := db.Path(tmpDir.Name())
+				dbPath := db.Path(tmpDir)
 				dbDir := filepath.Dir(dbPath)
 				err = os.MkdirAll(dbDir, 0700)
 				require.NoError(t, err)
@@ -44,7 +44,7 @@ func TestInit(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			err = db.Init(tmpDir.Name())
+			err = db.Init(tmpDir)
 			require.NoError(t, err)
 		})
 	}

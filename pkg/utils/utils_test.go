@@ -26,18 +26,18 @@ func write(t *testing.T, name string, content string) {
 }
 
 func TestFileWalk(t *testing.T) {
-	td, err := os.CreateTemp("", "walktest")
+	td, err := os.MkdirTemp("", "walktest")
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(td.Name())
+	defer os.RemoveAll(td)
 
-	if err := os.MkdirAll(filepath.Join(td.Name(), "dir"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(td, "dir"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	touch(t, filepath.Join(td.Name(), "dir/foo1"))
-	touch(t, filepath.Join(td.Name(), "dir/foo2"))
-	write(t, filepath.Join(td.Name(), "dir/foo3"), "foo3")
+	touch(t, filepath.Join(td, "dir/foo1"))
+	touch(t, filepath.Join(td, "dir/foo2"))
+	write(t, filepath.Join(td, "dir/foo3"), "foo3")
 
 	sawDir := false
 	sawFoo1 := false
@@ -62,7 +62,7 @@ func TestFileWalk(t *testing.T) {
 		return nil
 	}
 
-	err = FileWalk(td.Name(), walker)
+	err = FileWalk(td, walker)
 	if err != nil {
 		t.Fatal(err)
 	}
