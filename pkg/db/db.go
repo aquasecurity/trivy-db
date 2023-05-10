@@ -157,7 +157,12 @@ func (dbc Config) get(bktNames []string, key string) (value []byte, err error) {
 				return nil
 			}
 		}
-		value = bkt.Get([]byte(key))
+		dbValue := bkt.Get([]byte(key))
+
+		// Copy the byte slice so it can be used outside of the current transaction
+		value = make([]byte, len(dbValue))
+		copy(value, dbValue)
+
 		return nil
 	})
 	if err != nil {
@@ -216,9 +221,13 @@ func (dbc Config) forEach(bktNames []string) (map[string]Value, error) {
 			}
 
 			err = bkt.ForEach(func(k, v []byte) error {
+				// Copy the byte slice so it can be used outside of the current transaction
+				copiedContent := make([]byte, len(v))
+				copy(copiedContent, v)
+
 				values[string(k)] = Value{
 					Source:  source,
-					Content: v,
+					Content: copiedContent,
 				}
 				return nil
 			})
