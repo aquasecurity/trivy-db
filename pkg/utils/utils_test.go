@@ -26,11 +26,7 @@ func write(t *testing.T, name string, content string) {
 }
 
 func TestFileWalk(t *testing.T) {
-	td, err := os.MkdirTemp("", "walktest")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(td)
+	td:= t.TempDir()
 
 	if err := os.MkdirAll(filepath.Join(td, "dir"), 0755); err != nil {
 		t.Fatal(err)
@@ -43,6 +39,8 @@ func TestFileWalk(t *testing.T) {
 	sawFoo1 := false
 	sawFoo2 := false
 	var contentFoo3 []byte
+	var err error
+
 	walker := func(r io.Reader, path string) error {
 		if strings.HasSuffix(path, "dir") {
 			sawDir = true
