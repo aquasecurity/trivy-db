@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/mariner"
 	cbl "github.com/aquasecurity/trivy-db/pkg/vulnsrc/mariner"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
@@ -176,7 +175,7 @@ func TestVulnSrc_Get(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			vs := mariner.NewVulnSrc()
+			vs := cbl.NewVulnSrc()
 			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
 				Fixtures:   tt.fixtures,
 				WantValues: tt.want,
