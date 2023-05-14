@@ -47,6 +47,7 @@ var (
 		"impish":  "21.10",
 		"jammy":   "22.04",
 		"kinetic": "22.10",
+		"lunar":   "23.04",
 		// ESM versions:
 		"precise/esm":      "12.04-ESM",
 		"trusty/esm":       "14.04-ESM",
