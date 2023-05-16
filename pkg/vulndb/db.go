@@ -2,6 +2,7 @@ package vulndb
 
 import (
 	"log"
+	"strings"
 	"time"
 
 	bolt "go.etcd.io/bbolt"
@@ -129,12 +130,32 @@ func (t TrivyDB) optimize() error {
 	// This bucket has only vulnerability IDs provided by vendors. They must be stored.
 	err := t.dbc.ForEachVulnerabilityID(func(tx *bolt.Tx, cveID string) error {
 		details := t.vulnClient.GetDetails(cveID)
+		cves := details[vulnerability.RedHatOVAL].CveIDs
 		if t.vulnClient.IsRejected(details) {
 			return nil
 		}
-
-		if err := t.dbc.SaveAdvisoryDetails(tx, cveID); err != nil {
-			return xerrors.Errorf("failed to save advisories: %w", err)
+		// Red Hat RHSA advisories include several CVEs.
+		// Part of these CVEs can be rejected.
+		// Keep RHSA advisories separate from all Cves.
+		// Because we must remove rejected Cves first.
+		if strings.HasPrefix(cveID, "RHSA") && len(cves) > 0 {
+			var rejectedCves []string
+			for _, cve := range cves {
+				if t.vulnClient.IsRejected(t.vulnClient.GetDetails(cve)) {
+					rejectedCves = append(rejectedCves, cve)
+				}
+			}
+			// if all entry CVEs are rejected - do not save this CVE
+			if len(rejectedCves) == len(cves) {
+				return nil
+			}
+			if err := t.dbc.SaveRhsaAdvisoryDetails(tx, cveID, rejectedCves); err != nil {
+				return xerrors.Errorf("unable to save RHSA advisories: %w", err)
+			}
+		} else {
+			if err := t.dbc.SaveAdvisoryDetails(tx, cveID); err != nil {
+				return xerrors.Errorf("failed to save advisories: %w", err)
+			}
 		}
 
 		if len(details) == 0 {

@@ -1,65 +1,65 @@
-package redhatoval
+package types
 
 import "github.com/aquasecurity/trivy-db/pkg/types"
 
-type redhatOVAL struct {
+type RedhatOVAL struct {
 	Class    string
 	ID       string
 	Version  string
-	Metadata ovalMetadata
-	Criteria criteria
+	Metadata OvalMetadata
+	Criteria Criteria
 }
 
-type ovalMetadata struct {
+type OvalMetadata struct {
 	Title        string
-	AffectedList []affected
-	References   []reference
+	AffectedList []Affected
+	References   []Reference
 	Description  string
-	Advisory     ovalAdvisory
+	Advisory     OvalAdvisory
 }
 
-type ovalAdvisory struct {
+type OvalAdvisory struct {
 	From            string
 	Severity        string
 	Rights          string
-	Issued          issued
-	Updated         updated
-	Cves            []ovalCVE
-	Bugzilla        []bugzilla
+	Issued          Issued
+	Updated         Updated
+	Cves            []OvalCVE
+	Bugzilla        []Bugzilla
 	AffectedCpeList []string
 }
 
-type criteria struct {
+type Criteria struct {
 	Operator   string
-	Criterias  []criteria
-	Criterions []criterion
+	Criterias  []Criteria
+	Criterions []Criterion
 }
 
-type criterion struct {
+type Criterion struct {
 	TestRef string
 	Comment string
 }
 
-type affected struct {
+type Affected struct {
 	Family    string
 	Platforms []string
 }
 
-type reference struct {
+type Reference struct {
 	Source string
 	RefID  string
 	RefURL string
 }
 
-type issued struct {
+type Issued struct {
 	Date string
 }
 
-type updated struct {
+type Updated struct {
 	Date string
 }
 
-type ovalCVE struct {
+type OvalCVE struct {
 	CveID  string
 	Cvss2  string
 	Cvss3  string
@@ -69,83 +69,83 @@ type ovalCVE struct {
 	Public string
 }
 
-type bugzilla struct {
+type Bugzilla struct {
 	ID   string
 	Href string
 }
 
-type ovalTests struct {
-	RpminfoTests []rpminfoTest
+type OvalTests struct {
+	RpminfoTests []RpminfoTest
 }
 
-type ovalObjects struct {
-	RpminfoObjects []rpminfoObject
+type OvalObjects struct {
+	RpminfoObjects []RpminfoObject
 }
 
-type ovalStates struct {
-	RpminfoState []rpminfoState
+type OvalStates struct {
+	RpminfoState []RpminfoState
 }
 
-type ovalstate struct {
+type Ovalstate struct {
 	Text     string
 	StateRef string
 }
 
-type ovalObject struct {
+type OvalObject struct {
 	Text      string
 	ObjectRef string
 }
 
-type rpminfoTest struct {
+type RpminfoTest struct {
 	Check          string
 	Comment        string
 	ID             string
 	Version        string
 	CheckExistence string
-	Object         ovalObject
-	State          ovalstate
+	Object         OvalObject
+	State          Ovalstate
 }
 
-type rpminfoObject struct {
+type RpminfoObject struct {
 	ID      string
 	Version string
 	Name    string
 }
 
-type rpminfoState struct {
+type RpminfoState struct {
 	ID             string
 	Version        string
-	Arch           arch
-	Evr            evr
-	SignatureKeyID signatureKeyID
+	Arch           Arch
+	Evr            Evr
+	SignatureKeyID SignatureKeyID
 }
 
-type signatureKeyID struct {
+type SignatureKeyID struct {
 	Text      string
 	Operation string
 }
 
-type arch struct {
-	Text      string
-	Datatype  string
-	Operation string
-}
-
-type evr struct {
+type Arch struct {
 	Text      string
 	Datatype  string
 	Operation string
 }
 
-type pkg struct {
+type Evr struct {
+	Text      string
+	Datatype  string
+	Operation string
+}
+
+type Pkg struct {
 	Name         string
 	FixedVersion string
 	Arches       []string
 }
 
-type bucket struct {
-	pkgName string
-	vulnID  string
+type Bucket struct {
+	PkgName string
+	VulnID  string
 }
 
 type Advisory struct {

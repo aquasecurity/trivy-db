@@ -3,6 +3,8 @@ package db
 import (
 	"encoding/json"
 
+	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
+	redhatovaltypes "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval/types"
 	bolt "go.etcd.io/bbolt"
 
 	"golang.org/x/xerrors"
@@ -76,4 +78,66 @@ func (dbc Config) saveAdvisories(tx *bolt.Tx, bkt *bolt.Bucket, bktNames []strin
 
 func (dbc Config) DeleteAdvisoryDetailBucket() error {
 	return dbc.deleteBucket(advisoryDetailBucket)
+}
+
+// SaveRhsaAdvisoryDetails Extract 'RHSA' advisories from 'advisory-detail'-'Red Hat' bucket and copy them in each
+func (dbc Config) SaveRhsaAdvisoryDetails(tx *bolt.Tx, vulnID string, rejectedCve []string) error {
+	root := tx.Bucket([]byte(advisoryDetailBucket))
+	if root == nil {
+		return nil
+	}
+
+	cveBucket := root.Bucket([]byte(vulnID))
+	if cveBucket == nil {
+		return nil
+	}
+
+	redHatBucket := cveBucket.Bucket([]byte("Red Hat"))
+	if redHatBucket == nil {
+		return nil
+	}
+
+	if err := dbc.saveRhsaAdvisories(tx, redHatBucket, []string{"Red Hat"}, vulnID, rejectedCve); err != nil {
+		return xerrors.Errorf("walk advisories error: %w", err)
+	}
+
+	return nil
+}
+
+// saveRhsaAdvisories walks all RHSA 'advisory-detail' bucket, removes the rejected cve's from the cve List and copy them in each Red Hat bucket.
+func (dbc Config) saveRhsaAdvisories(tx *bolt.Tx, bkt *bolt.Bucket, bktNames []string, vulnID string, rejectedCve []string) error {
+	if bkt == nil {
+		return nil
+	}
+
+	err := bkt.ForEach(func(k, v []byte) error {
+		advisory := redhatovaltypes.Advisory{}
+		if err := json.Unmarshal(v, &advisory); err != nil {
+			return xerrors.Errorf("failed to unmarshall the advisory detail: %w", err)
+		}
+
+		for i, entry := range advisory.Entries {
+			var cves []redhatovaltypes.CveEntry
+			for _, cve := range entry.Cves {
+				// Include in the database only non-rejected Cves
+				if !ustrings.InSlice(cve.ID, rejectedCve) {
+					cves = append(cves, cve)
+				}
+			}
+			advisory.Entries[i].Cves = cves
+		}
+
+		// Save advisory
+		bkts := append(bktNames, string(k))
+		if err := dbc.put(tx, bkts, vulnID, advisory); err != nil {
+			return xerrors.Errorf("database put error: %w", err)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return xerrors.Errorf("foreach error: %w", err)
+	}
+
+	return nil
 }

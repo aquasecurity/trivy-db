@@ -64,7 +64,8 @@ type LastUpdated struct {
 	Date time.Time
 }
 type VulnerabilityDetail struct {
-	ID               string     `json:",omitempty"` // e.g. CVE-2019-8331, OSVDB-104365
+	ID               string     `json:",omitempty"` // e.g. CVE-2019-8331, OSVDB-104365, RHSA-2021:4151
+	CveIDs           []string   `json:",omitempty"` // e.g. ["CVE-2020-27619", "CVE-2020-28493" ...] for RHSA-2021:4151
 	CvssScore        float64    `json:",omitempty"`
 	CvssVector       string     `json:",omitempty"`
 	CvssScoreV3      float64    `json:",omitempty"`
