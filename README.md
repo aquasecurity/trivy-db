@@ -25,7 +25,9 @@
 Trivy uses `trivy-db` internally to manipulate vulnerability DB. This DB has vulnerability information from NVD, Red Hat, Debian, etc.
 
 ### CLI
-`trivy-db` builds vulnerability DBs on GitHub Actions and uploads them to GitHub Release periodically.
+The `trivy-db` CLI tool builds vulnerability DBs. A [GitHub Actions workflow](.github/workflows/cron.yml)
+periodically builds a fresh version of the vulnerability DB using `trivy-db` and uploads it to the GitHub
+Container Registry (see [Download the vulnerability database](#download-the-vulnerability-database) below).
 
 ```
 NAME:
@@ -39,7 +41,6 @@ VERSION:
 
 COMMANDS:
      build    build a database file
-     upload   upload database files to GitHub Release
      help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
