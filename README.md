@@ -26,8 +26,8 @@ Trivy uses `trivy-db` internally to manipulate vulnerability DB. This DB has vul
 
 ### CLI
 The `trivy-db` CLI tool builds vulnerability DBs. A [GitHub Actions workflow](.github/workflows/cron.yml)
-periodically builds a fresh version of the vulnerability DB using `trivy-db` and uploads it as a GitHub
-release (see [Download the vulnerability database](#download-the-vulnerability-database) below).
+periodically builds a fresh version of the vulnerability DB using `trivy-db` and uploads it to the GitHub
+Container Registry (see [Download the vulnerability database](#download-the-vulnerability-database) below).
 
 ```
 NAME:
