@@ -211,6 +211,231 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
+			name: "happy path with different severity for different platforms",
+			dir:  filepath.Join("testdata", "different-severity"),
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "Red Hat"},
+					Value: types.DataSource{
+						ID:   vulnerability.RedHatOVAL,
+						Name: "Red Hat OVAL v2",
+						URL:  "https://www.redhat.com/security/data/oval/v2/",
+					},
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "0"},
+					Value: "cpe:/a:redhat:enterprise_linux:8",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "1"},
+					Value: "cpe:/a:redhat:enterprise_linux:8::appstream",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "2"},
+					Value: "cpe:/a:redhat:enterprise_linux:8::crb",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "3"},
+					Value: "cpe:/a:redhat:enterprise_linux:8::highavailability",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "4"},
+					Value: "cpe:/a:redhat:enterprise_linux:8::nfv",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "5"},
+					Value: "cpe:/a:redhat:enterprise_linux:8::realtime",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "6"},
+					Value: "cpe:/a:redhat:enterprise_linux:8::resilientstorage",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "7"},
+					Value: "cpe:/a:redhat:enterprise_linux:8::sap",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "8"},
+					Value: "cpe:/a:redhat:enterprise_linux:8::sap_hana",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "9"},
+					Value: "cpe:/a:redhat:enterprise_linux:8::supplementary",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "10"},
+					Value: "cpe:/a:redhat:rhel_extras:7",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "11"},
+					Value: "cpe:/a:redhat:rhel_extras_oracle_java:7",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "12"},
+					Value: "cpe:/a:redhat:rhel_extras_rt:7",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "13"},
+					Value: "cpe:/a:redhat:rhel_extras_sap:7",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "14"},
+					Value: "cpe:/a:redhat:rhel_extras_sap_hana:7",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "15"},
+					Value: "cpe:/o:redhat:enterprise_linux:7",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "16"},
+					Value: "cpe:/o:redhat:enterprise_linux:7::client",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "17"},
+					Value: "cpe:/o:redhat:enterprise_linux:7::computenode",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "18"},
+					Value: "cpe:/o:redhat:enterprise_linux:7::container",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "19"},
+					Value: "cpe:/o:redhat:enterprise_linux:7::containers",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "20"},
+					Value: "cpe:/o:redhat:enterprise_linux:7::server",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "cpe", "21"},
+					Value: "cpe:/o:redhat:enterprise_linux:7::workstation",
+				},
+				{
+					Key:   []string{"Red Hat CPE", "repository", "rhel-8-for-x86_64-baseos-rpms"},
+					Value: []int{23},
+				},
+				{
+					Key:   []string{"Red Hat CPE", "nvr", "3scale-amp-apicast-gateway-container-1.11-1-x86_64"},
+					Value: []int{20},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2020-21674", "Red Hat", "bsdcpio"},
+					Value: redhat.Advisory{
+						Entries: []redhat.Entry{
+							{
+								FixedVersion:       "",
+								AffectedCPEIndices: []int{10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21},
+								Cves: []redhat.CveEntry{
+									{
+										ID:       "",
+										Severity: types.SeverityMedium,
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2020-21674", "Red Hat", "bsdtar"},
+					Value: redhat.Advisory{
+						Entries: []redhat.Entry{
+							{
+								FixedVersion:       "",
+								AffectedCPEIndices: []int{10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21},
+								Cves: []redhat.CveEntry{
+									{
+										ID:       "",
+										Severity: types.SeverityMedium,
+									},
+								},
+							},
+							{
+								FixedVersion:       "",
+								AffectedCPEIndices: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 22, 23},
+								Cves: []redhat.CveEntry{
+									{
+										ID:       "",
+										Severity: types.SeverityLow,
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2020-21674", "Red Hat", "libarchive"},
+					Value: redhat.Advisory{
+						Entries: []redhat.Entry{
+							{
+								FixedVersion:       "",
+								AffectedCPEIndices: []int{10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21},
+								Cves: []redhat.CveEntry{
+									{
+										ID:       "",
+										Severity: types.SeverityMedium,
+									},
+								},
+							},
+							{
+								FixedVersion:       "",
+								AffectedCPEIndices: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 22, 23},
+								Cves: []redhat.CveEntry{
+									{
+										ID:       "",
+										Severity: types.SeverityLow,
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2020-21674", "Red Hat", "libarchive-debugsource"},
+					Value: redhat.Advisory{
+						Entries: []redhat.Entry{
+							{
+								FixedVersion:       "",
+								AffectedCPEIndices: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 22, 23},
+								Cves: []redhat.CveEntry{
+									{
+										ID:       "",
+										Severity: types.SeverityLow,
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2020-21674", "Red Hat", "libarchive-devel"},
+					Value: redhat.Advisory{
+						Entries: []redhat.Entry{
+							{
+								FixedVersion:       "",
+								AffectedCPEIndices: []int{10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21},
+								Cves: []redhat.CveEntry{
+									{
+										ID:       "",
+										Severity: types.SeverityMedium,
+									},
+								},
+							},
+							{
+								FixedVersion:       "",
+								AffectedCPEIndices: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 22, 23},
+								Cves: []redhat.CveEntry{
+									{
+										ID:       "",
+										Severity: types.SeverityLow,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			name: "no definitions dir",
 			dir:  filepath.Join("testdata", "no-definitions"),
 		},

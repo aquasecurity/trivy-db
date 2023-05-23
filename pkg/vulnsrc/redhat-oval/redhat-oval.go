@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/aquasecurity/trivy-db/pkg/utils/ints"
@@ -146,7 +147,8 @@ func (vs VulnSrc) mergeAdvisories(advisories map[bucket]Advisory, defs map[bucke
 			found := false
 			for i := range old.Entries {
 				// New advisory should contain a single fixed version and list of arches.
-				if old.Entries[i].FixedVersion == def.Entry.FixedVersion && old.Entries[i].State == def.Entry.State && archesEqual(old.Entries[i].Arches, def.Entry.Arches) {
+				if old.Entries[i].FixedVersion == def.Entry.FixedVersion && old.Entries[i].State == def.Entry.State &&
+					archesEqual(old.Entries[i].Arches, def.Entry.Arches) && cvesEqual(old.Entries[i].Cves, def.Entry.Cves) {
 					found = true
 					old.Entries[i].AffectedCPEList = ustrings.Merge(old.Entries[i].AffectedCPEList, def.Entry.AffectedCPEList)
 				}
@@ -480,6 +482,27 @@ func archesEqual(a, b []string) bool {
 	}
 	for i := range a {
 		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func cvesEqual(a, b []CveEntry) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	// sort slices to fix case when they have same values in different order
+	sort.Slice(a, func(i, j int) bool {
+		return a[i].ID < a[j].ID
+	})
+	sort.Slice(b, func(i, j int) bool {
+		return a[i].ID < a[j].ID
+	})
+
+	for i := range a {
+		if a[i].ID != b[i].ID || a[i].Severity != b[i].Severity {
 			return false
 		}
 	}

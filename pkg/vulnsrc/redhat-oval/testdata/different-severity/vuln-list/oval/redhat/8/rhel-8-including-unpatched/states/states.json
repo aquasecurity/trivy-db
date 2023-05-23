@@ -1,0 +1,49 @@
+{
+  "RpminfoState": [
+    {
+      "ID": "oval:com.redhat.cve:ste:20052541001",
+      "Version": "636",
+      "Arch": {},
+      "Evr": {},
+      "SignatureKeyID": {
+        "Text": "199e2f91fd431d51",
+        "Operation": "equals"
+      }
+    }
+  ],
+  "RpmverifyfileStates": [
+    {
+      "ID": "oval:com.redhat.cve:ste:20052541002",
+      "AttrVersion": "636",
+      "Name": {
+        "Text": "^redhat-release",
+        "Operation": "pattern match"
+      },
+      "Version": {
+        "Text": "^8[^\\d]",
+        "Operation": "pattern match"
+      }
+    },
+    {
+      "ID": "oval:com.redhat.cve:ste:20052541003",
+      "AttrVersion": "636",
+      "Name": {
+        "Text": "^redhat-release",
+        "Operation": "pattern match"
+      },
+      "Version": {}
+    },
+    {
+      "ID": "oval:com.redhat.rhba:ste:20191992004",
+      "AttrVersion": "635",
+      "Name": {
+        "Text": "^redhat-release-coreos",
+        "Operation": "pattern match"
+      },
+      "Version": {
+        "Text": "^4[\\d]+?[^\\d]",
+        "Operation": "pattern match"
+      }
+    }
+  ]
+}

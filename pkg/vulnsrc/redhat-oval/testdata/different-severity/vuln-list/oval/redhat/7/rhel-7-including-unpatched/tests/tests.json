@@ -1,0 +1,119 @@
+{
+  "RpminfoTests": [
+    {
+      "Check": "at least one",
+      "Comment": "bsdcpio is installed",
+      "ID": "oval:com.redhat.cve:tst:20152304001",
+      "Version": "636",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20152304001"
+      },
+      "State": {}
+    },
+    {
+      "Check": "at least one",
+      "Comment": "bsdcpio is signed with Red Hat redhatrelease2 key",
+      "ID": "oval:com.redhat.cve:tst:20152304002",
+      "Version": "636",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20152304001"
+      },
+      "State": {
+        "StateRef": "oval:com.redhat.cve:ste:20042779001"
+      }
+    },
+    {
+      "Check": "at least one",
+      "Comment": "bsdtar is installed",
+      "ID": "oval:com.redhat.cve:tst:20152304003",
+      "Version": "636",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20152304002"
+      },
+      "State": {}
+    },
+    {
+      "Check": "at least one",
+      "Comment": "bsdtar is signed with Red Hat redhatrelease2 key",
+      "ID": "oval:com.redhat.cve:tst:20152304004",
+      "Version": "636",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20152304002"
+      },
+      "State": {
+        "StateRef": "oval:com.redhat.cve:ste:20042779001"
+      }
+    },
+
+    {
+      "Check": "at least one",
+      "Comment": "libarchive is installed",
+      "ID": "oval:com.redhat.cve:tst:20152304005",
+      "Version": "636",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20152304003"
+      },
+      "State": {}
+    },
+    {
+      "Check": "at least one",
+      "Comment": "libarchive is signed with Red Hat redhatrelease2 key",
+      "ID": "oval:com.redhat.cve:tst:20152304006",
+      "Version": "636",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20152304003"
+      },
+      "State": {
+        "StateRef": "oval:com.redhat.cve:ste:20042779001"
+      }
+    },
+    {
+      "Check": "at least one",
+      "Comment": "libarchive-devel is installed",
+      "ID": "oval:com.redhat.cve:tst:20152304007",
+      "Version": "636",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20152304004"
+      },
+      "State": {}
+    },
+    {
+      "Check": "at least one",
+      "Comment": "libarchive-devel is signed with Red Hat redhatrelease2 key",
+      "ID": "oval:com.redhat.cve:tst:20152304008",
+      "Version": "636",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20152304004"
+      },
+      "State": {
+        "StateRef": "oval:com.redhat.cve:ste:20042779001"
+      }
+    }
+  ],
+  "RpmverifyfileTests": [
+    {
+      "Check": "at least one",
+      "Comment": "Red Hat Enterprise Linux 7 is installed",
+      "ID": "oval:com.redhat.cve:tst:20042779005",
+      "Version": "636",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20042779003"
+      },
+      "State": {
+        "StateRef": "oval:com.redhat.cve:ste:20042779002"
+      }
+    },
+   {
+      "Check": "none satisfy",
+      "Comment": "Red Hat Enterprise Linux must be installed",
+      "ID": "oval:com.redhat.cve:tst:20042779006",
+      "Version": "636",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20042779003"
+      },
+      "State": {
+        "StateRef": "oval:com.redhat.cve:ste:20042779003"
+      }
+    }
+  ]
+}

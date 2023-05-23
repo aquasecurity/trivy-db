@@ -1,0 +1,60 @@
+{
+  "RpminfoObjects": [
+    {
+      "ID": "oval:com.redhat.cve:obj:20181000879001",
+      "Version": "636",
+      "Name": "libarchive-devel"
+    },
+    {
+      "ID": "oval:com.redhat.cve:obj:20181000879002",
+      "Version": "636",
+      "Name": "bsdtar"
+    },
+    {
+      "ID": "oval:com.redhat.cve:obj:20181000879003",
+      "Version": "636",
+      "Name": "libarchive"
+    },
+    {
+      "ID": "oval:com.redhat.cve:obj:20181000879004",
+      "Version": "636",
+      "Name": "libarchive-debugsource"
+    }
+  ],
+  "RpmverifyfileObjects": [
+    {
+      "ID": "oval:com.redhat.cve:obj:20052541002",
+      "AttrVersion": "636",
+      "Behaviors": {
+        "Noconfigfiles": "true",
+        "Noghostfiles": "true",
+        "Nogroup": "true",
+        "Nolinkto": "true",
+        "Nomd5": "true",
+        "Nomode": "true",
+        "Nomtime": "true",
+        "Nordev": "true",
+        "Nosize": "true",
+        "Nouser": "true"
+      },
+      "Filepath": {
+        "Text": "/etc/redhat-release"
+      },
+      "Name": {
+        "Operation": "pattern match"
+      },
+      "Version": {
+        "Operation": "pattern match"
+      },
+      "Epoch": {
+        "Operation": "pattern match"
+      },
+      "Arch": {
+        "Operation": "pattern match"
+      },
+      "Release": {
+        "Operation": "pattern match"
+      }
+    }
+  ]
+}
