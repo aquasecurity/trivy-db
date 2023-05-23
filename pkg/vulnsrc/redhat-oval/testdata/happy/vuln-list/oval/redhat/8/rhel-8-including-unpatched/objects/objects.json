@@ -24,6 +24,11 @@
       "ID": "oval:com.redhat.cve:obj:201817199004",
       "Version": "631",
       "Name": "httpd"
+    },
+    {
+      "ID": "oval:com.redhat.cve:obj:202011879002",
+      "Version": "636",
+      "Name": "evolution"
     }
   ]
 }
