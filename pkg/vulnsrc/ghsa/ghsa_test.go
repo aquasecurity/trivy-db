@@ -309,6 +309,21 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: map[string]interface{}{},
 				},
 				{
+					Key: []string{"data-source", "go::GitHub Security Advisory Go"},
+					Value: types.DataSource{
+						ID:   vulnerability.GHSA,
+						Name: "GitHub Security Advisory Go",
+						URL:  "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Ago",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2020-8911", "go::GitHub Security Advisory Go", "github.com/aws/aws-sdk-go"},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"1.34.0"},
+						VulnerableVersions: []string{"\u003c 1.34.0"},
+					},
+				},
+				{
 					Key: []string{"vulnerability-detail", "CVE-2020-8911", ghsaDir},
 					Value: types.VulnerabilityDetail{
 						ID:          "CVE-2020-8911",
@@ -323,6 +338,7 @@ func TestVulnSrc_Update(t *testing.T) {
 							"https://aws.amazon.com/blogs/developer/updates-to-the-amazon-s3-encryption-client/?s=09",
 							"https://bugzilla.redhat.com/show_bug.cgi?id=1869800",
 							"https://github.com/sophieschmieg/exploits/tree/master/aws_s3_crypto_poc",
+							"https://pkg.go.dev/vuln/GO-2022-0646",
 							"https://github.com/advisories/GHSA-f5pg-7wfw-84q9",
 						},
 						Severity:     types.SeverityMedium,

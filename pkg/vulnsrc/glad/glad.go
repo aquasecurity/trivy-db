@@ -32,7 +32,7 @@ const (
 
 var (
 	// TODO: support Npm, NuGet, PyPI and Packagist
-	supportedPkgTypes   = []packageType{Go, Maven, Conan}
+	supportedPkgTypes   = []packageType{Maven, Conan}
 	supportedIDPrefixes = []string{"CVE", "GHSA", "GMS"}
 
 	source = types.DataSource{
