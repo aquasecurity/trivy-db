@@ -26,6 +26,11 @@ var (
 	sourceID   = vulnerability.GHSA
 	ecosystems = []types.Ecosystem{
 		vulnerability.Composer,
+		// GHSA for `Go` ecosystem can use package names instead of module names
+		// e.g. https://github.com/advisories/GHSA-6jvc-q2x7-pchv
+		//         => github.com/aws/aws-sdk-go/service/s3/s3crypto (package name)
+		// but `go-vuln` updates advisories with a delay.
+		// This is why we still use GHSA for `Go`.
 		vulnerability.Go,
 		vulnerability.Maven,
 		vulnerability.Npm,
@@ -139,15 +144,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ecosystem types.Ecosystem, entries []Entry
 		}
 
 		pkgName := vulnerability.NormalizePkgName(ecosystem, entry.Package.Name)
-		// ghsa doesn't have valid module name
-		// We are currently using `govuln` to detect vulnerabilities in `go`
-		// But `govuln` doesn't have severity and some other vulnerability details
-		// We will use `ghsa` vulnerability details for `govuln`
-		if ecosystem != vulnerability.Go {
-			err = vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bucketName}, a)
-			if err != nil {
-				return xerrors.Errorf("failed to save GHSA: %w", err)
-			}
+
+		err = vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bucketName}, a)
+		if err != nil {
+			return xerrors.Errorf("failed to save GHSA: %w", err)
 		}
 
 		var references []string
