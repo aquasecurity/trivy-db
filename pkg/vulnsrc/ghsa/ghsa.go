@@ -26,10 +26,11 @@ var (
 	sourceID   = vulnerability.GHSA
 	ecosystems = []types.Ecosystem{
 		vulnerability.Composer,
-		// ghsa for `Go` ecosystem can use package name instead of module name
-		// e.g. github.com/aws/aws-sdk-go/service/s3/s3crypto
-		// but `go-vuln` updates advisories with a delay
-		// this is why we still use ghsa for `Go`
+		// GHSA for `Go` ecosystem can use package names instead of module names
+		// e.g. https://github.com/advisories/GHSA-6jvc-q2x7-pchv
+		//         => github.com/aws/aws-sdk-go/service/s3/s3crypto (package name)
+		// but `go-vuln` updates advisories with a delay.
+		// This is why we still use GHSA for `Go`.
 		vulnerability.Go,
 		vulnerability.Maven,
 		vulnerability.Npm,
