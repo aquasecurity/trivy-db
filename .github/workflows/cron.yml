@@ -18,7 +18,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version-file: 1.19
+          go-version-file: go.mod
 
       - name: Install bbolt
         run: go install go.etcd.io/bbolt/cmd/bbolt@v1.3.5
