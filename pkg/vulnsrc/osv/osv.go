@@ -123,6 +123,11 @@ func (vs VulnSrc) save(eco ecosystem, entries []Entry) error {
 }
 
 func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
+
+	if entry.Withdrawn != nil {
+		return nil
+	}
+
 	bktName := bucket.Name(string(eco.name), dataSource)
 
 	if err := vs.dbc.PutDataSource(tx, bktName, eco.dataSource); err != nil {
