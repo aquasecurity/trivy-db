@@ -7,6 +7,7 @@ import (
 	"log"
 	"path/filepath"
 	"strings"
+	"time"
 
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/vuln/osv"
@@ -124,7 +125,7 @@ func (vs VulnSrc) save(eco ecosystem, entries []Entry) error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 
-	if entry.Withdrawn != nil {
+	if entry.Withdrawn != nil && entry.Withdrawn.Before(time.Now()) {
 		return nil
 	}
 

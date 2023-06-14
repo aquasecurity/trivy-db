@@ -52,6 +52,10 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key:   []string{"vulnerability-id", "CVE-2018-10895"},
 					Value: map[string]interface{}{},
 				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-2013-4251"},
+					Value: map[string]interface{}{},
+				},
 			},
 			noBuckets: [][]string{ //skip GHSA-id
 				{"advisory-detail", "CVE-2021-40829"},
