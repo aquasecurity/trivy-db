@@ -1,12 +1,12 @@
 package osv
 
 import (
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 	"path/filepath"
 	"testing"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
@@ -52,11 +52,19 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key:   []string{"vulnerability-id", "CVE-2018-10895"},
 					Value: map[string]interface{}{},
 				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-2013-4251"},
+					Value: map[string]interface{}{},
+				},
 			},
 			noBuckets: [][]string{ //skip GHSA-id
 				{"advisory-detail", "CVE-2021-40829"},
 				{"vulnerability-detail", "CVE-2021-40829"},
 				{"vulnerability-id", "CVE-2021-40829"},
+				// skip withdrawn
+				{"vulnerability-id", "CVE-2023-31655"},
+				{"advisory-detail", "CVE-2023-31655"},
+				{"vulnerability-detail", "CVE-2023-31655"},
 			},
 		},
 		{
