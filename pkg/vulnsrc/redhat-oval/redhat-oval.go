@@ -11,14 +11,14 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/aquasecurity/trivy-db/pkg/utils/ints"
-
 	bolt "go.etcd.io/bbolt"
+	"golang.org/x/exp/slices"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/utils/ints"
 	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
@@ -148,7 +148,7 @@ func (vs VulnSrc) mergeAdvisories(advisories map[bucket]Advisory, defs map[bucke
 			for i := range old.Entries {
 				// New advisory should contain a single fixed version and list of arches.
 				if old.Entries[i].FixedVersion == def.Entry.FixedVersion && old.Entries[i].State == def.Entry.State &&
-					archesEqual(old.Entries[i].Arches, def.Entry.Arches) && cvesEqual(old.Entries[i].Cves, def.Entry.Cves) {
+					slices.Equal(old.Entries[i].Arches, def.Entry.Arches) && slices.Equal(old.Entries[i].Cves, def.Entry.Cves) {
 					found = true
 					old.Entries[i].AffectedCPEList = ustrings.Merge(old.Entries[i].AffectedCPEList, def.Entry.AffectedCPEList)
 				}
@@ -349,6 +349,9 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 					Severity: severityFromImpact(cve.Impact),
 				})
 			}
+			sort.Slice(cveEntries, func(i, j int) bool {
+				return cveEntries[i].ID < cveEntries[j].ID
+			})
 
 			if rhsaID != "" { // For patched vulnerabilities
 				bkt := bucket{
@@ -417,6 +420,7 @@ func walkCriterion(cri criteria, tests map[string]rpmInfoTest) (string, []pkg) {
 		var arches []string
 		if t.Arch != "" {
 			arches = strings.Split(t.Arch, "|") // affected arches are merged with '|'(e.g. 'aarch64|ppc64le|x86_64')
+			sort.Strings(arches)
 		}
 
 		packages = append(packages, pkg{
@@ -474,37 +478,4 @@ func severityFromImpact(sev string) types.Severity {
 		return types.SeverityCritical
 	}
 	return types.SeverityUnknown
-}
-
-func archesEqual(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
-}
-
-func cvesEqual(a, b []CveEntry) bool {
-	if len(a) != len(b) {
-		return false
-	}
-
-	// sort slices to fix case when they have same values in different order
-	sort.Slice(a, func(i, j int) bool {
-		return a[i].ID < a[j].ID
-	})
-	sort.Slice(b, func(i, j int) bool {
-		return a[i].ID < a[j].ID
-	})
-
-	for i := range a {
-		if a[i].ID != b[i].ID || a[i].Severity != b[i].Severity {
-			return false
-		}
-	}
-	return true
 }
