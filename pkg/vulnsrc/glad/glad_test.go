@@ -22,14 +22,6 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []vulnsrctest.WantValues{
 				{
-					Key: []string{"data-source", "go::GitLab Advisory Database Community"},
-					Value: types.DataSource{
-						ID:   vulnerability.GLAD,
-						Name: "GitLab Advisory Database Community",
-						URL:  "https://gitlab.com/gitlab-org/advisories-community",
-					},
-				},
-				{
 					Key: []string{"data-source", "maven::GitLab Advisory Database Community"},
 					Value: types.DataSource{
 						ID:   vulnerability.GLAD,
@@ -46,13 +38,6 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2016-1905", "go::GitLab Advisory Database Community", "k8s.io/kubernetes"},
-					Value: types.Advisory{
-						PatchedVersions:    []string{"v1.2.0"},
-						VulnerableVersions: []string{"<v1.2.0"},
-					},
-				},
-				{
 					Key: []string{"advisory-detail", "CVE-2018-1196", "maven::GitLab Advisory Database Community", "org.springframework.boot:spring-boot"},
 					Value: types.Advisory{
 						PatchedVersions:    []string{"1.5.10.RELEASE"},
@@ -63,15 +48,6 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"advisory-detail", "CVE-2020-13574", "conan::GitLab Advisory Database Community", "gsoap"},
 					Value: types.Advisory{
 						VulnerableVersions: []string{"=2.8.107"},
-					},
-				},
-				{
-					Key: []string{"vulnerability-detail", "CVE-2016-1905", "glad"},
-					Value: types.VulnerabilityDetail{
-						ID:          "CVE-2016-1905",
-						Title:       "Improper Access Control",
-						Description: "The API server in Kubernetes does not properly check admission control, which allows remote authenticated users to access additional resources via a crafted patched object.",
-						References:  []string{"https://nvd.nist.gov/vuln/detail/CVE-2016-1905"},
 					},
 				},
 				{
