@@ -21,7 +21,8 @@ import (
 )
 
 const (
-	redhatDir = "redhat"
+	vulnListDir = "vuln-list-redhat"
+	redhatDir   = "redhat"
 
 	resourceURL = "https://access.redhat.com/security/cve/%s"
 )
@@ -41,7 +42,7 @@ func (vs VulnSrc) Name() types.SourceID {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	rootDir := filepath.Join(dir, "vuln-list", redhatDir)
+	rootDir := filepath.Join(dir, vulnListDir, redhatDir)
 
 	var cves []RedhatCVE
 	err := utils.FileWalk(rootDir, func(r io.Reader, _ string) error {
