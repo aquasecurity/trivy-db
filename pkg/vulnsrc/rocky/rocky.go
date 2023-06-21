@@ -161,7 +161,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 					VendorID:     erratum.ID,
 				}
 
-				// if advisory for this package and CVE was saved - add new architecture
+				// if the advisory for this package and CVE have been kept - just add the new architecture
 				if adv, ok := input.Advisories[pkg.Name]; ok {
 					// don't include duplicates
 					if !adv.FixedVersions.IsDuplicate(fixedVersion) {

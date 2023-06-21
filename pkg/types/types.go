@@ -116,7 +116,7 @@ type Advisory struct {
 	FixedVersion    string `json:",omitempty"`
 	AffectedVersion string `json:",omitempty"` // Only for Arch Linux
 
-	// Advisory can contain different fixed versions for different architectures/flavors(see Oracle Linux)
+	// Advisory can contain different fixed versions for different architectures
 	FixedVersions FixedVersions `json:",omitempty"`
 
 	// MajorVersion ranges for language-specific package
@@ -138,7 +138,6 @@ type FixedVersion struct {
 	FixedVersion string
 	Arch         string
 	VendorID     string
-	Flavor       string // For Oracle Linux: (fips, ksplice1, etc...)
 }
 
 type Vulnerability struct {
@@ -162,7 +161,6 @@ type Ecosystem string
 func (versions FixedVersions) IsDuplicate(ver FixedVersion) bool {
 	for _, version := range versions {
 		if version.FixedVersion == ver.FixedVersion &&
-			version.Flavor == ver.Flavor &&
 			version.Arch == ver.Arch &&
 			version.VendorID == ver.VendorID {
 			return true
