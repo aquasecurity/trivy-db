@@ -25,7 +25,7 @@ const (
 
 var (
 	targetRepos  = []string{"BaseOS", "AppStream", "extras"}
-	targetArches = []string{"x86_64"}
+	targetArches = []string{"x86_64", "aarch64"}
 	source       = types.DataSource{
 		ID:   vulnerability.Rocky,
 		Name: "Rocky Linux updateinfo",
@@ -106,11 +106,7 @@ func (vs *VulnSrc) parse(rootDir string) (map[string][]RLSA, error) {
 		}
 
 		if !ustrings.InSlice(arch, targetArches) {
-			switch arch {
-			case "aarch64":
-			default:
-				log.Printf("Unsupported Rocky arch: %s", arch)
-			}
+			log.Printf("Unsupported Rocky arch: %s", arch)
 			return nil
 		}
 
@@ -143,9 +139,15 @@ func (vs *VulnSrc) put(errataVer map[string][]RLSA) error {
 }
 
 func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error {
+	savedInputs := map[string]PutInput{}
 	for _, erratum := range errata {
 		for _, cveID := range erratum.CveIDs {
-			advisories := map[string]types.Advisory{}
+			input := PutInput{
+				Advisories: map[string]types.Advisory{},
+			}
+			if in, ok := savedInputs[cveID]; ok {
+				input = in
+			}
 			for _, pkg := range erratum.Packages {
 				// Skip the modular packages until the following bug is fixed.
 				// https://forums.rockylinux.org/t/some-errata-missing-in-comparison-with-rhel-and-almalinux/3843/8
@@ -153,12 +155,29 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 					continue
 				}
 
-				advisories[pkg.Name] = types.Advisory{
+				fixedVersion := types.FixedVersion{
 					FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
+					Arch:         pkg.Arch,
+					VendorID:     erratum.ID,
+				}
+
+				// if advisory for this package and CVE was saved - add new architecture
+				if adv, ok := input.Advisories[pkg.Name]; ok {
+					// don't include duplicates
+					if !adv.FixedVersions.IsDuplicate(fixedVersion) {
+						adv.FixedVersions = append(adv.FixedVersions, fixedVersion)
+						input.Advisories[pkg.Name] = adv
+					}
+				} else {
+					input.Advisories[pkg.Name] = types.Advisory{
+						// For backward compatibility
+						FixedVersion:  utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
+						FixedVersions: types.FixedVersions{fixedVersion},
+					}
 				}
 			}
 
-			if len(advisories) == 0 {
+			if len(input.Advisories) == 0 {
 				continue
 			}
 
@@ -174,16 +193,18 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 				Description: erratum.Description,
 			}
 
-			err := vs.Put(tx, PutInput{
-				PlatformName: platformName,
-				CveID:        cveID,
-				Vuln:         vuln,
-				Advisories:   advisories,
-				Erratum:      erratum,
-			})
-			if err != nil {
-				return xerrors.Errorf("db put error: %w", err)
-			}
+			input.PlatformName = platformName
+			input.CveID = cveID
+			input.Vuln = vuln
+
+			savedInputs[cveID] = input
+		}
+	}
+
+	for _, input := range savedInputs {
+		err := vs.Put(tx, input)
+		if err != nil {
+			return xerrors.Errorf("db put error: %w", err)
 		}
 	}
 	return nil

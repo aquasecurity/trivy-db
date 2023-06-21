@@ -32,12 +32,46 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"advisory-detail", "CVE-2021-25215", "rocky 8", "bind-export-libs"},
 					Value: types.Advisory{
 						FixedVersion: "32:9.11.26-4.el8_4",
+						FixedVersions: []types.FixedVersion{
+							{
+								FixedVersion: "32:9.11.26-4.el8_4",
+								Arch:         "aarch64",
+								VendorID:     "RLSA-2021:1989",
+							},
+							{
+								FixedVersion: "32:9.11.26-4.el8_4",
+								Arch:         "i686",
+								VendorID:     "RLSA-2021:1989",
+							},
+							{
+								FixedVersion: "32:9.11.26-4.el8_4",
+								Arch:         "x86_64",
+								VendorID:     "RLSA-2021:1989",
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2021-25215", "rocky 8", "bind-export-devel"},
 					Value: types.Advisory{
 						FixedVersion: "32:9.11.26-4.el8_4",
+						FixedVersions: []types.FixedVersion{
+							{
+								FixedVersion: "32:9.11.26-4.el8_4",
+								Arch:         "aarch64",
+								VendorID:     "RLSA-2021:1989",
+							},
+							{
+								FixedVersion: "32:9.11.26-4.el8_4",
+								Arch:         "x86_64",
+								VendorID:     "RLSA-2021:1989",
+							},
+							{
+								FixedVersion: "32:9.11.26-4.el8_4",
+								Arch:         "i686",
+								VendorID:     "RLSA-2021:1989",
+							},
+						},
 					},
 				},
 				{
