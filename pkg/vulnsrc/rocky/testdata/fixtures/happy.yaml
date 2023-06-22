@@ -1,0 +1,30 @@
+- bucket: rocky 9
+  pairs:
+    - bucket: bind
+      pairs:
+        - key: CVE-2022-0396
+          value:
+            FixedVersion: 32:9.16.23-0.9.el8.1
+            Entries:
+              - FixedVersion: 32:9.16.23-0.9.el8.1
+                Arches:
+                  - aarch64
+                  - x86_64
+                VendorIds:
+                  - RLSA-2022:7643
+    - bucket: rsyslog
+      pairs:
+        - key: CVE-2022-24903
+          value:
+            FixedVersion: 8.2102.0-7.el8_6.1
+            Entries:
+              - FixedVersion: 8.2102.0-7.el8_6.1
+                Arches:
+                  - x86_64
+                VendorIds:
+                  - RLSA-2022:4799
+              - FixedVersion: 8.2102.0-7.el8_6.2 # modified for testing
+                Arches:
+                  - aarch64
+                VendorIds:
+                  - RLSA-2022:4799
