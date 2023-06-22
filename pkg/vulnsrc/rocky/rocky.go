@@ -3,6 +3,7 @@ package rocky
 import (
 	"encoding/json"
 	"fmt"
+	"golang.org/x/exp/slices"
 	"io"
 	"log"
 	"path/filepath"
@@ -155,7 +156,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 					continue
 				}
 
-				fixedVersion := types.FixedVersion{
+				entry := types.Entry{
 					FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 					Arch:         pkg.Arch,
 					VendorID:     erratum.ID,
@@ -164,15 +165,14 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 				// if the advisory for this package and CVE have been kept - just add the new architecture
 				if adv, ok := input.Advisories[pkg.Name]; ok {
 					// don't include duplicates
-					if !adv.FixedVersions.IsDuplicate(fixedVersion) {
-						adv.FixedVersions = append(adv.FixedVersions, fixedVersion)
+					if !slices.Contains(adv.Entries, entry) {
+						adv.Entries = append(adv.Entries, entry)
 						input.Advisories[pkg.Name] = adv
 					}
 				} else {
 					input.Advisories[pkg.Name] = types.Advisory{
-						// For backward compatibility
-						FixedVersion:  utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
-						FixedVersions: types.FixedVersions{fixedVersion},
+						FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release), // For backward compatibility
+						Entries:      types.Entries{entry},
 					}
 				}
 			}

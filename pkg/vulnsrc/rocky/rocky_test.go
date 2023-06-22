@@ -32,7 +32,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"advisory-detail", "CVE-2021-25215", "rocky 8", "bind-export-libs"},
 					Value: types.Advisory{
 						FixedVersion: "32:9.11.26-4.el8_4",
-						FixedVersions: []types.FixedVersion{
+						Entries: []types.Entry{
 							{
 								FixedVersion: "32:9.11.26-4.el8_4",
 								Arch:         "aarch64",
@@ -55,7 +55,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"advisory-detail", "CVE-2021-25215", "rocky 8", "bind-export-devel"},
 					Value: types.Advisory{
 						FixedVersion: "32:9.11.26-4.el8_4",
-						FixedVersions: []types.FixedVersion{
+						Entries: []types.Entry{
 							{
 								FixedVersion: "32:9.11.26-4.el8_4",
 								Arch:         "aarch64",

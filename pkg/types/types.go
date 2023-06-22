@@ -116,8 +116,9 @@ type Advisory struct {
 	FixedVersion    string `json:",omitempty"`
 	AffectedVersion string `json:",omitempty"` // Only for Arch Linux
 
-	// Advisory can contain different fixed versions for different architectures
-	FixedVersions FixedVersions `json:",omitempty"`
+	// Entries contains fixed versions for each architecture
+	// To find cases when different architectures have different fixed versions
+	Entries Entries `json:",omitempty"`
 
 	// MajorVersion ranges for language-specific package
 	// Some advisories provide VulnerableVersions only, others provide PatchedVersions and UnaffectedVersions
@@ -132,9 +133,9 @@ type Advisory struct {
 	Custom interface{} `json:",omitempty"`
 }
 
-type FixedVersions []FixedVersion
+type Entries []Entry
 
-type FixedVersion struct {
+type Entry struct {
 	FixedVersion string
 	Arch         string
 	VendorID     string
@@ -157,14 +158,3 @@ type Vulnerability struct {
 
 // Ecosystem represents language-specific ecosystem
 type Ecosystem string
-
-func (versions FixedVersions) IsDuplicate(ver FixedVersion) bool {
-	for _, version := range versions {
-		if version.FixedVersion == ver.FixedVersion &&
-			version.Arch == ver.Arch &&
-			version.VendorID == ver.VendorID {
-			return true
-		}
-	}
-	return false
-}
