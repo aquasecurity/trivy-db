@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/samber/lo"
@@ -241,6 +242,10 @@ func (r *Rocky) Put(tx *bolt.Tx, input PutInput) error {
 	}
 
 	for pkgName, advisory := range input.Advisories {
+		for _, entry := range advisory.Entries {
+			sort.Strings(entry.Arches)
+			sort.Strings(entry.VendorIDs)
+		}
 		if err := r.PutAdvisoryDetail(tx, input.CveID, pkgName, []string{input.PlatformName}, advisory); err != nil {
 			return xerrors.Errorf("failed to save Rocky advisory: %w", err)
 		}
