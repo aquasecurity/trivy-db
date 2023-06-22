@@ -98,9 +98,7 @@ type Advisory struct {
 	VulnerabilityID string   `json:",omitempty"` // CVE-ID or vendor ID
 	VendorIDs       []string `json:",omitempty"` // e.g. RHSA-ID and DSA-ID
 
-	// Rpm packages have advisories for different architectures with same package name
-	// This field is required to separate these packages.
-	Arches []string `json:"-"`
+	Arches []string `json:",omitempty"`
 
 	// It is filled only when FixedVersion is empty since it is obvious the state is "Fixed" when FixedVersion is not empty.
 	// e.g. Will not fix and Affected
@@ -116,10 +114,6 @@ type Advisory struct {
 	FixedVersion    string `json:",omitempty"`
 	AffectedVersion string `json:",omitempty"` // Only for Arch Linux
 
-	// Entries contains fixed versions for each architecture
-	// To find cases when different architectures have different fixed versions
-	Entries Entries `json:",omitempty"`
-
 	// MajorVersion ranges for language-specific package
 	// Some advisories provide VulnerableVersions only, others provide PatchedVersions and UnaffectedVersions
 	VulnerableVersions []string `json:",omitempty"`
@@ -131,14 +125,6 @@ type Advisory struct {
 
 	// Custom is basically for extensibility and is not supposed to be used in OSS
 	Custom interface{} `json:",omitempty"`
-}
-
-type Entries []Entry
-
-type Entry struct {
-	FixedVersion string
-	Arch         string
-	VendorID     string
 }
 
 type Vulnerability struct {

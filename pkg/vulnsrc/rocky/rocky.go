@@ -3,13 +3,14 @@ package rocky
 import (
 	"encoding/json"
 	"fmt"
-	"golang.org/x/exp/slices"
 	"io"
 	"log"
 	"path/filepath"
 	"strings"
 
+	"github.com/samber/lo"
 	bolt "go.etcd.io/bbolt"
+	"golang.org/x/exp/slices"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
@@ -25,9 +26,16 @@ const (
 )
 
 var (
-	targetRepos  = []string{"BaseOS", "AppStream", "extras"}
-	targetArches = []string{"x86_64", "aarch64"}
-	source       = types.DataSource{
+	targetRepos = []string{
+		"BaseOS",
+		"AppStream",
+		"extras",
+	}
+	targetArches = []string{
+		"x86_64",
+		"aarch64",
+	}
+	source = types.DataSource{
 		ID:   vulnerability.Rocky,
 		Name: "Rocky Linux updateinfo",
 		URL:  "https://download.rockylinux.org/pub/rocky/",
@@ -38,14 +46,19 @@ type PutInput struct {
 	PlatformName string
 	CveID        string
 	Vuln         types.VulnerabilityDetail
-	Advisories   map[string]types.Advisory // pkg name => advisory
-	Erratum      RLSA                      // for extensibility, not used in trivy-db
+	Advisories   map[string]Advisory // pkg name => advisory
+	Erratum      RLSA                // for extensibility, not used in trivy-db
+}
+
+type Advisory struct {
+	FixedVersion string           `json:",omitempty"` // For backward compatibility
+	Entries      []types.Advisory `json:",omitempty"`
 }
 
 type DB interface {
 	db.Operation
 	Put(*bolt.Tx, PutInput) error
-	Get(release, pkgName string) ([]types.Advisory, error)
+	Get(release, pkgName, arch string) ([]types.Advisory, error)
 }
 
 type VulnSrc struct {
@@ -144,7 +157,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 	for _, erratum := range errata {
 		for _, cveID := range erratum.CveIDs {
 			input := PutInput{
-				Advisories: map[string]types.Advisory{},
+				Advisories: map[string]Advisory{},
 			}
 			if in, ok := savedInputs[cveID]; ok {
 				input = in
@@ -156,23 +169,30 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 					continue
 				}
 
-				entry := types.Entry{
+				entry := types.Advisory{
 					FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
-					Arch:         pkg.Arch,
-					VendorID:     erratum.ID,
+					Arches:       []string{pkg.Arch},
+					VendorIDs:    []string{erratum.ID},
 				}
 
 				// if the advisory for this package and CVE have been kept - just add the new architecture
 				if adv, ok := input.Advisories[pkg.Name]; ok {
-					// don't include duplicates
-					if !slices.Contains(adv.Entries, entry) {
+					old, i, found := lo.FindIndexOf(adv.Entries, func(adv types.Advisory) bool {
+						return adv.FixedVersion == entry.FixedVersion
+					})
+
+					// If the advisory with the same fixed version and RLSA-ID is present - just add the new architecture
+					if found && !slices.Contains(old.Arches, pkg.Arch) {
+						adv.Entries[i].Arches = append(old.Arches, pkg.Arch)
+						input.Advisories[pkg.Name] = adv
+					} else if !found {
 						adv.Entries = append(adv.Entries, entry)
 						input.Advisories[pkg.Name] = adv
 					}
 				} else {
-					input.Advisories[pkg.Name] = types.Advisory{
+					input.Advisories[pkg.Name] = Advisory{
 						FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release), // For backward compatibility
-						Entries:      types.Entries{entry},
+						Entries:      []types.Advisory{entry},
 					}
 				}
 			}
@@ -228,12 +248,28 @@ func (r *Rocky) Put(tx *bolt.Tx, input PutInput) error {
 	return nil
 }
 
-func (r *Rocky) Get(release, pkgName string) ([]types.Advisory, error) {
+func (r *Rocky) Get(release, pkgName, arch string) ([]types.Advisory, error) {
 	bucket := fmt.Sprintf(platformFormat, release)
-	advisories, err := r.GetAdvisories(bucket, pkgName)
+	rawAdvisories, err := r.ForEachAdvisory([]string{bucket}, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get Rocky advisories: %w", err)
+		return nil, xerrors.Errorf("unable to iterate advisories: %w", err)
 	}
+	var advisories []types.Advisory
+	for vulnID, v := range rawAdvisories {
+		var adv Advisory
+		if err = json.Unmarshal(v.Content, &adv); err != nil {
+			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
+		}
+
+		for _, entry := range adv.Entries {
+			if !slices.Contains(entry.Arches, arch) {
+				continue
+			}
+			entry.VulnerabilityID = vulnID
+			advisories = append(advisories, entry)
+		}
+	}
+
 	return advisories, nil
 }
 
