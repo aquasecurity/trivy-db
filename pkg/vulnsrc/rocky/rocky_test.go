@@ -44,7 +44,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"rocky 8",
 						"bind-export-libs",
 					},
-					Value: rocky.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "32:9.11.26-4.el8_4",
 						Entries: []types.Advisory{
 							{
@@ -66,7 +66,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"rocky 8",
 						"bind-export-devel",
 					},
-					Value: rocky.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "32:9.11.26-4.el8_4",
 						Entries: []types.Advisory{
 							{
@@ -100,6 +100,139 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{
 						"vulnerability-id",
 						"CVE-2021-25215",
+					},
+					Value: map[string]interface{}{},
+				},
+			},
+		},
+		{
+			name: "happy path. Different versions",
+			dir:  filepath.Join("testdata", "different-versions"),
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{
+						"data-source",
+						"rocky 8",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.Rocky,
+						Name: "Rocky Linux updateinfo",
+						URL:  "https://download.rockylinux.org/pub/rocky/",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2021-25215",
+						"rocky 8",
+						"bind-export-devel",
+					},
+					Value: types.Advisories{
+						FixedVersion: "32:9.11.26-4.el8_4",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "32:9.11.26-4.el8_4",
+								Arches: []string{
+									"aarch64",
+								},
+								VendorIDs: []string{"RLSA-2021:000"},
+							},
+							{
+								FixedVersion: "32:7.11.26-4.el8_4",
+								Arches: []string{
+									"x86_64",
+								},
+								VendorIDs: []string{"RLSA-2021:0000"},
+							},
+							{
+								FixedVersion: "32:8.11.26-4.el8_4",
+								Arches: []string{
+									"i686",
+								},
+								VendorIDs: []string{"RLSA-2021:0000"},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2021-25215",
+						string(vulnerability.Rocky),
+					},
+					Value: types.VulnerabilityDetail{
+						Severity: types.SeverityHigh,
+						References: []string{
+							"https://access.redhat.com/hydra/rest/securitydata/cve/CVE-2021-25215.json",
+						},
+						Title:       "Important: bind security update",
+						Description: "For more information visit https://errata.rockylinux.org/RLSA-2021:1989",
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2021-25215",
+					},
+					Value: map[string]interface{}{},
+				},
+			},
+		},
+		{
+			name: "happy path with duplicates",
+			dir:  filepath.Join("testdata", "duplicates"),
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{
+						"data-source",
+						"rocky 8",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.Rocky,
+						Name: "Rocky Linux updateinfo",
+						URL:  "https://download.rockylinux.org/pub/rocky/",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2022-29117",
+						"rocky 8",
+						"aspnetcore-runtime-6.0",
+					},
+					Value: types.Advisories{
+						FixedVersion: "6.0.5-1.el8_6",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "6.0.5-1.el8_6",
+								Arches: []string{
+									"aarch64",
+									"x86_64",
+								},
+								VendorIDs: []string{"RLSA-2022:0000", "RLSA-2022:2200"},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2022-29117",
+						string(vulnerability.Rocky),
+					},
+					Value: types.VulnerabilityDetail{
+						Severity: types.SeverityHigh,
+						References: []string{
+							"https://access.redhat.com/hydra/rest/securitydata/cve/CVE-2022-29117.json",
+						},
+						Title:       "Important: .NET 5.0 security, bug fix, and enhancement update",
+						Description: "For more information visit https://errata.rockylinux.org/RLSA-2022:2200",
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2022-29117",
 					},
 					Value: map[string]interface{}{},
 				},
