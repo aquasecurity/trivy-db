@@ -47,13 +47,8 @@ type PutInput struct {
 	PlatformName string
 	CveID        string
 	Vuln         types.VulnerabilityDetail
-	Advisories   map[string]Advisory // pkg name => advisory
-	Erratum      RLSA                // for extensibility, not used in trivy-db
-}
-
-type Advisory struct {
-	FixedVersion string           `json:",omitempty"` // For backward compatibility
-	Entries      []types.Advisory `json:",omitempty"`
+	Advisories   map[string]types.Advisories // pkg name => advisory
+	Erratum      RLSA                        // for extensibility, not used in trivy-db
 }
 
 type DB interface {
@@ -158,7 +153,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 	for _, erratum := range errata {
 		for _, cveID := range erratum.CveIDs {
 			input := PutInput{
-				Advisories: map[string]Advisory{},
+				Advisories: map[string]types.Advisories{},
 			}
 			if in, ok := savedInputs[cveID]; ok {
 				input = in
@@ -183,15 +178,20 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 					})
 
 					// If the advisory with the same fixed version and RLSA-ID is present - just add the new architecture
-					if found && !slices.Contains(old.Arches, pkg.Arch) {
-						adv.Entries[i].Arches = append(old.Arches, pkg.Arch)
+					if found {
+						if !slices.Contains(old.Arches, pkg.Arch) {
+							adv.Entries[i].Arches = append(old.Arches, pkg.Arch)
+						}
+						if !slices.Contains(old.VendorIDs, erratum.ID) {
+							adv.Entries[i].VendorIDs = append(old.VendorIDs, erratum.ID)
+						}
 						input.Advisories[pkg.Name] = adv
 					} else if !found {
 						adv.Entries = append(adv.Entries, entry)
 						input.Advisories[pkg.Name] = adv
 					}
 				} else {
-					input.Advisories[pkg.Name] = Advisory{
+					input.Advisories[pkg.Name] = types.Advisories{
 						FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release), // For backward compatibility
 						Entries:      []types.Advisory{entry},
 					}
@@ -261,7 +261,7 @@ func (r *Rocky) Get(release, pkgName, arch string) ([]types.Advisory, error) {
 	}
 	var advisories []types.Advisory
 	for vulnID, v := range rawAdvisories {
-		var adv Advisory
+		var adv types.Advisories
 		if err = json.Unmarshal(v.Content, &adv); err != nil {
 			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
 		}

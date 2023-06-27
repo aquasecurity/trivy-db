@@ -127,6 +127,13 @@ type Advisory struct {
 	Custom interface{} `json:",omitempty"`
 }
 
+// Advisories saves fixed versions for each arches/vendorIDs
+// e.g. this is required when CVE has different fixed versions for different arches
+type Advisories struct {
+	FixedVersion string     `json:",omitempty"` // For backward compatibility
+	Entries      []Advisory `json:",omitempty"`
+}
+
 type Vulnerability struct {
 	Title            string         `json:",omitempty"`
 	Description      string         `json:",omitempty"`
