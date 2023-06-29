@@ -272,6 +272,7 @@ func (r *Rocky) Get(release, pkgName, arch string) ([]types.Advisory, error) {
 			advisories = append(advisories, types.Advisory{
 				VulnerabilityID: vulnID,
 				FixedVersion:    adv.FixedVersion,
+				DataSource:      &v.Source,
 			})
 			continue
 		}
@@ -281,6 +282,7 @@ func (r *Rocky) Get(release, pkgName, arch string) ([]types.Advisory, error) {
 				continue
 			}
 			entry.VulnerabilityID = vulnID
+			entry.DataSource = &v.Source
 			advisories = append(advisories, entry)
 		}
 	}
