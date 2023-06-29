@@ -266,6 +266,16 @@ func (r *Rocky) Get(release, pkgName, arch string) ([]types.Advisory, error) {
 			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
 		}
 
+		// For backward compatibility
+		// The old trivy-db has no entries, but has fixed versions only.
+		if len(adv.Entries) == 0 {
+			advisories = append(advisories, types.Advisory{
+				VulnerabilityID: vulnID,
+				FixedVersion:    adv.FixedVersion,
+			})
+			continue
+		}
+
 		for _, entry := range adv.Entries {
 			if !slices.Contains(entry.Arches, arch) {
 				continue

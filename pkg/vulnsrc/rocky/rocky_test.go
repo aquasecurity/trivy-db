@@ -209,7 +209,10 @@ func TestVulnSrc_Update(t *testing.T) {
 									"aarch64",
 									"x86_64",
 								},
-								VendorIDs: []string{"RLSA-2022:0000", "RLSA-2022:2200"},
+								VendorIDs: []string{
+									"RLSA-2022:0000",
+									"RLSA-2022:2200",
+								},
 							},
 						},
 					},
@@ -311,6 +314,22 @@ func TestRocky_Get(t *testing.T) {
 						"aarch64",
 					},
 					VendorIDs: []string{"RLSA-2022:4799"},
+				},
+			},
+			wantErr: require.NoError,
+		},
+		{
+			name:     "old schema, no entries",
+			fixtures: []string{"testdata/fixtures/old.yaml"},
+			args: args{
+				release: "9",
+				pkgName: "bind",
+				arch:    "aarch64",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2022-0396",
+					FixedVersion:    "32:9.16.23-0.9.el8.1",
 				},
 			},
 			wantErr: require.NoError,
