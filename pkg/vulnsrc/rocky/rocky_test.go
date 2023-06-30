@@ -294,6 +294,11 @@ func TestRocky_Get(t *testing.T) {
 						"x86_64",
 					},
 					VendorIDs: []string{"RLSA-2022:7643"},
+					DataSource: &types.DataSource{
+						ID:   "rocky",
+						Name: "Rocky Linux updateinfo",
+						URL:  "https://download.rockylinux.org/pub/rocky/",
+					},
 				},
 			},
 			wantErr: require.NoError,
@@ -314,6 +319,11 @@ func TestRocky_Get(t *testing.T) {
 						"aarch64",
 					},
 					VendorIDs: []string{"RLSA-2022:4799"},
+					DataSource: &types.DataSource{
+						ID:   "rocky",
+						Name: "Rocky Linux updateinfo",
+						URL:  "https://download.rockylinux.org/pub/rocky/",
+					},
 				},
 			},
 			wantErr: require.NoError,
@@ -330,6 +340,11 @@ func TestRocky_Get(t *testing.T) {
 				{
 					VulnerabilityID: "CVE-2022-0396",
 					FixedVersion:    "32:9.16.23-0.9.el8.1",
+					DataSource: &types.DataSource{
+						ID:   "rocky",
+						Name: "Rocky Linux updateinfo",
+						URL:  "https://download.rockylinux.org/pub/rocky/",
+					},
 				},
 			},
 			wantErr: require.NoError,
