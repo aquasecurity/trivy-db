@@ -5,10 +5,3 @@
         - key: CVE-2022-0396
           value:
             FixedVersion: 32:9.16.23-0.9.el8.1
-- bucket: data-source
-  pairs:
-    - key: rocky 9
-      value:
-        ID: "rocky"
-        Name: "Rocky Linux updateinfo"
-        URL: "https://download.rockylinux.org/pub/rocky/"

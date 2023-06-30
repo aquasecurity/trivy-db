@@ -279,7 +279,7 @@ func TestRocky_Get(t *testing.T) {
 	}{
 		{
 			name:     "the same fixed version",
-			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/data-source.yaml"},
 			args: args{
 				release: "9",
 				pkgName: "bind",
@@ -305,7 +305,7 @@ func TestRocky_Get(t *testing.T) {
 		},
 		{
 			name:     "different fixed versions for different arches",
-			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/data-source.yaml"},
 			args: args{
 				release: "9",
 				pkgName: "rsyslog",
@@ -330,7 +330,7 @@ func TestRocky_Get(t *testing.T) {
 		},
 		{
 			name:     "old schema, no entries",
-			fixtures: []string{"testdata/fixtures/old.yaml"},
+			fixtures: []string{"testdata/fixtures/old.yaml", "testdata/fixtures/data-source.yaml"},
 			args: args{
 				release: "9",
 				pkgName: "bind",
