@@ -275,6 +275,7 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 					FixedVersion: entry.FixedVersion,
 					Arches:       entry.Arches,
 					Status:       entry.State,
+					DataSource:   &v.Source,
 				}
 
 				if strings.HasPrefix(vulnID, "CVE-") {
@@ -493,6 +494,11 @@ func newStatus(s string) types.Status {
 		return types.StatusUnderInvestigation
 	case "will not fix":
 		return types.StatusWillNotFix
+	case "out of support scope":
+		return types.StatusEndOfLife
+	}
+	if s != "" {
+		panic(fmt.Sprintf("unknown status: %s", s))
 	}
 	return types.StatusUnknown
 }

@@ -10,10 +10,10 @@ require (
 	github.com/knqyf263/go-deb-version v0.0.0-20190517075300-09fca494f03d
 	github.com/knqyf263/go-rpm-version v0.0.0-20170716094938-74609b86c936
 	github.com/stretchr/testify v1.8.4
-	github.com/urfave/cli v1.22.13
+	github.com/urfave/cli v1.22.14
 	go.etcd.io/bbolt v1.3.7
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
-	golang.org/x/text v0.9.0
+	golang.org/x/text v0.10.0
 	golang.org/x/vuln v0.0.0-20211221130724-9d39a965865f
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	gopkg.in/cheggaaa/pb.v1 v1.0.28

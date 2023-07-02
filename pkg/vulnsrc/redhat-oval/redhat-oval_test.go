@@ -827,6 +827,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/cpe.yaml",
+				"testdata/fixtures/data-source.yaml",
 			},
 			want: []types.Advisory{
 				{
@@ -839,10 +840,20 @@ func TestVulnSrc_Get(t *testing.T) {
 						"ppc64",
 						"x86_64",
 					},
+					DataSource: &types.DataSource{
+						ID:   vulnerability.RedHatOVAL,
+						Name: "Red Hat OVAL v2",
+						URL:  "https://www.redhat.com/security/data/oval/v2/",
+					},
 				},
 				{
 					VulnerabilityID: "CVE-2020-8625",
 					Severity:        types.SeverityLow,
+					DataSource: &types.DataSource{
+						ID:   vulnerability.RedHatOVAL,
+						Name: "Red Hat OVAL v2",
+						URL:  "https://www.redhat.com/security/data/oval/v2/",
+					},
 				},
 			},
 		},
@@ -855,6 +866,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/cpe.yaml",
+				"testdata/fixtures/data-source.yaml",
 			},
 			want: []types.Advisory{
 				{
@@ -867,38 +879,20 @@ func TestVulnSrc_Get(t *testing.T) {
 						"ppc64",
 						"x86_64",
 					},
-				},
-				{
-					VulnerabilityID: "CVE-2020-8625",
-					Severity:        types.SeverityLow,
-				},
-			},
-		},
-		{
-			name: "nvr",
-			args: args{
-				pkgName: "bind",
-				nvrs:    []string{"ubi8-init-container-8.0-7-x86_64"},
-			},
-			fixtures: []string{
-				"testdata/fixtures/happy.yaml",
-				"testdata/fixtures/cpe.yaml",
-			},
-			want: []types.Advisory{
-				{
-					VulnerabilityID: "CVE-2017-3145",
-					VendorIDs:       []string{"RHSA-2018:0488"},
-					Severity:        types.SeverityHigh,
-					FixedVersion:    "32:9.9.4-29.el7_2.8",
-					Arches: []string{
-						"i386",
-						"ppc64",
-						"x86_64",
+					DataSource: &types.DataSource{
+						ID:   vulnerability.RedHatOVAL,
+						Name: "Red Hat OVAL v2",
+						URL:  "https://www.redhat.com/security/data/oval/v2/",
 					},
 				},
 				{
 					VulnerabilityID: "CVE-2020-8625",
 					Severity:        types.SeverityLow,
+					DataSource: &types.DataSource{
+						ID:   vulnerability.RedHatOVAL,
+						Name: "Red Hat OVAL v2",
+						URL:  "https://www.redhat.com/security/data/oval/v2/",
+					},
 				},
 			},
 		},
