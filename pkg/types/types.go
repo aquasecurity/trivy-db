@@ -69,13 +69,14 @@ type Status int
 // In addition to them, Red Hat has "will_not_fix" and "fix_deferred".
 // cf. https://access.redhat.com/blogs/product-security/posts/2066793
 var Statuses = []string{
-	"unknown",
-	"not_affected",
-	"affected",
-	"fixed",
-	"under_investigation",
-	"will_not_fix",
-	"fix_deferred",
+	"Unknown",
+	"Not affected",
+	"Affected",
+	"Fixed",
+	"Under investigation",
+	"Will not fix",
+	"Fix deferred",
+	"End of life",
 }
 
 const (
