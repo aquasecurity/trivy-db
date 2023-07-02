@@ -86,6 +86,7 @@ const (
 	StatusUnderInvestigation
 	StatusWillNotFix // Red Hat specific
 	StatusFixDeferred
+	StatusEndOfLife
 )
 
 func (s Status) String() string {

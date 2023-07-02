@@ -458,7 +458,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 
 	detail := types.Advisory{
 		VendorIDs:    adv.VendorIDs,
-		Status:       newStatus(adv.State),
+		Status:       newStatus(adv.VulnerabilityID, adv.State),
 		Severity:     severityFromUrgency(adv.Severity),
 		FixedVersion: adv.FixedVersion,
 	}
@@ -661,15 +661,18 @@ func compareVersions(v1, v2 string) (int, error) {
 	return ver1.Compare(ver2), nil
 }
 
-func newStatus(s string) types.Status {
+func newStatus(vulnID, s string) types.Status {
 	switch strings.ToLower(s) {
-	case "no-dsa":
+	// "end-of-life" is considered as vulnerable
+	// e.g. https://security-tracker.debian.org/tracker/CVE-2022-1488
+	case "no-dsa", "unfixed":
 		return types.StatusAffected
 	case "ignored":
 		return types.StatusWillNotFix
 	case "postponed":
 		return types.StatusFixDeferred
+	case "end-of-life":
+		return types.StatusEndOfLife
 	}
-	panic("unknown status: " + s)
 	return types.StatusUnknown
 }
