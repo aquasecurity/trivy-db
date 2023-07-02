@@ -458,7 +458,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 
 	detail := types.Advisory{
 		VendorIDs:    adv.VendorIDs,
-		State:        adv.State,
+		Status:       newStatus(adv.State),
 		Severity:     severityFromUrgency(adv.Severity),
 		FixedVersion: adv.FixedVersion,
 	}
@@ -659,4 +659,17 @@ func compareVersions(v1, v2 string) (int, error) {
 	}
 
 	return ver1.Compare(ver2), nil
+}
+
+func newStatus(s string) types.Status {
+	switch strings.ToLower(s) {
+	case "no-dsa":
+		return types.StatusAffected
+	case "ignored":
+		return types.StatusWillNotFix
+	case "postponed":
+		return types.StatusFixDeferred
+	}
+	panic("unknown status: " + s)
+	return types.StatusUnknown
 }

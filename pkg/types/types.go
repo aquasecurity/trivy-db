@@ -65,7 +65,8 @@ type Status int
 // Statuses is a list of statuses.
 // VEX has 4 statuses: not-affected, affected, fixed, and under_investigation.
 // cf. https://www.cisa.gov/sites/default/files/2023-04/minimum-requirements-for-vex-508c.pdf
-// In addition to them, Red Hat has "will_not_fix".
+//
+// In addition to them, Red Hat has "will_not_fix" and "fix_deferred".
 // cf. https://access.redhat.com/blogs/product-security/posts/2066793
 var Statuses = []string{
 	"unknown",
@@ -74,6 +75,7 @@ var Statuses = []string{
 	"fixed",
 	"under_investigation",
 	"will_not_fix",
+	"fix_deferred",
 }
 
 const (
@@ -83,6 +85,7 @@ const (
 	StatusFixed
 	StatusUnderInvestigation
 	StatusWillNotFix // Red Hat specific
+	StatusFixDeferred
 )
 
 func (s Status) String() string {
