@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	version "github.com/knqyf263/go-deb-version"
+	debver "github.com/knqyf263/go-deb-version"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	debianDir = "debian"
+	debianDir = "vuln-list-debian"
 
 	// Type
 	packageType = "package"
@@ -42,7 +42,10 @@ const (
 var (
 	// NOTE: "removed" should not be marked as "not-affected".
 	// ref. https://security-team.debian.org/security_tracker.html#removed-packages
-	skipStatuses = []string{"not-affected", "undetermined"}
+	skipStatuses = []string{
+		"not-affected",
+		"undetermined",
+	}
 
 	source = types.DataSource{
 		ID:   vulnerability.Debian,
@@ -125,7 +128,7 @@ func (vs VulnSrc) Update(dir string) error {
 }
 
 func (vs VulnSrc) parse(dir string) error {
-	rootDir := filepath.Join(dir, "vuln-list", debianDir)
+	rootDir := filepath.Join(dir, debianDir, "tracker")
 
 	// Parse distributions.json
 	if err := vs.parseDistributions(rootDir); err != nil {
@@ -349,7 +352,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 		cveID := sidBkt.vulnID
 
 		// Skip if the advisory is stated as "not-affected" for all distributions.
-		if _, ok := vs.notAffected[bucket{pkgName: pkgName, vulnID: cveID}]; ok {
+		if _, ok := vs.notAffected[bucket{
+			pkgName: pkgName,
+			vulnID:  cveID,
+		}]; ok {
 			continue
 		}
 
@@ -544,41 +550,39 @@ func (vs VulnSrc) parseSources(dir string) error {
 		log.Printf("  Parsing %s sources...", code)
 		err := utils.FileWalk(codePath, func(r io.Reader, path string) error {
 			// To parse Sources.json
-			var pkgs []struct {
+			var pkg struct {
 				Package []string
 				Version []string
 			}
-			if err := json.NewDecoder(r).Decode(&pkgs); err != nil {
+			if err := json.NewDecoder(r).Decode(&pkg); err != nil {
 				return xerrors.Errorf("failed to decode %s: %w", path, err)
 			}
 
-			for _, pkg := range pkgs {
-				if len(pkg.Package) == 0 || len(pkg.Version) == 0 {
-					continue
-				}
-
-				bkt := bucket{
-					codeName: code,
-					pkgName:  pkg.Package[0],
-				}
-
-				version := pkg.Version[0]
-
-				// Skip the update when the stored version is greater than the processing version.
-				if v, ok := vs.pkgVersions[bkt]; ok {
-					res, err := compareVersions(v, version)
-					if err != nil {
-						return xerrors.Errorf("version comparison error: %w", err)
-					}
-
-					if res >= 0 {
-						continue
-					}
-				}
-
-				// Store package name and version per codename
-				vs.pkgVersions[bkt] = version
+			if len(pkg.Package) == 0 || len(pkg.Version) == 0 {
+				return nil
 			}
+
+			bkt := bucket{
+				codeName: code,
+				pkgName:  pkg.Package[0],
+			}
+
+			version := pkg.Version[0]
+
+			// Skip the update when the stored version is greater than the processing version.
+			if v, ok := vs.pkgVersions[bkt]; ok {
+				res, err := compareVersions(v, version)
+				if err != nil {
+					return xerrors.Errorf("version comparison error: %w", err)
+				}
+
+				if res >= 0 {
+					return nil
+				}
+			}
+
+			// Store package name and version per codename
+			vs.pkgVersions[bkt] = version
 
 			return nil
 		})
@@ -593,28 +597,31 @@ func (vs VulnSrc) parseSources(dir string) error {
 // There are 3 cases when the fixed version of each release is not stated in list files.
 //
 // Case 1
-//   When the latest version in the release is greater than the fixed version in sid,
-//   we can assume that the vulnerability was already fixed at the fixed version.
-//   e.g.
-//	   latest version (buster) : "5.0-4"
-//     fixed version (sid)     : "5.0-2"
-//      => the vulnerability was fixed at "5.0-2".
+//
+//	  When the latest version in the release is greater than the fixed version in sid,
+//	  we can assume that the vulnerability was already fixed at the fixed version.
+//	  e.g.
+//		latest version (buster) : "5.0-4"
+//	    fixed version (sid)     : "5.0-2"
+//	    => the vulnerability was fixed at "5.0-2".
 //
 // Case 2
-//   When the latest version in the release less than the fixed version in sid,
-//   it means the vulnerability has not been fixed yet.
-//   e.g.
-//	   latest version (buster) : "5.0-4"
-//     fixed version (sid)     : "5.0-5"
-//      => the vulnerability hasn't been fixed yet.
+//
+//	  When the latest version in the release less than the fixed version in sid,
+//	  it means the vulnerability has not been fixed yet.
+//	  e.g.
+//		latest version (buster) : "5.0-4"
+//	    fixed version (sid)     : "5.0-5"
+//	     => the vulnerability hasn't been fixed yet.
 //
 // Case 3
-//   When the fixed version in sid is empty,
-//   it means the vulnerability has not been fixed yet.
-//   e.g.
-//	   latest version (buster) : "5.0-4"
-//     fixed version (sid)     : ""
-//      => the vulnerability hasn't been fixed yet.
+//
+//	  When the fixed version in sid is empty,
+//	  it means the vulnerability has not been fixed yet.
+//	  e.g.
+//		   latest version (buster) : "5.0-4"
+//	    fixed version (sid)     : ""
+//	     => the vulnerability hasn't been fixed yet.
 func hasFixedVersion(sidVer, codeVer string) (bool, error) {
 	// No fixed version even in sid
 	if sidVer == "" {
@@ -641,12 +648,12 @@ func compareVersions(v1, v2 string) (int, error) {
 		return 1, nil
 	}
 
-	ver1, err := version.NewVersion(v1)
+	ver1, err := debver.NewVersion(v1)
 	if err != nil {
 		return 0, xerrors.Errorf("version error: %w", err)
 	}
 
-	ver2, err := version.NewVersion(v2)
+	ver2, err := debver.NewVersion(v2)
 	if err != nil {
 		return 0, xerrors.Errorf("version error: %w", err)
 	}

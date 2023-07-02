@@ -28,7 +28,9 @@ const (
 )
 
 var (
-	redhatDir = filepath.Join("oval", "redhat")
+	ovalDir     = "oval"
+	cpeDir      = "cpe"
+	vulnListDir = "vuln-list-redhat"
 
 	moduleRegexp = regexp.MustCompile(`Module\s+(.*)\s+is enabled`)
 
@@ -67,7 +69,7 @@ func (vs VulnSrc) Update(dir string) error {
 	}
 
 	// List version directories
-	rootDir := filepath.Join(dir, "vuln-list", redhatDir)
+	rootDir := filepath.Join(dir, vulnListDir, ovalDir)
 	versions, err := os.ReadDir(rootDir)
 	if err != nil {
 		return xerrors.Errorf("unable to list directory entries (%s): %w", rootDir, err)
@@ -103,7 +105,7 @@ func (vs VulnSrc) Update(dir string) error {
 }
 
 func (vs VulnSrc) parseRepositoryCpeMapping(dir string, uniqCPEs CPEMap) (map[string][]string, error) {
-	filePath := filepath.Join(dir, "vuln-list", "redhat-cpe", "repository-to-cpe.json")
+	filePath := filepath.Join(dir, vulnListDir, cpeDir, "repository-to-cpe.json")
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, xerrors.Errorf("file open error: %w", err)
@@ -123,7 +125,7 @@ func (vs VulnSrc) parseRepositoryCpeMapping(dir string, uniqCPEs CPEMap) (map[st
 }
 
 func (vs VulnSrc) parseNvrCpeMapping(dir string, uniqCPEs CPEMap) (map[string][]string, error) {
-	filePath := filepath.Join(dir, "vuln-list", "redhat-cpe", "nvr-to-cpe.json")
+	filePath := filepath.Join(dir, vulnListDir, cpeDir, "nvr-to-cpe.json")
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, xerrors.Errorf("file open error: %w", err)
