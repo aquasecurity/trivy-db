@@ -36,7 +36,10 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []vulnsrctest.WantValues{
 				{
-					Key: []string{"data-source", "Red Hat"},
+					Key: []string{
+						"data-source",
+						"Red Hat",
+					},
 					Value: types.DataSource{
 						ID:   vulnerability.RedHatOVAL,
 						Name: "Red Hat OVAL v2",
@@ -44,47 +47,88 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "0"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"0",
+					},
 					Value: "cpe:/a:redhat:enterprise_linux:7",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "1"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"1",
+					},
 					Value: "cpe:/a:redhat:enterprise_linux:8",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "2"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"2",
+					},
 					Value: "cpe:/a:redhat:enterprise_linux:8::appstream",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "3"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"3",
+					},
 					Value: "cpe:/a:redhat:enterprise_linux:8::crb",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "4"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"4",
+					},
 					Value: "cpe:/a:redhat:rhel_eus:8.1",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "5"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"5",
+					},
 					Value: "cpe:/o:redhat:enterprise_linux:7::server",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "6"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"6",
+					},
 					Value: "cpe:/o:redhat:enterprise_linux:8::baseos",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "repository", "rhel-8-for-x86_64-baseos-rpms"},
+					Key: []string{
+						"Red Hat CPE",
+						"repository",
+						"rhel-8-for-x86_64-baseos-rpms",
+					},
 					Value: []int{6},
 				},
 				{
-					Key:   []string{"Red Hat CPE", "nvr", "3scale-amp-apicast-gateway-container-1.11-1-x86_64"},
+					Key: []string{
+						"Red Hat CPE",
+						"nvr",
+						"3scale-amp-apicast-gateway-container-1.11-1-x86_64",
+					},
 					Value: []int{5},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2020-11879", "Red Hat", "evolution"},
+					Key: []string{
+						"advisory-detail",
+						"CVE-2020-11879",
+						"Red Hat",
+						"evolution",
+					},
 					Value: redhat.Advisory{
 						Entries: []redhat.Entry{
 							{
-								State:              "Will not fix",
+								State:              types.StatusWillNotFix,
 								FixedVersion:       "",
 								AffectedCPEIndices: []int{1},
 								Cves: []redhat.CveEntry{
@@ -98,13 +142,26 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "RHSA-2020:5624", "Red Hat", "thunderbird"},
+					Key: []string{
+						"advisory-detail",
+						"RHSA-2020:5624",
+						"Red Hat",
+						"thunderbird",
+					},
 					Value: redhat.Advisory{
 						Entries: []redhat.Entry{
 							{
-								FixedVersion:       "0:78.6.0-1.el8_3",
-								AffectedCPEIndices: []int{1, 2, 6},
-								Arches:             []string{"aarch64", "ppc64le", "x86_64"},
+								FixedVersion: "0:78.6.0-1.el8_3",
+								AffectedCPEIndices: []int{
+									1,
+									2,
+									6,
+								},
+								Arches: []string{
+									"aarch64",
+									"ppc64le",
+									"x86_64",
+								},
 								Cves: []redhat.CveEntry{
 									{
 										ID:       "CVE-2020-16042",
@@ -120,13 +177,26 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "RHSA-2020:5624", "Red Hat", "thunderbird-debugsource"},
+					Key: []string{
+						"advisory-detail",
+						"RHSA-2020:5624",
+						"Red Hat",
+						"thunderbird-debugsource",
+					},
 					Value: redhat.Advisory{
 						Entries: []redhat.Entry{
 							{
-								FixedVersion:       "0:78.6.0-1.el8_3",
-								AffectedCPEIndices: []int{1, 2, 6},
-								Arches:             []string{"aarch64", "ppc64le", "x86_64"},
+								FixedVersion: "0:78.6.0-1.el8_3",
+								AffectedCPEIndices: []int{
+									1,
+									2,
+									6,
+								},
+								Arches: []string{
+									"aarch64",
+									"ppc64le",
+									"x86_64",
+								},
 								Cves: []redhat.CveEntry{
 									{
 										ID:       "CVE-2020-16042",
@@ -142,13 +212,26 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "RHSA-2020:4751", "Red Hat", "httpd:2.4::httpd"},
+					Key: []string{
+						"advisory-detail",
+						"RHSA-2020:4751",
+						"Red Hat",
+						"httpd:2.4::httpd",
+					},
 					Value: redhat.Advisory{
 						Entries: []redhat.Entry{
 							{
-								FixedVersion:       "0:2.4.37-30.module+el7.3.0+7001+0766b9e7",
-								AffectedCPEIndices: []int{0, 5},
-								Arches:             []string{"aarch64", "ppc64le", "s390x", "x86_64"},
+								FixedVersion: "0:2.4.37-30.module+el7.3.0+7001+0766b9e7",
+								AffectedCPEIndices: []int{
+									0,
+									5,
+								},
+								Arches: []string{
+									"aarch64",
+									"ppc64le",
+									"s390x",
+									"x86_64",
+								},
 								Cves: []redhat.CveEntry{
 									{
 										ID:       "CVE-2018-17189",
@@ -157,9 +240,17 @@ func TestVulnSrc_Update(t *testing.T) {
 								},
 							},
 							{
-								FixedVersion:       "0:2.4.37-30.module+el8.3.0+7001+0766b9e7",
-								AffectedCPEIndices: []int{1, 2},
-								Arches:             []string{"aarch64", "ppc64le", "s390x", "x86_64"},
+								FixedVersion: "0:2.4.37-30.module+el8.3.0+7001+0766b9e7",
+								AffectedCPEIndices: []int{
+									1,
+									2,
+								},
+								Arches: []string{
+									"aarch64",
+									"ppc64le",
+									"s390x",
+									"x86_64",
+								},
 								Cves: []redhat.CveEntry{
 									{
 										ID:       "CVE-2018-17189",
@@ -171,12 +262,21 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2020-14342", "Red Hat", "cifs-utils"},
+					Key: []string{
+						"advisory-detail",
+						"CVE-2020-14342",
+						"Red Hat",
+						"cifs-utils",
+					},
 					Value: redhat.Advisory{
 						Entries: []redhat.Entry{
 							{
-								FixedVersion:       "",
-								AffectedCPEIndices: []int{3, 5},
+								State:        types.StatusAffected,
+								FixedVersion: "",
+								AffectedCPEIndices: []int{
+									3,
+									5,
+								},
 								Cves: []redhat.CveEntry{
 									{
 										Severity: types.SeverityLow,
@@ -187,13 +287,22 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "RHSA-2020:9999", "Red Hat", "thunderbird"},
+					Key: []string{
+						"advisory-detail",
+						"RHSA-2020:9999",
+						"Red Hat",
+						"thunderbird",
+					},
 					Value: redhat.Advisory{
 						Entries: []redhat.Entry{
 							{
 								FixedVersion:       "0:999.el8_3",
 								AffectedCPEIndices: []int{4},
-								Arches:             []string{"aarch64", "ppc64le", "x86_64"},
+								Arches: []string{
+									"aarch64",
+									"ppc64le",
+									"x86_64",
+								},
 								Cves: []redhat.CveEntry{
 									{
 										ID:       "CVE-2020-26971",
@@ -215,7 +324,10 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:  filepath.Join("testdata", "different-severity"),
 			wantValues: []vulnsrctest.WantValues{
 				{
-					Key: []string{"data-source", "Red Hat"},
+					Key: []string{
+						"data-source",
+						"Red Hat",
+					},
 					Value: types.DataSource{
 						ID:   vulnerability.RedHatOVAL,
 						Name: "Red Hat OVAL v2",
@@ -223,108 +335,222 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "0"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"0",
+					},
 					Value: "cpe:/a:redhat:enterprise_linux:8",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "1"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"1",
+					},
 					Value: "cpe:/a:redhat:enterprise_linux:8::appstream",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "2"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"2",
+					},
 					Value: "cpe:/a:redhat:enterprise_linux:8::crb",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "3"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"3",
+					},
 					Value: "cpe:/a:redhat:enterprise_linux:8::highavailability",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "4"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"4",
+					},
 					Value: "cpe:/a:redhat:enterprise_linux:8::nfv",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "5"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"5",
+					},
 					Value: "cpe:/a:redhat:enterprise_linux:8::realtime",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "6"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"6",
+					},
 					Value: "cpe:/a:redhat:enterprise_linux:8::resilientstorage",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "7"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"7",
+					},
 					Value: "cpe:/a:redhat:enterprise_linux:8::sap",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "8"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"8",
+					},
 					Value: "cpe:/a:redhat:enterprise_linux:8::sap_hana",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "9"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"9",
+					},
 					Value: "cpe:/a:redhat:enterprise_linux:8::supplementary",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "10"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"10",
+					},
 					Value: "cpe:/a:redhat:rhel_extras:7",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "11"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"11",
+					},
 					Value: "cpe:/a:redhat:rhel_extras_oracle_java:7",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "12"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"12",
+					},
 					Value: "cpe:/a:redhat:rhel_extras_rt:7",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "13"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"13",
+					},
 					Value: "cpe:/a:redhat:rhel_extras_sap:7",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "14"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"14",
+					},
 					Value: "cpe:/a:redhat:rhel_extras_sap_hana:7",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "15"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"15",
+					},
 					Value: "cpe:/o:redhat:enterprise_linux:7",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "16"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"16",
+					},
 					Value: "cpe:/o:redhat:enterprise_linux:7::client",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "17"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"17",
+					},
 					Value: "cpe:/o:redhat:enterprise_linux:7::computenode",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "18"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"18",
+					},
 					Value: "cpe:/o:redhat:enterprise_linux:7::container",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "19"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"19",
+					},
 					Value: "cpe:/o:redhat:enterprise_linux:7::containers",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "20"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"20",
+					},
 					Value: "cpe:/o:redhat:enterprise_linux:7::server",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "cpe", "21"},
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"21",
+					},
 					Value: "cpe:/o:redhat:enterprise_linux:7::workstation",
 				},
 				{
-					Key:   []string{"Red Hat CPE", "repository", "rhel-8-for-x86_64-baseos-rpms"},
+					Key: []string{
+						"Red Hat CPE",
+						"repository",
+						"rhel-8-for-x86_64-baseos-rpms",
+					},
 					Value: []int{23},
 				},
 				{
-					Key:   []string{"Red Hat CPE", "nvr", "3scale-amp-apicast-gateway-container-1.11-1-x86_64"},
+					Key: []string{
+						"Red Hat CPE",
+						"nvr",
+						"3scale-amp-apicast-gateway-container-1.11-1-x86_64",
+					},
 					Value: []int{20},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2020-21674", "Red Hat", "bsdcpio"},
+					Key: []string{
+						"advisory-detail",
+						"CVE-2020-21674",
+						"Red Hat",
+						"bsdcpio",
+					},
 					Value: redhat.Advisory{
 						Entries: []redhat.Entry{
 							{
-								FixedVersion:       "",
-								AffectedCPEIndices: []int{10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21},
+								FixedVersion: "",
+								AffectedCPEIndices: []int{
+									10,
+									11,
+									12,
+									13,
+									14,
+									15,
+									16,
+									17,
+									18,
+									19,
+									20,
+									21,
+								},
 								Cves: []redhat.CveEntry{
 									{
 										ID:       "",
@@ -336,12 +562,30 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2020-21674", "Red Hat", "bsdtar"},
+					Key: []string{
+						"advisory-detail",
+						"CVE-2020-21674",
+						"Red Hat",
+						"bsdtar",
+					},
 					Value: redhat.Advisory{
 						Entries: []redhat.Entry{
 							{
-								FixedVersion:       "",
-								AffectedCPEIndices: []int{10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21},
+								FixedVersion: "",
+								AffectedCPEIndices: []int{
+									10,
+									11,
+									12,
+									13,
+									14,
+									15,
+									16,
+									17,
+									18,
+									19,
+									20,
+									21,
+								},
 								Cves: []redhat.CveEntry{
 									{
 										ID:       "",
@@ -350,8 +594,21 @@ func TestVulnSrc_Update(t *testing.T) {
 								},
 							},
 							{
-								FixedVersion:       "",
-								AffectedCPEIndices: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 22, 23},
+								FixedVersion: "",
+								AffectedCPEIndices: []int{
+									0,
+									1,
+									2,
+									3,
+									4,
+									5,
+									6,
+									7,
+									8,
+									9,
+									22,
+									23,
+								},
 								Cves: []redhat.CveEntry{
 									{
 										ID:       "",
@@ -363,12 +620,30 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2020-21674", "Red Hat", "libarchive"},
+					Key: []string{
+						"advisory-detail",
+						"CVE-2020-21674",
+						"Red Hat",
+						"libarchive",
+					},
 					Value: redhat.Advisory{
 						Entries: []redhat.Entry{
 							{
-								FixedVersion:       "",
-								AffectedCPEIndices: []int{10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21},
+								FixedVersion: "",
+								AffectedCPEIndices: []int{
+									10,
+									11,
+									12,
+									13,
+									14,
+									15,
+									16,
+									17,
+									18,
+									19,
+									20,
+									21,
+								},
 								Cves: []redhat.CveEntry{
 									{
 										ID:       "",
@@ -377,8 +652,21 @@ func TestVulnSrc_Update(t *testing.T) {
 								},
 							},
 							{
-								FixedVersion:       "",
-								AffectedCPEIndices: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 22, 23},
+								FixedVersion: "",
+								AffectedCPEIndices: []int{
+									0,
+									1,
+									2,
+									3,
+									4,
+									5,
+									6,
+									7,
+									8,
+									9,
+									22,
+									23,
+								},
 								Cves: []redhat.CveEntry{
 									{
 										ID:       "",
@@ -390,12 +678,30 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2020-21674", "Red Hat", "libarchive-debugsource"},
+					Key: []string{
+						"advisory-detail",
+						"CVE-2020-21674",
+						"Red Hat",
+						"libarchive-debugsource",
+					},
 					Value: redhat.Advisory{
 						Entries: []redhat.Entry{
 							{
-								FixedVersion:       "",
-								AffectedCPEIndices: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 22, 23},
+								FixedVersion: "",
+								AffectedCPEIndices: []int{
+									0,
+									1,
+									2,
+									3,
+									4,
+									5,
+									6,
+									7,
+									8,
+									9,
+									22,
+									23,
+								},
 								Cves: []redhat.CveEntry{
 									{
 										ID:       "",
@@ -407,12 +713,30 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2020-21674", "Red Hat", "libarchive-devel"},
+					Key: []string{
+						"advisory-detail",
+						"CVE-2020-21674",
+						"Red Hat",
+						"libarchive-devel",
+					},
 					Value: redhat.Advisory{
 						Entries: []redhat.Entry{
 							{
-								FixedVersion:       "",
-								AffectedCPEIndices: []int{10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21},
+								FixedVersion: "",
+								AffectedCPEIndices: []int{
+									10,
+									11,
+									12,
+									13,
+									14,
+									15,
+									16,
+									17,
+									18,
+									19,
+									20,
+									21,
+								},
 								Cves: []redhat.CveEntry{
 									{
 										ID:       "",
@@ -421,8 +745,21 @@ func TestVulnSrc_Update(t *testing.T) {
 								},
 							},
 							{
-								FixedVersion:       "",
-								AffectedCPEIndices: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 22, 23},
+								FixedVersion: "",
+								AffectedCPEIndices: []int{
+									0,
+									1,
+									2,
+									3,
+									4,
+									5,
+									6,
+									7,
+									8,
+									9,
+									22,
+									23,
+								},
 								Cves: []redhat.CveEntry{
 									{
 										ID:       "",
@@ -487,14 +824,21 @@ func TestVulnSrc_Get(t *testing.T) {
 				pkgName:      "bind",
 				repositories: []string{"rhel-8-for-x86_64-baseos-rpms"},
 			},
-			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/cpe.yaml"},
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/cpe.yaml",
+			},
 			want: []types.Advisory{
 				{
 					VulnerabilityID: "CVE-2017-3145",
 					VendorIDs:       []string{"RHSA-2018:0488"},
 					Severity:        types.SeverityHigh,
 					FixedVersion:    "32:9.9.4-29.el7_2.8",
-					Arches:          []string{"i386", "ppc64", "x86_64"},
+					Arches: []string{
+						"i386",
+						"ppc64",
+						"x86_64",
+					},
 				},
 				{
 					VulnerabilityID: "CVE-2020-8625",
@@ -508,14 +852,21 @@ func TestVulnSrc_Get(t *testing.T) {
 				pkgName: "bind",
 				nvrs:    []string{"ubi8-init-container-8.0-7-x86_64"},
 			},
-			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/cpe.yaml"},
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/cpe.yaml",
+			},
 			want: []types.Advisory{
 				{
 					VulnerabilityID: "CVE-2017-3145",
 					VendorIDs:       []string{"RHSA-2018:0488"},
 					Severity:        types.SeverityHigh,
 					FixedVersion:    "32:9.9.4-29.el7_2.8",
-					Arches:          []string{"i386", "ppc64", "x86_64"},
+					Arches: []string{
+						"i386",
+						"ppc64",
+						"x86_64",
+					},
 				},
 				{
 					VulnerabilityID: "CVE-2020-8625",
@@ -529,14 +880,21 @@ func TestVulnSrc_Get(t *testing.T) {
 				pkgName: "bind",
 				nvrs:    []string{"ubi8-init-container-8.0-7-x86_64"},
 			},
-			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/cpe.yaml"},
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/cpe.yaml",
+			},
 			want: []types.Advisory{
 				{
 					VulnerabilityID: "CVE-2017-3145",
 					VendorIDs:       []string{"RHSA-2018:0488"},
 					Severity:        types.SeverityHigh,
 					FixedVersion:    "32:9.9.4-29.el7_2.8",
-					Arches:          []string{"i386", "ppc64", "x86_64"},
+					Arches: []string{
+						"i386",
+						"ppc64",
+						"x86_64",
+					},
 				},
 				{
 					VulnerabilityID: "CVE-2020-8625",
@@ -550,8 +908,11 @@ func TestVulnSrc_Get(t *testing.T) {
 				pkgName:      "bind",
 				repositories: []string{"3scale-amp-2-rpms-for-rhel-8-x86_64-debug-rpms"},
 			},
-			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/cpe.yaml"},
-			want:     []types.Advisory(nil),
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/cpe.yaml",
+			},
+			want: []types.Advisory(nil),
 		},
 		{
 			// This case should not be happened
@@ -560,8 +921,11 @@ func TestVulnSrc_Get(t *testing.T) {
 				pkgName:      "bind",
 				repositories: []string{"unknown"},
 			},
-			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/cpe.yaml"},
-			want:     []types.Advisory(nil),
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/cpe.yaml",
+			},
+			want: []types.Advisory(nil),
 		},
 		{
 			name: "no advisory bucket",
@@ -587,9 +951,12 @@ func TestVulnSrc_Get(t *testing.T) {
 				pkgName:      "bind",
 				repositories: []string{"rhel-8-for-x86_64-baseos-rpms"},
 			},
-			fixtures: []string{"testdata/fixtures/broken.yaml", "testdata/fixtures/cpe.yaml"},
-			want:     []types.Advisory(nil),
-			wantErr:  "failed to unmarshal advisory JSON",
+			fixtures: []string{
+				"testdata/fixtures/broken.yaml",
+				"testdata/fixtures/cpe.yaml",
+			},
+			want:    []types.Advisory(nil),
+			wantErr: "failed to unmarshal advisory JSON",
 		},
 	}
 	for _, tt := range tests {

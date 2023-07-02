@@ -60,6 +60,37 @@ func (s Severity) String() string {
 	return SeverityNames[s]
 }
 
+type Status int
+
+var Statuses = []string{
+	"unknown",
+	"not_affected",
+	"affected",
+	"fixed",
+	"under_investigation",
+	"will_not_fix",
+}
+
+const (
+	StatusUnknown Status = iota
+	StatusNotAffected
+	StatusAffected
+	StatusFixed
+	StatusUnderInvestigation
+	StatusWillNotFix // Red Hat specific
+)
+
+func (s Status) String() string {
+	if s < 0 || int(s) >= len(Statuses) {
+		return "unknown"
+	}
+	return [...]string{}[s]
+}
+
+func (s Status) Index() int {
+	return int(s)
+}
+
 type LastUpdated struct {
 	Date time.Time
 }
@@ -104,7 +135,7 @@ type Advisory struct {
 
 	// It is filled only when FixedVersion is empty since it is obvious the state is "Fixed" when FixedVersion is not empty.
 	// e.g. Will not fix and Affected
-	State string `json:",omitempty"`
+	Status Status `json:",omitempty"`
 
 	// Trivy DB has "vulnerability" bucket and severities are usually stored in the bucket per a vulnerability ID.
 	// In some cases, the advisory may have multiple severities depending on the packages.

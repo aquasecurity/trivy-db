@@ -272,7 +272,7 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 					Severity:     cve.Severity,
 					FixedVersion: entry.FixedVersion,
 					Arches:       entry.Arches,
-					State:        entry.State,
+					Status:       entry.State,
 				}
 
 				if strings.HasPrefix(vulnID, "CVE-") {
@@ -363,8 +363,11 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 						Cves:            cveEntries,
 						FixedVersion:    affectedPkg.FixedVersion,
 						AffectedCPEList: advisory.Metadata.Advisory.AffectedCpeList,
-						State:           advisory.Metadata.Advisory.Affected.Resolution.State,
 						Arches:          affectedPkg.Arches,
+
+						// The status is obviously "fixed" when there is a patch.
+						// To keep the database size small, we don't store the status for patched vulns.
+						// Status:		  StatusFixed,
 					},
 				}
 			} else { // For unpatched vulnerabilities
@@ -383,7 +386,7 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 							FixedVersion:    affectedPkg.FixedVersion,
 							AffectedCPEList: advisory.Metadata.Advisory.AffectedCpeList,
 							Arches:          affectedPkg.Arches,
-							State:           advisory.Metadata.Advisory.Affected.Resolution.State,
+							State:           newStatus(advisory.Metadata.Advisory.Affected.Resolution.State),
 						},
 					}
 				}
@@ -478,4 +481,16 @@ func severityFromImpact(sev string) types.Severity {
 		return types.SeverityCritical
 	}
 	return types.SeverityUnknown
+}
+
+func newStatus(s string) types.Status {
+	switch strings.ToLower(s) {
+	case "affected", "fix deferred":
+		return types.StatusAffected
+	case "under investigation":
+		return types.StatusUnderInvestigation
+	case "will not fix":
+		return types.StatusWillNotFix
+	}
+	return types.StatusUnknown
 }
