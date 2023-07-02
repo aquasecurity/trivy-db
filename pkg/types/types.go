@@ -62,6 +62,11 @@ func (s Severity) String() string {
 
 type Status int
 
+// Statuses is a list of statuses.
+// VEX has 4 statuses: not-affected, affected, fixed, and under_investigation.
+// cf. https://www.cisa.gov/sites/default/files/2023-04/minimum-requirements-for-vex-508c.pdf
+// In addition to them, Red Hat has "will_not_fix".
+// cf. https://access.redhat.com/blogs/product-security/posts/2066793
 var Statuses = []string{
 	"unknown",
 	"not_affected",
