@@ -310,6 +310,7 @@ func generalizeSeverity(severity string) types.Severity {
 }
 
 // fixedVersion checks for the arch and only updates version for `x86_64`
+// only used for types.Advisories.FixedVersion for backward compatibility
 func fixedVersion(prevVersion, newVersion, arch string) string {
 	if arch == "x86_64" || arch == "noarch" {
 		return newVersion
