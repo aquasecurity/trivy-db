@@ -497,8 +497,5 @@ func newStatus(s string) types.Status {
 	case "out of support scope":
 		return types.StatusEndOfLife
 	}
-	if s != "" {
-		panic(fmt.Sprintf("unknown status: %s", s))
-	}
 	return types.StatusUnknown
 }
