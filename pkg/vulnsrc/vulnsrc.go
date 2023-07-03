@@ -10,6 +10,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/chainguard"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/composer"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/fedora"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/glad"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/govulndb"
@@ -44,6 +45,7 @@ var (
 		archlinux.NewVulnSrc(),
 		redhat.NewVulnSrc(),
 		redhatoval.NewVulnSrc(),
+		fedora.NewVulnSrc(),
 		debian.NewVulnSrc(),
 		ubuntu.NewVulnSrc(),
 		amazon.NewVulnSrc(),

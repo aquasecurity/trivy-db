@@ -1,0 +1,90 @@
+{
+  "id": "FEDORA-2021-0b8814db99"
+  "title": "cacti-1.2.19-1.fc35 cacti-spine-1.2.19-1.fc35",
+  "type": "security",
+  "issued": {
+    "date": "2021-11-11 01:17:54"
+  },
+  "updated": {
+    "date": "2021-11-02 09:38:12"
+  },
+  "severity": "Moderate",
+  "description": "- Update to 1.2.19\n\nRelease notes: https://www.cacti.net/info/changelog/1.2.19",
+  "packages": [
+    {
+      "name": "cacti",
+      "epoch": "0",
+      "version": "1.2.19",
+      "release": "1.fc35",
+      "arch": "noarch",
+      "src": "https://download.fedoraproject.org/pub/fedora/linux/updates/35/i386/c/cacti-1.2.19-1.fc35.noarch.rpm",
+      "filename": "cacti-1.2.19-1.fc35.noarch.rpm"
+    },
+    {
+      "name": "cacti-spine-debugsource",
+      "epoch": "0",
+      "version": "1.2.19",
+      "release": "1.fc35",
+      "arch": "i686",
+      "src": "https://download.fedoraproject.org/pub/fedora/linux/updates/35/i386/c/cacti-spine-debugsource-1.2.19-1.fc35.i686.rpm",
+      "filename": "cacti-spine-debugsource-1.2.19-1.fc35.i686.rpm"
+    },
+    {
+      "name": "cacti-spine",
+      "epoch": "0",
+      "version": "1.2.19",
+      "release": "1.fc35",
+      "arch": "i686",
+      "src": "https://download.fedoraproject.org/pub/fedora/linux/updates/35/i386/c/cacti-spine-1.2.19-1.fc35.i686.rpm",
+      "filename": "cacti-spine-1.2.19-1.fc35.i686.rpm"
+    },
+    {
+      "name": "cacti-spine-debuginfo",
+      "epoch": "0",
+      "version": "1.2.19",
+      "release": "1.fc35",
+      "arch": "i686",
+      "src": "https://download.fedoraproject.org/pub/fedora/linux/updates/35/i386/c/cacti-spine-debuginfo-1.2.19-1.fc35.i686.rpm",
+      "filename": "cacti-spine-debuginfo-1.2.19-1.fc35.i686.rpm"
+    },
+    {
+      "name": "cacti-spine-debugsource",
+      "epoch": "0",
+      "version": "1.2.19",
+      "release": "1.fc35",
+      "arch": "x86_64",
+      "src": "https://download.fedoraproject.org/pub/fedora/linux/updates/35/x86_64/c/cacti-spine-debugsource-1.2.19-1.fc35.x86_64.rpm",
+      "filename": "cacti-spine-debugsource-1.2.19-1.fc35.x86_64.rpm"
+    },
+    {
+      "name": "cacti-spine-debuginfo",
+      "epoch": "0",
+      "version": "1.2.19",
+      "release": "1.fc35",
+      "arch": "x86_64",
+      "src": "https://download.fedoraproject.org/pub/fedora/linux/updates/35/x86_64/c/cacti-spine-debuginfo-1.2.19-1.fc35.x86_64.rpm",
+      "filename": "cacti-spine-debuginfo-1.2.19-1.fc35.x86_64.rpm"
+    },
+    {
+      "name": "cacti-spine",
+      "epoch": "0",
+      "version": "1.2.19",
+      "release": "1.fc35",
+      "arch": "x86_64",
+      "src": "https://download.fedoraproject.org/pub/fedora/linux/updates/35/x86_64/c/cacti-spine-1.2.19-1.fc35.x86_64.rpm",
+      "filename": "cacti-spine-1.2.19-1.fc35.x86_64.rpm"
+    }
+  ],
+  "module": {},
+  "references": [
+    {
+      "href": "https://bugzilla.redhat.com/show_bug.cgi?id=2001017",
+      "id": "2001017",
+      "title": "CVE-2020-14424 cacti: lack of escaping on template import can lead to XSS [fedora-all]",
+      "type": "bugzilla"
+    }
+  ],
+  "cveids": [
+    "CVE-2020-14424"
+  ]
+}

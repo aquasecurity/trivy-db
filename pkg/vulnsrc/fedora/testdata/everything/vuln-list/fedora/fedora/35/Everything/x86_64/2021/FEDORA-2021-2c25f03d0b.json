@@ -1,0 +1,36 @@
+{
+  "id": "FEDORA-2021-2c25f03d0b",
+  "title": "freerdp-2.4.1-1.fc35 guacamole-server-1.3.0-9.fc35 remmina-1.4.21-1.fc35",
+  "type": "security",
+  "issued": {
+    "date": "2021-11-17 01:12:41"
+  },
+  "updated": {
+    "date": "2021-11-10 20:45:11"
+  },
+  "severity": "Important",
+  "description": "- Update to 2.4.1 containing security fixes for CVE-2021-41159 and CVE-2021-41160.\n- Remmina 1.4.21 with bugfixes.\n\n",
+  "packages": [
+    {
+      "name": "freerdp-libs-debuginfo",
+      "epoch": "2",
+      "version": "2.4.1",
+      "release": "1.fc35",
+      "arch": "x86_64",
+      "src": "https://download.fedoraproject.org/pub/fedora/linux/updates/35/x86_64/f/freerdp-libs-debuginfo-2.4.1-1.fc35.x86_64.rpm",
+      "filename": "freerdp-libs-debuginfo-2.4.1-1.fc35.x86_64.rpm"
+    }
+  ],
+  "module": {},
+  "references": [
+    {
+      "href": "https://bugzilla.redhat.com/show_bug.cgi?id=2015189",
+      "id": "2015189",
+      "title": "remmina-1.4.21 is available",
+      "type": "bugzilla"
+    }
+  ],
+  "cveids": [
+    "CVE-2021-41159"
+  ]
+}
