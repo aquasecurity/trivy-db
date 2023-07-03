@@ -221,6 +221,9 @@ func (dbc Config) forEach(bktNames []string) (map[string]Value, error) {
 			}
 
 			err = bkt.ForEach(func(k, v []byte) error {
+				if len(v) == 0 {
+					return nil
+				}
 				// Copy the byte slice so it can be used outside of the current transaction
 				copiedContent := make([]byte, len(v))
 				copy(copiedContent, v)

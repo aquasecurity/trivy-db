@@ -1,0 +1,7 @@
+- bucket: rocky 9
+  pairs:
+    - bucket: bind
+      pairs:
+        - key: CVE-2022-0396
+          value:
+            Entries: "broken"

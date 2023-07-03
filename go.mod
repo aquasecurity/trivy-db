@@ -9,6 +9,7 @@ require (
 	github.com/hashicorp/go-version v1.6.0
 	github.com/knqyf263/go-deb-version v0.0.0-20190517075300-09fca494f03d
 	github.com/knqyf263/go-rpm-version v0.0.0-20170716094938-74609b86c936
+	github.com/samber/lo v1.38.1
 	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli v1.22.14
 	go.etcd.io/bbolt v1.3.7
