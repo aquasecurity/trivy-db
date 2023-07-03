@@ -25,6 +25,7 @@ import (
 	susecvrf "github.com/aquasecurity/trivy-db/pkg/vulnsrc/suse-cvrf"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/wolfi"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/wrlinux"
 )
 
 type VulnSrc interface {
@@ -55,6 +56,7 @@ var (
 		mariner.NewVulnSrc(),
 		wolfi.NewVulnSrc(),
 		chainguard.NewVulnSrc(),
+		wrlinux.NewVulnSrc(),
 
 		// Language-specific packages
 		bundler.NewVulnSrc(),
