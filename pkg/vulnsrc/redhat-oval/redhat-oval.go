@@ -271,6 +271,7 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 					FixedVersion: entry.FixedVersion,
 					Arches:       entry.Arches,
 					State:        entry.State,
+					DataSource:   &v.Source,
 				}
 
 				if strings.HasPrefix(vulnID, "CVE-") {
