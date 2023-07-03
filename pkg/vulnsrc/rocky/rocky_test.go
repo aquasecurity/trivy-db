@@ -128,7 +128,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"bind-export-devel",
 					},
 					Value: types.Advisories{
-						FixedVersion: "32:9.11.26-4.el8_4",
+						FixedVersion: "32:7.11.26-4.el8_4",
 						Entries: []types.Advisory{
 							{
 								FixedVersion: "32:9.11.26-4.el8_4",
@@ -150,6 +150,125 @@ func TestVulnSrc_Update(t *testing.T) {
 									"i686",
 								},
 								VendorIDs: []string{"RLSA-2021:0000"},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2021-25215",
+						string(vulnerability.Rocky),
+					},
+					Value: types.VulnerabilityDetail{
+						Severity: types.SeverityHigh,
+						References: []string{
+							"https://access.redhat.com/hydra/rest/securitydata/cve/CVE-2021-25215.json",
+						},
+						Title:       "Important: bind security update",
+						Description: "For more information visit https://errata.rockylinux.org/RLSA-2021:1989",
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2021-25215",
+					},
+					Value: map[string]interface{}{},
+				},
+			},
+		},
+		{
+			name: "happy path. `noarch` package",
+			dir:  filepath.Join("testdata", "noarch"),
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{
+						"data-source",
+						"rocky 9",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.Rocky,
+						Name: "Rocky Linux updateinfo",
+						URL:  "https://download.rockylinux.org/pub/rocky/",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2022-42010",
+						"rocky 9",
+						"dbus-common",
+					},
+					Value: types.Advisories{
+						FixedVersion: "1:1.12.20-7.el9_1",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "1:1.12.20-7.el9_1",
+								Arches: []string{
+									"noarch",
+								},
+								VendorIDs: []string{"RLSA-2023:0335"},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2022-42010",
+						string(vulnerability.Rocky),
+					},
+					Value: types.VulnerabilityDetail{
+						Severity: types.SeverityMedium,
+						References: []string{
+							"https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-42010",
+							"https://errata.rockylinux.org/RLSA-2023:0335",
+						},
+						Title:       "Moderate: dbus security update",
+						Description: "D-Bus is a system for sending messages between applications...",
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2022-42010",
+					},
+					Value: map[string]interface{}{},
+				},
+			},
+		},
+		{
+			name: "happy path. `aarch64` only",
+			dir:  filepath.Join("testdata", "aarch64-only"),
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{
+						"data-source",
+						"rocky 8",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.Rocky,
+						Name: "Rocky Linux updateinfo",
+						URL:  "https://download.rockylinux.org/pub/rocky/",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2021-25215",
+						"rocky 8",
+						"bind-export-devel",
+					},
+					Value: types.Advisories{
+						FixedVersion: "0.0.0",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "32:9.11.26-4.el8_4",
+								Arches: []string{
+									"aarch64",
+								},
+								VendorIDs: []string{"RLSA-2021:1989"},
 							},
 						},
 					},

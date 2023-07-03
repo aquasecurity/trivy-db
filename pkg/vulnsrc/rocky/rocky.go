@@ -173,6 +173,9 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 
 				// if the advisory for this package and CVE have been kept - just add the new architecture
 				if adv, ok := input.Advisories[pkg.Name]; ok {
+					// update `fixedVersion` if `fixedVersion` for `x86_64` was not previously saved
+					adv.FixedVersion = fixedVersion(adv.FixedVersion, entry.FixedVersion, pkg.Arch)
+
 					old, i, found := lo.FindIndexOf(adv.Entries, func(adv types.Advisory) bool {
 						return adv.FixedVersion == entry.FixedVersion
 					})
@@ -192,7 +195,9 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 					}
 				} else {
 					input.Advisories[pkg.Name] = types.Advisories{
-						FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release), // For backward compatibility
+						// will save `0.0.0` version for non-`x86_64` arch
+						// to avoid false positives when using old Trivy with new database
+						FixedVersion: fixedVersion("0.0.0", entry.FixedVersion, pkg.Arch), // For backward compatibility
 						Entries:      []types.Advisory{entry},
 					}
 				}
@@ -302,4 +307,12 @@ func generalizeSeverity(severity string) types.Severity {
 		return types.SeverityCritical
 	}
 	return types.SeverityUnknown
+}
+
+// fixedVersion checks for the arch and only updates version for `x86_64`
+func fixedVersion(prevVersion, newVersion, arch string) string {
+	if arch == "x86_64" || arch == "noarch" {
+		return newVersion
+	}
+	return prevVersion
 }
