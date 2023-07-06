@@ -12,7 +12,6 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/glad"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/govulndb"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/mariner"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
@@ -62,7 +61,6 @@ var (
 		node.NewVulnSrc(),
 		ghsa.NewVulnSrc(),
 		glad.NewVulnSrc(),
-		govulndb.NewVulnSrc(),
 		osv.NewVulnSrc(),
 	}
 )
