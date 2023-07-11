@@ -114,7 +114,7 @@ func (vs *VulnSrc) put(ovals []OracleOVAL) error {
 
 func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 	foundPlatformNames := map[string]struct{}{}
-	// platform => cveID => PutInput
+	// platform => vulnID => PutInput
 	savedInputs := map[string]map[string]PutInput{}
 	for _, oval := range ovals {
 		elsaID := strings.Split(oval.Title, ":")[0]
@@ -131,7 +131,12 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			affectedPkgs := walkOracle(oval.Criteria, "", "", []AffectedPackage{})
 			for _, affectedPkg := range affectedPkgs {
 				pkgName := affectedPkg.Package.Name
-				if pkgName == "" {
+				// there are cases when advisory doesn't have arch
+				// it looks as bug
+				// because CVE doesn't contain this ELSA
+				// e.g. https://linux.oracle.com/errata/ELSA-2018-0013.html
+				// https://linux.oracle.com/cve/CVE-2017-5715.html
+				if pkgName == "" || affectedPkg.Arch == "" {
 					continue
 				}
 
