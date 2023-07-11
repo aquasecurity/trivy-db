@@ -1,7 +1,12 @@
-package oracleoval
+package oracleoval_test
 
 import (
+	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/dbtest"
+	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"testing"
@@ -442,7 +447,7 @@ func TestVulnSrc_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			vs := NewVulnSrc()
+			vs := oracleoval.NewVulnSrc()
 			vulnsrctest.TestUpdate(t, vs, vulnsrctest.TestUpdateArgs{
 				Dir:        tt.dir,
 				WantValues: tt.wantValues,
@@ -458,20 +463,27 @@ func TestVulnSrc_Get(t *testing.T) {
 		fixtures []string
 		version  string
 		pkgName  string
+		arch     string
 		want     []types.Advisory
-		wantErr  string
+		wantErr  require.ErrorAssertionFunc
 	}{
 		{
 			name:     "happy path",
-			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/data-source.yaml"},
 			version:  "8",
 			pkgName:  "bind",
 			want: []types.Advisory{
 				{
 					VulnerabilityID: "ELSA-2019-1145",
 					FixedVersion:    "32:9.11.4-17.P2.el8_0",
+					DataSource: &types.DataSource{
+						ID:   vulnerability.OracleOVAL,
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
 				},
 			},
+			wantErr: require.NoError,
 		},
 		{
 			name:     "no advisories are returned",
@@ -479,25 +491,26 @@ func TestVulnSrc_Get(t *testing.T) {
 			version:  "8",
 			pkgName:  "no-package",
 			want:     nil,
+			wantErr:  require.NoError,
 		},
 		{
 			name:     "GetAdvisories returns an error",
 			fixtures: []string{"testdata/fixtures/sad.yaml"},
 			version:  "8",
 			pkgName:  "bind",
-			wantErr:  "failed to unmarshal advisory JSON",
+			wantErr:  require.Error,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			vs := NewVulnSrc()
-			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
-				Fixtures:   tt.fixtures,
-				WantValues: tt.want,
-				Release:    tt.version,
-				PkgName:    tt.pkgName,
-				WantErr:    tt.wantErr,
-			})
+			_ = dbtest.InitDB(t, tt.fixtures)
+			defer db.Close()
+
+			vs := oracleoval.NewVulnSrc()
+			got, err := vs.Get(tt.version, tt.pkgName, tt.arch)
+
+			tt.wantErr(t, err)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
