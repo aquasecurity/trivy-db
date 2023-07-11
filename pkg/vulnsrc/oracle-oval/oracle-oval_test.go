@@ -196,6 +196,76 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
+			name: "happy path multi arch",
+			dir:  filepath.Join("testdata", "multi-arch"),
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "Oracle Linux 5"},
+					Value: types.DataSource{
+						ID:   vulnerability.OracleOVAL,
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2007-0493", "Oracle Linux 5", "bind-devel"},
+					Value: types.Advisory{
+						FixedVersion: "30:9.3.3-8.el5",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2007-0494", "Oracle Linux 5", "bind-devel"},
+					Value: types.Advisory{
+						FixedVersion: "30:9.3.3-8.el5",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2007-0493", "Oracle Linux 5", "bind-sdb"},
+					Value: types.Advisory{
+						FixedVersion: "30:9.3.3-8.el5",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2007-0494", "Oracle Linux 5", "bind-sdb"},
+					Value: types.Advisory{
+						FixedVersion: "30:9.3.3-8.el5",
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "CVE-2007-0493", "oracle-oval"},
+					Value: types.VulnerabilityDetail{
+						Title:       "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)",
+						Description: "[30:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229",
+						References: []string{
+							"http://linux.oracle.com/cve/CVE-2007-0493.html",
+							"http://linux.oracle.com/errata/ELSA-2007-0057.html",
+						},
+						Severity: types.SeverityMedium,
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "CVE-2007-0494", "oracle-oval"},
+					Value: types.VulnerabilityDetail{
+						Title:       "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)",
+						Description: "[30:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229",
+						References: []string{
+							"http://linux.oracle.com/cve/CVE-2007-0494.html",
+							"http://linux.oracle.com/errata/ELSA-2007-0057.html",
+						},
+						Severity: types.SeverityMedium,
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-2007-0493"},
+					Value: map[string]interface{}{},
+				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-2007-0494"},
+					Value: map[string]interface{}{},
+				},
+			},
+		},
+		{
 			name: "happy path ELSA-ID",
 			dir:  filepath.Join("testdata", "elsa-id"),
 			wantValues: []vulnsrctest.WantValues{
