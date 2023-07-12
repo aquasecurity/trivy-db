@@ -98,3 +98,5 @@ db-fetch-vuln-list:
 	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-debian/archive/main.tar.gz | tar xz -C cache/vuln-list-debian --strip-components=1
 	mkdir -p cache/vuln-list-nvd
 	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-nvd/archive/main.tar.gz | tar xz -C cache/vuln-list-nvd --strip-components=1
+    mkdir -p cache/vuln-list-k8s
+	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-k8s/archive/main.tar.gz | tar xz -C cache/vuln-list-k8s --strip-components=1
