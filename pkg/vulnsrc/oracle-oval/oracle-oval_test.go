@@ -468,8 +468,55 @@ func TestVulnSrc_Get(t *testing.T) {
 		wantErr  require.ErrorAssertionFunc
 	}{
 		{
-			name:     "happy path",
+			name:     "the same fixed version",
 			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/data-source.yaml"},
+			version:  "8",
+			pkgName:  "bind",
+			arch:     "x86_64",
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2018-5743",
+					FixedVersion:    "32:9.11.4-17.P2.el8_0",
+					Arches: []string{
+						"aarch64",
+						"x86_64",
+					},
+					VendorIDs: []string{"ELSA-2019-1145"},
+					DataSource: &types.DataSource{
+						ID:   vulnerability.OracleOVAL,
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
+				},
+			},
+			wantErr: require.NoError,
+		},
+		{
+			name:     "different fixed versions for different arches",
+			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/data-source.yaml"},
+			version:  "7",
+			pkgName:  "rsyslog",
+			arch:     "aarch64",
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2022-24903",
+					FixedVersion:    "8.24.0-57.0.4.el7_9.3",
+					Arches: []string{
+						"aarch64",
+					},
+					VendorIDs: []string{"ELSA-2022-4803"},
+					DataSource: &types.DataSource{
+						ID:   vulnerability.OracleOVAL,
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
+				},
+			},
+			wantErr: require.NoError,
+		},
+		{
+			name:     "old schema, no entries",
+			fixtures: []string{"testdata/fixtures/old.yaml", "testdata/fixtures/data-source.yaml"},
 			version:  "8",
 			pkgName:  "bind",
 			want: []types.Advisory{
@@ -487,7 +534,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:     "no advisories are returned",
-			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			fixtures: []string{"testdata/fixtures/old.yaml"},
 			version:  "8",
 			pkgName:  "no-package",
 			want:     nil,
