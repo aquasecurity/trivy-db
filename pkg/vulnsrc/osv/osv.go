@@ -147,7 +147,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 	}
 
 	for _, affected := range entry.Affected {
-		pkgName := vulnerability.NormalizePkgName(eco.name, affected.Module.Path)
+		pkgName := vulnerability.NormalizePkgName(eco.name, affected.Package.Name)
 		var patchedVersions, vulnerableVersions []string
 		for _, affects := range affected.Ranges {
 			if affects.Type == RangeTypeGit {

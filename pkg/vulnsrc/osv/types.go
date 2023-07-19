@@ -10,12 +10,8 @@ const RangeTypeGit RangeType = "GIT"
 
 type Ecosystem string
 
-// Module identifies the Go module containing the vulnerability.
-// Note that this field is called "package" in the OSV specification.
-//
-// See https://ossf.github.io/osv-schema/#affectedpackage-field.
-type Module struct {
-	Path      string    `json:"name"`
+type Package struct {
+	Name      string    `json:"name"`
 	Ecosystem Ecosystem `json:"ecosystem"`
 }
 
@@ -37,14 +33,12 @@ type Reference struct {
 }
 
 type Affected struct {
-	// The affected Go module. Required.
-	// Note that this field is called "package" in the OSV specification.
-	Module            Module            `json:"package"`
+	Package           Package           `json:"package"`
 	Ranges            []Range           `json:"ranges,omitempty"`
 	EcosystemSpecific EcosystemSpecific `json:"ecosystem_specific"`
 }
 
-type Package struct {
+type Import struct {
 	Path    string   `json:"path,omitempty"`
 	GOOS    []string `json:"goos,omitempty"`
 	GOARCH  []string `json:"goarch,omitempty"`
@@ -52,10 +46,10 @@ type Package struct {
 }
 
 type EcosystemSpecific struct {
-	Packages []Package `json:"imports,omitempty"`
+	Imports []Import `json:"imports,omitempty"`
 }
 
-// source: https://github.com/golang/vuln/blob/2e18a6705c6b7f63b802491a33e8b78766cb3822/internal/osv/osv.go
+// source: https://ossf.github.io/osv-schema
 type Entry struct {
 	SchemaVersion    string            `json:"schema_version,omitempty"`
 	ID               string            `json:"id"`
