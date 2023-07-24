@@ -60,47 +60,6 @@ func (s Severity) String() string {
 	return SeverityNames[s]
 }
 
-type Status int
-
-// Statuses is a list of statuses.
-// VEX has 4 statuses: not-affected, affected, fixed, and under_investigation.
-// cf. https://www.cisa.gov/sites/default/files/2023-04/minimum-requirements-for-vex-508c.pdf
-//
-// In addition to them, Red Hat has "will_not_fix" and "fix_deferred".
-// cf. https://access.redhat.com/blogs/product-security/posts/2066793
-var Statuses = []string{
-	"Unknown",
-	"Not affected",
-	"Affected",
-	"Fixed",
-	"Under investigation",
-	"Will not fix",
-	"Fix deferred",
-	"End of life",
-}
-
-const (
-	StatusUnknown Status = iota
-	StatusNotAffected
-	StatusAffected
-	StatusFixed
-	StatusUnderInvestigation
-	StatusWillNotFix // Red Hat specific
-	StatusFixDeferred
-	StatusEndOfLife
-)
-
-func (s Status) String() string {
-	if s < 0 || int(s) >= len(Statuses) {
-		return "unknown"
-	}
-	return [...]string{}[s]
-}
-
-func (s Status) Index() int {
-	return int(s)
-}
-
 type LastUpdated struct {
 	Date time.Time
 }
