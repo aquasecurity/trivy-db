@@ -1,5 +1,7 @@
 package types
 
+import "encoding/json"
+
 type Status int
 
 var (
@@ -41,13 +43,28 @@ func NewStatus(status string) Status {
 	return StatusUnknown
 }
 
-func (s Status) String() string {
-	if s < 0 || int(s) >= len(Statuses) {
-		return Statuses[0]
+func (s *Status) String() string {
+	idx := s.Index()
+	if idx < 0 || idx >= len(Statuses) {
+		idx = 0 // unknown
 	}
-	return [...]string{}[s]
+	return Statuses[idx]
 }
 
-func (s Status) Index() int {
-	return int(s)
+func (s *Status) Index() int {
+	return int(*s)
+}
+
+func (s *Status) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.String())
+}
+
+func (s *Status) UnmarshalJSON(data []byte) error {
+	var str string
+	if err := json.Unmarshal(data, &str); err != nil {
+		return err
+	}
+
+	*s = NewStatus(str)
+	return nil
 }
