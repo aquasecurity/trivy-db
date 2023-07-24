@@ -170,7 +170,7 @@ type Entry struct {
 	FixedVersion string `json:",omitempty"`
 	Cves         []CveEntry
 	Arches       []string     `json:",omitempty"`
-	State        types.Status `json:",omitempty"`
+	Status       types.Status `json:",omitempty"`
 
 	// For DB size optimization, CPE names will not be stored.
 	// CPE indices are stored instead.
