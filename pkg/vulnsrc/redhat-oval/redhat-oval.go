@@ -255,10 +255,6 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 
 	var advisories []types.Advisory
 	for vulnID, v := range rawAdvisories {
-		if len(v.Content) == 0 {
-			continue
-		}
-
 		var adv Advisory
 		if err = json.Unmarshal(v.Content, &adv); err != nil {
 			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)

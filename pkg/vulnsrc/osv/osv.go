@@ -10,7 +10,6 @@ import (
 	"time"
 
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/vuln/osv"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
@@ -50,8 +49,8 @@ var ecosystems = []ecosystem{
 		},
 	*/
 
-	// We cannot use OSV for golang scanning until module names are included.
-	// See https://github.com/golang/go/issues/50006 for the detail.
+	// Go ecosystem advisories in OSV were disabled,
+	// because GitHub Advisory Database contains almost all information.
 	//{dir: "go", pkgType: vulnerability.Go, sourceID: vulnerability.OSVGo},
 }
 
@@ -151,7 +150,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 		pkgName := vulnerability.NormalizePkgName(eco.name, affected.Package.Name)
 		var patchedVersions, vulnerableVersions []string
 		for _, affects := range affected.Ranges {
-			if affects.Type == osv.TypeGit {
+			if affects.Type == RangeTypeGit {
 				continue
 			}
 
