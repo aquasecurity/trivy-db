@@ -41,7 +41,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"debian 9",
 						"libgcrypt20",
 					},
-					Value: types.Advisory{
+					Value: &types.Advisory{
 						VendorIDs:    []string{"DLA-2691-1"},
 						FixedVersion: "1.7.6-2+deb9u4",
 					},
@@ -53,7 +53,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"debian 10",
 						"libgcrypt20",
 					},
-					Value: types.Advisory{
+					Value: &types.Advisory{
 						FixedVersion: "1.8.4-5+deb10u1",
 					},
 				},
@@ -64,7 +64,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"debian 11",
 						"libgcrypt20",
 					},
-					Value: types.Advisory{
+					Value: &types.Advisory{
 						FixedVersion: "1.8.7-6",
 					},
 				},
@@ -75,9 +75,9 @@ func TestVulnSrc_Update(t *testing.T) {
 						"debian 10",
 						"dacs",
 					},
-					Value: types.Advisory{
-						Status:   types.StatusWillNotFix,
+					Value: &types.Advisory{
 						Severity: types.SeverityLow,
+						Status:   types.StatusWillNotFix,
 					},
 				},
 				{
@@ -87,7 +87,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"debian 8",
 						"akonadi",
 					},
-					Value: types.Advisory{
+					Value: &types.Advisory{
 						VendorIDs:    []string{"DSA-3714-1"},
 						FixedVersion: "1.13.0-2+deb8u2",
 					},
@@ -100,7 +100,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"debian 11",
 						"cloud-init",
 					},
-					Value: types.Advisory{
+					Value: &types.Advisory{
 						FixedVersion: "19.4-2",
 					},
 				},
