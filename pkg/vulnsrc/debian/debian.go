@@ -458,12 +458,12 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 
 	detail := types.Advisory{
 		VendorIDs:    adv.VendorIDs,
-		State:        adv.State,
+		Status:       newStatus(adv.State),
 		Severity:     severityFromUrgency(adv.Severity),
 		FixedVersion: adv.FixedVersion,
 	}
 
-	if err := dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.PkgName, []string{adv.Platform}, detail); err != nil {
+	if err := dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.PkgName, []string{adv.Platform}, &detail); err != nil {
 		return xerrors.Errorf("failed to save Debian advisory: %w", err)
 	}
 
@@ -659,4 +659,20 @@ func compareVersions(v1, v2 string) (int, error) {
 	}
 
 	return ver1.Compare(ver2), nil
+}
+
+func newStatus(s string) types.Status {
+	switch strings.ToLower(s) {
+	// "end-of-life" is considered as vulnerable
+	// e.g. https://security-tracker.debian.org/tracker/CVE-2022-1488
+	case "no-dsa", "unfixed":
+		return types.StatusAffected
+	case "ignored":
+		return types.StatusWillNotFix
+	case "postponed":
+		return types.StatusFixDeferred
+	case "end-of-life":
+		return types.StatusEndOfLife
+	}
+	return types.StatusUnknown
 }
