@@ -19,7 +19,8 @@ import (
 )
 
 const (
-	nvdDir = "nvd"
+	vulnListDir = "vuln-list-nvd"
+	feedDir     = "feed"
 )
 
 type VulnSrc struct {
@@ -37,7 +38,7 @@ func (vs VulnSrc) Name() types.SourceID {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	rootDir := filepath.Join(dir, "vuln-list", nvdDir)
+	rootDir := filepath.Join(dir, vulnListDir, feedDir)
 
 	var items []Item
 	buffer := &bytes.Buffer{}
