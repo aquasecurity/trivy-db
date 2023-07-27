@@ -1,7 +1,6 @@
 package vulnsrctest
 
 import (
-	"log"
 	"sort"
 	"testing"
 
@@ -48,8 +47,6 @@ func TestUpdate(t *testing.T, vulnsrc Updater, args TestUpdateArgs) {
 
 	require.NoError(t, err)
 	require.NoError(t, db.Close()) // Need to close before dbtest.JSONEq is called
-
-	log.Println(dbPath)
 	for _, want := range args.WantValues {
 		dbtest.JSONEq(t, dbPath, want.Key, want.Value, want.Key)
 	}
