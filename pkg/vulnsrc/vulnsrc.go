@@ -6,6 +6,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/amazon"
 	archlinux "github.com/aquasecurity/trivy-db/pkg/vulnsrc/arch-linux"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bitnami"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bundler"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/chainguard"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/composer"
@@ -54,6 +55,7 @@ var (
 		mariner.NewVulnSrc(),
 		wolfi.NewVulnSrc(),
 		chainguard.NewVulnSrc(),
+		bitnami.NewVulnSrc(),
 
 		// Language-specific packages
 		bundler.NewVulnSrc(),

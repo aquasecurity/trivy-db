@@ -2,17 +2,17 @@ package osv
 
 import (
 	"time"
-)
 
-type RangeType string
+	"github.com/aquasecurity/trivy-db/pkg/types"
+)
 
 const RangeTypeGit RangeType = "GIT"
 
-type Ecosystem string
+type RangeType string
 
 type Package struct {
-	Name      string    `json:"name"`
-	Ecosystem Ecosystem `json:"ecosystem"`
+	Name      string          `json:"name"`
+	Ecosystem types.Ecosystem `json:"ecosystem"`
 }
 
 type RangeEvent struct {

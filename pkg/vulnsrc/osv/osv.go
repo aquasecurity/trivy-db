@@ -2,7 +2,6 @@ package osv
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"path/filepath"
@@ -22,7 +21,6 @@ import (
 const (
 	osvDir     = "osv"
 	dataSource = "Open Source Vulnerability"
-	sourceID   = vulnerability.OSV
 )
 
 var ecosystems = []ecosystem{
@@ -30,28 +28,33 @@ var ecosystems = []ecosystem{
 		dir:  "python",
 		name: vulnerability.Pip,
 		dataSource: types.DataSource{
-			ID:   sourceID,
+			ID:   vulnerability.OSV,
 			Name: "Python Packaging Advisory Database",
 			URL:  "https://github.com/pypa/advisory-db",
 		},
 	},
-	// Cargo ecosystem advisories in OSV were disabled,
+	// Cargo & Go ecosystem advisories in OSV were disabled,
 	// because GitHub Advisory Database contains almost all information.
 	/*
 		{
 			dir:  "rust",
 			name: vulnerability.Cargo,
 			dataSource: types.DataSource{
-				ID:   sourceID,
+				ID:   vulnerability.OSV,
 				Name: "RustSec Advisory Database",
 				URL:  "https://github.com/RustSec/advisory-db",
 			},
 		},
+		{
+			dir:  "go",
+			name: vulnerability.Go,
+			dataSource: types.DataSource{
+				ID:   vulnerability.OSV,
+				Name: "Go Advisory Database",
+				URL:  "https://pkg.go.dev/vuln",
+			},
+		},
 	*/
-
-	// Go ecosystem advisories in OSV were disabled,
-	// because GitHub Advisory Database contains almost all information.
-	//{dir: "go", pkgType: vulnerability.Go, sourceID: vulnerability.OSVGo},
 }
 
 type ecosystem struct {
@@ -71,12 +74,12 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return sourceID
+	return vulnerability.OSV
 }
 
 func (vs VulnSrc) Update(dir string) error {
 	for _, eco := range ecosystems {
-		log.Printf("    Updating Open Source Vulnerability %s", eco.name)
+		log.Printf("    Updating OSV - %s", eco.name)
 		rootDir := filepath.Join(dir, "vuln-list", osvDir, eco.dir)
 
 		var entries []Entry
@@ -108,9 +111,14 @@ func (vs VulnSrc) Update(dir string) error {
 }
 
 func (vs VulnSrc) save(eco ecosystem, entries []Entry) error {
+	bktName := bucket.Name(string(eco.name), dataSource)
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
+		if err := vs.dbc.PutDataSource(tx, bktName, eco.dataSource); err != nil {
+			return xerrors.Errorf("failed to put data source: %w", err)
+		}
+
 		for _, entry := range entries {
-			if err := vs.commit(tx, eco, entry); err != nil {
+			if err := vs.commit(tx, bktName, eco.name, entry); err != nil {
 				return err
 			}
 		}
@@ -122,20 +130,13 @@ func (vs VulnSrc) save(eco ecosystem, entries []Entry) error {
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
-
+func (vs VulnSrc) commit(tx *bolt.Tx, bktName string, ecoName types.Ecosystem, entry Entry) error {
 	if entry.Withdrawn != nil && entry.Withdrawn.Before(time.Now()) {
 		return nil
 	}
 
-	bktName := bucket.Name(string(eco.name), dataSource)
-
-	if err := vs.dbc.PutDataSource(tx, bktName, eco.dataSource); err != nil {
-		return xerrors.Errorf("failed to put data source: %w", err)
-	}
-
 	// Aliases contain CVE-IDs
-	vulnIDs := filterCveIDs(entry.Aliases)
+	vulnIDs := FilterCveIDs(entry.Aliases)
 	if len(vulnIDs) == 0 {
 		// e.g. PYSEC-2021-335
 		vulnIDs = []string{entry.ID}
@@ -147,39 +148,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 	}
 
 	for _, affected := range entry.Affected {
-		pkgName := vulnerability.NormalizePkgName(eco.name, affected.Package.Name)
-		var patchedVersions, vulnerableVersions []string
-		for _, affects := range affected.Ranges {
-			if affects.Type == RangeTypeGit {
-				continue
-			}
-
-			var vulnerable string
-			for _, event := range affects.Events {
-				switch {
-				case event.Introduced != "":
-					// e.g. {"introduced": "1.2.0}, {"introduced": "2.2.0}
-					if vulnerable != "" {
-						vulnerableVersions = append(vulnerableVersions, vulnerable)
-					}
-					vulnerable = fmt.Sprintf(">=%s", event.Introduced)
-				case event.Fixed != "":
-					// patched versions
-					patchedVersions = append(patchedVersions, event.Fixed)
-
-					// e.g. {"introduced": "1.2.0}, {"fixed": "1.2.5}
-					vulnerable = fmt.Sprintf("%s, <%s", vulnerable, event.Fixed)
-				}
-			}
-			if vulnerable != "" {
-				vulnerableVersions = append(vulnerableVersions, vulnerable)
-			}
-		}
-
-		advisory := types.Advisory{
-			VulnerableVersions: vulnerableVersions,
-			PatchedVersions:    patchedVersions,
-		}
+		pkgName := vulnerability.NormalizePkgName(ecoName, affected.Package.Name)
+		advisory := GetAdvisory(affected.Ranges)
 
 		for _, vulnID := range vulnIDs {
 			if err := vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bktName}, advisory); err != nil {
@@ -195,7 +165,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 			References:  references,
 		}
 
-		if err := vs.dbc.PutVulnerabilityDetail(tx, vulnID, sourceID, vuln); err != nil {
+		if err := vs.dbc.PutVulnerabilityDetail(tx, vulnID, vulnerability.OSV, vuln); err != nil {
 			return xerrors.Errorf("failed to put vulnerability detail (%s): %w", vulnID, err)
 		}
 
@@ -204,14 +174,4 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 		}
 	}
 	return nil
-}
-
-func filterCveIDs(aliases []string) []string {
-	var cveIDs []string
-	for _, a := range aliases {
-		if strings.HasPrefix(a, "CVE-") {
-			cveIDs = append(cveIDs, a)
-		}
-	}
-	return cveIDs
 }
