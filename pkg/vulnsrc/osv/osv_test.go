@@ -56,6 +56,13 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key:   []string{"vulnerability-id", "CVE-2013-4251"},
 					Value: map[string]interface{}{},
 				},
+				{
+					Key: []string{"advisory-detail", "CVE-2023-37276", "pip::Open Source Vulnerability", "aiohttp"},
+					Value: types.Advisory{
+						VulnerableVersions: []string{">=0, <=3.8.4"},
+						UnaffectedVersions: []string{">3.8.4"},
+					},
+				},
 			},
 			noBuckets: [][]string{ //skip GHSA-id
 				{"advisory-detail", "CVE-2021-40829"},

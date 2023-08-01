@@ -148,7 +148,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 
 	for _, affected := range entry.Affected {
 		pkgName := vulnerability.NormalizePkgName(eco.name, affected.Package.Name)
-		var patchedVersions, vulnerableVersions []string
+		var patchedVersions, vulnerableVersions, unaffectedVersions []string
 		for _, affects := range affected.Ranges {
 			if affects.Type == RangeTypeGit {
 				continue
@@ -169,6 +169,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 
 					// e.g. {"introduced": "1.2.0}, {"fixed": "1.2.5}
 					vulnerable = fmt.Sprintf("%s, <%s", vulnerable, event.Fixed)
+				case event.LastAffected != "":
+					unaffectedVersions = append(unaffectedVersions, fmt.Sprintf(">%s", event.LastAffected))
+					vulnerable = fmt.Sprintf("%s, <=%s", vulnerable, event.LastAffected)
 				}
 			}
 			if vulnerable != "" {
@@ -179,6 +182,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 		advisory := types.Advisory{
 			VulnerableVersions: vulnerableVersions,
 			PatchedVersions:    patchedVersions,
+			UnaffectedVersions: unaffectedVersions,
 		}
 
 		for _, vulnID := range vulnIDs {
