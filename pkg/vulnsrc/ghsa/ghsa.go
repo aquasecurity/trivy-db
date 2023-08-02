@@ -35,6 +35,7 @@ var (
 		vulnerability.Rust,
 		vulnerability.Erlang,
 		vulnerability.Pub,
+		vulnerability.Swift,
 	}
 	platformFormat = "GitHub Security Advisory %s"
 )
