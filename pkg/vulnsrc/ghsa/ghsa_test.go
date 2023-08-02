@@ -389,6 +389,42 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key:   []string{"vulnerability-id", "CVE-2020-35669"},
 					Value: map[string]interface{}{},
 				},
+				{
+					Key: []string{"data-source", "swift::GitHub Security Advisory Swift"},
+					Value: types.DataSource{
+						ID:   vulnerability.GHSA,
+						Name: "GitHub Security Advisory Swift",
+						URL:  "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Aswift",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2022-3215", "swift::GitHub Security Advisory Swift", "github.com/apple/swift-nio"},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"2.29.1", "2.39.1", "2.42.0"},
+						VulnerableVersions: []string{"\u003c 2.29.1", "\u003e= 2.39.0, \u003c 2.39.1", "\u003e= 2.41.0, \u003c 2.42.0"},
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "CVE-2022-3215", ghsaDir},
+					Value: types.VulnerabilityDetail{
+						ID:          "CVE-2022-3215",
+						Title:       "SwiftNIO vulnerable to Improper Neutralization of CRLF Sequences in HTTP Headers ('HTTP Response Splitting')",
+						Description: "`NIOHTTP1` and projects using it for generating HTTP responses, including SwiftNIO, can be subject to a HTTP Response Injection attack...",
+						References: []string{
+							"https://github.com/apple/swift-nio/security/advisories/GHSA-7fj7-39wj-c64f",
+							"https://nvd.nist.gov/vuln/detail/CVE-2022-3215",
+							"https://github.com/apple/swift-nio/commit/a16e2f54a25b2af217044e5168997009a505930f",
+							"https://github.com/advisories/GHSA-7fj7-39wj-c64f",
+						},
+						Severity:     types.SeverityMedium,
+						CvssScoreV3:  5.3,
+						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-2022-3215"},
+					Value: map[string]interface{}{},
+				},
 			},
 		},
 		{
