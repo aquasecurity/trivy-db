@@ -1,0 +1,68 @@
+{
+  "Severity": "MODERATE",
+  "UpdatedAt": "2023-06-07T16:01:53Z",
+  "Package": {
+    "Ecosystem": "SWIFT",
+    "Name": "github.com/apple/swift-nio"
+  },
+  "Advisory": {
+    "DatabaseId": 211869,
+    "Id": "GSA_kwCzR0hTQS03Zmo3LTM5d2otYzY0Zs4AAzud",
+    "GhsaId": "GHSA-7fj7-39wj-c64f",
+    "References": [
+      {
+        "Url": "https://github.com/apple/swift-nio/security/advisories/GHSA-7fj7-39wj-c64f"
+      },
+      {
+        "Url": "https://nvd.nist.gov/vuln/detail/CVE-2022-3215"
+      },
+      {
+        "Url": "https://github.com/apple/swift-nio/commit/a16e2f54a25b2af217044e5168997009a505930f"
+      },
+      {
+        "Url": "https://github.com/advisories/GHSA-7fj7-39wj-c64f"
+      }
+    ],
+    "Identifiers": [
+      {
+        "Type": "GHSA",
+        "Value": "GHSA-7fj7-39wj-c64f"
+      },
+      {
+        "Type": "CVE",
+        "Value": "CVE-2022-3215"
+      }
+    ],
+    "Description": "`NIOHTTP1` and projects using it for generating HTTP responses, including SwiftNIO, can be subject to a HTTP Response Injection attack...",
+    "Origin": "UNSPECIFIED",
+    "PublishedAt": "2023-06-07T16:01:53Z",
+    "Severity": "MODERATE",
+    "Summary": "SwiftNIO vulnerable to Improper Neutralization of CRLF Sequences in HTTP Headers ('HTTP Response Splitting')",
+    "UpdatedAt": "2023-06-19T16:45:07Z",
+    "WithdrawnAt": "",
+    "CVSS": {
+      "Score": 5.3,
+      "VectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"
+    }
+  },
+  "Versions": [
+    {
+      "FirstPatchedVersion": {
+        "Identifier": "2.29.1"
+      },
+      "VulnerableVersionRange": "\u003c 2.29.1"
+    },
+    {
+      "FirstPatchedVersion": {
+        "Identifier": "2.39.1"
+      },
+      "VulnerableVersionRange": "\u003e= 2.39.0, \u003c 2.39.1"
+    },
+    {
+      "FirstPatchedVersion": {
+        "Identifier": "2.42.0"
+      },
+      "VulnerableVersionRange": "\u003e= 2.41.0, \u003c 2.42.0"
+    }
+  ]
+}
