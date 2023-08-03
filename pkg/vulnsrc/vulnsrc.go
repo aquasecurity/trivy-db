@@ -9,6 +9,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/chainguard"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/composer"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
+	eolalpine "github.com/aquasecurity/trivy-db/pkg/vulnsrc/eol/alpine"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/glad"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/mariner"
@@ -60,5 +61,8 @@ var (
 		ghsa.NewVulnSrc(),
 		glad.NewVulnSrc(),
 		osv.NewVulnSrc(),
+
+		// End-of-life dates
+		eolalpine.NewEolSrc(),
 	}
 )
