@@ -222,6 +222,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 			input.PlatformName = platformName
 			input.CveID = cveID
 			input.Vuln = vuln
+			input.Erratum = erratum
 
 			savedInputs[cveID] = input
 		}
