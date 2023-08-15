@@ -398,7 +398,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2022-3215", "swift::GitHub Security Advisory Swift", "https://github.com/apple/swift-nio.git"},
+					Key: []string{"advisory-detail", "CVE-2022-3215", "swift::GitHub Security Advisory Swift", "github.com/apple/swift-nio"},
 					Value: types.Advisory{
 						PatchedVersions:    []string{"2.29.1", "2.39.1", "2.42.0"},
 						VulnerableVersions: []string{"\u003c 2.29.1", "\u003e= 2.39.0, \u003c 2.39.1", "\u003e= 2.41.0, \u003c 2.42.0"},
