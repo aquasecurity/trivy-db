@@ -114,13 +114,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ecosystem types.Ecosystem, entries []Entry
 			// But part Swift advisories doesn't `https://` prefix or `.git` suffix
 			// e.g. https://github.com/github/advisory-database/blob/76f65b0d0fdac39c8b0e834ab03562b5f80d5b27/advisories/github-reviewed/2023/06/GHSA-qvxg-wjxc-r4gg/GHSA-qvxg-wjxc-r4gg.json#L21
 			// https://github.com/github/advisory-database/blob/76f65b0d0fdac39c8b0e834ab03562b5f80d5b27/advisories/github-reviewed/2023/07/GHSA-jq43-q8mx-r7mq/GHSA-jq43-q8mx-r7mq.json#L21
-			// Add them to fit the same format
-			if strings.HasPrefix(entry.Package.Name, "https://") {
-				entry.Package.Name = strings.TrimPrefix(entry.Package.Name, "https://")
-			}
-			if strings.HasSuffix(entry.Package.Name, ".git") {
-				entry.Package.Name = strings.TrimSuffix(entry.Package.Name, ".git")
-			}
+			// Remove them to fit the same format
+			entry.Package.Name = strings.TrimPrefix(entry.Package.Name, "https://")
+			entry.Package.Name = strings.TrimSuffix(entry.Package.Name, ".git")
 		}
 		var pvs, avs []string
 		for _, va := range entry.Versions {
