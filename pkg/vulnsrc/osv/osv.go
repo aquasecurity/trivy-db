@@ -163,6 +163,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 						vulnerableVersions = append(vulnerableVersions, vulnerable)
 					}
 					vulnerable = fmt.Sprintf(">=%s", event.Introduced)
+				// Entries in the events array can contain either last_affected or fixed events, but not both
 				case event.Fixed != "":
 					// patched versions
 					patchedVersions = append(patchedVersions, event.Fixed)
@@ -170,7 +171,6 @@ func (vs VulnSrc) commit(tx *bolt.Tx, eco ecosystem, entry Entry) error {
 					// e.g. {"introduced": "1.2.0}, {"fixed": "1.2.5}
 					vulnerable = fmt.Sprintf("%s, <%s", vulnerable, event.Fixed)
 				case event.LastAffected != "":
-					unaffectedVersions = append(unaffectedVersions, fmt.Sprintf(">%s", event.LastAffected))
 					vulnerable = fmt.Sprintf("%s, <=%s", vulnerable, event.LastAffected)
 				}
 			}
