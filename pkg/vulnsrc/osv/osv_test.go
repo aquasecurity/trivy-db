@@ -60,7 +60,6 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"advisory-detail", "CVE-2023-37276", "pip::Open Source Vulnerability", "aiohttp"},
 					Value: types.Advisory{
 						VulnerableVersions: []string{">=0, <=3.8.4"},
-						UnaffectedVersions: []string{">3.8.4"},
 					},
 				},
 			},
