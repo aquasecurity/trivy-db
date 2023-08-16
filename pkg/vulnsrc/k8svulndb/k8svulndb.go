@@ -96,10 +96,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, item K8sCVE) error {
 	if len(item.AffectedVersions) == 0 {
 		return nil
 	}
-	var patchedVersions, vulnerableVersions []string
+	var vulnerableVersions []string
 	for _, introduced := range item.AffectedVersions {
 		vulnerableVersions = append(vulnerableVersions, fmt.Sprintf("%s<=, <=%s", introduced.Introduced, introduced.LastAffected))
-		patchedVersions = append(patchedVersions, introduced.Fixed)
 	}
 	a := types.Advisory{
 		PatchedVersions:    lo.Map(item.AffectedVersions, func(v *Version, _ int) string { return v.Fixed }),
