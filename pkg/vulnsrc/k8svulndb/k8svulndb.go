@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/samber/lo"
+	bolt "go.etcd.io/bbolt"
+	"golang.org/x/xerrors"
 	"io"
 	"log"
 	"path/filepath"
-
-	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
@@ -93,18 +93,16 @@ func (vs VulnSrc) save(items []K8sCVE) error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx, item K8sCVE) error {
 
-	if len(item.AffectedVersion) == 0 {
+	if len(item.AffectedVersions) == 0 {
 		return nil
 	}
 	var patchedVersions, vulnerableVersions []string
-	for index, introduced := range item.AffectedVersion {
-		vulnerableVersions = append(vulnerableVersions, fmt.Sprintf("%s, <=%s", introduced.From, introduced.To))
-		if len(item.FixedVersion) > index {
-			patchedVersions = append(patchedVersions, item.FixedVersion[index].Fixed)
-		}
+	for _, introduced := range item.AffectedVersions {
+		vulnerableVersions = append(vulnerableVersions, fmt.Sprintf("%s<=, <=%s", introduced.Introduced, introduced.LastAffected))
+		patchedVersions = append(patchedVersions, introduced.Fixed)
 	}
 	a := types.Advisory{
-		PatchedVersions:    patchedVersions,
+		PatchedVersions:    lo.Map(item.AffectedVersions, func(v *Version, _ int) string { return v.Fixed }),
 		VulnerableVersions: vulnerableVersions,
 	}
 	err := vs.dbc.PutAdvisoryDetail(tx, item.ID, item.Component, []string{bucketName}, a)
@@ -113,7 +111,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, item K8sCVE) error {
 	}
 	severity, err := types.NewSeverity(strings.ToUpper(item.Severity))
 	if err != nil {
-		severity = types.SeverityLow
+		severity = types.SeverityUnknown
 	}
 	publishedDate, err := time.Parse(time.RFC3339, item.CreatedAt)
 	if err != nil {
@@ -122,10 +120,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, item K8sCVE) error {
 	vuln := types.VulnerabilityDetail{
 		ID:               item.ID,
 		Severity:         severity,
-		CvssVector:       item.Cvss,
+		CvssVector:       item.CvssV3.Vector,
 		Description:      item.Description,
 		References:       item.Urls,
-		CvssScoreV3:      item.Score,
+		CvssScoreV3:      item.CvssV3.Score,
 		Title:            item.Summary,
 		PublishedDate:    &publishedDate,
 		LastModifiedDate: &publishedDate,
