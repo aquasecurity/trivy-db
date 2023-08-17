@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/samber/lo"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 	"io"
@@ -93,21 +92,45 @@ func (vs VulnSrc) save(items []K8sCVE) error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx, item K8sCVE) error {
 
-	if len(item.AffectedVersions) == 0 {
+	if len(item.Affected) == 0 {
 		return nil
 	}
-	var vulnerableVersions []string
-	for _, introduced := range item.AffectedVersions {
-		vulnerableVersions = append(vulnerableVersions, fmt.Sprintf("%s<=, <=%s", introduced.Introduced, introduced.LastAffected))
+	for _, affected := range item.Affected {
+		var patchedVersions, vulnerableVersions []string
+		for _, af := range affected.Ranges {
+			for _, event := range af.Events {
+				var vulnerable string
+				switch {
+				case event.Introduced != "":
+					// e.g. {"introduced": "1.2.0}, {"introduced": "2.2.0}
+					if vulnerable != "" {
+						vulnerableVersions = append(vulnerableVersions, vulnerable)
+					}
+					vulnerable = fmt.Sprintf(">=%s", event.Introduced)
+				// cf. https://ossf.github.io/osv-schema/#requirements
+				case event.Fixed != "":
+					// patched versions
+					patchedVersions = append(patchedVersions, event.Fixed)
+					// vulnerable versions
+					vulnerable = fmt.Sprintf("%s, <%s", vulnerable, event.Fixed)
+				case event.LastAffected != "":
+					vulnerable = fmt.Sprintf("%s, <=%s", vulnerable, event.LastAffected)
+				}
+				if vulnerable != "" {
+					vulnerableVersions = append(vulnerableVersions, vulnerable)
+				}
+			}
+			a := types.Advisory{
+				PatchedVersions:    patchedVersions,
+				VulnerableVersions: vulnerableVersions,
+			}
+			err := vs.dbc.PutAdvisoryDetail(tx, item.ID, item.Component, []string{bucketName}, a)
+			if err != nil {
+				return xerrors.Errorf("failed to save k8s-vulndb advisory: %w", err)
+			}
+		}
 	}
-	a := types.Advisory{
-		PatchedVersions:    lo.Map(item.AffectedVersions, func(v *Version, _ int) string { return v.Fixed }),
-		VulnerableVersions: vulnerableVersions,
-	}
-	err := vs.dbc.PutAdvisoryDetail(tx, item.ID, item.Component, []string{bucketName}, a)
-	if err != nil {
-		return xerrors.Errorf("failed to save k8s-vulndb advisory: %w", err)
-	}
+
 	severity, err := types.NewSeverity(strings.ToUpper(item.Severity))
 	if err != nil {
 		severity = types.SeverityUnknown
@@ -120,8 +143,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, item K8sCVE) error {
 		ID:               item.ID,
 		Severity:         severity,
 		CvssVector:       item.CvssV3.Vector,
-		Description:      item.Description,
-		References:       item.Urls,
+		Description:      item.Details,
+		References:       item.References,
 		CvssScoreV3:      item.CvssV3.Score,
 		Title:            item.Summary,
 		PublishedDate:    &publishedDate,

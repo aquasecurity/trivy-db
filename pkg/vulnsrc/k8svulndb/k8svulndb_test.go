@@ -43,7 +43,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"advisory-detail", "CVE-2023-2727", "k8s::The k8s Vulnerability Database", "k8s.io/kube-apiserver"},
 					Value: types.Advisory{
 						PatchedVersions:    []string{"1.27.3"},
-						VulnerableVersions: []string{"1.27.0<=, <=1.27.2"},
+						VulnerableVersions: []string{">=1.27.0", ", <=1.27.2", ", <1.27.3"},
 					},
 				},
 				{
