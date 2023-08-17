@@ -120,14 +120,14 @@ func (vs VulnSrc) commit(tx *bolt.Tx, item K8sCVE) error {
 					vulnerableVersions = append(vulnerableVersions, vulnerable)
 				}
 			}
-			a := types.Advisory{
-				PatchedVersions:    patchedVersions,
-				VulnerableVersions: vulnerableVersions,
-			}
-			err := vs.dbc.PutAdvisoryDetail(tx, item.ID, item.Component, []string{bucketName}, a)
-			if err != nil {
-				return xerrors.Errorf("failed to save k8s-vulndb advisory: %w", err)
-			}
+		}
+		a := types.Advisory{
+			PatchedVersions:    patchedVersions,
+			VulnerableVersions: vulnerableVersions,
+		}
+		err := vs.dbc.PutAdvisoryDetail(tx, item.ID, item.Component, []string{bucketName}, a)
+		if err != nil {
+			return xerrors.Errorf("failed to save k8s-vulndb advisory: %w", err)
 		}
 	}
 
