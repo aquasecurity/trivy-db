@@ -16,8 +16,9 @@ type Package struct {
 }
 
 type RangeEvent struct {
-	Introduced string `json:"introduced,omitempty"`
-	Fixed      string `json:"fixed,omitempty"`
+	Introduced   string `json:"introduced,omitempty"`
+	Fixed        string `json:"fixed,omitempty"`
+	LastAffected string `json:"last_affected,omitempty"`
 }
 
 type Range struct {
