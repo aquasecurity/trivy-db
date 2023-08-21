@@ -17,9 +17,10 @@ func FilterCveIDs(aliases []string) []string {
 	return cveIDs
 }
 
-func GetAdvisory(ranges []Range) types.Advisory {
+func GetAdvisory(affected Affected) types.Advisory {
 	var patchedVersions, vulnerableVersions []string
-	for _, affects := range ranges {
+
+	for _, affects := range affected.Ranges {
 		if affects.Type == RangeTypeGit {
 			continue
 		}
@@ -44,6 +45,10 @@ func GetAdvisory(ranges []Range) types.Advisory {
 		if vulnerable != "" {
 			vulnerableVersions = append(vulnerableVersions, vulnerable)
 		}
+	}
+
+	for _, v := range affected.Versions {
+		vulnerableVersions = append(vulnerableVersions, fmt.Sprintf("=%s", v))
 	}
 
 	return types.Advisory{

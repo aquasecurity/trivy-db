@@ -29,6 +29,13 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
+					Key: []string{"advisory-detail", "CVE-2020-11998", bucketName, "activemq"},
+					Value: types.Advisory{
+						VulnerableVersions: []string{"=5.15.12"},
+						PatchedVersions:    []string{},
+					},
+				},
+				{
 					Key: []string{"advisory-detail", "CVE-2020-7059", bucketName, "php"},
 					Value: types.Advisory{
 						VulnerableVersions: []string{">=7.2.0, <7.2.27", ">=7.3.0, <7.3.14", ">=7.4.0, <7.4.2"},

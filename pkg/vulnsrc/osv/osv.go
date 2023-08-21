@@ -149,7 +149,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, bktName string, ecoName types.Ecosystem, e
 
 	for _, affected := range entry.Affected {
 		pkgName := vulnerability.NormalizePkgName(ecoName, affected.Package.Name)
-		advisory := GetAdvisory(affected.Ranges)
+		var advisory types.Advisory
+		if len(affected.Ranges) > 0 || len(affected.Versions) > 0 {
+			advisory = GetAdvisory(affected)
+		}
 
 		for _, vulnID := range vulnIDs {
 			if err := vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bktName}, advisory); err != nil {

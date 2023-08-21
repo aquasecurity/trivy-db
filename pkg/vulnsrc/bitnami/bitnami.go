@@ -108,7 +108,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, entry osv.Entry) error {
 
 	for _, affected := range entry.Affected {
 		pkgName := vulnerability.NormalizePkgName(vulnerability.Bitnami, affected.Package.Name)
-		advisory := osv.GetAdvisory(affected.Ranges)
+		var advisory types.Advisory
+		if len(affected.Ranges) > 0 || len(affected.Versions) > 0 {
+			advisory = osv.GetAdvisory(affected)
+		}
+
 		for _, vulnID := range vulnIDs {
 			if err := vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bucketName}, advisory); err != nil {
 				return xerrors.Errorf("failed to save OSV advisory: %w", err)

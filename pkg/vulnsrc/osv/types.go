@@ -35,6 +35,7 @@ type Reference struct {
 type Affected struct {
 	Package           Package           `json:"package"`
 	Ranges            []Range           `json:"ranges,omitempty"`
+	Versions          []string          `json:"versions,omitempty"`
 	EcosystemSpecific EcosystemSpecific `json:"ecosystem_specific"`
 }
 
