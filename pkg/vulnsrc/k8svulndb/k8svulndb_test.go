@@ -28,8 +28,8 @@ func TestVulnSrc_Update(t *testing.T) {
 		wantErr string
 	}{
 		{
-			name: "happy path",
-			dir:  "testdata/happy",
+			name: "happy path fixed version",
+			dir:  "testdata/happy-fixed",
 			want: []vulnsrctest.WantValues{
 				{
 					Key: []string{"data-source", "k8s::The k8s Vulnerability Database"},
@@ -43,7 +43,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"advisory-detail", "CVE-2023-2727", "k8s::The k8s Vulnerability Database", "k8s.io/kube-apiserver"},
 					Value: types.Advisory{
 						PatchedVersions:    []string{"1.27.3"},
-						VulnerableVersions: []string{">=1.27.0", ", <=1.27.2", ", <1.27.3"},
+						VulnerableVersions: []string{">=1.27.0", ", <1.27.3"},
 					},
 				},
 				{
@@ -52,9 +52,46 @@ func TestVulnSrc_Update(t *testing.T) {
 						Description: "CVE-2023-2727: Bypassing policies imposed by the ImagePolicyWebhook admission pluginCVSS Rating: CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:NA security issue was discovered in Kubernetes where users may be able to launch containers using images that are restricted by ImagePolicyWebhook when using ephemeral containers. Kubernetes clusters are only affected if the ImagePolicyWebhook admission plugin is used together with ephemeral containers.Am I vulnerable?Clusters are impacted by this vulnerability if all of the following are true:",
 						References: []string{
 							"https://github.com/kubernetes/kubernetes/issues/118640",
-							"https://www.cve.org/cverecord?id=CVE-2023-2727, CVE-2023-2728",
+							"https://www.cve.org/cverecord?id=CVE-2023-2727",
 						},
 						ID:               "CVE-2023-2727",
+						CvssScoreV3:      6.5,
+						CvssVector:       "CVSS:3.0/AV:L/AC:H/PR:L/UI:R/S:U/C:L/I:L/A:N",
+						Severity:         severity,
+						PublishedDate:    &publishedDate,
+						LastModifiedDate: &publishedDate,
+						Title:            "Bypassing policies imposed by the ImagePolicyWebhook and bypassing mountable secrets policy imposed by the ServiceAccount admission plugin",
+					},
+				},
+			},
+		},
+		{
+			name: "happy path last affected version",
+			dir:  "testdata/happy",
+			want: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "k8s::The k8s Vulnerability Database"},
+					Value: types.DataSource{
+						ID:   vulnerability.K8sVulnDB,
+						Name: "The k8s Vulnerability Database",
+						URL:  "https://kubernetes.io/docs/reference/issues-security/official-cve-feed/index.json",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2023-2728", "k8s::The k8s Vulnerability Database", "k8s.io/kube-apiserver"},
+					Value: types.Advisory{
+						VulnerableVersions: []string{">=1.27.0", ", <=1.27.2"},
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "CVE-2023-2728", string(vulnerability.K8sVulnDB)},
+					Value: types.VulnerabilityDetail{
+						Description: "CVE-2023-2728: Bypassing policies imposed by the ImagePolicyWebhook admission pluginCVSS Rating: CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:NA security issue was discovered in Kubernetes where users may be able to launch containers using images that are restricted by ImagePolicyWebhook when using ephemeral containers. Kubernetes clusters are only affected if the ImagePolicyWebhook admission plugin is used together with ephemeral containers.Am I vulnerable?Clusters are impacted by this vulnerability if all of the following are true:",
+						References: []string{
+							"https://github.com/kubernetes/kubernetes/issues/118640",
+							"https://www.cve.org/cverecord?id=CVE-2023-2728",
+						},
+						ID:               "CVE-2023-2728",
 						CvssScoreV3:      6.5,
 						CvssVector:       "CVSS:3.0/AV:L/AC:H/PR:L/UI:R/S:U/C:L/I:L/A:N",
 						Severity:         severity,
