@@ -212,7 +212,7 @@ func (dbc Config) forEach(bktNames []string) (map[string]Value, error) {
 			bkt := root
 			for _, nestedBkt := range nestedBuckets {
 				bkt = bkt.Bucket([]byte(nestedBkt))
-				if bkt == nil {
+				if bkt != nil {
 					break
 				}
 			}
