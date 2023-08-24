@@ -462,7 +462,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad path (cocoapods-specs doesn't exist)",
 			dir:     "testdata",
-			wantErr: "failed to decode GHSA",
+			wantErr: "no such file or directory",
 		},
 	}
 	for _, tt := range tests {
