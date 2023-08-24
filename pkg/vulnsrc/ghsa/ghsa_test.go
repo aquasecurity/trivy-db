@@ -405,6 +405,28 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
+					Key: []string{"data-source", "cocoapods::GitHub Security Advisory Cocoapods"},
+					Value: types.DataSource{
+						ID:   vulnerability.GHSA,
+						Name: "GitHub Security Advisory Cocoapods",
+						URL:  "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Aswift",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2022-3215", "cocoapods::GitHub Security Advisory Cocoapods", "SwiftNIO"},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"2.29.1", "2.39.1", "2.42.0"},
+						VulnerableVersions: []string{"\u003c 2.29.1", "\u003e= 2.39.0, \u003c 2.39.1", "\u003e= 2.41.0, \u003c 2.42.0"},
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2022-3215", "cocoapods::GitHub Security Advisory Cocoapods", "_NIODataStructures"},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"2.29.1", "2.39.1", "2.42.0"},
+						VulnerableVersions: []string{"\u003c 2.29.1", "\u003e= 2.39.0, \u003c 2.39.1", "\u003e= 2.41.0, \u003c 2.42.0"},
+					},
+				},
+				{
 					Key: []string{"vulnerability-detail", "CVE-2022-3215", ghsaDir},
 					Value: types.VulnerabilityDetail{
 						ID:          "CVE-2022-3215",

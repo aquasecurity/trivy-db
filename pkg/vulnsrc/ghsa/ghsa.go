@@ -3,6 +3,7 @@ package ghsa
 import (
 	"encoding/json"
 	"fmt"
+	"golang.org/x/exp/slices"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"io"
@@ -41,12 +42,14 @@ var (
 )
 
 type VulnSrc struct {
-	dbc db.Operation
+	dbc              db.Operation
+	cocoapodsUpdater updater
 }
 
 func NewVulnSrc() VulnSrc {
 	return VulnSrc{
-		dbc: db.Config{},
+		dbc:              db.Config{},
+		cocoapodsUpdater: updater{},
 	}
 }
 
@@ -56,6 +59,14 @@ func (vs VulnSrc) Name() types.SourceID {
 
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", ghsaDir)
+
+	if slices.Contains(ecosystems, vulnerability.Swift) {
+		var err error
+		vs.cocoapodsUpdater, err = newCocoapodsParser(dir, vs.dbc)
+		if err != nil {
+			return xerrors.Errorf("failed to init cocoapods updater: %w", err)
+		}
+	}
 
 	for _, ecosystem := range ecosystems {
 		var entries []Entry
@@ -104,20 +115,17 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ecosystem types.Ecosystem, entries []Entry
 		return xerrors.Errorf("failed to put data source: %w", err)
 	}
 
+	if ecosystem == vulnerability.Swift {
+		if err = vs.cocoapodsUpdater.putDataSource(tx); err != nil {
+			return xerrors.Errorf("failed to put cocoapods data source: %w", err)
+		}
+	}
+
 	for _, entry := range entries {
 		if entry.Advisory.WithdrawnAt != "" {
 			continue
 		}
 
-		if ecosystem == vulnerability.Swift {
-			// Swift uses `https://github.com/<author>/<package>.git format
-			// But part Swift advisories doesn't `https://` prefix or `.git` suffix
-			// e.g. https://github.com/github/advisory-database/blob/76f65b0d0fdac39c8b0e834ab03562b5f80d5b27/advisories/github-reviewed/2023/06/GHSA-qvxg-wjxc-r4gg/GHSA-qvxg-wjxc-r4gg.json#L21
-			// https://github.com/github/advisory-database/blob/76f65b0d0fdac39c8b0e834ab03562b5f80d5b27/advisories/github-reviewed/2023/07/GHSA-jq43-q8mx-r7mq/GHSA-jq43-q8mx-r7mq.json#L21
-			// Remove them to fit the same format
-			entry.Package.Name = strings.TrimPrefix(entry.Package.Name, "https://")
-			entry.Package.Name = strings.TrimSuffix(entry.Package.Name, ".git")
-		}
 		var pvs, avs []string
 		for _, va := range entry.Versions {
 			// e.g. GHSA-r4x3-g983-9g48 PatchVersion has "<" operator
@@ -154,6 +162,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, ecosystem types.Ecosystem, entries []Entry
 		err = vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bucketName}, a)
 		if err != nil {
 			return xerrors.Errorf("failed to save GHSA: %w", err)
+		}
+
+		if ecosystem == vulnerability.Swift {
+			if err = vs.cocoapodsUpdater.putAdvisoryDetail(tx, a, vulnID, pkgName); err != nil {
+				return xerrors.Errorf("failed to save GHSA Cocoapods spec: %w", err)
+			}
 		}
 
 		var references []string

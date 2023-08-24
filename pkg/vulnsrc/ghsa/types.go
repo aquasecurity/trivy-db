@@ -51,3 +51,13 @@ type Entry struct {
 	Advisory  Advisory
 	Versions  []Version
 }
+
+// Spec is cocoapods struct
+type Spec struct {
+	Name   string `json:"name"`
+	Source Source `json:"source"`
+}
+
+type Source struct {
+	Git string `json:"git"`
+}

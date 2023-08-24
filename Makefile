@@ -55,7 +55,7 @@ trivy-db:
 
 .PHONY: db-all
 db-all:
-	make build db-fetch-langs db-fetch-vuln-list
+	make build db-fetch-langs db-fetch-vuln-list db-fetch-cocoapods
 	make db-build
 	make db-compact
 	make db-compress
@@ -94,3 +94,9 @@ db-fetch-vuln-list:
 	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-redhat/archive/main.tar.gz | tar xz -C cache/vuln-list-redhat --strip-components=1
 	mkdir -p cache/vuln-list-debian
 	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-debian/archive/main.tar.gz | tar xz -C cache/vuln-list-debian --strip-components=1
+
+## required to convert GHSA Swift repo links to Cocoapods package names
+.PHONY: db-fetch-cocoapods
+db-fetch-cocoapods:
+	mkdir -p cache/cocoapods-specs
+	wget -qO - https://github.com/CocoaPods/Specs/archive/master.zip | tar xz -C cache/cocoapods-specs --strip-components=1
