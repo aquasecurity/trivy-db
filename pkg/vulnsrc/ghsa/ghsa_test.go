@@ -459,6 +459,11 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:     filepath.Join("testdata", "sad"),
 			wantErr: "failed to decode GHSA",
 		},
+		{
+			name:    "sad path (cocoapods-specs doesn't exist)",
+			dir:     "testdata",
+			wantErr: "failed to decode GHSA",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
