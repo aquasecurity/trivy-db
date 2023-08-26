@@ -32,15 +32,15 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:  "testdata/happy-fixed",
 			want: []vulnsrctest.WantValues{
 				{
-					Key: []string{"data-source", "k8s::The k8s Vulnerability Database"},
+					Key: []string{"data-source", "k8s::Official Kubernetes CVE Feed"},
 					Value: types.DataSource{
 						ID:   vulnerability.K8sVulnDB,
-						Name: "The k8s Vulnerability Database",
+						Name: "Official Kubernetes CVE Feed",
 						URL:  "https://kubernetes.io/docs/reference/issues-security/official-cve-feed/index.json",
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2023-2727", "k8s::The k8s Vulnerability Database", "k8s.io/kube-apiserver"},
+					Key: []string{"advisory-detail", "CVE-2023-2727", "k8s::Official Kubernetes CVE Feed", "k8s.io/kube-apiserver"},
 					Value: types.Advisory{
 						PatchedVersions:    []string{"1.27.3"},
 						VulnerableVersions: []string{">=1.27.0", ", <1.27.3"},
@@ -70,15 +70,15 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:  "testdata/happy",
 			want: []vulnsrctest.WantValues{
 				{
-					Key: []string{"data-source", "k8s::The k8s Vulnerability Database"},
+					Key: []string{"data-source", "k8s::Official Kubernetes CVE Feed"},
 					Value: types.DataSource{
 						ID:   vulnerability.K8sVulnDB,
-						Name: "The k8s Vulnerability Database",
+						Name: "Official Kubernetes CVE Feed",
 						URL:  "https://kubernetes.io/docs/reference/issues-security/official-cve-feed/index.json",
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2023-2728", "k8s::The k8s Vulnerability Database", "k8s.io/kube-apiserver"},
+					Key: []string{"advisory-detail", "CVE-2023-2728", "k8s::Official Kubernetes CVE Feed", "k8s.io/kube-apiserver"},
 					Value: types.Advisory{
 						VulnerableVersions: []string{">=1.27.0", ", <=1.27.2"},
 					},

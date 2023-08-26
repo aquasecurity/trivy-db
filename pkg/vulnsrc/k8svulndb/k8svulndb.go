@@ -6,11 +6,12 @@ import (
 	"strings"
 	"time"
 
-	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 	"io"
 	"log"
 	"path/filepath"
+
+	bolt "go.etcd.io/bbolt"
+	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
@@ -27,7 +28,7 @@ const (
 var (
 	source = types.DataSource{
 		ID:   vulnerability.K8sVulnDB,
-		Name: "The k8s Vulnerability Database",
+		Name: "Official Kubernetes CVE Feed",
 		URL:  "https://kubernetes.io/docs/reference/issues-security/official-cve-feed/index.json",
 	}
 
@@ -71,7 +72,7 @@ func (vs VulnSrc) Update(dir string) error {
 }
 
 func (vs VulnSrc) save(items []K8sCVE) error {
-	log.Println("Saving The k8s Vulnerability Database")
+	log.Println("Saving Official Kubernetes CVE Feed")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		if err := vs.dbc.PutDataSource(tx, bucketName, source); err != nil {
 			return xerrors.Errorf("failed to put data source: %w", err)
