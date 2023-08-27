@@ -10,6 +10,7 @@ import (
 
 	"github.com/samber/lo"
 	bolt "go.etcd.io/bbolt"
+	"golang.org/x/exp/maps"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
@@ -20,8 +21,10 @@ import (
 )
 
 type Advisory struct {
+	Ecosystem       types.Ecosystem
 	PkgName         string
 	VulnerabilityID string
+	Aliases         []string
 
 	// Advisory detail
 	VulnerableVersions []string
@@ -45,14 +48,14 @@ type OSV struct {
 }
 
 type Transformer interface {
-	TransformAdvisory(*Advisory, Entry) error
-	TransformAdvisories(map[types.Ecosystem][]Advisory) error
+	TransformAdvisories([]Advisory, Entry) ([]Advisory, error)
 }
 
 type defaultTransformer struct{}
 
-func (t *defaultTransformer) TransformAdvisory(*Advisory, Entry) error                 { return nil }
-func (t *defaultTransformer) TransformAdvisories(map[types.Ecosystem][]Advisory) error { return nil }
+func (t *defaultTransformer) TransformAdvisories(advs []Advisory, _ Entry) ([]Advisory, error) {
+	return advs, nil
+}
 
 func New(dir string, sourceID types.SourceID, dataSources map[types.Ecosystem]types.DataSource, transformer Transformer) OSV {
 	if transformer == nil {
@@ -115,18 +118,14 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 	}
 
 	// Aliases contain CVE-IDs
-	vulnIDs := filterCveIDs(entry.Aliases)
-	if len(vulnIDs) == 0 {
-		// e.g. PYSEC-2021-335
-		vulnIDs = []string{entry.ID}
-	}
+	vulnIDs, aliases := groupVulnIDs(entry.ID, entry.Aliases)
 
 	var references []string
 	for _, ref := range entry.References {
 		references = append(references, ref.URL)
 	}
 
-	advisories := map[types.Ecosystem][]Advisory{}
+	uniqAdvisories := map[string]Advisory{}
 	for _, affected := range entry.Affected {
 		ecosystem := convertEcosystem(affected.Package.Ecosystem)
 		if ecosystem == vulnerability.Unknown {
@@ -170,80 +169,94 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 			return s.Type == "CVSS_V3"
 		})
 
+		key := fmt.Sprintf("%s/%s", ecosystem, pkgName)
 		for _, vulnID := range vulnIDs {
-			advisory := Advisory{
-				PkgName:            pkgName,
-				VulnerabilityID:    vulnID,
-				VulnerableVersions: vulnerableVersions,
-				PatchedVersions:    patchedVersions,
-				Title:              entry.Summary,
-				Description:        entry.Details,
-				References:         references,
-				CVSSVectorV3:       cvssVectorV3.Score,
+			if adv, ok := uniqAdvisories[key]; ok {
+				// The same package could be repeated with different version ranges.
+				// cf. https://github.com/github/advisory-database/blob/0996f81ca6f1b65ba25f8e71fba263cb1e54ced5/advisories/github-reviewed/2019/12/GHSA-wjx8-cgrm-hh8p/GHSA-wjx8-cgrm-hh8p.json
+				adv.VulnerableVersions = append(adv.VulnerableVersions, vulnerableVersions...)
+				adv.PatchedVersions = append(adv.PatchedVersions, patchedVersions...)
+				uniqAdvisories[key] = adv
+			} else {
+				uniqAdvisories[key] = Advisory{
+					Ecosystem:          ecosystem,
+					PkgName:            pkgName,
+					VulnerabilityID:    vulnID,
+					Aliases:            aliases,
+					VulnerableVersions: vulnerableVersions,
+					PatchedVersions:    patchedVersions,
+					Title:              entry.Summary,
+					Description:        entry.Details,
+					References:         references,
+					CVSSVectorV3:       cvssVectorV3.Score,
+				}
 			}
-			if err := o.transformer.TransformAdvisory(&advisory, entry); err != nil {
-				return xerrors.Errorf("failed to transform advisory: %w", err)
-			}
-			advisories[ecosystem] = append(advisories[ecosystem], advisory)
 		}
 	}
 
 	// Transform advisories
-	if err := o.transformer.TransformAdvisories(advisories); err != nil {
+	advisories, err := o.transformer.TransformAdvisories(maps.Values(uniqAdvisories), entry)
+	if err != nil {
 		return xerrors.Errorf("failed to transform advisories: %w", err)
 	}
 
-	for ecosystem, advs := range advisories {
-		dataSource, ok := o.dataSources[ecosystem]
+	for _, adv := range advisories {
+		dataSource, ok := o.dataSources[adv.Ecosystem]
 		if !ok {
 			continue
 		}
-		bktName := bucket.Name(string(ecosystem), dataSource.Name)
+		bktName := bucket.Name(string(adv.Ecosystem), dataSource.Name)
 
-		if err := o.dbc.PutDataSource(tx, bktName, dataSource); err != nil {
+		if err = o.dbc.PutDataSource(tx, bktName, dataSource); err != nil {
 			return xerrors.Errorf("failed to put data source: %w", err)
 		}
 
-		for _, adv := range advs {
-			// Store advisories
-			advisory := types.Advisory{
-				VulnerableVersions: adv.VulnerableVersions,
-				PatchedVersions:    adv.PatchedVersions,
-			}
-			if err := o.dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.PkgName, []string{bktName}, advisory); err != nil {
-				return xerrors.Errorf("failed to save OSV advisory: %w", err)
-			}
+		// Store advisories
+		advisory := types.Advisory{
+			VendorIDs:          adv.Aliases,
+			VulnerableVersions: adv.VulnerableVersions,
+			PatchedVersions:    adv.PatchedVersions,
+		}
+		if err = o.dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.PkgName, []string{bktName}, advisory); err != nil {
+			return xerrors.Errorf("failed to save OSV advisory: %w", err)
+		}
 
-			// Store vulnerability details
-			vuln := types.VulnerabilityDetail{
-				Severity:     adv.Severity,
-				References:   adv.References,
-				Title:        adv.Title,
-				Description:  adv.Description,
-				CvssScoreV3:  adv.CVSSScoreV3,
-				CvssVectorV3: adv.CVSSVectorV3,
-			}
+		// Store vulnerability details
+		vuln := types.VulnerabilityDetail{
+			Severity:     adv.Severity,
+			References:   adv.References,
+			Title:        adv.Title,
+			Description:  adv.Description,
+			CvssScoreV3:  adv.CVSSScoreV3,
+			CvssVectorV3: adv.CVSSVectorV3,
+		}
 
-			if err := o.dbc.PutVulnerabilityDetail(tx, adv.VulnerabilityID, o.sourceID, vuln); err != nil {
-				return xerrors.Errorf("failed to put vulnerability detail (%s): %w", adv.VulnerabilityID, err)
-			}
+		if err = o.dbc.PutVulnerabilityDetail(tx, adv.VulnerabilityID, o.sourceID, vuln); err != nil {
+			return xerrors.Errorf("failed to put vulnerability detail (%s): %w", adv.VulnerabilityID, err)
+		}
 
-			if err := o.dbc.PutVulnerabilityID(tx, adv.VulnerabilityID); err != nil {
-				return xerrors.Errorf("failed to put vulnerability id (%s): %w", adv.VulnerabilityID, err)
-			}
+		if err = o.dbc.PutVulnerabilityID(tx, adv.VulnerabilityID); err != nil {
+			return xerrors.Errorf("failed to put vulnerability id (%s): %w", adv.VulnerabilityID, err)
 		}
 	}
 	return nil
 }
 
-func filterCveIDs(aliases []string) []string {
-	var cveIDs []string
-	for _, a := range aliases {
+func groupVulnIDs(id string, aliases []string) ([]string, []string) {
+	var cveIDs, nonCVEIDs []string
+	for _, a := range append(aliases, id) {
 		if strings.HasPrefix(a, "CVE-") {
 			cveIDs = append(cveIDs, a)
+		} else {
+			nonCVEIDs = append(nonCVEIDs, a)
 		}
 	}
-	return cveIDs
+	if len(cveIDs) == 0 {
+		// Use the original vulnerability ID
+		// e.g. PYSEC-2021-335 and GHSA-wjx8-cgrm-hh8p
+		return []string{id}, aliases
+	}
+	return cveIDs, nonCVEIDs
 }
 
 func convertEcosystem(eco Ecosystem) types.Ecosystem {

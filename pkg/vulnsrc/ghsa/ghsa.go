@@ -54,17 +54,17 @@ func NewVulnSrc() osv.OSV {
 
 type transformer struct{}
 
-func (*transformer) TransformAdvisory(adv *osv.Advisory, entry osv.Entry) error {
+func (*transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.Entry) ([]osv.Advisory, error) {
 	var specific DatabaseSpecific
 	if err := json.Unmarshal(entry.DatabaseSpecific, &specific); err != nil {
-		return xerrors.Errorf("JSON decode error: %w", err)
+		return nil, xerrors.Errorf("JSON decode error: %w", err)
 	}
-	adv.Severity = convertSeverity(specific.Severity)
-	return nil
-}
 
-func (*transformer) TransformAdvisories(map[types.Ecosystem][]osv.Advisory) error {
-	return nil
+	severity := convertSeverity(specific.Severity)
+	for i := range advisories {
+		advisories[i].Severity = severity
+	}
+	return advisories, nil
 }
 
 func convertSeverity(severity string) types.Severity {
