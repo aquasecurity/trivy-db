@@ -49,7 +49,15 @@ type Transformer interface {
 	TransformAdvisories(map[types.Ecosystem][]Advisory) error
 }
 
+type defaultTransformer struct{}
+
+func (t *defaultTransformer) TransformAdvisory(*Advisory, Entry) error                 { return nil }
+func (t *defaultTransformer) TransformAdvisories(map[types.Ecosystem][]Advisory) error { return nil }
+
 func New(dir string, sourceID types.SourceID, dataSources map[types.Ecosystem]types.DataSource, transformer Transformer) OSV {
+	if transformer == nil {
+		transformer = &defaultTransformer{}
+	}
 	return OSV{
 		dir:         dir,
 		dbc:         db.Config{},
