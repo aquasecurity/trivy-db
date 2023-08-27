@@ -41,6 +41,10 @@ func TestVulnSrc_Update(t *testing.T) {
 						"qutebrowser",
 					},
 					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-wgmx-52ph-qqcw",
+							"PYSEC-2018-27",
+						},
 						VulnerableVersions: []string{">=0, <1.4.1"},
 						PatchedVersions:    []string{"1.4.1"},
 					},
@@ -83,6 +87,10 @@ func TestVulnSrc_Update(t *testing.T) {
 						"aiohttp",
 					},
 					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-45c4-8wx5-qw6w",
+							"PYSEC-2023-120",
+						},
 						VulnerableVersions: []string{">=0, <=3.8.4"},
 					},
 				},
