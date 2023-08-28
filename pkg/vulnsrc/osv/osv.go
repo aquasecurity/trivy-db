@@ -278,6 +278,10 @@ func convertEcosystem(eco Ecosystem) types.Ecosystem {
 		return vulnerability.Maven
 	case "NuGet":
 		return vulnerability.NuGet
+	case "Hex":
+		return vulnerability.Erlang
+	case "Pub":
+		return vulnerability.Pub
 	case "SwiftURL", "purl-type:swift":
 		// GHSA still uses "purl-type:swift" for Swift advisories.
 		// cf. https://github.com/github/advisory-database/blob/db1cdfb553e48f18aa27d7e929d200563451391a/advisories/github-reviewed/2023/07/GHSA-jq43-q8mx-r7mq/GHSA-jq43-q8mx-r7mq.json#L20
