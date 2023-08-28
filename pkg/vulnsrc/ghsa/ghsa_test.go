@@ -24,67 +24,6 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"data-source",
-						"composer::GitHub Security Advisory Composer",
-					},
-					Value: types.DataSource{
-						ID:   vulnerability.GHSA,
-						Name: "GitHub Security Advisory Composer",
-						URL:  "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Acomposer",
-					},
-				},
-				{
-					Key: []string{
-						"advisory-detail",
-						"CVE-2019-19745",
-						"composer::GitHub Security Advisory Composer",
-						"contao/core-bundle",
-					},
-					Value: types.Advisory{
-						VendorIDs: []string{
-							"GHSA-wjx8-cgrm-hh8p",
-						},
-						PatchedVersions: []string{
-							"4.4.46",
-							"4.8.6",
-						},
-						VulnerableVersions: []string{
-							">=4.0.0, <4.4.46",
-							">=4.5.0, <4.8.6",
-						},
-					},
-				},
-				{
-					Key: []string{
-						"vulnerability-detail",
-						"CVE-2019-19745",
-						"ghsa",
-					},
-					Value: types.VulnerabilityDetail{
-						Title:       "Unrestricted file uploads in Contao",
-						Description: "### Impact\n\nA back end user with access to the form generator can upload arbitrary files and execute them on the server.\n\n### Patches\n\nUpdate to Contao 4.4.46 or 4.8.6.\n\n### Workarounds\n\nConfigure your web server so it does not execute PHP files and other scripts in the Contao file upload directory.\n\n### References\n\nhttps://contao.org/en/security-advisories/unrestricted-file-uploads\n\n### For more information\n\nIf you have any questions or comments about this advisory, open an issue in [contao/contao](https://github.com/contao/contao/issues/new/choose).\n",
-						References: []string{
-							"https://github.com/contao/contao/security/advisories/GHSA-wjx8-cgrm-hh8p",
-							"https://nvd.nist.gov/vuln/detail/CVE-2019-19745",
-							"https://contao.org/en/news.html",
-							"https://contao.org/en/security-advisories/unrestricted-file-uploads.html",
-							"https://github.com/FriendsOfPHP/security-advisories/blob/master/contao/core-bundle/CVE-2019-19745.yaml",
-							"https://github.com/contao/contao",
-						},
-						Severity:     types.SeverityHigh,
-						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
-						CvssScoreV3:  8.8,
-					},
-				},
-				{
-					Key: []string{
-						"vulnerability-id",
-						"CVE-2019-19745",
-					},
-					Value: map[string]interface{}{},
-				},
-				{
-					Key: []string{
-						"data-source",
 						"maven::GitHub Security Advisory Maven",
 					},
 					Value: types.DataSource{
@@ -193,6 +132,124 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: map[string]interface{}{},
 				},
+				{
+					Key: []string{
+						"data-source",
+						"swift::GitHub Security Advisory Swift",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.GHSA,
+						Name: "GitHub Security Advisory Swift",
+						URL:  "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Aswift",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2022-3215",
+						"swift::GitHub Security Advisory Swift",
+						"github.com/apple/swift-nio",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-7fj7-39wj-c64f",
+						},
+						PatchedVersions: []string{
+							"2.42.0",
+							"2.39.1",
+							"2.29.1",
+						},
+						VulnerableVersions: []string{
+							">=2.41.0, <2.42.0",
+							">=2.39.0, <2.39.1",
+							">=0, <2.29.1",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"cocoapods::GitHub Security Advisory Swift",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.GHSA,
+						Name: "GitHub Security Advisory Swift",
+						URL:  "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Aswift",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2022-3215",
+						"cocoapods::GitHub Security Advisory Swift",
+						"SwiftNIO",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-7fj7-39wj-c64f",
+						},
+						PatchedVersions: []string{
+							"2.42.0",
+							"2.39.1",
+							"2.29.1",
+						},
+						VulnerableVersions: []string{
+							">=2.41.0, <2.42.0",
+							">=2.39.0, <2.39.1",
+							">=0, <2.29.1",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2022-3215",
+						"cocoapods::GitHub Security Advisory Swift",
+						"_NIODataStructures",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-7fj7-39wj-c64f",
+						},
+						PatchedVersions: []string{
+							"2.42.0",
+							"2.39.1",
+							"2.29.1",
+						},
+						VulnerableVersions: []string{
+							">=2.41.0, <2.42.0",
+							">=2.39.0, <2.39.1",
+							">=0, <2.29.1",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2022-3215",
+						"ghsa",
+					},
+					Value: types.VulnerabilityDetail{
+						Title:       "SwiftNIO vulnerable to Improper Neutralization of CRLF Sequences in HTTP Headers ('HTTP Response Splitting')",
+						Description: "`NIOHTTP1` and projects using it for generating HTTP responses, including SwiftNIO, can be subject to a HTTP Response Injection attack. This occurs when a HTTP/1.1 server accepts user generated input from an incoming request and reflects it into a HTTP/1.1 response header in some form. A malicious user can add newlines to their input (usually in encoded form) and \"inject\" those newlines into the returned HTTP response.\n\nThis capability allows users to work around security headers and HTTP/1.1 framing headers by injecting entirely false responses or other new headers. The injected false responses may also be treated as the response to subsequent requests, which can lead to XSS, cache poisoning, and a number of other flaws.\n\nThis issue was resolved by adding a default channel handler that polices outbound headers. This channel handler is added by default to channel pipelines, but can be removed by users if they are doing this validation themselves.",
+						References: []string{
+							"https://github.com/apple/swift-nio/security/advisories/GHSA-7fj7-39wj-c64f",
+							"https://nvd.nist.gov/vuln/detail/CVE-2022-3215",
+							"https://github.com/apple/swift-nio/commit/a16e2f54a25b2af217044e5168997009a505930f",
+							"https://github.com/apple/swift-nio",
+						},
+						Severity:     types.SeverityMedium,
+						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+						CvssScoreV3:  5.3,
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2022-3215",
+					},
+					Value: map[string]interface{}{},
+				},
 			},
 		},
 		{
@@ -204,6 +261,11 @@ func TestVulnSrc_Update(t *testing.T) {
 			name:    "sad path (failed to decode)",
 			dir:     filepath.Join("testdata", "sad"),
 			wantErr: "JSON decode error",
+		},
+		{
+			name:    "sad path (cocoapods-specs doesn't exist)",
+			dir:     "testdata",
+			wantErr: "no such file or directory",
 		},
 	}
 	for _, tt := range tests {
