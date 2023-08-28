@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/samber/lo"
+	"github.com/goark/go-cvss/v3/metric"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/exp/maps"
 	"golang.org/x/xerrors"
@@ -164,10 +164,21 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 			}
 		}
 
-		// cf. https://ossf.github.io/osv-schema/#severitytype-field
-		cvssVectorV3, _ := lo.Find(entry.Severities, func(s Severity) bool {
-			return s.Type == "CVSS_V3"
-		})
+		var (
+			cvssVectorV3 string
+			cvssScoreV3  float64
+		)
+		for _, s := range entry.Severities {
+			// cf. https://ossf.github.io/osv-schema/#severitytype-field
+			if s.Type == "CVSS_V3" {
+				cvssVectorV3 = s.Score
+				metrics, err := metric.NewBase().Decode(cvssVectorV3)
+				if err != nil {
+					return xerrors.Errorf("failed to decode CVSSv3 vector: %w", err)
+				}
+				cvssScoreV3 = metrics.Score()
+			}
+		}
 
 		key := fmt.Sprintf("%s/%s", ecosystem, pkgName)
 		for _, vulnID := range vulnIDs {
@@ -188,7 +199,8 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 					Title:              entry.Summary,
 					Description:        entry.Details,
 					References:         references,
-					CVSSVectorV3:       cvssVectorV3.Score,
+					CVSSVectorV3:       cvssVectorV3,
+					CVSSScoreV3:        cvssScoreV3,
 				}
 			}
 		}

@@ -72,6 +72,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						},
 						Severity:     types.SeverityHigh,
 						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+						CvssScoreV3:  8.8,
 					},
 				},
 				{
@@ -123,6 +124,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						},
 						Severity:     types.SeverityMedium,
 						CvssVectorV3: "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N",
+						CvssScoreV3:  5.9,
 					},
 				},
 				{
@@ -181,6 +183,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						},
 						Severity:     types.SeverityMedium,
 						CvssVectorV3: "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:C/C:H/I:N/A:N",
+						CvssScoreV3:  5.6,
 					},
 				},
 				{
