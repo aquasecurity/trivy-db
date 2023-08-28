@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/samber/lo"
+	"github.com/goark/go-cvss/v3/metric"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/exp/maps"
 	"golang.org/x/xerrors"
@@ -117,7 +117,7 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 		return nil
 	}
 
-	// Aliases contain CVE-IDs
+	// Group IDs into primary vulnerability IDs and aliases.
 	vulnIDs, aliases := groupVulnIDs(entry.ID, entry.Aliases)
 
 	var references []string
@@ -164,10 +164,24 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 			}
 		}
 
-		// cf. https://ossf.github.io/osv-schema/#severitytype-field
-		cvssVectorV3, _ := lo.Find(entry.Severities, func(s Severity) bool {
-			return s.Type == "CVSS_V3"
-		})
+		var (
+			cvssVectorV3 string
+			cvssScoreV3  float64
+		)
+		for _, s := range entry.Severities {
+			// cf. https://ossf.github.io/osv-schema/#severitytype-field
+			if s.Type == "CVSS_V3" {
+				// some GHSA vectors have `/` suffix
+				// e.g. https://github.com/github/advisory-database/blob/2d3bc73d2117893b217233aeb95b9236c7b93761/advisories/github-reviewed/2019/05/GHSA-j59f-6m4q-62h6/GHSA-j59f-6m4q-62h6.json#L14
+				// trim this suffix to avoid errors
+				cvssVectorV3 = strings.TrimSuffix(s.Score, "/")
+				metrics, err := metric.NewTemporal().Decode(cvssVectorV3)
+				if err != nil {
+					return xerrors.Errorf("failed to decode CVSSv3 vector: %w", err)
+				}
+				cvssScoreV3 = metrics.Score()
+			}
+		}
 
 		key := fmt.Sprintf("%s/%s", ecosystem, pkgName)
 		for _, vulnID := range vulnIDs {
@@ -188,7 +202,8 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 					Title:              entry.Summary,
 					Description:        entry.Details,
 					References:         references,
-					CVSSVectorV3:       cvssVectorV3.Score,
+					CVSSVectorV3:       cvssVectorV3,
+					CVSSScoreV3:        cvssScoreV3,
 				}
 			}
 		}
@@ -278,6 +293,10 @@ func convertEcosystem(eco Ecosystem) types.Ecosystem {
 		return vulnerability.Maven
 	case "NuGet":
 		return vulnerability.NuGet
+	case "Hex":
+		return vulnerability.Erlang
+	case "Pub":
+		return vulnerability.Pub
 	case "SwiftURL", "purl-type:swift":
 		// GHSA still uses "purl-type:swift" for Swift advisories.
 		// cf. https://github.com/github/advisory-database/blob/db1cdfb553e48f18aa27d7e929d200563451391a/advisories/github-reviewed/2023/07/GHSA-jq43-q8mx-r7mq/GHSA-jq43-q8mx-r7mq.json#L20

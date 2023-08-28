@@ -63,6 +63,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						},
 						Severity:     types.SeverityMedium,
 						CvssVectorV3: "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N",
+						CvssScoreV3:  5.9,
 					},
 				},
 				{
@@ -120,7 +121,8 @@ func TestVulnSrc_Update(t *testing.T) {
 							"https://pkg.go.dev/vuln/GO-2022-0646",
 						},
 						Severity:     types.SeverityMedium,
-						CvssVectorV3: "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:C/C:H/I:N/A:N",
+						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/E:P/RL:O/RC:C",
+						CvssScoreV3:  8.8,
 					},
 				},
 				{
@@ -238,6 +240,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						},
 						Severity:     types.SeverityMedium,
 						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+						CvssScoreV3:  5.3,
 					},
 				},
 				{
