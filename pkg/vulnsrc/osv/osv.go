@@ -171,8 +171,11 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 		for _, s := range entry.Severities {
 			// cf. https://ossf.github.io/osv-schema/#severitytype-field
 			if s.Type == "CVSS_V3" {
-				cvssVectorV3 = s.Score
-				metrics, err := metric.NewBase().Decode(cvssVectorV3)
+				// some GHSA vectors have `/` suffix
+				// e.g. https://github.com/github/advisory-database/blob/2d3bc73d2117893b217233aeb95b9236c7b93761/advisories/github-reviewed/2019/05/GHSA-j59f-6m4q-62h6/GHSA-j59f-6m4q-62h6.json#L14
+				// trim this suffix to avoid errors
+				cvssVectorV3 = strings.TrimSuffix(s.Score, "/")
+				metrics, err := metric.NewTemporal().Decode(cvssVectorV3)
 				if err != nil {
 					return xerrors.Errorf("failed to decode CVSSv3 vector: %w", err)
 				}
