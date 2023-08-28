@@ -182,8 +182,8 @@ func TestVulnSrc_Update(t *testing.T) {
 							"https://pkg.go.dev/vuln/GO-2022-0646",
 						},
 						Severity:     types.SeverityMedium,
-						CvssVectorV3: "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:C/C:H/I:N/A:N",
-						CvssScoreV3:  5.6,
+						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/E:P/RL:O/RC:C",
+						CvssScoreV3:  8.8,
 					},
 				},
 				{
