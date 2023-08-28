@@ -117,7 +117,7 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 		return nil
 	}
 
-	// Aliases contain CVE-IDs
+	// Group IDs into primary vulnerability IDs and aliases.
 	vulnIDs, aliases := groupVulnIDs(entry.ID, entry.Aliases)
 
 	var references []string
