@@ -5,9 +5,12 @@ import (
 	"testing"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 )
+
+var bucketName = bucket.Name(string(vulnerability.Bitnami), "Bitnami Vulnerability Database")
 
 func TestVulnSrc_Update(t *testing.T) {
 	tests := []struct {
@@ -33,6 +36,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.Advisory{
 						VulnerableVersions: []string{"=5.15.12"},
 						PatchedVersions:    []string{},
+						VendorIDs:          []string{"BIT-2020-11998"},
 					},
 				},
 				{
@@ -40,6 +44,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.Advisory{
 						VulnerableVersions: []string{">=7.2.0, <7.2.27", ">=7.3.0, <7.3.14", ">=7.4.0, <7.4.2"},
 						PatchedVersions:    []string{"7.2.27", "7.3.14", "7.4.2"},
+						VendorIDs:          []string{"BIT-2020-7059"},
 					},
 				},
 			},

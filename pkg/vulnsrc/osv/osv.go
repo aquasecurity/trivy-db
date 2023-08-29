@@ -132,54 +132,13 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 			continue
 		}
 		pkgName := vulnerability.NormalizePkgName(ecosystem, affected.Package.Name)
-		var patchedVersions, vulnerableVersions []string
-		for _, affects := range affected.Ranges {
-			if affects.Type == RangeTypeGit {
-				continue
-			}
 
-			var vulnerable string
-			for _, event := range affects.Events {
-				switch {
-				case event.Introduced != "":
-					// e.g. {"introduced": "1.2.0}, {"introduced": "2.2.0}
-					if vulnerable != "" {
-						vulnerableVersions = append(vulnerableVersions, vulnerable)
-					}
-					vulnerable = fmt.Sprintf(">=%s", event.Introduced)
-				// Entries in the events array can contain either last_affected or fixed events, but not both
-				// cf. https://ossf.github.io/osv-schema/#requirements
-				case event.Fixed != "":
-					// patched versions
-					patchedVersions = append(patchedVersions, event.Fixed)
-
-					// e.g. {"introduced": "1.2.0}, {"fixed": "1.2.5}
-					vulnerable = fmt.Sprintf("%s, <%s", vulnerable, event.Fixed)
-				case event.LastAffected != "":
-					vulnerable = fmt.Sprintf("%s, <=%s", vulnerable, event.LastAffected)
-				}
-			}
-			if vulnerable != "" {
-				vulnerableVersions = append(vulnerableVersions, vulnerable)
-			}
-		}
-
-		var (
-			cvssVectorV3 string
-			cvssScoreV3  float64
-		)
-		for _, s := range entry.Severities {
-			// cf. https://ossf.github.io/osv-schema/#severitytype-field
-			if s.Type == "CVSS_V3" {
-				// some GHSA vectors have `/` suffix
-				// e.g. https://github.com/github/advisory-database/blob/2d3bc73d2117893b217233aeb95b9236c7b93761/advisories/github-reviewed/2019/05/GHSA-j59f-6m4q-62h6/GHSA-j59f-6m4q-62h6.json#L14
-				// trim this suffix to avoid errors
-				cvssVectorV3 = strings.TrimSuffix(s.Score, "/")
-				metrics, err := metric.NewTemporal().Decode(cvssVectorV3)
-				if err != nil {
-					return xerrors.Errorf("failed to decode CVSSv3 vector: %w", err)
-				}
-				cvssScoreV3 = metrics.Score()
+		var advisory *Advisory
+		if len(affected.Ranges) > 0 || len(affected.Versions) > 0 {
+			var advisoryErr error
+			advisory, advisoryErr = getAdvisory(affected)
+			if advisoryErr != nil {
+				return xerrors.Errorf("failed to get advisory: %w", advisoryErr)
 			}
 		}
 
@@ -188,8 +147,8 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 			if adv, ok := uniqAdvisories[key]; ok {
 				// The same package could be repeated with different version ranges.
 				// cf. https://github.com/github/advisory-database/blob/0996f81ca6f1b65ba25f8e71fba263cb1e54ced5/advisories/github-reviewed/2019/12/GHSA-wjx8-cgrm-hh8p/GHSA-wjx8-cgrm-hh8p.json
-				adv.VulnerableVersions = append(adv.VulnerableVersions, vulnerableVersions...)
-				adv.PatchedVersions = append(adv.PatchedVersions, patchedVersions...)
+				adv.VulnerableVersions = append(adv.VulnerableVersions, advisory.VulnerableVersions...)
+				adv.PatchedVersions = append(adv.PatchedVersions, advisory.PatchedVersions...)
 				uniqAdvisories[key] = adv
 			} else {
 				uniqAdvisories[key] = Advisory{
@@ -197,13 +156,13 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 					PkgName:            pkgName,
 					VulnerabilityID:    vulnID,
 					Aliases:            aliases,
-					VulnerableVersions: vulnerableVersions,
-					PatchedVersions:    patchedVersions,
+					VulnerableVersions: advisory.VulnerableVersions,
+					PatchedVersions:    advisory.PatchedVersions,
 					Title:              entry.Summary,
 					Description:        entry.Details,
 					References:         references,
-					CVSSVectorV3:       cvssVectorV3,
-					CVSSScoreV3:        cvssScoreV3,
+					CVSSVectorV3:       advisory.CVSSVectorV3,
+					CVSSScoreV3:        advisory.CVSSScoreV3,
 				}
 			}
 		}
@@ -213,6 +172,23 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 	advisories, err := o.transformer.TransformAdvisories(maps.Values(uniqAdvisories), entry)
 	if err != nil {
 		return xerrors.Errorf("failed to transform advisories: %w", err)
+	}
+
+	// Severities can be found both in severity and affected[].severity fields.
+	// ref: https://ossf.github.io/osv-schema/#affectedseverity-field
+	// ref: https://ossf.github.io/osv-schema/#severitytype-field
+	if len(entry.Severities) != 0 {
+		cvssVectorV3, cvssScoreV3, err := getCvssInfo(entry.Severities)
+		if err != nil {
+			return xerrors.Errorf("failed to decode CVSSv3 vector: %w", err)
+		}
+
+		for i := range advisories {
+			if advisories[i].CVSSVectorV3 == "" || advisories[i].CVSSScoreV3 == 0 {
+				advisories[i].CVSSVectorV3 = cvssVectorV3
+				advisories[i].CVSSScoreV3 = cvssScoreV3
+			}
+		}
 	}
 
 	for _, adv := range advisories {
@@ -274,34 +250,102 @@ func groupVulnIDs(id string, aliases []string) ([]string, []string) {
 	return cveIDs, nonCVEIDs
 }
 
+func getAdvisory(affected Affected) (*Advisory, error) {
+	var patchedVersions, vulnerableVersions []string
+
+	for _, affects := range affected.Ranges {
+		if affects.Type == RangeTypeGit {
+			continue
+		}
+
+		var vulnerable string
+		for _, event := range affects.Events {
+			switch {
+			case event.Introduced != "":
+				// e.g. {"introduced": "1.2.0}, {"introduced": "2.2.0}
+				if vulnerable != "" {
+					vulnerableVersions = append(vulnerableVersions, vulnerable)
+				}
+				vulnerable = fmt.Sprintf(">=%s", event.Introduced)
+			case event.Fixed != "":
+				// patched versions
+				patchedVersions = append(patchedVersions, event.Fixed)
+
+				// e.g. {"introduced": "1.2.0}, {"fixed": "1.2.5}
+				vulnerable = fmt.Sprintf("%s, <%s", vulnerable, event.Fixed)
+			case event.LastAffected != "":
+				vulnerable = fmt.Sprintf("%s, <=%s", vulnerable, event.LastAffected)
+			}
+		}
+		if vulnerable != "" {
+			vulnerableVersions = append(vulnerableVersions, vulnerable)
+		}
+	}
+
+	for _, v := range affected.Versions {
+		vulnerableVersions = append(vulnerableVersions, fmt.Sprintf("=%s", v))
+	}
+
+	cvssVectorV3, cvssScoreV3, err := getCvssInfo(affected.Severities)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to decode CVSSv3 vector: %w", err)
+	}
+
+	return &Advisory{
+		VulnerableVersions: vulnerableVersions,
+		PatchedVersions:    patchedVersions,
+		CVSSVectorV3:       cvssVectorV3,
+		CVSSScoreV3:        cvssScoreV3,
+	}, nil
+}
+
+func getCvssInfo(severities []Severity) (string, float64, error) {
+	var cvssVectorV3 string
+	var cvssScoreV3 float64
+	for _, s := range severities {
+		if s.Type == "CVSS_V3" {
+			// some GHSA vectors have `/` suffix
+			// e.g. https://github.com/github/advisory-database/blob/2d3bc73d2117893b217233aeb95b9236c7b93761/advisories/github-reviewed/2019/05/GHSA-j59f-6m4q-62h6/GHSA-j59f-6m4q-62h6.json#L14
+			// trim this suffix to avoid errors
+			cvssVectorV3 = strings.TrimSuffix(s.Score, "/")
+			metrics, err := metric.NewTemporal().Decode(cvssVectorV3)
+			if err != nil {
+				return "", 0, xerrors.Errorf("failed to decode CVSSv3 vector: %w", err)
+			}
+			cvssScoreV3 = metrics.Score()
+		}
+	}
+	return cvssVectorV3, cvssScoreV3, nil
+}
+
 func convertEcosystem(eco Ecosystem) types.Ecosystem {
 	// cf. https://ossf.github.io/osv-schema/#affectedpackage-field
-	switch eco {
-	case "Go":
+	switch strings.ToLower(string(eco)) {
+	case "go":
 		return vulnerability.Go
 	case "npm":
 		return vulnerability.Npm
-	case "PyPI":
+	case "pypi":
 		return vulnerability.Pip
-	case "RubyGems":
+	case "rubygems":
 		return vulnerability.RubyGems
 	case "crates.io":
 		return vulnerability.Cargo
-	case "Packagist":
+	case "packagist":
 		return vulnerability.Composer
-	case "Maven":
+	case "maven":
 		return vulnerability.Maven
-	case "NuGet":
+	case "nuget":
 		return vulnerability.NuGet
-	case "Hex":
+	case "hex":
 		return vulnerability.Erlang
-	case "Pub":
+	case "pub":
 		return vulnerability.Pub
-	case "SwiftURL", "purl-type:swift":
+	case "swifturl", "purl-type:swift":
 		// GHSA still uses "purl-type:swift" for Swift advisories.
 		// cf. https://github.com/github/advisory-database/blob/db1cdfb553e48f18aa27d7e929d200563451391a/advisories/github-reviewed/2023/07/GHSA-jq43-q8mx-r7mq/GHSA-jq43-q8mx-r7mq.json#L20
 		return vulnerability.Swift
-	case "Bitnami":
+	case "bitnami":
 		return vulnerability.Bitnami
 	default:
 		return vulnerability.Unknown
