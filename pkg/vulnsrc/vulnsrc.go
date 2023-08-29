@@ -16,7 +16,6 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/photon"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat"
 	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
@@ -61,6 +60,5 @@ var (
 		node.NewVulnSrc(),
 		ghsa.NewVulnSrc(),
 		glad.NewVulnSrc(),
-		osv.NewVulnSrc(),
 	}
 )

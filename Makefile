@@ -55,17 +55,18 @@ trivy-db:
 
 .PHONY: db-all
 db-all:
-	make build db-fetch-langs db-fetch-vuln-list
+	make build db-fetch-langs db-fetch-vuln-list db-fetch-cocoapods
 	make db-build
 	make db-compact
 	make db-compress
 
 .PHONY: db-fetch-langs
 db-fetch-langs:
-	mkdir -p cache/{ruby-advisory-db,php-security-advisories,nodejs-security-wg,bitnami-vulndb}
+	mkdir -p cache/{ruby-advisory-db,php-security-advisories,nodejs-security-wg,ghsa,bitnami-vulndb}
 	wget -qO - https://github.com/rubysec/ruby-advisory-db/archive/master.tar.gz | tar xz -C cache/ruby-advisory-db --strip-components=1
 	wget -qO - https://github.com/FriendsOfPHP/security-advisories/archive/master.tar.gz | tar xz -C cache/php-security-advisories --strip-components=1
 	wget -qO - https://github.com/nodejs/security-wg/archive/main.tar.gz | tar xz -C cache/nodejs-security-wg --strip-components=1
+	wget -qO - https://github.com/github/advisory-database/archive/refs/heads/main.tar.gz | tar xz -C cache/ghsa --strip-components=1
 	wget -qO - https://github.com/bitnami/vulndb/archive/main.tar.gz | tar xz -C cache/bitnami-vulndb --strip-components=1
 
 .PHONY: db-build
@@ -95,3 +96,9 @@ db-fetch-vuln-list:
 	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-redhat/archive/main.tar.gz | tar xz -C cache/vuln-list-redhat --strip-components=1
 	mkdir -p cache/vuln-list-debian
 	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-debian/archive/main.tar.gz | tar xz -C cache/vuln-list-debian --strip-components=1
+
+## required to convert GHSA Swift repo links to Cocoapods package names
+.PHONY: db-fetch-cocoapods
+db-fetch-cocoapods:
+	mkdir -p cache/cocoapods-specs
+	wget -qO - https://github.com/CocoaPods/Specs/archive/master.zip | tar xz -C cache/cocoapods-specs --strip-components=1

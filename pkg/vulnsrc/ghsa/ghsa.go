@@ -3,27 +3,24 @@ package ghsa
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
+
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"io"
-	"log"
-	"path/filepath"
-	"strings"
-
-	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
-	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
-	"github.com/aquasecurity/trivy-db/pkg/utils"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-const ghsaDir = "ghsa"
+const (
+	sourceID       = vulnerability.GHSA
+	platformFormat = "GitHub Security Advisory %s"
+)
 
 var (
-	sourceID   = vulnerability.GHSA
+	ghsaDir    = filepath.Join("ghsa", "advisories", "github-reviewed")
 	ecosystems = []types.Ecosystem{
 		vulnerability.Composer,
 		vulnerability.Go,
@@ -35,146 +32,90 @@ var (
 		vulnerability.Rust,
 		vulnerability.Erlang,
 		vulnerability.Pub,
+		vulnerability.Swift,
 	}
-	platformFormat = "GitHub Security Advisory %s"
 )
 
-type VulnSrc struct {
-	dbc db.Operation
+type DatabaseSpecific struct {
+	Severity string `json:"severity"`
 }
 
-func NewVulnSrc() VulnSrc {
-	return VulnSrc{
-		dbc: db.Config{},
-	}
+type GHSA struct{}
+
+func NewVulnSrc() GHSA {
+	return GHSA{}
 }
 
-func (vs VulnSrc) Name() types.SourceID {
-	return sourceID
+func (GHSA) Name() types.SourceID {
+	return vulnerability.GHSA
 }
 
-func (vs VulnSrc) Update(dir string) error {
-	rootDir := filepath.Join(dir, "vuln-list", ghsaDir)
-
+func (GHSA) Update(root string) error {
+	dataSources := map[types.Ecosystem]types.DataSource{}
 	for _, ecosystem := range ecosystems {
-		var entries []Entry
-		err := utils.FileWalk(filepath.Join(rootDir, string(ecosystem)), func(r io.Reader, path string) error {
-			var entry Entry
-			if err := json.NewDecoder(r).Decode(&entry); err != nil {
-				return xerrors.Errorf("failed to decode GHSA: %w", err)
-			}
-			entries = append(entries, entry)
-			return nil
-		})
-		if err != nil {
-			return xerrors.Errorf("error in GHSA walk: %w", err)
+		src := types.DataSource{
+			ID:   sourceID,
+			Name: fmt.Sprintf(platformFormat, cases.Title(language.English).String(string(ecosystem))),
+			URL:  fmt.Sprintf("https://github.com/advisories?query=type%%3Areviewed+ecosystem%%3A%s", ecosystem),
 		}
+		dataSources[ecosystem] = src
 
-		if err = vs.save(ecosystem, entries); err != nil {
-			return xerrors.Errorf("error in GHSA save: %w", err)
+		// CocoaPods' vulnerability detection uses the Swift advisories.
+		if ecosystem == vulnerability.Swift {
+			dataSources[vulnerability.Cocoapods] = src
 		}
 	}
 
-	return nil
-}
-
-func (vs VulnSrc) save(ecosystem types.Ecosystem, entries []Entry) error {
-	log.Printf("Saving GHSA %s", ecosystem)
-	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		return vs.commit(tx, ecosystem, entries)
-	})
+	t, err := newTransformer(root)
 	if err != nil {
-		return xerrors.Errorf("error in batch update: %w", err)
+		return xerrors.Errorf("transformer error: %w", err)
 	}
 
-	return nil
+	return osv.New(ghsaDir, sourceID, dataSources, t).Update(root)
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, ecosystem types.Ecosystem, entries []Entry) error {
-	ecosystemName := cases.Title(language.English).String(string(ecosystem))
-	sourceName := fmt.Sprintf(platformFormat, ecosystemName)
-	bucketName := bucket.Name(string(ecosystem), sourceName)
-	err := vs.dbc.PutDataSource(tx, bucketName, types.DataSource{
-		ID:   sourceID,
-		Name: sourceName,
-		URL:  fmt.Sprintf("https://github.com/advisories?query=type%%3Areviewed+ecosystem%%3A%s", ecosystem),
-	})
+type transformer struct {
+	// cocoaPodsSpecs is a map of Swift git URLs to CocoaPods package names.
+	cocoaPodsSpecs map[string][]string
+}
+
+func newTransformer(root string) (*transformer, error) {
+	cocoaPodsSpecs, err := walkCocoaPodsSpecs(root)
 	if err != nil {
-		return xerrors.Errorf("failed to put data source: %w", err)
+		return nil, xerrors.Errorf("CocoaPods spec error: %w", err)
 	}
-
-	for _, entry := range entries {
-		if entry.Advisory.WithdrawnAt != "" {
-			continue
-		}
-		var pvs, avs []string
-		for _, va := range entry.Versions {
-			// e.g. GHSA-r4x3-g983-9g48 PatchVersion has "<" operator
-			if strings.HasPrefix(va.FirstPatchedVersion.Identifier, "<") {
-				va.VulnerableVersionRange = fmt.Sprintf(
-					"%s, %s",
-					va.VulnerableVersionRange,
-					va.FirstPatchedVersion.Identifier,
-				)
-				va.FirstPatchedVersion.Identifier = strings.TrimPrefix(va.FirstPatchedVersion.Identifier, "< ")
-			}
-
-			if va.FirstPatchedVersion.Identifier != "" {
-				pvs = append(pvs, va.FirstPatchedVersion.Identifier)
-			}
-			avs = append(avs, va.VulnerableVersionRange)
-		}
-
-		vulnID := entry.Advisory.GhsaId
-		for _, identifier := range entry.Advisory.Identifiers {
-			if identifier.Type == "CVE" && identifier.Value != "" {
-				vulnID = identifier.Value
-			}
-		}
-		vulnID = strings.TrimSpace(vulnID)
-
-		a := types.Advisory{
-			PatchedVersions:    pvs,
-			VulnerableVersions: avs,
-		}
-
-		pkgName := vulnerability.NormalizePkgName(ecosystem, entry.Package.Name)
-
-		err = vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bucketName}, a)
-		if err != nil {
-			return xerrors.Errorf("failed to save GHSA: %w", err)
-		}
-
-		var references []string
-		for _, ref := range entry.Advisory.References {
-			references = append(references, ref.Url)
-		}
-
-		vuln := types.VulnerabilityDetail{
-			ID:           vulnID,
-			Severity:     severityFromThreat(entry.Severity),
-			References:   references,
-			Title:        entry.Advisory.Summary,
-			Description:  entry.Advisory.Description,
-			CvssScoreV3:  entry.Advisory.CVSS.Score,
-			CvssVectorV3: entry.Advisory.CVSS.VectorString,
-		}
-
-		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, vulnerability.GHSA, vuln); err != nil {
-			return xerrors.Errorf("failed to save GHSA vulnerability detail: %w", err)
-		}
-
-		// for optimization
-		if err = vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
-			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
-		}
-	}
-
-	return nil
+	return &transformer{
+		cocoaPodsSpecs: cocoaPodsSpecs,
+	}, nil
 }
 
-func severityFromThreat(urgency string) types.Severity {
-	switch urgency {
+func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.Entry) ([]osv.Advisory, error) {
+	var specific DatabaseSpecific
+	if err := json.Unmarshal(entry.DatabaseSpecific, &specific); err != nil {
+		return nil, xerrors.Errorf("JSON decode error: %w", err)
+	}
+
+	severity := convertSeverity(specific.Severity)
+	for i, adv := range advisories {
+		advisories[i].Severity = severity
+
+		// Replace a git URL with a CocoaPods package name in a Swift vulnerability
+		// and store it as a CocoaPods vulnerability.
+		if adv.Ecosystem == vulnerability.Swift {
+			adv.Severity = severity
+			adv.Ecosystem = vulnerability.Cocoapods
+			for _, pkgName := range t.cocoaPodsSpecs[adv.PkgName] {
+				adv.PkgName = pkgName
+				advisories = append(advisories, adv)
+			}
+		}
+	}
+
+	return advisories, nil
+}
+
+func convertSeverity(severity string) types.Severity {
+	switch severity {
 	case "LOW":
 		return types.SeverityLow
 	case "MODERATE":

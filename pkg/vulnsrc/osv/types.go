@@ -1,6 +1,7 @@
 package osv
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
@@ -33,6 +34,11 @@ type Reference struct {
 	URL  string        `json:"url"`
 }
 
+type Severity struct {
+	Type  string `json:"type"`
+	Score string `json:"score"`
+}
+
 type Affected struct {
 	Package           Package           `json:"package"`
 	Ranges            []Range           `json:"ranges,omitempty"`
@@ -53,24 +59,21 @@ type EcosystemSpecific struct {
 
 // source: https://ossf.github.io/osv-schema
 type Entry struct {
-	SchemaVersion    string            `json:"schema_version,omitempty"`
-	ID               string            `json:"id"`
-	Modified         time.Time         `json:"modified,omitempty"`
-	Published        time.Time         `json:"published,omitempty"`
-	Withdrawn        *time.Time        `json:"withdrawn,omitempty"`
-	Aliases          []string          `json:"aliases,omitempty"`
-	Summary          string            `json:"summary,omitempty"`
-	Details          string            `json:"details"`
-	Affected         []Affected        `json:"affected"`
-	References       []Reference       `json:"references,omitempty"`
-	Credits          []Credit          `json:"credits,omitempty"`
-	DatabaseSpecific *DatabaseSpecific `json:"database_specific,omitempty"`
+	SchemaVersion    string          `json:"schema_version,omitempty"`
+	ID               string          `json:"id"`
+	Modified         time.Time       `json:"modified,omitempty"`
+	Published        time.Time       `json:"published,omitempty"`
+	Withdrawn        *time.Time      `json:"withdrawn,omitempty"`
+	Aliases          []string        `json:"aliases,omitempty"`
+	Summary          string          `json:"summary,omitempty"`
+	Details          string          `json:"details"`
+	Severities       []Severity      `json:"severity"`
+	Affected         []Affected      `json:"affected"`
+	References       []Reference     `json:"references,omitempty"`
+	Credits          []Credit        `json:"credits,omitempty"`
+	DatabaseSpecific json.RawMessage `json:"database_specific,omitempty"`
 }
 
 type Credit struct {
 	Name string `json:"name"`
-}
-
-type DatabaseSpecific struct {
-	URL string `json:"url,omitempty"`
 }
