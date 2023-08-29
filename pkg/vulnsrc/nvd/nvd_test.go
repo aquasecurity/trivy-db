@@ -22,7 +22,7 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []vulnsrctest.WantValues{
 				{
-					Key: []string{"vulnerability-detail", "CVE-2020-0001", nvdDir},
+					Key: []string{"vulnerability-detail", "CVE-2020-0001", "nvd"},
 					Value: types.VulnerabilityDetail{
 						Description:      "In getProcessRecordLocked of ActivityManagerService.java isolated apps are not handled correctly. This could lead to local escalation of privilege with no additional execution privileges needed. User interaction is not needed for exploitation. Product: Android Versions: Android-8.0, Android-8.1, Android-9, and Android-10 Android ID: A-140055304",
 						CvssScore:        7.2,
