@@ -53,14 +53,6 @@ $(GOBIN)/bbolt:
 trivy-db:
 	make build
 
-## db-all is not used in GitHub Actions
-.PHONY: db-all
-db-all:
-	make build db-fetch-langs db-fetch-vuln-list
-	make db-build
-	make db-compact
-	make db-compress
-
 .PHONY: db-fetch-langs
 db-fetch-langs:
 	mkdir -p cache/ruby-advisory-db cache/php-security-advisories cache/nodejs-security-wg cache/ghsa cache/cocoapods-specs
@@ -69,7 +61,7 @@ db-fetch-langs:
 	wget -qO - https://github.com/nodejs/security-wg/archive/main.tar.gz | tar xz -C cache/nodejs-security-wg --strip-components=1
 	wget -qO - https://github.com/github/advisory-database/archive/refs/heads/main.tar.gz | tar xz -C cache/ghsa --strip-components=1
 	## required to convert GHSA Swift repo links to Cocoapods package names
-	wget -qO - https://github.com/CocoaPods/Specs/archive/master.zip | tar xz -C cache/cocoapods-specs --strip-components=1
+	wget -qO - https://github.com/CocoaPods/Specs/archive/master.tar.gz | tar xz -C cache/cocoapods-specs --strip-components=1
 
 .PHONY: db-build
 db-build: trivy-db
