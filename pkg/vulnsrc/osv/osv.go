@@ -133,7 +133,7 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 		}
 		pkgName := vulnerability.NormalizePkgName(ecosystem, affected.Package.Name)
 
-		var advisory *Advisory
+		var advisory Advisory
 		if len(affected.Ranges) > 0 || len(affected.Versions) > 0 {
 			var advisoryErr error
 			advisory, advisoryErr = getAdvisory(affected)
@@ -250,7 +250,7 @@ func groupVulnIDs(id string, aliases []string) ([]string, []string) {
 	return cveIDs, nonCVEIDs
 }
 
-func getAdvisory(affected Affected) (*Advisory, error) {
+func getAdvisory(affected Affected) (Advisory, error) {
 	var patchedVersions, vulnerableVersions []string
 
 	for _, affects := range affected.Ranges {
@@ -288,10 +288,10 @@ func getAdvisory(affected Affected) (*Advisory, error) {
 
 	cvssVectorV3, cvssScoreV3, err := getCvssInfo(affected.Severities)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to decode CVSSv3 vector: %w", err)
+		return Advisory{}, xerrors.Errorf("failed to decode CVSSv3 vector: %w", err)
 	}
 
-	return &Advisory{
+	return Advisory{
 		VulnerableVersions: vulnerableVersions,
 		PatchedVersions:    patchedVersions,
 		CVSSVectorV3:       cvssVectorV3,
