@@ -13,33 +13,19 @@ import (
 
 var bitnamiDir = filepath.Join("bitnami-vulndb", "data")
 
-type BitnamiVulnSrc struct{}
-
-func NewVulnSrc() BitnamiVulnSrc {
-	return BitnamiVulnSrc{}
-}
-
-func (BitnamiVulnSrc) Name() types.SourceID {
-	return vulnerability.BitnamiVulndb
-}
-
-func (b BitnamiVulnSrc) Update(root string) error {
+func NewVulnSrc() osv.OSV {
 	sources := map[types.Ecosystem]types.DataSource{
 		vulnerability.Bitnami: {
-			ID:   b.Name(),
+			ID:   vulnerability.BitnamiVulndb,
 			Name: "Bitnami Vulnerability Database",
 			URL:  "https://github.com/bitnami/vulndb",
 		},
 	}
 
-	return osv.New(bitnamiDir, b.Name(), sources, newTransformer()).Update(root)
+	return osv.New(bitnamiDir, vulnerability.BitnamiVulndb, sources, &transformer{})
 }
 
 type transformer struct{}
-
-func newTransformer() *transformer {
-	return &transformer{}
-}
 
 type DatabaseSpecific struct {
 	Severity string `json:"severity"`
