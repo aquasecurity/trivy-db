@@ -202,7 +202,7 @@ func parseAffected(entry Entry, vulnIDs, aliases, references []string) ([]Adviso
 	// Severities can be found both in severity and affected[].severity fields.
 	cvssVectorV3, cvssScoreV3, err := parseSeverity(entry.Severities)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to decode CVSSv3 vector: %w", err)
+		return nil, xerrors.Errorf("failed to decode CVSS vector (%s): %w", entry.ID, err)
 	}
 
 	uniqAdvisories := map[string]Advisory{}
@@ -220,7 +220,7 @@ func parseAffected(entry Entry, vulnIDs, aliases, references []string) ([]Adviso
 
 		// Parse affected[].severity
 		if vecV3, scoreV3, err := parseSeverity(affected.Severities); err != nil {
-			return nil, xerrors.Errorf("failed to decode CVSSv3 vector: %w", err)
+			return nil, xerrors.Errorf("failed to decode CVSS vector (%s): %w", entry.ID, err)
 		} else if vecV3 != "" {
 			// Overwrite the CVSS vector and score if affected[].severity is set
 			cvssVectorV3, cvssScoreV3 = vecV3, scoreV3
@@ -305,7 +305,7 @@ func parseAffectedVersions(affected Affected) ([]string, []string, error) {
 // - https://ossf.github.io/osv-schema/#affectedseverity-field
 func parseSeverity(severities []Severity) (string, float64, error) {
 	for _, s := range severities {
-		if s.Type == "CVSS_V3" {
+		if s.Type == "CVSS_V3" && s.Score != "" {
 			// CVSS vectors possibly have `/` suffix
 			// e.g. https://github.com/github/advisory-database/blob/2d3bc73d2117893b217233aeb95b9236c7b93761/advisories/github-reviewed/2019/05/GHSA-j59f-6m4q-62h6/GHSA-j59f-6m4q-62h6.json#L14
 			// Trim the suffix to avoid errors

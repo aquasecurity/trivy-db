@@ -1,3 +1,4 @@
+SHELL=/bin/bash
 LDFLAGS=-ldflags "-s -w"
 
 GOPATH=$(shell go env GOPATH)
