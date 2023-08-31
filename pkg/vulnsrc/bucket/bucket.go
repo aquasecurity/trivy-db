@@ -39,6 +39,8 @@ func Name(ecosystem, dataSource string) string {
 		prefix = vulnerability.Swift
 	case "cocoapods":
 		prefix = vulnerability.Cocoapods
+	case "bitnami":
+		prefix = vulnerability.Bitnami
 	default:
 		return ""
 	}

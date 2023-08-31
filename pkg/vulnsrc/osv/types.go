@@ -5,11 +5,10 @@ import (
 	"time"
 )
 
-type RangeType string
-
 const RangeTypeGit RangeType = "GIT"
 
 type Ecosystem string
+type RangeType string
 
 type Package struct {
 	Name      string    `json:"name"`
@@ -41,7 +40,9 @@ type Severity struct {
 
 type Affected struct {
 	Package           Package           `json:"package"`
+	Severities        []Severity        `json:"severity,omitempty"`
 	Ranges            []Range           `json:"ranges,omitempty"`
+	Versions          []string          `json:"versions,omitempty"`
 	EcosystemSpecific EcosystemSpecific `json:"ecosystem_specific"`
 }
 
