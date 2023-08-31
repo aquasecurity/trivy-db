@@ -282,8 +282,11 @@ func getAdvisory(affected Affected) (Advisory, error) {
 		}
 	}
 
-	for _, v := range affected.Versions {
-		vulnerableVersions = append(vulnerableVersions, fmt.Sprintf("=%s", v))
+	// Alternatively, use affected.Versions if affected.Ranges is empty.
+	if len(affected.Ranges) == 0 {
+		for _, v := range affected.Versions {
+			vulnerableVersions = append(vulnerableVersions, fmt.Sprintf("=%s", v))
+		}
 	}
 
 	cvssVectorV3, cvssScoreV3, err := getCvssInfo(affected.Severities)
