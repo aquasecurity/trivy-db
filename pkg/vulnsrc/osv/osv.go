@@ -127,6 +127,9 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 
 	// Parse []affected
 	advisories, err := parseAffected(entry, vulnIDs, aliases, references)
+	if err != nil {
+		return xerrors.Errorf("failed to parse affected: %w", err)
+	}
 
 	// Transform advisories
 	advisories, err = o.transformer.TransformAdvisories(advisories, entry)
