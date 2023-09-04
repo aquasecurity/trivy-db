@@ -255,13 +255,16 @@ func parseAffected(entry Entry, vulnIDs, aliases, references []string) ([]Adviso
 	return maps.Values(uniqAdvisories), nil
 }
 
+// versionsRange represents a range of versions
 type versionsRange struct {
 	from       string
 	to         string
 	toIncluded bool
 }
 
-func (r versionsRange) Constraint() string {
+// constraint returns the range as a constraint string in the expected
+// format for semver.NewConstraint
+func (r versionsRange) constraint() string {
 	if r.to != "" {
 		if r.toIncluded {
 			return fmt.Sprintf(">=%s, <=%s", r.from, r.to)
@@ -271,8 +274,9 @@ func (r versionsRange) Constraint() string {
 	return fmt.Sprintf(">=%s", r.from)
 }
 
-func (r versionsRange) Contains(version string) bool {
-	c, err := semver.NewConstraint(r.Constraint())
+// contains returns true if the given version is included in the range of versions
+func (r versionsRange) contains(version string) bool {
+	c, err := semver.NewConstraint(r.constraint())
 	if err != nil {
 		return false
 	}
@@ -297,17 +301,20 @@ func parseAffectedVersions(affected Affected) ([]string, []string, error) {
 			continue
 		}
 
-		// Each "introduced" event implies a new version range
 		var index int
 		for _, event := range affects.Events {
 			switch {
+			// Each "introduced" event implies a new version range
+			// e.g. {"introduced": "1.2.0}, {"introduced": "2.2.0}
 			case event.Introduced != "":
 				affectedRanges = append(affectedRanges, versionsRange{from: event.Introduced})
 				index = len(affectedRanges) - 1
+			// e.g. {"introduced": "1.2.0}, {"fixed": "1.2.5}
 			case event.Fixed != "":
 				affectedRanges[index].to = event.Fixed
 				affectedRanges[index].toIncluded = false
 				patchedVersions = append(patchedVersions, event.Fixed)
+			// e.g. {"introduced": "1.2.0}, {"last_affected": "1.2.5}
 			case event.LastAffected != "":
 				affectedRanges[index].to = event.LastAffected
 				affectedRanges[index].toIncluded = true
@@ -316,13 +323,14 @@ func parseAffectedVersions(affected Affected) ([]string, []string, error) {
 	}
 
 	for _, r := range affectedRanges {
-		vulnerableVersions = append(vulnerableVersions, r.Constraint())
+		vulnerableVersions = append(vulnerableVersions, r.constraint())
 	}
 
 	for _, v := range affected.Versions {
+		// We don't need to add the versions that are already included in the ranges
 		isUnique := true
 		for _, r := range affectedRanges {
-			if r.Contains(v) {
+			if r.contains(v) {
 				isUnique = false
 				break
 			}
