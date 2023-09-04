@@ -22,6 +22,8 @@ require (
 	k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 )
 
+require github.com/Masterminds/semver v1.5.0
+
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect

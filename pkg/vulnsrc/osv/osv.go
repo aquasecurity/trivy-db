@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Masterminds/semver"
 	"github.com/goark/go-cvss/v3/metric"
 	"github.com/samber/lo"
 	bolt "go.etcd.io/bbolt"
@@ -254,44 +255,79 @@ func parseAffected(entry Entry, vulnIDs, aliases, references []string) ([]Adviso
 	return maps.Values(uniqAdvisories), nil
 }
 
+type versionsRange struct {
+	from       string
+	to         string
+	toIncluded bool
+}
+
+func (r versionsRange) Constraint() string {
+	if r.to != "" {
+		if r.toIncluded {
+			return fmt.Sprintf(">=%s, <=%s", r.from, r.to)
+		}
+		return fmt.Sprintf(">=%s, <%s", r.from, r.to)
+	}
+	return fmt.Sprintf(">=%s", r.from)
+}
+
+func (r versionsRange) Contains(version string) bool {
+	c, err := semver.NewConstraint(r.Constraint())
+	if err != nil {
+		return false
+	}
+
+	v, err := semver.NewVersion(version)
+	if err != nil {
+		return false
+	}
+
+	return c.Check(v)
+}
+
 // parseAffectedVersions parses the affected.versions and affected.ranges fields
 // cf.
 // - https://ossf.github.io/osv-schema/#affectedversions-field
 // - https://ossf.github.io/osv-schema/#affectedranges-field
 func parseAffectedVersions(affected Affected) ([]string, []string, error) {
 	var patchedVersions, vulnerableVersions []string
+	var affectedRanges []versionsRange
 	for _, affects := range affected.Ranges {
 		if affects.Type == RangeTypeGit {
 			continue
 		}
 
-		var vulnerable string
+		// Each "introduced" event implies a new version range
+		var index int
 		for _, event := range affects.Events {
 			switch {
 			case event.Introduced != "":
-				// e.g. {"introduced": "1.2.0}, {"introduced": "2.2.0}
-				if vulnerable != "" {
-					vulnerableVersions = append(vulnerableVersions, vulnerable)
-				}
-				vulnerable = fmt.Sprintf(">=%s", event.Introduced)
+				affectedRanges = append(affectedRanges, versionsRange{from: event.Introduced})
+				index = len(affectedRanges) - 1
 			case event.Fixed != "":
-				// patched versions
+				affectedRanges[index].to = event.Fixed
+				affectedRanges[index].toIncluded = false
 				patchedVersions = append(patchedVersions, event.Fixed)
-
-				// e.g. {"introduced": "1.2.0}, {"fixed": "1.2.5}
-				vulnerable = fmt.Sprintf("%s, <%s", vulnerable, event.Fixed)
 			case event.LastAffected != "":
-				vulnerable = fmt.Sprintf("%s, <=%s", vulnerable, event.LastAffected)
+				affectedRanges[index].to = event.LastAffected
+				affectedRanges[index].toIncluded = true
 			}
-		}
-		if vulnerable != "" {
-			vulnerableVersions = append(vulnerableVersions, vulnerable)
 		}
 	}
 
-	// Alternatively, use affected.Versions if affected.Ranges is empty.
-	if len(affected.Ranges) == 0 {
-		for _, v := range affected.Versions {
+	for _, r := range affectedRanges {
+		vulnerableVersions = append(vulnerableVersions, r.Constraint())
+	}
+
+	for _, v := range affected.Versions {
+		isUnique := true
+		for _, r := range affectedRanges {
+			if r.Contains(v) {
+				isUnique = false
+				break
+			}
+		}
+		if isUnique {
 			vulnerableVersions = append(vulnerableVersions, fmt.Sprintf("=%s", v))
 		}
 	}
