@@ -18,7 +18,7 @@ jobs:
         uses: ibiqlik/action-yamllint@v3
 
       - name: Lint
-        uses: golangci/golangci-lint-action@v3.6.0
+        uses: golangci/golangci-lint-action@v3.7.0
         with:
           version: v1.52
           args: -D errcheck
