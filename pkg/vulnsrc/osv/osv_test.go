@@ -94,6 +94,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						},
 						VulnerableVersions: []string{
 							">=0, <=3.8.4",
+							"=0.1",
+							"=0.2",
 							// Non-semver versions cannot be compared
 							"=0.22.0a0",
 							"=0.22.0b0",
@@ -103,6 +105,8 @@ func TestVulnSrc_Update(t *testing.T) {
 							"=0.22.0b4",
 							"=0.22.0b5",
 							"=0.22.0b6",
+							"=0.3",
+							"=0.4",
 							"=2.0.0rc1",
 							"=2.3.0a1",
 							"=2.3.0a2",

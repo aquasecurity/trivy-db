@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Masterminds/semver"
+	"github.com/aquasecurity/go-version/pkg/semver"
 	"github.com/goark/go-cvss/v3/metric"
 	"github.com/samber/lo"
 	bolt "go.etcd.io/bbolt"
@@ -276,12 +276,12 @@ func (r versionsRange) constraint() string {
 
 // contains returns true if the given version is included in the range of versions
 func (r versionsRange) contains(version string) bool {
-	c, err := semver.NewConstraint(r.constraint())
+	c, err := semver.NewConstraints(r.constraint())
 	if err != nil {
 		return false
 	}
 
-	v, err := semver.NewVersion(version)
+	v, err := semver.Parse(version)
 	if err != nil {
 		return false
 	}
