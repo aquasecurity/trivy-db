@@ -1,7 +1,12 @@
-package oracleoval
+package oracleoval_test
 
 import (
+	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/dbtest"
+	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"testing"
@@ -37,26 +42,70 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2007-0493", "Oracle Linux 5", "bind-devel"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "30:9.3.3-8.el5",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "30:9.3.3-8.el5",
+								Arches: []string{
+									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2007-0057",
+								},
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2007-0494", "Oracle Linux 5", "bind-devel"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "30:9.3.3-8.el5",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "30:9.3.3-8.el5",
+								Arches: []string{
+									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2007-0057",
+								},
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2007-0493", "Oracle Linux 5", "bind-sdb"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "30:9.3.3-8.el5",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "30:9.3.3-8.el5",
+								Arches: []string{
+									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2007-0057",
+								},
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2007-0494", "Oracle Linux 5", "bind-sdb"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "30:9.3.3-8.el5",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "30:9.3.3-8.el5",
+								Arches: []string{
+									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2007-0057",
+								},
+							},
+						},
 					},
 				},
 				{
@@ -115,50 +164,138 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 6", "kernel-uek-doc"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el6uek",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "4.1.12-124.24.3.el6uek",
+								Arches: []string{
+									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2019-4510",
+								},
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 6", "kernel-uek-doc"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el6uek",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "4.1.12-124.24.3.el6uek",
+								Arches: []string{
+									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2019-4510",
+								},
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 6", "kernel-uek-firmware"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el6uek",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "4.1.12-124.24.3.el6uek",
+								Arches: []string{
+									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2019-4510",
+								},
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 6", "kernel-uek-firmware"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el6uek",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "4.1.12-124.24.3.el6uek",
+								Arches: []string{
+									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2019-4510",
+								},
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 7", "kernel-uek-doc"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el7uek",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "4.1.12-124.24.3.el7uek",
+								Arches: []string{
+									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2019-4510",
+								},
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 7", "kernel-uek-doc"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el7uek",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "4.1.12-124.24.3.el7uek",
+								Arches: []string{
+									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2019-4510",
+								},
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 7", "kernel-uek-firmware"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el7uek",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "4.1.12-124.24.3.el7uek",
+								Arches: []string{
+									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2019-4510",
+								},
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 7", "kernel-uek-firmware"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el7uek",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "4.1.12-124.24.3.el7uek",
+								Arches: []string{
+									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2019-4510",
+								},
+							},
+						},
 					},
 				},
 				{
@@ -196,6 +333,62 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
+			name: "happy path multi arch",
+			dir:  filepath.Join("testdata", "multi-arch"),
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "Oracle Linux 7"},
+					Value: types.DataSource{
+						ID:   vulnerability.OracleOVAL,
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2022-24903", "Oracle Linux 7", "rsyslog"},
+					Value: types.Advisories{
+						FixedVersion: "8.24.0-57.0.1.el7_9.3",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "8.24.0-57.0.4.el7_9.3",
+								Arches: []string{
+									"aarch64",
+								},
+								VendorIDs: []string{
+									"ELSA-2022-4803",
+								},
+							},
+							{
+								FixedVersion: "8.24.0-57.0.1.el7_9.3",
+								Arches: []string{
+									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2022-4803",
+								},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "CVE-2022-24903", string(vulnerability.OracleOVAL)},
+					Value: types.VulnerabilityDetail{
+						Title:       "ELSA-2022-4803:  rsyslog security update (IMPORTANT)",
+						Description: "[8.24.0-57.0.4.el7_9.3]\n- Newer gcc complains about implicit declaration of prctl. Added header file to quiesce the compiler\n\n[8.24.0-57.3]\n- Address CVE-2022-24903, Heap-based overflow in TCP syslog server\n  resolves: rhbz#2081395",
+						References: []string{
+							"https://linux.oracle.com/cve/CVE-2022-24903.html",
+							"https://linux.oracle.com/errata/ELSA-2022-4803.html",
+						},
+						Severity: types.SeverityHigh,
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-2022-24903"},
+					Value: map[string]interface{}{},
+				},
+			},
+		},
+		{
 			name: "happy path ELSA-ID",
 			dir:  filepath.Join("testdata", "elsa-id"),
 			wantValues: []vulnsrctest.WantValues{
@@ -209,8 +402,19 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{"advisory-detail", "ELSA-2007-0057", "Oracle Linux 5", "bind-devel"},
-					Value: types.Advisory{
-						FixedVersion: "9.3.3-8.el5",
+					Value: types.Advisories{
+						FixedVersion: "30:9.3.3-8.el5",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "30:9.3.3-8.el5",
+								Arches: []string{
+									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2007-0057",
+								},
+							},
+						},
 					},
 				},
 				{
@@ -231,28 +435,6 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
-			name: "unknown platform",
-			dir:  filepath.Join("testdata", "unknown-platform"),
-			wantValues: []vulnsrctest.WantValues{
-				{
-					Key: []string{"vulnerability-detail", "CVE-0001-0001", "oracle-oval"},
-					Value: types.VulnerabilityDetail{
-						Title:       "ELSA-0001-0001:  Moderate: empty security update  (N/A)",
-						Description: "empty description",
-						References: []string{
-							"http://linux.oracle.com/cve/CVE-0001-0001.html",
-							"http://linux.oracle.com/errata/ELSA-0001-0001.html",
-						},
-						Severity: types.SeverityUnknown,
-					},
-				},
-				{
-					Key:   []string{"vulnerability-id", "CVE-0001-0001"},
-					Value: map[string]interface{}{},
-				},
-			},
-		},
-		{
 			name:    "sad path (dir doesn't exist)",
 			dir:     filepath.Join("testdata", "badPath"),
 			wantErr: "no such file or directory",
@@ -265,7 +447,7 @@ func TestVulnSrc_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			vs := NewVulnSrc()
+			vs := oracleoval.NewVulnSrc()
 			vulnsrctest.TestUpdate(t, vs, vulnsrctest.TestUpdateArgs{
 				Dir:        tt.dir,
 				WantValues: tt.wantValues,
@@ -281,46 +463,101 @@ func TestVulnSrc_Get(t *testing.T) {
 		fixtures []string
 		version  string
 		pkgName  string
+		arch     string
 		want     []types.Advisory
-		wantErr  string
+		wantErr  require.ErrorAssertionFunc
 	}{
 		{
-			name:     "happy path",
-			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			name:     "the same fixed version",
+			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/data-source.yaml"},
+			version:  "8",
+			pkgName:  "bind",
+			arch:     "x86_64",
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2018-5743",
+					FixedVersion:    "32:9.11.4-17.P2.el8_0",
+					Arches: []string{
+						"aarch64",
+						"x86_64",
+					},
+					VendorIDs: []string{"ELSA-2019-1145"},
+					DataSource: &types.DataSource{
+						ID:   vulnerability.OracleOVAL,
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
+				},
+			},
+			wantErr: require.NoError,
+		},
+		{
+			name:     "different fixed versions for different arches",
+			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/data-source.yaml"},
+			version:  "7",
+			pkgName:  "rsyslog",
+			arch:     "aarch64",
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2022-24903",
+					FixedVersion:    "8.24.0-57.0.4.el7_9.3",
+					Arches: []string{
+						"aarch64",
+					},
+					VendorIDs: []string{"ELSA-2022-4803"},
+					DataSource: &types.DataSource{
+						ID:   vulnerability.OracleOVAL,
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
+				},
+			},
+			wantErr: require.NoError,
+		},
+		{
+			name:     "old schema, no entries",
+			fixtures: []string{"testdata/fixtures/old.yaml", "testdata/fixtures/data-source.yaml"},
 			version:  "8",
 			pkgName:  "bind",
 			want: []types.Advisory{
 				{
 					VulnerabilityID: "ELSA-2019-1145",
 					FixedVersion:    "32:9.11.4-17.P2.el8_0",
+					DataSource: &types.DataSource{
+						ID:   vulnerability.OracleOVAL,
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
 				},
 			},
+			wantErr: require.NoError,
 		},
 		{
 			name:     "no advisories are returned",
-			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			fixtures: []string{"testdata/fixtures/old.yaml"},
 			version:  "8",
 			pkgName:  "no-package",
 			want:     nil,
+			wantErr:  require.NoError,
 		},
 		{
 			name:     "GetAdvisories returns an error",
 			fixtures: []string{"testdata/fixtures/sad.yaml"},
 			version:  "8",
 			pkgName:  "bind",
-			wantErr:  "failed to unmarshal advisory JSON",
+			wantErr:  require.Error,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			vs := NewVulnSrc()
-			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
-				Fixtures:   tt.fixtures,
-				WantValues: tt.want,
-				Release:    tt.version,
-				PkgName:    tt.pkgName,
-				WantErr:    tt.wantErr,
-			})
+			_ = dbtest.InitDB(t, tt.fixtures)
+			defer db.Close()
+
+			vs := oracleoval.NewVulnSrc()
+			got, err := vs.Get(tt.version, tt.pkgName, tt.arch)
+
+			tt.wantErr(t, err)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
