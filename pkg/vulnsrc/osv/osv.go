@@ -267,6 +267,9 @@ type versionsRange struct {
 func (r versionsRange) constraint() string {
 	if r.to != "" {
 		if r.toIncluded {
+			if r.from == r.to {
+				return fmt.Sprintf("=%s", r.from)
+			}
 			return fmt.Sprintf(">=%s, <=%s", r.from, r.to)
 		}
 		return fmt.Sprintf(">=%s, <%s", r.from, r.to)

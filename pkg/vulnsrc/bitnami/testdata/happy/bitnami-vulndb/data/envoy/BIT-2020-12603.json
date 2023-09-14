@@ -18,10 +18,6 @@
           "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
         }
       ],
-      "versions": [
-        "1.13.2",
-        "1.14.2"
-      ],
       "ranges": [
         {
           "type": "SEMVER",
@@ -31,6 +27,28 @@
             },
             {
               "fixed": "1.12.4"
+            }
+          ]
+        },
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "1.13.2"
+            },
+            {
+              "last_affected": "1.13.2"
+            }
+          ]
+        },
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "1.14.2"
+            },
+            {
+              "last_affected": "1.14.2"
             }
           ]
         }
@@ -55,6 +73,6 @@
       "url": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-pc38-4q6c-85p6"
     }
   ],
-  "published": "2023-09-04T09:39:15.588Z",
-  "modified": "2023-09-04T09:39:15.588Z"
+  "published": "2023-09-14T11:39:47.223Z",
+  "modified": "2023-09-14T11:39:47.223Z"
 }
