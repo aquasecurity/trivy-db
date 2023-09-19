@@ -360,6 +360,8 @@ func convertEcosystem(eco Ecosystem) types.Ecosystem {
 		return vulnerability.Swift
 	case "bitnami":
 		return vulnerability.Bitnami
+	case "k8s":
+		return vulnerability.K8s
 	default:
 		return vulnerability.Unknown
 	}

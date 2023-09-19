@@ -1,26 +1,16 @@
 package k8svulndb_test
 
 import (
-	"strings"
+	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/k8svulndb"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
-	publishedDate, err := time.Parse(time.RFC3339, "2023-06-13T14:42:06Z")
-	if err != nil {
-		publishedDate = time.Now()
-	}
-	severity, err := types.NewSeverity(strings.ToUpper("Medium"))
-	if err != nil {
-		severity = types.SeverityLow
-	}
 	tests := []struct {
 		name    string
 		dir     string
@@ -32,85 +22,41 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:  "testdata/happy-fixed",
 			want: []vulnsrctest.WantValues{
 				{
-					Key: []string{"data-source", "k8s::Official Kubernetes CVE Feed"},
-					Value: types.DataSource{
-						ID:   vulnerability.K8sVulnDB,
-						Name: "Official Kubernetes CVE Feed",
-						URL:  "https://kubernetes.io/docs/reference/issues-security/official-cve-feed/index.json",
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-2727",
+						"k8s::Official Kubernetes CVE Feed",
+						"k8s.io/apiserver",
 					},
-				},
-				{
-					Key: []string{"advisory-detail", "CVE-2023-2727", "k8s::Official Kubernetes CVE Feed", "k8s.io/kube-apiserver"},
 					Value: types.Advisory{
-						PatchedVersions:    []string{"1.27.3"},
-						VulnerableVersions: []string{">=1.27.0", ", <1.27.3"},
-					},
-				},
-				{
-					Key: []string{"vulnerability-detail", "CVE-2023-2727", string(vulnerability.K8sVulnDB)},
-					Value: types.VulnerabilityDetail{
-						Description: "CVE-2023-2727: Bypassing policies imposed by the ImagePolicyWebhook admission pluginCVSS Rating: CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:NA security issue was discovered in Kubernetes where users may be able to launch containers using images that are restricted by ImagePolicyWebhook when using ephemeral containers. Kubernetes clusters are only affected if the ImagePolicyWebhook admission plugin is used together with ephemeral containers.Am I vulnerable?Clusters are impacted by this vulnerability if all of the following are true:",
-						References: []string{
-							"https://github.com/kubernetes/kubernetes/issues/118640",
-							"https://www.cve.org/cverecord?id=CVE-2023-2727",
-						},
-						ID:               "CVE-2023-2727",
-						CvssScoreV3:      6.5,
-						CvssVector:       "CVSS:3.0/AV:L/AC:H/PR:L/UI:R/S:U/C:L/I:L/A:N",
-						Severity:         severity,
-						PublishedDate:    &publishedDate,
-						LastModifiedDate: &publishedDate,
-						Title:            "Bypassing policies imposed by the ImagePolicyWebhook and bypassing mountable secrets policy imposed by the ServiceAccount admission plugin",
+						PatchedVersions:    []string{"1.24.14"},
+						VulnerableVersions: []string{">=1.24.0, <1.24.14"},
+						Severity:           types.SeverityHigh,
 					},
 				},
 			},
 		},
 		{
-			name: "happy path last affected version",
+			name: "happy path affected version",
 			dir:  "testdata/happy",
 			want: []vulnsrctest.WantValues{
 				{
-					Key: []string{"data-source", "k8s::Official Kubernetes CVE Feed"},
-					Value: types.DataSource{
-						ID:   vulnerability.K8sVulnDB,
-						Name: "Official Kubernetes CVE Feed",
-						URL:  "https://kubernetes.io/docs/reference/issues-security/official-cve-feed/index.json",
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-2727",
+						"k8s::Official Kubernetes CVE Feed",
+						"k8s.io/apiserver",
 					},
-				},
-				{
-					Key: []string{"advisory-detail", "CVE-2023-2728", "k8s::Official Kubernetes CVE Feed", "k8s.io/kube-apiserver"},
 					Value: types.Advisory{
-						VulnerableVersions: []string{">=1.27.0", ", <=1.27.2"},
-					},
-				},
-				{
-					Key: []string{"vulnerability-detail", "CVE-2023-2728", string(vulnerability.K8sVulnDB)},
-					Value: types.VulnerabilityDetail{
-						Description: "CVE-2023-2728: Bypassing policies imposed by the ImagePolicyWebhook admission pluginCVSS Rating: CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:NA security issue was discovered in Kubernetes where users may be able to launch containers using images that are restricted by ImagePolicyWebhook when using ephemeral containers. Kubernetes clusters are only affected if the ImagePolicyWebhook admission plugin is used together with ephemeral containers.Am I vulnerable?Clusters are impacted by this vulnerability if all of the following are true:",
-						References: []string{
-							"https://github.com/kubernetes/kubernetes/issues/118640",
-							"https://www.cve.org/cverecord?id=CVE-2023-2728",
-						},
-						ID:               "CVE-2023-2728",
-						CvssScoreV3:      6.5,
-						CvssVector:       "CVSS:3.0/AV:L/AC:H/PR:L/UI:R/S:U/C:L/I:L/A:N",
-						Severity:         severity,
-						PublishedDate:    &publishedDate,
-						LastModifiedDate: &publishedDate,
-						Title:            "Bypassing policies imposed by the ImagePolicyWebhook and bypassing mountable secrets policy imposed by the ServiceAccount admission plugin",
+						VulnerableVersions: []string{">=1.24.0, <=1.24.14"},
 					},
 				},
 			},
 		},
 		{
-			name:    "broken JSON",
-			dir:     "testdata/broken",
-			wantErr: "JSON decode error",
-		},
-		{
 			name:    "sad path",
-			dir:     "./sad",
-			wantErr: "no such file or directory",
+			dir:     filepath.Join("testdata", "broken"),
+			wantErr: "JSON decode error",
 		},
 	}
 	for _, tt := range tests {
