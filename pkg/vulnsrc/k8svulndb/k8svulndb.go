@@ -28,16 +28,20 @@ func NewVulnSrc() osv.OSV {
 type transformer struct{}
 
 func (t *transformer) TransformAdvisories(advs []osv.Advisory, entry osv.Entry) ([]osv.Advisory, error) {
-	if len(entry.Severities) == 0 {
-		return advs, nil
-	}
-	severity := types.SeverityUnknown
-	bm, err := metric.NewBase().Decode(entry.Severities[0].Type)
-	if err == nil {
-		severity = types.Severity(bm.Severity())
-	}
-	for i := range advs {
-		advs[i].Severity = severity
+	if len(entry.Affected) > 0 {
+		if len(entry.Affected[0].Severities) > 0 {
+			severity := types.SeverityUnknown
+			vector := entry.Affected[0].Severities[0].Type
+			bm, err := metric.NewBase().Decode(vector)
+			if err == nil {
+				severity = types.Severity(bm.Severity())
+			}
+			for i := range advs {
+				advs[i].Severity = severity
+				advs[i].CVSSScoreV3 = bm.Score()
+				advs[i].CVSSVectorV3 = vector
+			}
+		}
 	}
 	return advs, nil
 }
