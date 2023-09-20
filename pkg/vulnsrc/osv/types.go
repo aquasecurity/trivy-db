@@ -5,7 +5,18 @@ import (
 	"time"
 )
 
-const RangeTypeGit RangeType = "GIT"
+const (
+	RangeTypeGit RangeType = "GIT"
+
+	EcosystemGo        Ecosystem = "Go"
+	EcosystemNpm       Ecosystem = "npm"
+	EcosystemPyPI      Ecosystem = "PyPI"
+	EcosystemRubygems  Ecosystem = "RubyGems"
+	EcosystemCrates    Ecosystem = "crates.io"
+	EcosystemPackagist Ecosystem = "Packagist"
+	EcosystemMaven     Ecosystem = "Maven"
+	EcosystemNuGet     Ecosystem = "NuGet"
+)
 
 type Ecosystem string
 type RangeType string

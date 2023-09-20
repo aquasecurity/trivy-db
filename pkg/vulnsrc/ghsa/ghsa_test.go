@@ -96,7 +96,7 @@ func TestVulnSrc_Update(t *testing.T) {
 							"GHSA-f5pg-7wfw-84q9",
 						},
 						PatchedVersions:    []string{"1.34.0"},
-						VulnerableVersions: []string{">=0, <1.34.0"},
+						VulnerableVersions: []string{"<1.34.0"},
 					},
 				},
 				{
@@ -162,7 +162,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						VulnerableVersions: []string{
 							">=2.41.0, <2.42.0",
 							">=2.39.0, <2.39.1",
-							">=0, <2.29.1",
+							"<2.29.1",
 						},
 					},
 				},
@@ -196,7 +196,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						VulnerableVersions: []string{
 							">=2.41.0, <2.42.0",
 							">=2.39.0, <2.39.1",
-							">=0, <2.29.1",
+							"<2.29.1",
 						},
 					},
 				},
@@ -219,7 +219,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						VulnerableVersions: []string{
 							">=2.41.0, <2.42.0",
 							">=2.39.0, <2.39.1",
-							">=0, <2.29.1",
+							"<2.29.1",
 						},
 					},
 				},

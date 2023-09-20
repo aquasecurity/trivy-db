@@ -51,6 +51,23 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"advisory-detail",
+						"CVE-2020-12603",
+						bucketName,
+						"envoy",
+					},
+					Value: types.Advisory{
+						VulnerableVersions: []string{
+							"<1.12.4",
+							"=1.13.2",
+							"=1.14.2",
+						},
+						PatchedVersions: []string{"1.12.4"},
+						VendorIDs:       []string{"BIT-2020-12603"},
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
 						"CVE-2020-7059",
 						bucketName,
 						"php",

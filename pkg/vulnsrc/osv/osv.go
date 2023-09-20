@@ -11,10 +11,12 @@ import (
 	"github.com/goark/go-cvss/v3/metric"
 	"github.com/samber/lo"
 	bolt "go.etcd.io/bbolt"
+	"go.uber.org/zap"
 	"golang.org/x/exp/maps"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
@@ -260,38 +262,46 @@ func parseAffected(entry Entry, vulnIDs, aliases, references []string) ([]Adviso
 // - https://ossf.github.io/osv-schema/#affectedranges-field
 func parseAffectedVersions(affected Affected) ([]string, []string, error) {
 	var patchedVersions, vulnerableVersions []string
+	var affectedRanges []VersionRange
 	for _, affects := range affected.Ranges {
 		if affects.Type == RangeTypeGit {
 			continue
 		}
 
-		var vulnerable string
+		var index int
 		for _, event := range affects.Events {
 			switch {
+			// Each "introduced" event implies a new version range
+			// e.g. {"introduced": "1.2.0"}, {"introduced": "2.2.0"}
 			case event.Introduced != "":
-				// e.g. {"introduced": "1.2.0}, {"introduced": "2.2.0}
-				if vulnerable != "" {
-					vulnerableVersions = append(vulnerableVersions, vulnerable)
-				}
-				vulnerable = fmt.Sprintf(">=%s", event.Introduced)
+				affectedRanges = append(affectedRanges, NewVersionRange(affected.Package.Ecosystem, event.Introduced))
+				index = len(affectedRanges) - 1
+			// e.g. {"introduced": "1.2.0"}, {"fixed": "1.2.5"}
 			case event.Fixed != "":
-				// patched versions
+				affectedRanges[index].SetFixed(event.Fixed)
 				patchedVersions = append(patchedVersions, event.Fixed)
-
-				// e.g. {"introduced": "1.2.0}, {"fixed": "1.2.5}
-				vulnerable = fmt.Sprintf("%s, <%s", vulnerable, event.Fixed)
+			// e.g. {"introduced": "1.2.0"}, {"last_affected": "1.2.5"}
 			case event.LastAffected != "":
-				vulnerable = fmt.Sprintf("%s, <=%s", vulnerable, event.LastAffected)
+				affectedRanges[index].SetLastAffected(event.LastAffected)
 			}
-		}
-		if vulnerable != "" {
-			vulnerableVersions = append(vulnerableVersions, vulnerable)
 		}
 	}
 
-	// Alternatively, use affected.Versions if affected.Ranges is empty.
-	if len(affected.Ranges) == 0 {
-		for _, v := range affected.Versions {
+	for _, r := range affectedRanges {
+		vulnerableVersions = append(vulnerableVersions, r.String())
+	}
+
+	for _, v := range affected.Versions {
+		// We don't need to add the versions that are already included in the ranges
+		ok, err := versionContains(affectedRanges, v)
+		if err != nil {
+			log.Logger.Errorw("Version comparison error",
+				zap.String("ecosystem", string(affected.Package.Ecosystem)),
+				zap.String("package", affected.Package.Name),
+				zap.Error(err),
+			)
+		}
+		if !ok {
 			vulnerableVersions = append(vulnerableVersions, fmt.Sprintf("=%s", v))
 		}
 	}
@@ -353,4 +363,15 @@ func convertEcosystem(eco Ecosystem) types.Ecosystem {
 	default:
 		return vulnerability.Unknown
 	}
+}
+
+func versionContains(ranges []VersionRange, version string) (bool, error) {
+	for _, r := range ranges {
+		if ok, err := r.Contains(version); err != nil {
+			return false, err
+		} else if ok {
+			return true, nil
+		}
+	}
+	return false, nil
 }

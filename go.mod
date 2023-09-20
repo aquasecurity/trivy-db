@@ -4,12 +4,17 @@ go 1.19
 
 require (
 	github.com/aquasecurity/bolt-fixtures v0.0.0-20200903104109-d34e7f983986
+	github.com/aquasecurity/go-gem-version v0.0.0-20201115065557-8eed6fe000ce
+	github.com/aquasecurity/go-npm-version v0.0.0-20201110091526-0b796d180798
+	github.com/aquasecurity/go-pep440-version v0.0.0-20210121094942-22b2f8951d46
+	github.com/aquasecurity/go-version v0.0.0-20210121072130-637058cfe492
 	github.com/briandowns/spinner v1.23.0
 	github.com/fatih/color v1.10.0 // indirect
 	github.com/goark/go-cvss v1.6.6
 	github.com/hashicorp/go-version v1.6.0
 	github.com/knqyf263/go-deb-version v0.0.0-20190517075300-09fca494f03d
 	github.com/knqyf263/go-rpm-version v0.0.0-20170716094938-74609b86c936
+	github.com/masahiro331/go-mvn-version v0.0.0-20210429150710-d3157d602a08
 	github.com/samber/lo v1.38.1
 	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli v1.22.14
@@ -27,6 +32,8 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/goark/errs v1.1.0 // indirect
 	github.com/goccy/go-yaml v1.8.1 // indirect
+	github.com/hashicorp/errwrap v1.0.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
