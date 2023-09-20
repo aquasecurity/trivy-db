@@ -57,7 +57,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: types.Advisory{
 						VulnerableVersions: []string{
-							">=0, <1.12.4",
+							"<1.12.4",
 							"=1.13.2",
 							"=1.14.2",
 						},

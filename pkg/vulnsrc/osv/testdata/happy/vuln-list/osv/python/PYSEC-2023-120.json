@@ -42,6 +42,12 @@
              },
              {
                "last_affected": "3.8.4"
+             },
+             {
+               "introduced": "4.0.1"
+             },
+             {
+               "last_affected": "4.0.1"
              }
            ]
          }
