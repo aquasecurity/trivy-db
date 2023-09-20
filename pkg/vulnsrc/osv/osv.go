@@ -11,10 +11,12 @@ import (
 	"github.com/goark/go-cvss/v3/metric"
 	"github.com/samber/lo"
 	bolt "go.etcd.io/bbolt"
+	"go.uber.org/zap"
 	"golang.org/x/exp/maps"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
@@ -291,9 +293,15 @@ func parseAffectedVersions(affected Affected) ([]string, []string, error) {
 
 	for _, v := range affected.Versions {
 		// We don't need to add the versions that are already included in the ranges
-		if !lo.SomeBy(affectedRanges, func(vr VersionRange) bool {
-			return vr.Contains(v)
-		}) {
+		ok, err := versionContains(affectedRanges, v)
+		if err != nil {
+			log.Logger.Errorw("Version comparison error",
+				zap.String("ecosystem", string(affected.Package.Ecosystem)),
+				zap.String("package", affected.Package.Name),
+				zap.Error(err),
+			)
+		}
+		if !ok {
 			vulnerableVersions = append(vulnerableVersions, fmt.Sprintf("=%s", v))
 		}
 	}
@@ -355,4 +363,15 @@ func convertEcosystem(eco Ecosystem) types.Ecosystem {
 	default:
 		return vulnerability.Unknown
 	}
+}
+
+func versionContains(ranges []VersionRange, version string) (bool, error) {
+	for _, r := range ranges {
+		if ok, err := r.Contains(version); err != nil {
+			return false, err
+		} else if ok {
+			return true, nil
+		}
+	}
+	return false, nil
 }

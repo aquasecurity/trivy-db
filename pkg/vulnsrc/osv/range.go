@@ -2,37 +2,41 @@ package osv
 
 import (
 	"fmt"
+
+	mvn "github.com/masahiro331/go-mvn-version"
+	"golang.org/x/xerrors"
+
 	"github.com/aquasecurity/go-gem-version"
 	"github.com/aquasecurity/go-npm-version/pkg"
 	pep440 "github.com/aquasecurity/go-pep440-version"
 	"github.com/aquasecurity/go-version/pkg/semver"
 	"github.com/aquasecurity/go-version/pkg/version"
-	"github.com/aquasecurity/trivy-db/pkg/log"
-	mvn "github.com/masahiro331/go-mvn-version"
-	"go.uber.org/zap"
 )
 
 type VersionRange interface {
-	Contains(ver string) bool
+	Contains(ver string) (bool, error)
 	String() string
 	SetFixed(fixed string)
 	SetLastAffected(lastAffected string)
 }
 
 func NewVersionRange(ecosystem Ecosystem, from string) VersionRange {
+	vr := &versionRange{from: from}
 	switch ecosystem {
 	case EcosystemNpm:
-		return NewNpmVersionRange(from)
+		return &NpmVersionRange{versionRange: vr}
 	case EcosystemRubygems:
-		return NewRubyGemsVersionRange(from)
+		return &RubyGemsVersionRange{versionRange: vr}
 	case EcosystemPyPI:
-		return NewPyPIVersionRange(from)
+		return &PyPIVersionRange{versionRange: vr}
 	case EcosystemMaven:
-		return NewMavenVersionRange(from)
-	case EcosystemGo, EcosystemCrates, EcosystemPackagist, EcosystemNuGet:
-		return NewSemVerRange(ecosystem, from)
+		return &MavenVersionRange{versionRange: vr}
+	case EcosystemGo, EcosystemCrates, EcosystemNuGet:
+		return &SemVerRange{versionRange: vr}
+	case EcosystemPackagist:
+		return &DefaultVersionRange{versionRange: vr}
 	default:
-		return NewDefaultVersionRange(ecosystem, from)
+		return &DefaultVersionRange{versionRange: vr}
 	}
 }
 
@@ -83,157 +87,109 @@ func (r *versionRange) SetLastAffected(lastAffected string) {
 }
 
 type DefaultVersionRange struct {
-	logger *zap.SugaredLogger
 	*versionRange
 }
 
-func NewDefaultVersionRange(ecosystem Ecosystem, from string) *DefaultVersionRange {
-	logger := log.Logger.With(zap.String("ECOSYSTEM", string(ecosystem)))
-	return &DefaultVersionRange{logger: logger, versionRange: &versionRange{from: from}}
-}
-
-func (r *DefaultVersionRange) Contains(ver string) bool {
+func (r *DefaultVersionRange) Contains(ver string) (bool, error) {
 	c, err := version.NewConstraints(r.String())
 	if err != nil {
-		r.logger.Error("Failed to parse version constraint", zap.String("constraint", r.String()), zap.Error(err))
-		return false
+		return false, xerrors.Errorf("failed to parse version constraint: %w", err)
 	}
 
 	v, err := version.Parse(ver)
 	if err != nil {
-		r.logger.Errorw("Failed to parse version", zap.String("version", ver), zap.Error(err))
-		return false
+		return false, xerrors.Errorf("failed to parse version: %w", err)
 	}
 
-	return c.Check(v)
+	return c.Check(v), nil
 }
 
 type SemVerRange struct {
-	logger *zap.SugaredLogger
 	*versionRange
 }
 
-func NewSemVerRange(ecosystem Ecosystem, from string) *SemVerRange {
-	logger := log.Logger.With(zap.String("ECOSYSTEM", string(ecosystem)))
-	return &SemVerRange{logger: logger, versionRange: &versionRange{from: from}}
-}
-
-func (r *SemVerRange) Contains(ver string) bool {
+func (r *SemVerRange) Contains(ver string) (bool, error) {
 	c, err := semver.NewConstraints(r.String())
 	if err != nil {
-		r.logger.Error("Failed to parse version constraint", zap.String("constraint", r.String()), zap.Error(err))
-		return false
+		return false, xerrors.Errorf("failed to parse version constraint: %w", err)
 	}
 
 	v, err := semver.Parse(ver)
 	if err != nil {
-		r.logger.Errorw("Failed to parse version", zap.String("version", ver), zap.Error(err))
-		return false
+		return false, xerrors.Errorf("failed to parse version: %w", err)
 	}
 
-	return c.Check(v)
+	return c.Check(v), nil
 }
 
 type NpmVersionRange struct {
-	logger *zap.SugaredLogger
 	*versionRange
 }
 
-func NewNpmVersionRange(from string) *NpmVersionRange {
-	logger := log.Logger.With(zap.String("ECOSYSTEM", string(EcosystemNpm)))
-	return &NpmVersionRange{logger: logger, versionRange: &versionRange{from: from}}
-}
-
-func (r *NpmVersionRange) Contains(ver string) bool {
+func (r *NpmVersionRange) Contains(ver string) (bool, error) {
 	c, err := npm.NewConstraints(r.String())
 	if err != nil {
-		r.logger.Error("Failed to parse version constraint", zap.String("constraint", r.String()), zap.Error(err))
-		return false
+		return false, xerrors.Errorf("failed to parse version constraint: %w", err)
 	}
 
 	v, err := npm.NewVersion(ver)
 	if err != nil {
-		r.logger.Errorw("Failed to parse version", zap.String("version", ver), zap.Error(err))
-		return false
+		return false, xerrors.Errorf("failed to parse version: %w", err)
 	}
 
-	return c.Check(v)
+	return c.Check(v), nil
 }
 
 type RubyGemsVersionRange struct {
-	logger *zap.SugaredLogger
 	*versionRange
 }
 
-func NewRubyGemsVersionRange(from string) *RubyGemsVersionRange {
-	logger := log.Logger.With(zap.String("ECOSYSTEM", string(EcosystemRubygems)))
-	return &RubyGemsVersionRange{logger: logger, versionRange: &versionRange{from: from}}
-}
-
-func (r *RubyGemsVersionRange) Contains(ver string) bool {
+func (r *RubyGemsVersionRange) Contains(ver string) (bool, error) {
 	c, err := gem.NewConstraints(r.String())
 	if err != nil {
-		r.logger.Error("Failed to parse version constraint", zap.String("constraint", r.String()), zap.Error(err))
-		return false
+		return false, xerrors.Errorf("failed to parse version constraint: %w", err)
 	}
 
 	v, err := gem.NewVersion(ver)
 	if err != nil {
-		r.logger.Errorw("Failed to parse version", zap.String("version", ver), zap.Error(err))
-		return false
+		return false, xerrors.Errorf("failed to parse version: %w", err)
 	}
 
-	return c.Check(v)
+	return c.Check(v), nil
 }
 
 type PyPIVersionRange struct {
-	logger *zap.SugaredLogger
 	*versionRange
 }
 
-func NewPyPIVersionRange(from string) *PyPIVersionRange {
-	logger := log.Logger.With(zap.String("ECOSYSTEM", string(EcosystemPyPI)))
-	return &PyPIVersionRange{logger: logger, versionRange: &versionRange{from: from}}
-}
-
-func (r *PyPIVersionRange) Contains(ver string) bool {
+func (r *PyPIVersionRange) Contains(ver string) (bool, error) {
 	c, err := pep440.NewSpecifiers(r.String())
 	if err != nil {
-		r.logger.Errorw("Failed to parse version constraint", zap.String("constraint", r.String()), zap.Error(err))
-		return false
+		return false, xerrors.Errorf("failed to parse version constraint: %w", err)
 	}
 
 	v, err := pep440.Parse(ver)
 	if err != nil {
-		r.logger.Errorw("Failed to parse version", zap.String("version", ver), zap.Error(err))
-		return false
+		return false, xerrors.Errorf("failed to parse version: %w", err)
 	}
 
-	return c.Check(v)
+	return c.Check(v), nil
 }
 
 type MavenVersionRange struct {
-	logger *zap.SugaredLogger
 	*versionRange
 }
 
-func NewMavenVersionRange(from string) *MavenVersionRange {
-	logger := log.Logger.With(zap.String("ECOSYSTEM", string(EcosystemMaven)))
-	return &MavenVersionRange{logger: logger, versionRange: &versionRange{from: from}}
-}
-
-func (r *MavenVersionRange) Contains(ver string) bool {
+func (r *MavenVersionRange) Contains(ver string) (bool, error) {
 	c, err := mvn.NewConstraints(r.String())
 	if err != nil {
-		r.logger.Errorw("Failed to parse version constraint", zap.String("constraint", r.String()), zap.Error(err))
-		return false
+		return false, xerrors.Errorf("failed to parse version constraint: %w", err)
 	}
 
 	v, err := mvn.NewVersion(ver)
 	if err != nil {
-		r.logger.Errorw("Failed to parse version", zap.String("version", ver), zap.Error(err))
-		return false
+		return false, xerrors.Errorf("failed to parse version: %w", err)
 	}
 
-	return c.Check(v)
+	return c.Check(v), nil
 }
