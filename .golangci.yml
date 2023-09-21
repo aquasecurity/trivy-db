@@ -38,4 +38,3 @@ linters-settings:
             recommendations:
               - github.com/aquasecurity/go-version
             reason: "`aquasecurity/go-version` is degisned for our use-cases"
-
