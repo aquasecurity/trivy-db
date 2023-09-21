@@ -58,6 +58,10 @@ func (GHSA) Update(root string) error {
 			Name: fmt.Sprintf(platformFormat, cases.Title(language.English).String(string(ecosystem))),
 			URL:  fmt.Sprintf("https://github.com/advisories?query=type%%3Areviewed+ecosystem%%3A%s", ecosystem),
 		}
+		// Trivy uses Cargo for Rust
+		if ecosystem == vulnerability.Rust {
+			ecosystem = vulnerability.Cargo
+		}
 		dataSources[ecosystem] = src
 
 		// CocoaPods' vulnerability detection uses the Swift advisories.
