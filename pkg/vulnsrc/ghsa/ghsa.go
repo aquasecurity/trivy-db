@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"strings"
 
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
@@ -17,22 +16,26 @@ import (
 const (
 	sourceID       = vulnerability.GHSA
 	platformFormat = "GitHub Security Advisory %s"
+	urlFormat      = "https://github.com/advisories?query=type%%3Areviewed+ecosystem%%3A%s"
 )
 
 var (
-	ghsaDir    = filepath.Join("ghsa", "advisories", "github-reviewed")
-	ecosystems = []types.Ecosystem{
-		vulnerability.Composer,
-		vulnerability.Go,
-		vulnerability.Maven,
-		vulnerability.Npm,
-		vulnerability.NuGet,
-		vulnerability.Pip,
-		vulnerability.RubyGems,
-		vulnerability.Rust,
-		vulnerability.Erlang,
-		vulnerability.Pub,
-		vulnerability.Swift,
+	ghsaDir = filepath.Join("ghsa", "advisories", "github-reviewed")
+
+	// Mapping between Trivy ecosystem and GHSA ecosystem
+	ecosystems = map[types.Ecosystem]string{
+		vulnerability.Composer:  "Composer",
+		vulnerability.Go:        "Go",
+		vulnerability.Maven:     "Maven",
+		vulnerability.Npm:       "npm",
+		vulnerability.NuGet:     "NuGet",
+		vulnerability.Pip:       "pip",
+		vulnerability.RubyGems:  "RubyGems",
+		vulnerability.Cargo:     "Rust", // different name
+		vulnerability.Erlang:    "Erlang",
+		vulnerability.Pub:       "Pub",
+		vulnerability.Swift:     "Swift",
+		vulnerability.Cocoapods: "Swift", // Use Swift advisories for CocoaPods
 	}
 )
 
@@ -52,22 +55,13 @@ func (GHSA) Name() types.SourceID {
 
 func (GHSA) Update(root string) error {
 	dataSources := map[types.Ecosystem]types.DataSource{}
-	for _, ecosystem := range ecosystems {
+	for ecosystem, ghsaEcosystem := range ecosystems {
 		src := types.DataSource{
 			ID:   sourceID,
-			Name: fmt.Sprintf(platformFormat, cases.Title(language.English).String(string(ecosystem))),
-			URL:  fmt.Sprintf("https://github.com/advisories?query=type%%3Areviewed+ecosystem%%3A%s", ecosystem),
-		}
-		// Trivy uses Cargo for Rust
-		if ecosystem == vulnerability.Rust {
-			ecosystem = vulnerability.Cargo
+			Name: fmt.Sprintf(platformFormat, ghsaEcosystem),
+			URL:  fmt.Sprintf(urlFormat, strings.ToLower(ghsaEcosystem)),
 		}
 		dataSources[ecosystem] = src
-
-		// CocoaPods' vulnerability detection uses the Swift advisories.
-		if ecosystem == vulnerability.Swift {
-			dataSources[vulnerability.Cocoapods] = src
-		}
 	}
 
 	t, err := newTransformer(root)
