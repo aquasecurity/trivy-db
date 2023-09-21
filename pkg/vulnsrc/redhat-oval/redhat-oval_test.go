@@ -6,8 +6,6 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -17,6 +15,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	redhat "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 )
 
 func TestMain(m *testing.M) {

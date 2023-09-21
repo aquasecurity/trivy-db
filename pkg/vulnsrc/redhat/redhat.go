@@ -3,8 +3,6 @@ package redhat
 import (
 	"encoding/json"
 	"fmt"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"io"
 	"log"
 	"path/filepath"
@@ -12,6 +10,8 @@ import (
 	"strings"
 
 	bolt "go.etcd.io/bbolt"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"

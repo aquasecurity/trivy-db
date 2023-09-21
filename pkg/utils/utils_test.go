@@ -26,7 +26,7 @@ func write(t *testing.T, name string, content string) {
 }
 
 func TestFileWalk(t *testing.T) {
-	td:= t.TempDir()
+	td := t.TempDir()
 
 	if err := os.MkdirAll(filepath.Join(td, "dir"), 0755); err != nil {
 		t.Fatal(err)

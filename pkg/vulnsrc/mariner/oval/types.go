@@ -1,8 +1,6 @@
 package oval
 
-////////////////////////
-//  definitions.json  //
-////////////////////////
+// Definition is struct of `definitions.json` files
 type Definition struct {
 	Class    string
 	ID       string
@@ -51,9 +49,7 @@ type Object struct {
 	ObjectRef string
 }
 
-////////////////
-// tests.json //
-////////////////
+// Tests is struct of `tests.json` files
 type Tests struct {
 	RpminfoTests []RpmInfoTest
 }
@@ -67,9 +63,7 @@ type RpmInfoTest struct {
 	State   State
 }
 
-//////////////////
-// objects.json //
-//////////////////
+// Objects is struct of `objects.json` files
 type Objects struct {
 	RpminfoObjects []RpmInfoObject
 }
@@ -80,9 +74,7 @@ type RpmInfoObject struct {
 	Name    string
 }
 
-/////////////////
-// states.json //
-/////////////////
+// States is struct of `states.json` files
 type States struct {
 	RpminfoState []RpmInfoState
 }

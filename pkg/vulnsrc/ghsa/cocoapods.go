@@ -2,13 +2,15 @@ package ghsa
 
 import (
 	"encoding/json"
-	"github.com/aquasecurity/trivy-db/pkg/utils"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
-	"golang.org/x/exp/slices"
-	"golang.org/x/xerrors"
 	"io"
 	"log"
 	"path/filepath"
+
+	"golang.org/x/exp/slices"
+	"golang.org/x/xerrors"
+
+	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 // Spec is cocoapods struct

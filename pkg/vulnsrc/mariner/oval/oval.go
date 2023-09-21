@@ -2,11 +2,12 @@ package oval
 
 import (
 	"encoding/json"
-	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"io"
 	"path/filepath"
 
 	"golang.org/x/xerrors"
+
+	"github.com/aquasecurity/trivy-db/pkg/utils"
 )
 
 func ParseDefinitions(dir string) ([]Definition, error) {

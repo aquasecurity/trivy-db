@@ -1,13 +1,12 @@
 package nvd
 
 import (
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 	"path/filepath"
 	"testing"
 
-	"github.com/aquasecurity/trivy-db/pkg/utils"
-
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 )
 
 func TestVulnSrc_Update(t *testing.T) {

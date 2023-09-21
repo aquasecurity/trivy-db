@@ -30,7 +30,7 @@ deps:
 	go mod tidy
 
 $(GOBIN)/golangci-lint:
-	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOBIN) v1.41.0
+	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOBIN) v1.54.2
 
 .PHONY: test
 test:
@@ -39,6 +39,10 @@ test:
 .PHONY: lint
 lint: $(GOBIN)/golangci-lint
 	$(GOBIN)/golangci-lint run
+
+.PHONY: lintfix
+lintfix: $(GOBIN)/golangci-lint
+	$(GOBIN)/golangci-lint run --fix
 
 .PHONY: build
 build:
