@@ -3,8 +3,9 @@ package bucket_test
 import (
 	"testing"
 
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 )
 
 func TestBucketName(t *testing.T) {

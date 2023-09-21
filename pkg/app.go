@@ -3,10 +3,10 @@ package pkg
 import (
 	"time"
 
-	"github.com/aquasecurity/trivy-db/pkg/utils"
-
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc"
 	"github.com/urfave/cli"
+
+	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc"
 )
 
 type AppConfig struct{}

@@ -2,6 +2,7 @@ package redhatoval
 
 import (
 	"encoding/json"
+
 	"github.com/aquasecurity/trivy-db/pkg/types"
 )
 

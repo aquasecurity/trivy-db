@@ -6,8 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/stretchr/testify/require"
+
+	"github.com/aquasecurity/trivy-db/pkg/db"
 )
 
 func TestInit(t *testing.T) {
@@ -30,7 +31,7 @@ func TestInit(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tmpDir:= t.TempDir()
+			tmpDir := t.TempDir()
 
 			if tt.dbPath != "" {
 				dbPath := db.Path(tmpDir)

@@ -9,10 +9,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/go-version"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
+	"github.com/aquasecurity/go-version/pkg/version"
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
@@ -192,7 +192,7 @@ func getOSVersion(platformName string) string {
 			log.Printf("invalid version: %s", platformName)
 			return ""
 		}
-		if _, err := version.NewVersion(ss[2]); err != nil {
+		if _, err := version.Parse(ss[2]); err != nil {
 			log.Printf("invalid version: %s, err: %s", platformName, err)
 			return ""
 		}

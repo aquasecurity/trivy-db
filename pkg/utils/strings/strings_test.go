@@ -3,9 +3,9 @@ package strings_test
 import (
 	"testing"
 
-	"github.com/aquasecurity/trivy-db/pkg/utils/strings"
-
 	"github.com/stretchr/testify/assert"
+
+	"github.com/aquasecurity/trivy-db/pkg/utils/strings"
 )
 
 func TestUnique(t *testing.T) {

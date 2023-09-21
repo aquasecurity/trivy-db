@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	version "github.com/knqyf263/go-rpm-version"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
@@ -15,7 +16,6 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
-	version "github.com/knqyf263/go-rpm-version"
 )
 
 const (
