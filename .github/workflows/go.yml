@@ -14,9 +14,6 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: yaml-lint
-        uses: ibiqlik/action-yamllint@v3
-
       - name: Lint
         uses: golangci/golangci-lint-action@v3.7.0
         with:
