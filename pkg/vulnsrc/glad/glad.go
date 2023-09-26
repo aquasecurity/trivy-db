@@ -21,20 +21,21 @@ const (
 	// GitLab Advisory Database
 	gladDir = "glad"
 
-	Conan     packageType = "Conan"
-	Gem       packageType = "Gem"
-	Go        packageType = "Go"
-	Maven     packageType = "Maven"
-	Npm       packageType = "Npm"
-	Nuget     packageType = "Nuget"
-	Packagist packageType = "Packagist"
-	PyPI      packageType = "PyPI"
+	Conan packageType = "Conan"
+	Maven packageType = "Maven"
 )
 
 var (
-	// TODO: support Npm, NuGet, PyPI and Packagist
-	supportedPkgTypes   = []packageType{Maven, Conan}
-	supportedIDPrefixes = []string{"CVE", "GHSA", "GMS"}
+	supportedIDPrefixes = []string{
+		"CVE",
+		"GHSA",
+		"GMS",
+	}
+
+	ecosystems = map[packageType]types.Ecosystem{
+		Maven: vulnerability.Maven,
+		Conan: vulnerability.Conan,
+	}
 
 	source = types.DataSource{
 		ID:   vulnerability.GLAD,
@@ -60,7 +61,7 @@ func (vs VulnSrc) Name() types.SourceID {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	for _, t := range supportedPkgTypes {
+	for t := range ecosystems {
 		log.Printf("    Updating GitLab Advisory Database %s...", t)
 		rootDir := filepath.Join(dir, "vuln-list", gladDir, strings.ToLower(string(t)))
 		if err := vs.update(t, rootDir); err != nil {
@@ -126,7 +127,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, pkgType packageType, glads []Advisory) err
 			pkgName = strings.ReplaceAll(pkgName, "/", ":")
 		}
 
-		bucketName := bucket.Name(string(pkgType), source.Name)
+		ecosystem, ok := ecosystems[pkgType]
+		if !ok {
+			return xerrors.Errorf("failed to get ecosystem: %s", pkgType)
+		}
+		bucketName := bucket.Name(ecosystem, source.Name)
 		if err := vs.dbc.PutDataSource(tx, bucketName, source); err != nil {
 			return xerrors.Errorf("failed to put data source: %w", err)
 		}

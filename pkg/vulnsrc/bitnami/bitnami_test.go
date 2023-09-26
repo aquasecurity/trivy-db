@@ -11,7 +11,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 )
 
-var bucketName = bucket.Name(string(vulnerability.Bitnami), "Bitnami Vulnerability Database")
+var bucketName = bucket.Name(vulnerability.Bitnami, "Bitnami Vulnerability Database")
 
 func TestVulnSrc_Update(t *testing.T) {
 	tests := []struct {
