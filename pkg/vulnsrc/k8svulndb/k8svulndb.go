@@ -31,7 +31,7 @@ func (t *transformer) TransformAdvisories(advs []osv.Advisory, entry osv.Entry) 
 	if len(entry.Affected) > 0 {
 		if len(entry.Affected[0].Severities) > 0 {
 			severity := types.SeverityUnknown
-			vector := entry.Affected[0].Severities[0].Type
+			vector := entry.Affected[0].Severities[0].Score
 			bm, err := metric.NewBase().Decode(vector)
 			if err == nil {
 				severity = types.Severity(bm.Severity())
