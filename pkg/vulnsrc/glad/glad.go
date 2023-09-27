@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	bolt "go.etcd.io/bbolt"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
@@ -21,8 +23,9 @@ const (
 	// GitLab Advisory Database
 	gladDir = "glad"
 
-	Conan packageType = "Conan"
-	Maven packageType = "Maven"
+	// cf. https://gitlab.com/gitlab-org/security-products/gemnasium-db/-/tree/e4176fff52c027165ae5a79f5b1193090e2fbef0#package-slug-and-package-name
+	Conan packageType = "conan"
+	Maven packageType = "maven"
 )
 
 var (
@@ -62,8 +65,8 @@ func (vs VulnSrc) Name() types.SourceID {
 
 func (vs VulnSrc) Update(dir string) error {
 	for t := range ecosystems {
-		log.Printf("    Updating GitLab Advisory Database %s...", t)
-		rootDir := filepath.Join(dir, "vuln-list", gladDir, strings.ToLower(string(t)))
+		log.Printf("    Updating GitLab Advisory Database %s...", cases.Title(language.English).String(string(t)))
+		rootDir := filepath.Join(dir, "vuln-list", gladDir, string(t))
 		if err := vs.update(t, rootDir); err != nil {
 			return xerrors.Errorf("update error: %w", err)
 		}
@@ -98,7 +101,6 @@ func (vs VulnSrc) update(pkgType packageType, rootDir string) error {
 }
 
 func (vs VulnSrc) save(pkgType packageType, glads []Advisory) error {
-	log.Printf("    Saving GitLab Advisory Database %s...", pkgType)
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, pkgType, glads)
 	})
