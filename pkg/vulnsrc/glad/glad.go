@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	bolt "go.etcd.io/bbolt"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
@@ -21,20 +23,22 @@ const (
 	// GitLab Advisory Database
 	gladDir = "glad"
 
-	Conan     packageType = "Conan"
-	Gem       packageType = "Gem"
-	Go        packageType = "Go"
-	Maven     packageType = "Maven"
-	Npm       packageType = "Npm"
-	Nuget     packageType = "Nuget"
-	Packagist packageType = "Packagist"
-	PyPI      packageType = "PyPI"
+	// cf. https://gitlab.com/gitlab-org/security-products/gemnasium-db/-/tree/e4176fff52c027165ae5a79f5b1193090e2fbef0#package-slug-and-package-name
+	Conan packageType = "conan"
+	Maven packageType = "maven"
 )
 
 var (
-	// TODO: support Npm, NuGet, PyPI and Packagist
-	supportedPkgTypes   = []packageType{Maven, Conan}
-	supportedIDPrefixes = []string{"CVE", "GHSA", "GMS"}
+	supportedIDPrefixes = []string{
+		"CVE",
+		"GHSA",
+		"GMS",
+	}
+
+	ecosystems = map[packageType]types.Ecosystem{
+		Maven: vulnerability.Maven,
+		Conan: vulnerability.Conan,
+	}
 
 	source = types.DataSource{
 		ID:   vulnerability.GLAD,
@@ -60,9 +64,9 @@ func (vs VulnSrc) Name() types.SourceID {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	for _, t := range supportedPkgTypes {
-		log.Printf("    Updating GitLab Advisory Database %s...", t)
-		rootDir := filepath.Join(dir, "vuln-list", gladDir, strings.ToLower(string(t)))
+	for t := range ecosystems {
+		log.Printf("    Updating GitLab Advisory Database %s...", cases.Title(language.English).String(string(t)))
+		rootDir := filepath.Join(dir, "vuln-list", gladDir, string(t))
 		if err := vs.update(t, rootDir); err != nil {
 			return xerrors.Errorf("update error: %w", err)
 		}
@@ -97,7 +101,6 @@ func (vs VulnSrc) update(pkgType packageType, rootDir string) error {
 }
 
 func (vs VulnSrc) save(pkgType packageType, glads []Advisory) error {
-	log.Printf("    Saving GitLab Advisory Database %s...", pkgType)
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, pkgType, glads)
 	})
@@ -126,7 +129,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, pkgType packageType, glads []Advisory) err
 			pkgName = strings.ReplaceAll(pkgName, "/", ":")
 		}
 
-		bucketName := bucket.Name(string(pkgType), source.Name)
+		ecosystem, ok := ecosystems[pkgType]
+		if !ok {
+			return xerrors.Errorf("failed to get ecosystem: %s", pkgType)
+		}
+		bucketName := bucket.Name(ecosystem, source.Name)
 		if err := vs.dbc.PutDataSource(tx, bucketName, source); err != nil {
 			return xerrors.Errorf("failed to put data source: %w", err)
 		}

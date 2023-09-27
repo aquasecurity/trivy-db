@@ -144,7 +144,7 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 		if !ok {
 			continue
 		}
-		bktName := bucket.Name(string(adv.Ecosystem), dataSource.Name)
+		bktName := bucket.Name(adv.Ecosystem, dataSource.Name)
 
 		if err = o.dbc.PutDataSource(tx, bktName, dataSource); err != nil {
 			return xerrors.Errorf("failed to put data source: %w", err)
