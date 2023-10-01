@@ -47,5 +47,5 @@ require (
 
 require (
 	github.com/mattn/go-runewidth v0.0.4 // indirect
-	go.uber.org/zap v1.25.0
+	go.uber.org/zap v1.26.0
 )
