@@ -11,7 +11,6 @@ require (
 	github.com/briandowns/spinner v1.23.0
 	github.com/fatih/color v1.10.0 // indirect
 	github.com/goark/go-cvss v1.6.6
-	github.com/hashicorp/go-version v1.6.0
 	github.com/knqyf263/go-deb-version v0.0.0-20190517075300-09fca494f03d
 	github.com/knqyf263/go-rpm-version v0.0.0-20170716094938-74609b86c936
 	github.com/masahiro331/go-mvn-version v0.0.0-20210429150710-d3157d602a08
@@ -48,5 +47,5 @@ require (
 
 require (
 	github.com/mattn/go-runewidth v0.0.4 // indirect
-	go.uber.org/zap v1.25.0
+	go.uber.org/zap v1.26.0
 )
