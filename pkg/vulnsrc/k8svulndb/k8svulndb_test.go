@@ -35,9 +35,11 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"vulnerability-detail", "CVE-2023-2727", "kubernetes"},
 					Value: types.VulnerabilityDetail{
-						Title:       "Bypassing policies imposed by the ImagePolicyWebhook and bypassing mountable secrets policy imposed by the ServiceAccount admission plugin",
-						Description: "Users may be able to launch containers using images that are restricted by ImagePolicyWebhook when using ephemeral containers. Kubernetes clusters are only affected if the ImagePolicyWebhook admission plugin is used together with ephemeral containers.",
-						References:  []string{"https: //www.cve.org/cverecord?id=CVE-2023-2727"},
+						Title:        "Bypassing policies imposed by the ImagePolicyWebhook and bypassing mountable secrets policy imposed by the ServiceAccount admission plugin",
+						Description:  "Users may be able to launch containers using images that are restricted by ImagePolicyWebhook when using ephemeral containers. Kubernetes clusters are only affected if the ImagePolicyWebhook admission plugin is used together with ephemeral containers.",
+						References:   []string{"https: //www.cve.org/cverecord?id=CVE-2023-2727"},
+						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:N",
+						CvssScoreV3:  6.5,
 					},
 				},
 			},
