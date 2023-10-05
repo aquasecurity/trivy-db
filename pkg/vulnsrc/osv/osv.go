@@ -82,6 +82,9 @@ func (o OSV) Update(root string) error {
 
 	var entries []Entry
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
+		if filepath.Ext(path) != ".json" {
+			return nil
+		}
 		var entry Entry
 		if err := json.NewDecoder(r).Decode(&entry); err != nil {
 			return xerrors.Errorf("JSON decode error (%s): %w", path, err)
