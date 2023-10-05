@@ -6,6 +6,7 @@ import (
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/k8svulndb"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 )
 
@@ -24,7 +25,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{
 						"advisory-detail",
 						"CVE-2023-2727",
-						"kubernetes::Official Kubernetes CVE Feed",
+						"k8s::Official Kubernetes CVE Feed",
 						"k8s.io/apiserver",
 					},
 					Value: types.Advisory{
@@ -33,7 +34,11 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"vulnerability-detail", "CVE-2023-2727", "kubernetes"},
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2023-2727",
+						string(vulnerability.Kubernetes),
+					},
 					Value: types.VulnerabilityDetail{
 						Title:        "Bypassing policies imposed by the ImagePolicyWebhook and bypassing mountable secrets policy imposed by the ServiceAccount admission plugin",
 						Description:  "Users may be able to launch containers using images that are restricted by ImagePolicyWebhook when using ephemeral containers. Kubernetes clusters are only affected if the ImagePolicyWebhook admission plugin is used together with ephemeral containers.",
@@ -52,7 +57,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{
 						"advisory-detail",
 						"CVE-2023-2727",
-						"kubernetes::Official Kubernetes CVE Feed",
+						"k8s::Official Kubernetes CVE Feed",
 						"k8s.io/apiserver",
 					},
 					Value: types.Advisory{
