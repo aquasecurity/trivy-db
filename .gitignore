@@ -13,6 +13,7 @@ coverage.txt
 *.out
 
 .idea
+.vscode
 
 **/.DS_Store
 
