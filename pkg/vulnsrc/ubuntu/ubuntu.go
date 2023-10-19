@@ -48,6 +48,7 @@ var (
 		"jammy":   "22.04",
 		"kinetic": "22.10",
 		"lunar":   "23.04",
+		"mantic":  "23.10",
 		// ESM versions:
 		"precise/esm":      "12.04-ESM",
 		"trusty/esm":       "14.04-ESM",
