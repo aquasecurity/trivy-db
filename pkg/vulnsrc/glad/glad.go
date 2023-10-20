@@ -25,7 +25,6 @@ const (
 
 	// cf. https://gitlab.com/gitlab-org/security-products/gemnasium-db/-/tree/e4176fff52c027165ae5a79f5b1193090e2fbef0#package-slug-and-package-name
 	Conan packageType = "conan"
-	Maven packageType = "maven"
 )
 
 var (
@@ -35,8 +34,8 @@ var (
 		"GMS",
 	}
 
+	// Mapping between GLAD slug and Trivy ecosystem
 	ecosystems = map[packageType]types.Ecosystem{
-		Maven: vulnerability.Maven,
 		Conan: vulnerability.Conan,
 	}
 
@@ -124,11 +123,6 @@ func (vs VulnSrc) commit(tx *bolt.Tx, pkgType packageType, glads []Advisory) err
 		}
 
 		pkgName := ss[1]
-		if pkgType == Maven {
-			// e.g. "maven/batik/batik-transcoder" => "maven", "batik:batik-transcoder"
-			pkgName = strings.ReplaceAll(pkgName, "/", ":")
-		}
-
 		ecosystem, ok := ecosystems[pkgType]
 		if !ok {
 			return xerrors.Errorf("failed to get ecosystem: %s", pkgType)
