@@ -165,6 +165,8 @@ func (a *Advisory) UnmarshalJSON(data []byte) error {
 type Advisories struct {
 	FixedVersion string     `json:",omitempty"` // For backward compatibility
 	Entries      []Advisory `json:",omitempty"`
+	// Custom is basically for extensibility and is not supposed to be used in OSS
+	Custom interface{} `json:",omitempty"` // For backward compatibility
 }
 
 type Vulnerability struct {
