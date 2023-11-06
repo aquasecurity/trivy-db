@@ -222,6 +222,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 			input.PlatformName = platformName
 			input.CveID = cveID
 			input.Vuln = vuln
+			input.Erratum = erratum // For Trivy Premium
 
 			savedInputs[cveID] = input
 		}
@@ -272,12 +273,13 @@ func (r *Rocky) Get(release, pkgName, arch string) ([]types.Advisory, error) {
 		}
 
 		// For backward compatibility
-		// The old trivy-db has no entries, but has fixed versions only.
+		// The old trivy-db has no entries, but has fixed versions and custom fields.
 		if len(adv.Entries) == 0 {
 			advisories = append(advisories, types.Advisory{
 				VulnerabilityID: vulnID,
 				FixedVersion:    adv.FixedVersion,
 				DataSource:      &v.Source,
+				Custom:          adv.Custom,
 			})
 			continue
 		}
