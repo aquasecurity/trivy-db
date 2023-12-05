@@ -3,13 +3,13 @@ package nvd
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/samber/lo"
 	"io"
 	"log"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/samber/lo"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
@@ -134,7 +134,7 @@ func (vs VulnSrc) save(cves []Cve) error {
 
 // getCvssV2 selects vector, score and severity from V2 metrics
 func getCvssV2(metricsV2 []CvssMetricV2) (score float64, vector string, severity types.Severity) {
-	for _, metricV2 := range append(metricsV2) {
+	for _, metricV2 := range metricsV2 {
 		// save first metric or the `Primary` metric if `Secondary` metric was saved previously
 		if score == 0 || metricV2.Type == primaryType {
 			score = metricV2.CvssData.BaseScore
