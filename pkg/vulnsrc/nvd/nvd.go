@@ -3,6 +3,7 @@ package nvd
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/samber/lo"
 	"io"
 	"log"
 	"path/filepath"
@@ -70,29 +71,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []Cve) error {
 	for _, cve := range cves {
 		cveID := cve.ID
 
-		var cvssScore, cvssScoreV3 float64
-		var cvssVector, CvssVectorV3 string
-		var severity, severityV3 types.Severity
-		for _, metricV2 := range cve.Metrics.CvssMetricV2 {
-			if metricV2.CvssData.BaseScore != 0 && metricV2.CvssData.VectorString != "" && metricV2.BaseSeverity != "" {
-				cvssScore = metricV2.CvssData.BaseScore
-				cvssVector = metricV2.CvssData.VectorString
-				severity, _ = types.NewSeverity(metricV2.BaseSeverity)
-				if metricV2.Type == primaryType {
-					break
-				}
-			}
-		}
-		for _, metricV31 := range cve.Metrics.CvssMetricV31 {
-			if metricV31.CvssData.BaseScore != 0 && metricV31.CvssData.VectorString != "" && metricV31.CvssData.BaseSeverity != "" {
-				cvssScoreV3 = metricV31.CvssData.BaseScore
-				CvssVectorV3 = metricV31.CvssData.VectorString
-				severityV3, _ = types.NewSeverity(metricV31.CvssData.BaseSeverity)
-				if metricV31.Type == primaryType {
-					break
-				}
-			}
-		}
+		cvssScore, cvssVector, severity := getCvssV2(cve.Metrics.CvssMetricV2)
+		cvssScoreV3, cvssVectorV3, severityV3 := getCvssV3(cve.Metrics.CvssMetricV31, cve.Metrics.CvssMetricV30)
 
 		var references []string
 		for _, ref := range cve.References {
@@ -109,7 +89,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []Cve) error {
 		var cweIDs []string
 		for _, data := range cve.Weaknesses {
 			for _, desc := range data.Description {
-				if !strings.HasPrefix(desc.Value, "CWE") || data.Type != primaryType {
+				if !strings.HasPrefix(desc.Value, "CWE") {
 					continue
 				}
 				cweIDs = append(cweIDs, desc.Value)
@@ -123,10 +103,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []Cve) error {
 			CvssScore:        cvssScore,
 			CvssVector:       cvssVector,
 			CvssScoreV3:      cvssScoreV3,
-			CvssVectorV3:     CvssVectorV3,
+			CvssVectorV3:     cvssVectorV3,
 			Severity:         severity,
 			SeverityV3:       severityV3,
-			CweIDs:           cweIDs,
+			CweIDs:           lo.Uniq(cweIDs),
 			References:       references,
 			Title:            "",
 			Description:      description,
@@ -150,4 +130,39 @@ func (vs VulnSrc) save(cves []Cve) error {
 		return xerrors.Errorf("error in batch update: %w", err)
 	}
 	return nil
+}
+
+// getCvssV2 selects vector, score and severity from V2 metrics
+func getCvssV2(metricsV2 []CvssMetricV2) (score float64, vector string, severity types.Severity) {
+	for _, metricV2 := range append(metricsV2) {
+		// save first metric or the `Primary` metric if `Secondary` metric was saved previously
+		if score == 0 || metricV2.Type == primaryType {
+			score = metricV2.CvssData.BaseScore
+			vector = metricV2.CvssData.VectorString
+			severity, _ = types.NewSeverity(metricV2.BaseSeverity)
+			if metricV2.Type == primaryType {
+				return
+			}
+		}
+	}
+	return
+}
+
+// getCvssV3 selects vector, score and severity from V3* metrics
+func getCvssV3(metricsV31, metricsV30 []CvssMetricV3) (score float64, vector string, severity types.Severity) {
+	// order: v3.1 metrics => v3.0 metrics
+	// save the first `primary` metric
+	// if the `Primary` metric does not exist => save the first `Secondary` metric (v3.1 => v3.0)
+	for _, metricV3 := range append(metricsV31, metricsV30...) {
+		// save first metric or the `Primary` metric if `Secondary` metric was saved previously
+		if score == 0 || metricV3.Type == primaryType {
+			score = metricV3.CvssData.BaseScore
+			vector = metricV3.CvssData.VectorString
+			severity, _ = types.NewSeverity(metricV3.CvssData.BaseSeverity)
+			if metricV3.Type == primaryType {
+				return
+			}
+		}
+	}
+	return
 }
