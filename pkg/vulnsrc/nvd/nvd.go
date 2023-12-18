@@ -22,7 +22,7 @@ import (
 const (
 	vulnListDir = "vuln-list-nvd"
 	apiDir      = "api"
-	primaryType = "Primary" // NVD has 2 type enums: `Primary` and `Secondary`
+	nvdSource   = "nvd@nist.gov"
 )
 
 type VulnSrc struct {
@@ -135,14 +135,12 @@ func (vs VulnSrc) save(cves []Cve) error {
 // getCvssV2 selects vector, score and severity from V2 metrics
 func getCvssV2(metricsV2 []CvssMetricV2) (score float64, vector string, severity types.Severity) {
 	for _, metricV2 := range metricsV2 {
-		// save first metric or the `Primary` metric if `Secondary` metric was saved previously
-		if score == 0 || metricV2.Type == primaryType {
+		// save only NVD metric
+		if metricV2.Source == nvdSource {
 			score = metricV2.CvssData.BaseScore
 			vector = metricV2.CvssData.VectorString
 			severity, _ = types.NewSeverity(metricV2.BaseSeverity)
-			if metricV2.Type == primaryType {
-				return
-			}
+			return
 		}
 	}
 	return
@@ -151,17 +149,13 @@ func getCvssV2(metricsV2 []CvssMetricV2) (score float64, vector string, severity
 // getCvssV3 selects vector, score and severity from V3* metrics
 func getCvssV3(metricsV31, metricsV30 []CvssMetricV3) (score float64, vector string, severity types.Severity) {
 	// order: v3.1 metrics => v3.0 metrics
-	// save the first `primary` metric
-	// if the `Primary` metric does not exist => save the first `Secondary` metric (v3.1 => v3.0)
+	// save the first NVD metric
 	for _, metricV3 := range append(metricsV31, metricsV30...) {
-		// save first metric or the `Primary` metric if `Secondary` metric was saved previously
-		if score == 0 || metricV3.Type == primaryType {
+		if metricV3.Source == nvdSource {
 			score = metricV3.CvssData.BaseScore
 			vector = metricV3.CvssData.VectorString
 			severity, _ = types.NewSeverity(metricV3.CvssData.BaseSeverity)
-			if metricV3.Type == primaryType {
-				return
-			}
+			return
 		}
 	}
 	return
