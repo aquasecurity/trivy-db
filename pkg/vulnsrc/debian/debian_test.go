@@ -105,6 +105,19 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
+					// Fix version not released yet
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-5981",
+						"debian 11",
+						"gnutls28",
+					},
+					Value: &types.Advisory{
+						FixedVersion: "3.7.1-5+deb11u5",
+						Status:       types.StatusAffected,
+					},
+				},
+				{
 					Key: []string{
 						"vulnerability-detail",
 						"CVE-2021-33560",

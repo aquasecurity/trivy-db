@@ -420,6 +420,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 
 	// All advisories with codename and fixed version are inserted into DB here.
 	for bkt, advisory := range vs.bktAdvisories {
+		if latestVersion, ok := vs.pkgVersions[bucket{codeName: bkt.codeName, pkgName: bkt.pkgName}]; ok {
+			// If the fixed version has not yet been released, then set the state to "unfixed".
+			if comp, err := compareVersions(latestVersion, advisory.FixedVersion); err == nil && comp < 0 {
+				advisory.State = "unfixed"
+			}
+		}
 		if err := vs.putAdvisory(tx, bkt, advisory); err != nil {
 			return xerrors.Errorf("put advisory error: %w", err)
 		}
