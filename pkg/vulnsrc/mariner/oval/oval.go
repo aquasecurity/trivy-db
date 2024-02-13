@@ -16,21 +16,21 @@ func ParseDefinitions(dir string) ([]Definition, error) {
 		return nil, xerrors.Errorf("no definitions dir")
 	}
 
-	var defs []Definition
+	var definitions []Definition
 
 	err := utils.FileWalk(dir, func(r io.Reader, path string) error {
-		var def Definition
-		if err := json.NewDecoder(r).Decode(&def); err != nil {
+		var defs []Definition
+		if err := json.NewDecoder(r).Decode(&defs); err != nil {
 			return xerrors.Errorf("failed to decode %s: %w", path, err)
 		}
-		defs = append(defs, def)
+		definitions = append(definitions, defs...)
 		return nil
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("CBL-Mariner OVAL walk error: %w", err)
 	}
 
-	return defs, nil
+	return definitions, nil
 }
 
 func ParseTests(dir string) (Tests, error) {
