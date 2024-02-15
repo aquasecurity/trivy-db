@@ -16,7 +16,7 @@ jobs:
       - name: Maximize build space
         uses: easimon/maximize-build-space@v10
         with:
-          root-reserve-mb: 32768 # vuln-list dirs + language repositores use more that 12GB of storage
+          root-reserve-mb: 32768 # vuln-list dirs + language repositories use more than 12GB of storage
           remove-android: "true"
           remove-docker-images: "true"
           remove-dotnet: "true"
