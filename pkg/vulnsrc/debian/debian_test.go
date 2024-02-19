@@ -113,8 +113,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"gnutls28",
 					},
 					Value: &types.Advisory{
-						FixedVersion: "3.7.1-5+deb11u5",
-						Status:       types.StatusAffected,
+						Status: types.StatusAffected,
 					},
 				},
 				{
