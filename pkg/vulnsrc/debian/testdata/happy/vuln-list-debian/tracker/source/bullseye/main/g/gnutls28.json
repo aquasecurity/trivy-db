@@ -1,0 +1,68 @@
+{
+    "Architecture": [
+      "any all"
+    ],
+    "Binary": [
+      "libgnutls28-dev, libgnutls30, gnutls-bin, gnutls-doc, libgnutlsxx28, libgnutls-openssl27, libgnutls-dane0, guile-gnutls"
+    ],
+    "Build-Conflicts": [
+      "libgnutls-dev"
+    ],
+    "Build-Depends": [
+      "autogen (\u003e= 1:5.16-0), bison, ca-certificates \u003c!nocheck\u003e, chrpath, datefudge \u003c!nocheck\u003e, debhelper-compat (= 13), freebsd-net-tools [kfreebsd-i386 kfreebsd-amd64] \u003c!nocheck\u003e, gperf, guile-2.2-dev \u003c!noguile\u003e, libcmocka-dev \u003c!nocheck\u003e, libgmp-dev (\u003e= 2:6), libidn2-dev, libopts25-dev, libp11-kit-dev (\u003e= 0.23.10), libssl-dev \u003c!nocheck\u003e, libtasn1-6-dev (\u003e= 4.9), libunbound-dev (\u003e= 1.5.10-1), libunistring-dev (\u003e= 0.9.7), net-tools [!kfreebsd-i386 !kfreebsd-amd64] \u003c!nocheck\u003e, nettle-dev (\u003e= 3.6), openssl \u003c!nocheck\u003e, pkg-config, softhsm2 \u003c!nocheck\u003e"
+    ],
+    "Build-Depends-Indep": [
+      "gtk-doc-tools, texinfo (\u003e= 4.8), texlive-plain-generic, texlive-latex-base"
+    ],
+    "Checksums-Sha256": [
+      "fe12190b21d411f2028df335af346a0065e802ab9093c79edcaf7244d644c383 3519 gnutls28_3.7.1-5+deb11u4.dsc 3777d7963eca5e06eb315686163b7b3f5045e2baac5e54e038ace9835e5cac6f 6038388 gnutls28_3.7.1.orig.tar.xz 13a683b12602c169a7ad7827ab0e3f35c8fa1f98675d0073cf7d54a8cd635582 854 gnutls28_3.7.1.orig.tar.xz.asc b9e12496d76db8f1fd95aa9467a7ef680e74fe0be1314e138aba83c737780d61 97368 gnutls28_3.7.1-5+deb11u4.debian.tar.xz"
+    ],
+    "Directory": [
+      "pool/main/g/gnutls28"
+    ],
+    "Files": [
+      "5e6c18a695ffc095af8eee06cbd73c86 3519 gnutls28_3.7.1-5+deb11u4.dsc 278e1f50d79cd13727733adbf01fde8f 6038388 gnutls28_3.7.1.orig.tar.xz 590c9d64f7d8ee77671cdb9547f5edaf 854 gnutls28_3.7.1.orig.tar.xz.asc 9f9130d79c2fd4d4590a4fb842c0a53d 97368 gnutls28_3.7.1-5+deb11u4.debian.tar.xz"
+    ],
+    "Format": [
+      "3.0 (quilt)"
+    ],
+    "Homepage": [
+      "https://www.gnutls.org/"
+    ],
+    "Maintainer": [
+      "Debian GnuTLS Maintainers \u003cpkg-gnutls-maint@lists.alioth.debian.org\u003e"
+    ],
+    "Package": [
+      "gnutls28"
+    ],
+    "Package-List": [
+      "gnutls-bin deb net optional arch=any gnutls-doc deb doc optional arch=all guile-gnutls deb lisp optional arch=any profile=!noguile libgnutls-dane0 deb libs optional arch=any libgnutls-openssl27 deb libs optional arch=any libgnutls28-dev deb libdevel optional arch=any libgnutls30 deb libs optional arch=any libgnutlsxx28 deb libs optional arch=any"
+    ],
+    "Priority": [
+      "source"
+    ],
+    "Section": [
+      "libs"
+    ],
+    "Standards-Version": [
+      "4.5.1"
+    ],
+    "Testsuite": [
+      "autopkgtest"
+    ],
+    "Testsuite-Triggers": [
+      "build-essential, ca-certificates, datefudge, freebsd-net-tools, net-tools, openssl, softhsm2"
+    ],
+    "Uploaders": [
+      "Andreas Metzler \u003cametzler@debian.org\u003e, Eric Dorland \u003ceric@debian.org\u003e, James Westby \u003cjw+debian@jameswestby.net\u003e, Simon Josefsson \u003csimon@josefsson.org\u003e"
+    ],
+    "Vcs-Browser": [
+      "https://salsa.debian.org/gnutls-team/gnutls"
+    ],
+    "Vcs-Git": [
+      "https://salsa.debian.org/gnutls-team/gnutls.git"
+    ],
+    "Version": [
+      "3.7.1-5+deb11u4"
+    ]
+  }

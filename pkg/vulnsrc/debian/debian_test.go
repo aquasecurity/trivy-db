@@ -105,6 +105,18 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
+					// Fix version not released yet
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-5981",
+						"debian 11",
+						"gnutls28",
+					},
+					Value: &types.Advisory{
+						Status: types.StatusAffected,
+					},
+				},
+				{
 					Key: []string{
 						"vulnerability-detail",
 						"CVE-2021-33560",
@@ -136,6 +148,16 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{
+						"vulnerability-detail",
+						"CVE-2023-5981",
+						string(vulnerability.Debian),
+					},
+					Value: types.VulnerabilityDetail{
+						Title: "A vulnerability was found that the response times to malformed ciphert ...",
+					},
+				},
+				{
+					Key: []string{
 						"vulnerability-id",
 						"CVE-2021-33560",
 					},
@@ -152,6 +174,13 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{
 						"vulnerability-id",
 						"DSA-3714-1",
+					},
+					Value: map[string]interface{}{},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2023-5981",
 					},
 					Value: map[string]interface{}{},
 				},
