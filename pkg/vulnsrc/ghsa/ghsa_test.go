@@ -100,6 +100,21 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{
+						"advisory-detail",
+						"CVE-2023-25330",
+						"maven::GitHub Security Advisory Maven",
+						"com.baomidou:mybatis-plus-copy",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-32qq-m9fh-f74w",
+						},
+						PatchedVersions:    []string{"3.5.0"},
+						VulnerableVersions: []string{"<3.5.0"},
+					},
+				},
+				{
+					Key: []string{
 						"vulnerability-detail",
 						"CVE-2023-25330",
 						"ghsa",
