@@ -78,6 +78,7 @@ type VulnerabilityDetail struct {
 	Description      string     `json:",omitempty"`
 	PublishedDate    *time.Time `json:",omitempty"` // Take from NVD
 	LastModifiedDate *time.Time `json:",omitempty"` // Take from NVD
+	Status           bool       `json:",omitempty"` // Rejected or not Rejected cve. Take from NVD
 }
 
 type AdvisoryDetail struct {
@@ -179,6 +180,7 @@ type Vulnerability struct {
 	References       []string       `json:",omitempty"`
 	PublishedDate    *time.Time     `json:",omitempty"` // Take from NVD
 	LastModifiedDate *time.Time     `json:",omitempty"` // Take from NVD
+	Status           bool           `json:",omitempty"` // Rejected or not Rejected cve. Take from NVD
 
 	// Custom is basically for extensibility and is not supposed to be used in OSS
 	Custom interface{} `json:",omitempty"`
