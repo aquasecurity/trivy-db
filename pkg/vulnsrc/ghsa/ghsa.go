@@ -3,6 +3,7 @@ package ghsa
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/samber/lo"
 	"path/filepath"
 	"strings"
 
@@ -40,7 +41,8 @@ var (
 )
 
 type DatabaseSpecific struct {
-	Severity string `json:"severity"`
+	Severity                      string `json:"severity"`
+	LastKnownAffectedVersionRange string `json:"last_known_affected_version_range"`
 }
 
 type GHSA struct{}
@@ -91,6 +93,44 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 	var specific DatabaseSpecific
 	if err := json.Unmarshal(entry.DatabaseSpecific, &specific); err != nil {
 		return nil, xerrors.Errorf("JSON decode error: %w", err)
+	}
+
+	for _, affected := range entry.Affected {
+		// Skip if `affected[].database_specific` field doesn't exist
+		if affected.DatabaseSpecific == nil {
+			continue
+		}
+
+		ecosystem := osv.ConvertEcosystem(affected.Package.Ecosystem)
+		if ecosystem == vulnerability.Unknown {
+			continue
+		}
+		pkgName := vulnerability.NormalizePkgName(ecosystem, affected.Package.Name)
+
+		var affectedSpecific DatabaseSpecific
+		if err := json.Unmarshal(affected.DatabaseSpecific, &affectedSpecific); err != nil {
+			return nil, xerrors.Errorf("JSON decode error: %w", err)
+		}
+
+		// Add version from `last_known_affected_version_range` field
+		// cf. https://github.com/github/advisory-database/issues/470#issuecomment-1998604377
+		advisories = lo.Map(advisories, func(adv osv.Advisory, _ int) osv.Advisory {
+			if adv.PkgName == pkgName && adv.Ecosystem == ecosystem {
+				for i, vulnVersion := range adv.VulnerableVersions {
+					// Skip next cases:
+					// - vulnerability version range is single version (`=` is used)
+					// - vulnerability version range already contains fixed/affected version (`<`/`<=` is used)
+					if !strings.Contains(vulnVersion, "<") && !strings.HasPrefix(vulnVersion, "=") {
+						// `last_known_affected_version_range` uses `< version` or `<= version` formats (e.g. `< 1.2.3` or `<= 1.2.3`).
+						// Remove space to fit our format.
+						affectedSpecific.LastKnownAffectedVersionRange = strings.ReplaceAll(affectedSpecific.LastKnownAffectedVersionRange, " ", "")
+						adv.VulnerableVersions[i] = fmt.Sprintf("%s, %s", vulnVersion, affectedSpecific.LastKnownAffectedVersionRange)
+						break
+					}
+				}
+			}
+			return adv
+		})
 	}
 
 	severity := convertSeverity(specific.Severity)
