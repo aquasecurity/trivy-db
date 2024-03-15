@@ -2,8 +2,10 @@ package vulndb_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -208,6 +210,15 @@ func TestTrivyDB_Build(t *testing.T) {
 			dbtest.NoBucket(t, dbPath, []string{"advisory-detail"})
 			dbtest.NoBucket(t, dbPath, []string{"vulnerability-detail"})
 			dbtest.NoBucket(t, dbPath, []string{"vulnerability-id"})
+
+			// Check if timestamp is in correct format
+			timestamp, err := full.Timestamp()
+			require.NoError(t, err)
+			pattern := `\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}`
+			timestampIsValid, err := regexp.MatchString(pattern, timestamp)
+			require.NoError(t, err)
+			assert.True(t, timestampIsValid,
+				fmt.Sprintf("timestamp %s did not match regex %s", timestamp, pattern))
 		})
 	}
 }

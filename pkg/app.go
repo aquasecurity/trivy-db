@@ -47,6 +47,24 @@ func (ac *AppConfig) NewApp(version string) *cli.App {
 				},
 			},
 		},
+		{
+			Name:   "timestamp",
+			Usage:  "retrieve the UpdatedAt timestamp",
+			Action: timestamp,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "cache-dir",
+					Usage: "cache directory path",
+					Value: utils.CacheDir(),
+				},
+				cli.DurationFlag{
+					Name:   "update-interval",
+					Usage:  "update interval",
+					Value:  24 * time.Hour,
+					EnvVar: "UPDATE_INTERVAL",
+				},
+			},
+		},
 	}
 
 	return app
