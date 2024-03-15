@@ -212,7 +212,7 @@ func parseAffected(entry Entry, vulnIDs, aliases, references []string) ([]Adviso
 
 	uniqAdvisories := map[string]Advisory{}
 	for _, affected := range entry.Affected {
-		ecosystem := convertEcosystem(affected.Package.Ecosystem)
+		ecosystem := ConvertEcosystem(affected.Package.Ecosystem)
 		if ecosystem == vulnerability.Unknown {
 			continue
 		}
@@ -334,7 +334,7 @@ func parseSeverity(severities []Severity) (string, float64, error) {
 	return "", 0, nil
 }
 
-func convertEcosystem(eco Ecosystem) types.Ecosystem {
+func ConvertEcosystem(eco Ecosystem) types.Ecosystem {
 	// cf. https://ossf.github.io/osv-schema/#affectedpackage-field
 	switch strings.ToLower(string(eco)) {
 	case "go":

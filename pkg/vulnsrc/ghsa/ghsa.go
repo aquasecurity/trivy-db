@@ -40,7 +40,8 @@ var (
 )
 
 type DatabaseSpecific struct {
-	Severity string `json:"severity"`
+	Severity                      string `json:"severity"`
+	LastKnownAffectedVersionRange string `json:"last_known_affected_version_range"`
 }
 
 type GHSA struct{}
@@ -95,6 +96,40 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 
 	severity := convertSeverity(specific.Severity)
 	for i, adv := range advisories {
+		// Add version from `last_known_affected_version_range` field.
+		// cf. https://github.com/github/advisory-database/issues/470#issuecomment-1998604377
+		for _, entryAffected := range entry.Affected {
+			// Skip if `affected[].database_specific` field doesn't exist
+			if entryAffected.DatabaseSpecific == nil {
+				continue
+			}
+
+			var affectedSpecific DatabaseSpecific
+			if err := json.Unmarshal(entryAffected.DatabaseSpecific, &affectedSpecific); err != nil {
+				return nil, xerrors.Errorf("JSON decode error: %w", err)
+			}
+
+			entryEcosystem := osv.ConvertEcosystem(entryAffected.Package.Ecosystem)
+			entryPkgName := vulnerability.NormalizePkgName(entryEcosystem, entryAffected.Package.Name)
+
+			if adv.PkgName != entryPkgName || adv.Ecosystem != entryEcosystem {
+				continue
+			}
+
+			for j, vulnVersion := range adv.VulnerableVersions {
+				// `fixed` and `last_affected` fields (`<`,`<=` or `=` is used) have high priority then `last_known_affected_version_range`.
+				if strings.Contains(vulnVersion, "<") || strings.HasPrefix(vulnVersion, "=") {
+					continue
+				}
+
+				// `last_known_affected_version_range` uses `< version` or `<= version` formats (e.g. `< 1.2.3` or `<= 1.2.3`).
+				// Remove space to fit our format.
+				affectedSpecific.LastKnownAffectedVersionRange = strings.ReplaceAll(affectedSpecific.LastKnownAffectedVersionRange, " ", "")
+				advisories[i].VulnerableVersions[j] = fmt.Sprintf("%s, %s", vulnVersion, affectedSpecific.LastKnownAffectedVersionRange)
+			}
+		}
+
+		// Fill severity from
 		advisories[i].Severity = severity
 
 		// Replace a git URL with a CocoaPods package name in a Swift vulnerability

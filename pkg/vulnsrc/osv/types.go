@@ -55,6 +55,7 @@ type Affected struct {
 	Ranges            []Range           `json:"ranges,omitempty"`
 	Versions          []string          `json:"versions,omitempty"`
 	EcosystemSpecific EcosystemSpecific `json:"ecosystem_specific"`
+	DatabaseSpecific  json.RawMessage   `json:"database_specific,omitempty"`
 }
 
 type Import struct {
