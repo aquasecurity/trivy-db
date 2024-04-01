@@ -76,6 +76,72 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"data-source",
+						"maven::GitHub Security Advisory Maven",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.GHSA,
+						Name: "GitHub Security Advisory Maven",
+						URL:  "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Amaven",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-25330",
+						"maven::GitHub Security Advisory Maven",
+						"com.baomidou:mybatis-plus",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-32qq-m9fh-f74w",
+						},
+						VulnerableVersions: []string{">=0, <3.5.3.1"},
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-25330",
+						"maven::GitHub Security Advisory Maven",
+						"com.baomidou:mybatis-plus-copy",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-32qq-m9fh-f74w",
+						},
+						PatchedVersions:    []string{"3.5.0"},
+						VulnerableVersions: []string{"<3.5.0"},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2023-25330",
+						"ghsa",
+					},
+					Value: types.VulnerabilityDetail{
+						Title:       "MyBatis-Plus vulnerable to SQL injection via TenantPlugin",
+						Description: "MyBatis-Plus below 3.5.3.1 is vulnerable to SQL injection via the tenant ID value. This may allow remote attackers to execute arbitrary SQL commands.",
+						References: []string{
+							"https://nvd.nist.gov/vuln/detail/CVE-2023-25330",
+							"https://github.com/FCncdn/MybatisPlusTenantPluginSQLInjection-POC/blob/master/Readme.en.md",
+							"https://github.com/baomidou/mybatis-plus",
+						},
+						Severity:     types.SeverityCritical,
+						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+						CvssScoreV3:  9.8,
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2023-25330",
+					},
+					Value: map[string]interface{}{},
+				},
+				{
+					Key: []string{
+						"data-source",
 						"cargo::GitHub Security Advisory Rust",
 					},
 					Value: types.DataSource{

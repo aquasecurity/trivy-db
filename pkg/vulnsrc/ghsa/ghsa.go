@@ -40,7 +40,8 @@ var (
 )
 
 type DatabaseSpecific struct {
-	Severity string `json:"severity"`
+	Severity                      string `json:"severity"`
+	LastKnownAffectedVersionRange string `json:"last_known_affected_version_range"`
 }
 
 type GHSA struct{}
@@ -95,6 +96,12 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 
 	severity := convertSeverity(specific.Severity)
 	for i, adv := range advisories {
+		// Parse database_specific
+		if err := parseDatabaseSpecific(adv); err != nil {
+			return nil, xerrors.Errorf("failed to parse database specific: %w", err)
+		}
+
+		// Fill severity from GHSA
 		advisories[i].Severity = severity
 
 		// Replace a git URL with a CocoaPods package name in a Swift vulnerability
@@ -110,6 +117,33 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 	}
 
 	return advisories, nil
+}
+
+// parseDatabaseSpecific adds a version from the last_known_affected_version_range field
+// cf. https://github.com/github/advisory-database/issues/470#issuecomment-1998604377
+func parseDatabaseSpecific(advisory osv.Advisory) error {
+	// Skip if the `affected[].database_specific` field doesn't exist
+	if advisory.DatabaseSpecific == nil {
+		return nil
+	}
+
+	var affectedSpecific DatabaseSpecific
+	if err := json.Unmarshal(advisory.DatabaseSpecific, &affectedSpecific); err != nil {
+		return xerrors.Errorf("JSON decode error: %w", err)
+	}
+
+	for i, vulnVersion := range advisory.VulnerableVersions {
+		// The fixed and last_affected fields (which use <, <=, or =) take precedence over
+		// the last_known_affected_version_range field.
+		if strings.Contains(vulnVersion, "<") || strings.HasPrefix(vulnVersion, "=") {
+			continue
+		}
+		// `last_known_affected_version_range` uses `< version` or `<= version` formats (e.g. `< 1.2.3` or `<= 1.2.3`).
+		// Remove spaces to match our format
+		verRange := strings.ReplaceAll(affectedSpecific.LastKnownAffectedVersionRange, " ", "")
+		advisory.VulnerableVersions[i] = fmt.Sprintf("%s, %s", vulnVersion, verRange)
+	}
+	return nil
 }
 
 func convertSeverity(severity string) types.Severity {
