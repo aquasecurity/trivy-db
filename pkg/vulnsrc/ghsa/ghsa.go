@@ -96,40 +96,12 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 
 	severity := convertSeverity(specific.Severity)
 	for i, adv := range advisories {
-		// Add version from `last_known_affected_version_range` field.
-		// cf. https://github.com/github/advisory-database/issues/470#issuecomment-1998604377
-		for _, entryAffected := range entry.Affected {
-			// Skip if `affected[].database_specific` field doesn't exist
-			if entryAffected.DatabaseSpecific == nil {
-				continue
-			}
-
-			var affectedSpecific DatabaseSpecific
-			if err := json.Unmarshal(entryAffected.DatabaseSpecific, &affectedSpecific); err != nil {
-				return nil, xerrors.Errorf("JSON decode error: %w", err)
-			}
-
-			entryEcosystem := osv.ConvertEcosystem(entryAffected.Package.Ecosystem)
-			entryPkgName := vulnerability.NormalizePkgName(entryEcosystem, entryAffected.Package.Name)
-
-			if adv.PkgName != entryPkgName || adv.Ecosystem != entryEcosystem {
-				continue
-			}
-
-			for j, vulnVersion := range adv.VulnerableVersions {
-				// `fixed` and `last_affected` fields (`<`,`<=` or `=` is used) have high priority then `last_known_affected_version_range`.
-				if strings.Contains(vulnVersion, "<") || strings.HasPrefix(vulnVersion, "=") {
-					continue
-				}
-
-				// `last_known_affected_version_range` uses `< version` or `<= version` formats (e.g. `< 1.2.3` or `<= 1.2.3`).
-				// Remove space to fit our format.
-				affectedSpecific.LastKnownAffectedVersionRange = strings.ReplaceAll(affectedSpecific.LastKnownAffectedVersionRange, " ", "")
-				advisories[i].VulnerableVersions[j] = fmt.Sprintf("%s, %s", vulnVersion, affectedSpecific.LastKnownAffectedVersionRange)
-			}
+		// Parse database_specific
+		if err := parseDatabaseSpecific(adv); err != nil {
+			return nil, xerrors.Errorf("failed to parse database specific: %w", err)
 		}
 
-		// Fill severity from
+		// Fill severity from GHSA
 		advisories[i].Severity = severity
 
 		// Replace a git URL with a CocoaPods package name in a Swift vulnerability
@@ -145,6 +117,33 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 	}
 
 	return advisories, nil
+}
+
+// parseDatabaseSpecific adds a version from the last_known_affected_version_range field
+// cf. https://github.com/github/advisory-database/issues/470#issuecomment-1998604377
+func parseDatabaseSpecific(advisory osv.Advisory) error {
+	// Skip if the `affected[].database_specific` field doesn't exist
+	if advisory.DatabaseSpecific == nil {
+		return nil
+	}
+
+	var affectedSpecific DatabaseSpecific
+	if err := json.Unmarshal(advisory.DatabaseSpecific, &affectedSpecific); err != nil {
+		return xerrors.Errorf("JSON decode error: %w", err)
+	}
+
+	for i, vulnVersion := range advisory.VulnerableVersions {
+		// The fixed and last_affected fields (which use <, <=, or =) take precedence over
+		// the last_known_affected_version_range field.
+		if strings.Contains(vulnVersion, "<") || strings.HasPrefix(vulnVersion, "=") {
+			continue
+		}
+		// `last_known_affected_version_range` uses `< version` or `<= version` formats (e.g. `< 1.2.3` or `<= 1.2.3`).
+		// Remove spaces to match our format
+		verRange := strings.ReplaceAll(affectedSpecific.LastKnownAffectedVersionRange, " ", "")
+		advisory.VulnerableVersions[i] = fmt.Sprintf("%s, %s", vulnVersion, verRange)
+	}
+	return nil
 }
 
 func convertSeverity(severity string) types.Severity {

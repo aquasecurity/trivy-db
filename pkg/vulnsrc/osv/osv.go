@@ -40,6 +40,9 @@ type Advisory struct {
 	References   []string
 	CVSSScoreV3  float64
 	CVSSVectorV3 string
+
+	// From affected[].database_specific
+	DatabaseSpecific json.RawMessage
 }
 
 type OSV struct {
@@ -212,7 +215,7 @@ func parseAffected(entry Entry, vulnIDs, aliases, references []string) ([]Adviso
 
 	uniqAdvisories := map[string]Advisory{}
 	for _, affected := range entry.Affected {
-		ecosystem := ConvertEcosystem(affected.Package.Ecosystem)
+		ecosystem := convertEcosystem(affected.Package.Ecosystem)
 		if ecosystem == vulnerability.Unknown {
 			continue
 		}
@@ -252,6 +255,7 @@ func parseAffected(entry Entry, vulnIDs, aliases, references []string) ([]Adviso
 					References:         references,
 					CVSSVectorV3:       cvssVectorV3,
 					CVSSScoreV3:        cvssScoreV3,
+					DatabaseSpecific:   affected.DatabaseSpecific,
 				}
 			}
 		}
@@ -334,7 +338,7 @@ func parseSeverity(severities []Severity) (string, float64, error) {
 	return "", 0, nil
 }
 
-func ConvertEcosystem(eco Ecosystem) types.Ecosystem {
+func convertEcosystem(eco Ecosystem) types.Ecosystem {
 	// cf. https://ossf.github.io/osv-schema/#affectedpackage-field
 	switch strings.ToLower(string(eco)) {
 	case "go":
