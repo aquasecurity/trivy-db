@@ -2,8 +2,9 @@ package govulndb
 
 import (
 	"encoding/json"
-	"golang.org/x/xerrors"
 	"path/filepath"
+
+	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"

@@ -1,9 +1,9 @@
 package govulndb_test
 
 import (
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/govulndb"
 	"testing"
 
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/govulndb"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 )
 
