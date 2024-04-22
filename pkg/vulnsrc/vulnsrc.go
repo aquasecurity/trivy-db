@@ -12,6 +12,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/glad"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/govulndb"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/k8svulndb"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/mariner"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
@@ -56,11 +57,13 @@ var (
 		bitnami.NewVulnSrc(),
 
 		k8svulndb.NewVulnSrc(),
+
 		// Language-specific packages
 		bundler.NewVulnSrc(),
 		composer.NewVulnSrc(),
 		node.NewVulnSrc(),
 		ghsa.NewVulnSrc(),
 		glad.NewVulnSrc(),
+		govulndb.NewVulnSrc(), // For Go stdlib packages
 	}
 )

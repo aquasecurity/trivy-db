@@ -128,7 +128,7 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 			}
 		}
 
-		// Skip a standard Go package as we use the Go Vulnerability Database for standard packages.
+		// Skip a standard Go package as we use the Go Vulnerability Database (govulndb) for standard packages.
 		if adv.Ecosystem == vulnerability.Go {
 			if isStandardGoPackage(adv.PkgName) {
 				advisories[i].Ecosystem = "" // An empty ecosystem is skipped later
