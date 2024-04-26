@@ -22,7 +22,7 @@ type Distribution int
 const OpenEulerFormat = "openEuler-%s"
 
 var (
-	eulerDir = filepath.Join("cvrf", "openeuler")
+	eulerDir = "openeuler"
 
 	source = types.DataSource{
 		ID:   vulnerability.OpenEuler,
