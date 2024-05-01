@@ -16,7 +16,7 @@ require (
 	github.com/masahiro331/go-mvn-version v0.0.0-20210429150710-d3157d602a08
 	github.com/samber/lo v1.39.0
 	github.com/stretchr/testify v1.9.0
-	github.com/urfave/cli v1.22.14
+	github.com/urfave/cli v1.22.15
 	go.etcd.io/bbolt v1.3.9
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	golang.org/x/text v0.14.0
@@ -28,7 +28,7 @@ require (
 )
 
 require (
-	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/goark/errs v1.1.0 // indirect
 	github.com/goccy/go-yaml v1.8.1 // indirect
