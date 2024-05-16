@@ -4,6 +4,16 @@
       "ID": "oval:com.microsoft.cbl-mariner:obj:1643374850000429",
       "Version": "1643374850",
       "Name": "wireshark"
+    },
+    {
+      "ID": "oval:com.microsoft.cbl-mariner:obj:31880001",
+      "Version": "0",
+      "Name": "openssl"
+    },
+    {
+      "ID": "oval:com.microsoft.cbl-mariner:obj:31872001",
+      "Version": "0",
+      "Name": "edk2"
     }
   ]
 }

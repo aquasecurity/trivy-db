@@ -8,6 +8,24 @@
         "Datatype": "evr_string",
         "Operation": "less than or equal"
       }
+    },
+    {
+      "ID": "oval:com.microsoft.cbl-mariner:ste:31880002",
+      "Version": "0",
+      "Evr": {
+        "Text": "0:1.1.1k-28.cm2",
+        "Datatype": "evr_string",
+        "Operation": "less than"
+      }
+    },
+    {
+      "ID": "oval:com.microsoft.cbl-mariner:ste:31872002",
+      "Version": "0",
+      "Evr": {
+        "Text": "0:20230301gitf80f052277c8-38.cm2",
+        "Datatype": "evr_string",
+        "Operation": "less than"
+      }
     }
   ]
 }
