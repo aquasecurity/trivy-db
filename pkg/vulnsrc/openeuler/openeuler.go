@@ -32,12 +32,12 @@ var (
 )
 
 type VulnSrc struct {
-	dbc  db.Operation
+	dbc db.Operation
 }
 
 func NewVulnSrc() VulnSrc {
 	return VulnSrc{
-		dbc:  db.Config{},
+		dbc: db.Config{},
 	}
 }
 
@@ -223,8 +223,7 @@ func splitPkgName(product string) (string, string) {
 }
 
 func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) {
-	var bucket string
-	bucket = fmt.Sprintf(OpenEulerFormat, version)
+	var bucket string = fmt.Sprintf(OpenEulerFormat, version)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get openEuler advisories: %w", err)

@@ -17,6 +17,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/k8svulndb"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/openeuler"
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/photon"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat"
@@ -25,7 +26,6 @@ import (
 	susecvrf "github.com/aquasecurity/trivy-db/pkg/vulnsrc/suse-cvrf"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/wolfi"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/openeuler"
 )
 
 type VulnSrc interface {

@@ -1,19 +1,19 @@
 package openeuler
 
 type Cvrf struct {
-	Title           string             `xml:"DocumentTitle"`
-	Type            string             `xml:"DocumentType"`
-	Publisher       DocumentPublisher  `xml:"DocumentPublisher"`
-	Tracking        DocumentTracking   `xml:"DocumentTracking"`
-	Notes           []DocumentNote     `xml:"DocumentNotes>Note"`
-	ProductTree     ProductTree        `xml:"ProductTree"`
-	References      []Reference        `xml:"DocumentReferences>Reference"`
-	Vulnerabilities []Vulnerability    `xml:"Vulnerability"`
+	Title           string            `xml:"DocumentTitle"`
+	Type            string            `xml:"DocumentType"`
+	Publisher       DocumentPublisher `xml:"DocumentPublisher"`
+	Tracking        DocumentTracking  `xml:"DocumentTracking"`
+	Notes           []DocumentNote    `xml:"DocumentNotes>Note"`
+	ProductTree     ProductTree       `xml:"ProductTree"`
+	References      []Reference       `xml:"DocumentReferences>Reference"`
+	Vulnerabilities []Vulnerability   `xml:"Vulnerability"`
 }
 
 type DocumentPublisher struct {
-	ContactDetails     string     `xml:"ContactDetails"`
-	IssuingAuthority   string     `xml:"IssuingAuthority"`
+	ContactDetails   string `xml:"ContactDetails"`
+	IssuingAuthority string `xml:"IssuingAuthority"`
 }
 
 type DocumentTracking struct {
@@ -49,8 +49,8 @@ type Production struct {
 }
 
 type Generator struct {
-	Engine   string  `xml:"Engine"`
-	Date     string  `xml:"Date"`
+	Engine string `xml:"Engine"`
+	Date   string `xml:"Date"`
 }
 
 type Revision struct {
