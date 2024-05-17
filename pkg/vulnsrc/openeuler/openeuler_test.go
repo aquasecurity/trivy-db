@@ -17,7 +17,6 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-
 func TestVulnSrc_Update(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -78,7 +77,6 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:     filepath.Join("testdata", "sad"),
 			wantErr: "failed to decode openEuler CVRF JSON",
 		},
-
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -91,7 +89,6 @@ func TestVulnSrc_Update(t *testing.T) {
 		})
 	}
 }
-
 
 func TestVulnSrc_Get(t *testing.T) {
 	tests := []struct {
@@ -158,12 +155,12 @@ func TestVulnSrc_Get(t *testing.T) {
 
 func TestSeverityFromThreat(t *testing.T) {
 	testCases := map[string]types.Severity{
-		"Low":       types.SeverityLow,
-		"Medium":    types.SeverityMedium,
-		"High": 	 types.SeverityHigh,
-		"Critical":  types.SeverityCritical,
-		"":          types.SeverityUnknown,
-		"None":      types.SeverityUnknown,
+		"Low":      types.SeverityLow,
+		"Medium":   types.SeverityMedium,
+		"High":     types.SeverityHigh,
+		"Critical": types.SeverityCritical,
+		"":         types.SeverityUnknown,
+		"None":     types.SeverityUnknown,
 	}
 	for k, v := range testCases {
 		assert.Equal(t, v, severityFromThreat(k))
@@ -172,7 +169,7 @@ func TestSeverityFromThreat(t *testing.T) {
 
 func TestGetOSVersion(t *testing.T) {
 	testCases := []struct {
-		inputPlatformCPE    string
+		inputPlatformCPE  string
 		expectedOsVersion string
 	}{
 		{
