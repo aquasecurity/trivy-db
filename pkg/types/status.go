@@ -11,6 +11,9 @@ var (
 	//
 	// In addition to them, Red Hat has "will_not_fix" and "fix_deferred".
 	// cf. https://access.redhat.com/blogs/product-security/posts/2066793
+	//
+	// In addition to them, Ubuntu has "DNE", "ignored", "needed", "pending"
+	// https://askubuntu.com/a/1509706
 	Statuses = []string{
 		"unknown",
 		"not_affected",
@@ -20,6 +23,9 @@ var (
 		"will_not_fix",
 		"fix_deferred",
 		"end_of_life",
+		"needed",
+		"pending",
+		"released",
 	}
 )
 
@@ -29,9 +35,12 @@ const (
 	StatusAffected
 	StatusFixed
 	StatusUnderInvestigation
-	StatusWillNotFix // Red Hat specific
+	StatusWillNotFix // Red Hat specific // Ubuntu Specific "ignored" Superseded || End of life || End of Kernal support
 	StatusFixDeferred
 	StatusEndOfLife
+	StatusNeeded   //Ubuntu Specific
+	StatusPending  //Ubuntu Specific
+	StatusReleased //Ubuntu Specific
 )
 
 func NewStatus(status string) Status {

@@ -23,7 +23,7 @@ const (
 )
 
 var (
-	targetStatuses        = []string{"needed", "deferred", "released"}
+	targetStatuses        = []string{"not-affected", "DNE", "ignored", "needed", "pending", "deferred", "released"}
 	UbuntuReleasesMapping = map[string]string{
 		"precise": "12.04",
 		"quantal": "12.10",
@@ -170,7 +170,8 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 			}
 
 			adv := types.Advisory{}
-			if status.Status == "released" {
+			adv.Status = StatusFromUbuntuStatus(status.Status)
+			if status.Status == types.Statuses[types.StatusReleased] {
 				adv.FixedVersion = status.Note
 			}
 			if err := dbc.PutAdvisoryDetail(tx, cve.Candidate, pkgName, []string{platformName}, adv); err != nil {
@@ -211,5 +212,23 @@ func SeverityFromPriority(priority string) types.Severity {
 		return types.SeverityCritical
 	default:
 		return types.SeverityUnknown
+	}
+}
+
+// StatusFromUbuntuStatus normalises Ubuntu status into common Trivy Types
+func StatusFromUbuntuStatus(status string) types.Status {
+	switch status { //TODO: Does this need to match case?
+	case "not-affected", "dne", "not-vulnerable", "ignored":
+		return types.StatusWillNotFix
+	case "deffered":
+		return types.StatusFixDeferred
+	case "needed":
+		return types.StatusNeeded
+	case "pending":
+		return types.StatusPending
+	case "released":
+		return types.StatusReleased
+	default:
+		return types.StatusUnknown
 	}
 }
