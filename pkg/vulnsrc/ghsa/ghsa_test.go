@@ -15,6 +15,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		name       string
 		dir        string
 		wantValues []vulnsrctest.WantValues
+		noBuckets  [][]string
 		wantErr    string
 	}{
 		{
@@ -370,6 +371,21 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: map[string]interface{}{},
 				},
 			},
+			noBuckets: [][]string{
+				// We shouldn't save Go runtime vulnerabilities
+				{
+					"advisory-detail",
+					"CVE-2023-45288",
+				},
+				{
+					"vulnerability-detail",
+					"CVE-2023-45288",
+				},
+				{
+					"vulnerability-id",
+					"CVE-2023-45288",
+				},
+			},
 		},
 		{
 			name:    "sad path (dir doesn't exist)",
@@ -394,6 +410,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				Dir:        tt.dir,
 				WantValues: tt.wantValues,
 				WantErr:    tt.wantErr,
+				NoBuckets:  tt.noBuckets,
 			})
 		})
 	}

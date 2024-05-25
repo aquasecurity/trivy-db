@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"golang.org/x/tools/go/packages"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
@@ -37,7 +38,19 @@ var (
 		vulnerability.Swift:     "Swift",
 		vulnerability.Cocoapods: "Swift", // Use Swift advisories for CocoaPods
 	}
+	standardGoPackages = make(map[string]struct{})
 )
+
+func init() {
+	pkgs, err := packages.Load(nil, "std")
+	if err != nil {
+		panic(err)
+	}
+
+	for _, p := range pkgs {
+		standardGoPackages[p.PkgPath] = struct{}{}
+	}
+}
 
 type DatabaseSpecific struct {
 	Severity                      string `json:"severity"`
@@ -114,6 +127,13 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 				advisories = append(advisories, adv)
 			}
 		}
+
+		// Skip a standard Go package as we use the Go Vulnerability Database (govulndb) for standard packages.
+		if adv.Ecosystem == vulnerability.Go {
+			if isStandardGoPackage(adv.PkgName) {
+				advisories[i].Ecosystem = "" // An empty ecosystem is skipped later
+			}
+		}
 	}
 
 	return advisories, nil
@@ -159,4 +179,9 @@ func convertSeverity(severity string) types.Severity {
 	default:
 		return types.SeverityUnknown
 	}
+}
+
+func isStandardGoPackage(pkg string) bool {
+	_, ok := standardGoPackages[pkg]
+	return ok
 }

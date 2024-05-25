@@ -60,12 +60,13 @@ trivy-db:
 
 .PHONY: db-fetch-langs
 db-fetch-langs:
-	mkdir -p cache/{ruby-advisory-db,php-security-advisories,nodejs-security-wg,ghsa,cocoapods-specs,bitnami-vulndb}
+	mkdir -p cache/{ruby-advisory-db,php-security-advisories,nodejs-security-wg,ghsa,cocoapods-specs,bitnami-vulndb,govulndb}
 	wget -qO - https://github.com/rubysec/ruby-advisory-db/archive/master.tar.gz | tar xz -C cache/ruby-advisory-db --strip-components=1
 	wget -qO - https://github.com/FriendsOfPHP/security-advisories/archive/master.tar.gz | tar xz -C cache/php-security-advisories --strip-components=1
 	wget -qO - https://github.com/nodejs/security-wg/archive/main.tar.gz | tar xz -C cache/nodejs-security-wg --strip-components=1
 	wget -qO - https://github.com/bitnami/vulndb/archive/main.tar.gz | tar xz -C cache/bitnami-vulndb --strip-components=1
 	wget -qO - https://github.com/github/advisory-database/archive/refs/heads/main.tar.gz | tar xz -C cache/ghsa --strip-components=1
+	wget -qO - https://github.com/golang/vulndb/archive/refs/heads/master.tar.gz | tar xz -C cache/govulndb --strip-components=1
 	## required to convert GHSA Swift repo links to Cocoapods package names
 	wget -qO - https://github.com/CocoaPods/Specs/archive/master.tar.gz | tar xz -C cache/cocoapods-specs --strip-components=1
 

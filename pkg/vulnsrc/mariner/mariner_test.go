@@ -51,6 +51,18 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
+					Key: []string{"advisory-detail", "CVE-2023-5678", "CBL-Mariner 2.0", "openssl"},
+					Value: types.Advisory{
+						FixedVersion: "0:1.1.1k-28.cm2",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2023-5678", "CBL-Mariner 2.0", "edk2"},
+					Value: types.Advisory{
+						FixedVersion: "0:20230301gitf80f052277c8-38.cm2",
+					},
+				},
+				{
 					Key: []string{"vulnerability-detail", "CVE-2008-3914", "cbl-mariner"},
 					Value: types.VulnerabilityDetail{
 						Severity:    types.SeverityCritical,
@@ -69,11 +81,24 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
+					Key: []string{"vulnerability-detail", "CVE-2023-5678", "cbl-mariner"},
+					Value: types.VulnerabilityDetail{
+						Severity:    types.SeverityMedium,
+						Title:       "CVE-2023-5678 affecting package openssl for versions less than 1.1.1k-28",
+						Description: "CVE-2023-5678 affecting package openssl for versions less than 1.1.1k-28. A patched version of the package is available.",
+						References:  []string{"https://nvd.nist.gov/vuln/detail/CVE-2023-5678"},
+					},
+				},
+				{
 					Key:   []string{"vulnerability-id", "CVE-2008-3914"},
 					Value: map[string]interface{}{},
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2021-39924"},
+					Value: map[string]interface{}{},
+				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-2023-5678"},
 					Value: map[string]interface{}{},
 				},
 			},
