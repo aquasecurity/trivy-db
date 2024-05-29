@@ -60,44 +60,44 @@ trivy-db:
 
 .PHONY: db-fetch-langs
 db-fetch-langs:
-	mkdir -p cache/{ruby-advisory-db,php-security-advisories,nodejs-security-wg,ghsa,cocoapods-specs,bitnami-vulndb,govulndb}
-	wget -qO - https://github.com/rubysec/ruby-advisory-db/archive/master.tar.gz | tar xz -C cache/ruby-advisory-db --strip-components=1
-	wget -qO - https://github.com/FriendsOfPHP/security-advisories/archive/master.tar.gz | tar xz -C cache/php-security-advisories --strip-components=1
-	wget -qO - https://github.com/nodejs/security-wg/archive/main.tar.gz | tar xz -C cache/nodejs-security-wg --strip-components=1
-	wget -qO - https://github.com/bitnami/vulndb/archive/main.tar.gz | tar xz -C cache/bitnami-vulndb --strip-components=1
-	wget -qO - https://github.com/github/advisory-database/archive/refs/heads/main.tar.gz | tar xz -C cache/ghsa --strip-components=1
-	wget -qO - https://github.com/golang/vulndb/archive/refs/heads/master.tar.gz | tar xz -C cache/govulndb --strip-components=1
+	mkdir -p _cache/{ruby-advisory-db,php-security-advisories,nodejs-security-wg,ghsa,cocoapods-specs,bitnami-vulndb,govulndb}
+	wget -qO - https://github.com/rubysec/ruby-advisory-db/archive/master.tar.gz | tar xz -C _cache/ruby-advisory-db --strip-components=1
+	wget -qO - https://github.com/FriendsOfPHP/security-advisories/archive/master.tar.gz | tar xz -C _cache/php-security-advisories --strip-components=1
+	wget -qO - https://github.com/nodejs/security-wg/archive/main.tar.gz | tar xz -C _cache/nodejs-security-wg --strip-components=1
+	wget -qO - https://github.com/bitnami/vulndb/archive/main.tar.gz | tar xz -C _cache/bitnami-vulndb --strip-components=1
+	wget -qO - https://github.com/github/advisory-database/archive/refs/heads/main.tar.gz | tar xz -C _cache/ghsa --strip-components=1
+	wget -qO - https://github.com/golang/vulndb/archive/refs/heads/master.tar.gz | tar xz -C _cache/govulndb --strip-components=1
 	## required to convert GHSA Swift repo links to Cocoapods package names
-	wget -qO - https://github.com/CocoaPods/Specs/archive/master.tar.gz | tar xz -C cache/cocoapods-specs --strip-components=1
+	wget -qO - https://github.com/CocoaPods/Specs/archive/master.tar.gz | tar xz -C _cache/cocoapods-specs --strip-components=1
 
 .PHONY: db-build
 db-build: trivy-db
-	./trivy-db build --cache-dir cache --update-interval 6h
+	./trivy-db build --cache-dir _cache --update-interval 6h
 
 .PHONY: db-compact
-db-compact: $(GOBIN)/bbolt cache/db/trivy.db
-	mkdir -p assets/
-	$(GOBIN)/bbolt compact -o ./assets/trivy.db cache/db/trivy.db
-	cp cache/db/metadata.json ./assets/metadata.json
-	rm -rf cache/db
+db-compact: $(GOBIN)/bbolt _cache/db/trivy.db
+	mkdir -p _assets/
+	$(GOBIN)/bbolt compact -o ./_assets/trivy.db _cache/db/trivy.db
+	cp _cache/db/metadata.json ./_assets/metadata.json
+	rm -rf _cache/db
 
 .PHONY: db-compress
-db-compress: assets/trivy.db assets/metadata.json
-	tar cvzf assets/db.tar.gz -C assets/ trivy.db metadata.json
+db-compress: _assets/trivy.db _assets/metadata.json
+	tar cvzf _assets/db.tar.gz -C _assets/ trivy.db metadata.json
 
 .PHONY: db-clean
 db-clean:
-	rm -rf cache assets
+	rm -rf _cache _assets
 
 .PHONY: db-fetch-vuln-list
 db-fetch-vuln-list:
-	mkdir -p cache/vuln-list
-	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list/archive/main.tar.gz | tar xz -C cache/vuln-list --strip-components=1
-	mkdir -p cache/vuln-list-redhat
-	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-redhat/archive/main.tar.gz | tar xz -C cache/vuln-list-redhat --strip-components=1
-	mkdir -p cache/vuln-list-debian
-	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-debian/archive/main.tar.gz | tar xz -C cache/vuln-list-debian --strip-components=1
-	mkdir -p cache/vuln-list-nvd
-	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-nvd/archive/main.tar.gz | tar xz -C cache/vuln-list-nvd --strip-components=1
-	mkdir -p cache/vuln-list-k8s
-	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-k8s/archive/main.tar.gz | tar xz -C cache/vuln-list-k8s --strip-components=1
+	mkdir -p _cache/vuln-list
+	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list/archive/main.tar.gz | tar xz -C _cache/vuln-list --strip-components=1
+	mkdir -p _cache/vuln-list-redhat
+	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-redhat/archive/main.tar.gz | tar xz -C _cache/vuln-list-redhat --strip-components=1
+	mkdir -p _cache/vuln-list-debian
+	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-debian/archive/main.tar.gz | tar xz -C _cache/vuln-list-debian --strip-components=1
+	mkdir -p _cache/vuln-list-nvd
+	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-nvd/archive/main.tar.gz | tar xz -C _cache/vuln-list-nvd --strip-components=1
+	mkdir -p _cache/vuln-list-k8s
+	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-k8s/archive/main.tar.gz | tar xz -C _cache/vuln-list-k8s --strip-components=1
