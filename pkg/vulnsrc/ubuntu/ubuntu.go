@@ -171,7 +171,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 
 			adv := types.Advisory{}
 			adv.Status = StatusFromUbuntuStatus(status.Status)
-			if status.Status == types.Statuses[types.StatusFixed] {
+			if adv.Status == types.StatusFixed {
 				adv.FixedVersion = status.Note
 			}
 			if err := dbc.PutAdvisoryDetail(tx, cve.Candidate, pkgName, []string{platformName}, adv); err != nil {

@@ -7,6 +7,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
@@ -33,6 +34,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"advisory-detail", "CVE-2020-1234", "ubuntu 18.04", "xen"},
 					Value: types.Advisory{
 						FixedVersion: "1.2.3",
+						Status:       types.StatusFixed,
 					},
 				},
 				{
@@ -57,6 +59,68 @@ func TestVulnSrc_Update(t *testing.T) {
 				WantValues: tt.wantValues,
 				WantErr:    tt.wantErr,
 			})
+		})
+	}
+}
+
+func TestUbuntuStatusFromStatus(t *testing.T) {
+	tests := []struct {
+		name     string
+		status   string
+		expected types.Status
+	}{
+		{
+			name:     "not-affected",
+			status:   "not-affected",
+			expected: types.StatusWillNotFix,
+		},
+		{
+			name:     "DNE",
+			status:   "DNE",
+			expected: types.StatusWillNotFix,
+		},
+		{
+			name:     "not-vulnerable",
+			status:   "not-vulnerable",
+			expected: types.StatusWillNotFix,
+		},
+		{
+			name:     "ignored",
+			status:   "ignored",
+			expected: types.StatusWillNotFix,
+		},
+
+		{
+			name:     "deffered",
+			status:   "deffered",
+			expected: types.StatusFixDeferred,
+		},
+		{
+			name:     "needed",
+			status:   "needed",
+			expected: types.StatusPending,
+		},
+		{
+			name:     "pending",
+			status:   "pending",
+			expected: types.StatusPending,
+		},
+		{
+			name:     "released",
+			status:   "released",
+			expected: types.StatusFixed,
+		},
+		{
+			name:     "unknown",
+			status:   "unknown",
+			expected: types.StatusUnknown,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			actual := ubuntu.StatusFromUbuntuStatus(test.status)
+			assert.Equal(t, test.expected, actual)
 		})
 	}
 }

@@ -25,7 +25,6 @@ var (
 		"end_of_life",
 		"needed",
 		"pending",
-		"released",
 	}
 )
 
