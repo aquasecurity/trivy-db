@@ -217,7 +217,7 @@ func SeverityFromPriority(priority string) types.Severity {
 
 // StatusFromUbuntuStatus normalises Ubuntu status into common Trivy Types
 func StatusFromUbuntuStatus(status string) types.Status {
-	switch status { //TODO: Does this need to match case?
+	switch status {
 	case "not-affected", "DNE", "not-vulnerable", "ignored":
 		return types.StatusWillNotFix
 	case "deffered":
