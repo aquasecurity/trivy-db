@@ -1,0 +1,7 @@
+- bucket: Azure Linux 3.0
+  pairs:
+    - bucket: ceph
+      pairs:
+        - key: CVE-2018-1999023
+          value:
+            FixedVersion: 0:18.2.1-1.azl3
