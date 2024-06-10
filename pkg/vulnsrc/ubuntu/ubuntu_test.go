@@ -91,19 +91,19 @@ func TestUbuntuStatusFromStatus(t *testing.T) {
 		},
 
 		{
-			name:     "deffered",
-			status:   "deffered",
+			name:     "deferred",
+			status:   "deferred",
 			expected: types.StatusFixDeferred,
 		},
 		{
 			name:     "needed",
 			status:   "needed",
-			expected: types.StatusPending,
+			expected: types.StatusFixDeferred,
 		},
 		{
 			name:     "pending",
 			status:   "pending",
-			expected: types.StatusPending,
+			expected: types.StatusFixDeferred,
 		},
 		{
 			name:     "released",

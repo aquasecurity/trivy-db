@@ -23,8 +23,6 @@ var (
 		"will_not_fix",
 		"fix_deferred",
 		"end_of_life",
-		"needed",
-		"pending",
 	}
 )
 
@@ -32,12 +30,11 @@ const (
 	StatusUnknown Status = iota
 	StatusNotAffected
 	StatusAffected
-	StatusFixed // Ubuntu "Released" Mapped to Fixed
+	StatusFixed
 	StatusUnderInvestigation
-	StatusWillNotFix // Red Hat specific // Ubuntu Specific "ignored" Superseded || End of life || End of Kernal support
+	StatusWillNotFix
 	StatusFixDeferred
 	StatusEndOfLife
-	StatusPending //Ubuntu Specific "pending","needed"
 )
 
 func NewStatus(status string) Status {

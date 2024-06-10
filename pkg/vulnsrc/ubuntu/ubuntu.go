@@ -220,10 +220,8 @@ func StatusFromUbuntuStatus(status string) types.Status {
 	switch status {
 	case "not-affected", "DNE", "not-vulnerable", "ignored":
 		return types.StatusWillNotFix
-	case "deffered":
+	case "needed", "pending", "deferred":
 		return types.StatusFixDeferred
-	case "needed", "pending":
-		return types.StatusPending
 	case "released":
 		return types.StatusFixed
 	default:
