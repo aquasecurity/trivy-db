@@ -19,8 +19,8 @@ coverage.txt
 
 
 #added _ to exclude from gopls linting, specifically helps when working on MacOS
-_assets
-_cache 
+assets
+cache 
 
 # trivy-db Outputs
 trivy-db
