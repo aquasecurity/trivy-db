@@ -128,15 +128,11 @@ func (t TrivyDB) optimize() error {
 	// Trivy DB will not store them so that it could reduce the database size.
 	// This bucket has only vulnerability IDs provided by vendors. They must be stored.
 	err := t.dbc.ForEachVulnerabilityID(func(tx *bolt.Tx, cveID string) error {
-		details := t.vulnClient.GetDetails(cveID)
-		if t.vulnClient.IsRejected(details) {
-			return nil
-		}
-
 		if err := t.dbc.SaveAdvisoryDetails(tx, cveID); err != nil {
 			return xerrors.Errorf("failed to save advisories: %w", err)
 		}
 
+		details := t.vulnClient.GetDetails(cveID)
 		if len(details) == 0 {
 			return nil
 		}

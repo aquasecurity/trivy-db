@@ -9,6 +9,9 @@ import (
 	"strconv"
 	"strings"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
