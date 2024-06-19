@@ -70,8 +70,7 @@ func (vs VulnSrc) Update(dir string) error {
 	switch vs.dist {
 	case SUSEEnterpriseLinux:
 		rootDir = filepath.Join(rootDir, "suse")
-	case OpenSUSE:
-	case OpenSUSETumbleweed:
+	case OpenSUSE, OpenSUSETumbleweed:
 		rootDir = filepath.Join(rootDir, "opensuse")
 	default:
 		return xerrors.New("unknown distribution")
