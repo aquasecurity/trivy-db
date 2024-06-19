@@ -467,6 +467,10 @@ func TestGetOSVersion(t *testing.T) {
 			inputPlatformName:    "openSUSE Leap 15.1 NonFree",
 			expectedPlatformName: "openSUSE Leap 15.1",
 		},
+		{
+			inputPlatformName:    "openSUSE Tumbleweed",
+			expectedPlatformName: "openSUSE Tumbleweed",
+		},
 		// Below tests exclude platformNames
 		{
 			inputPlatformName:    "openSUSE Leap NonFree 15.1",
