@@ -18,7 +18,6 @@ coverage.txt
 **/.DS_Store
 
 
-#added _ to exclude from gopls linting, specifically helps when working on MacOS
 assets
 cache
 

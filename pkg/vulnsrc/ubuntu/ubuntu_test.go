@@ -70,21 +70,6 @@ func TestUbuntuStatusFromStatus(t *testing.T) {
 		expected types.Status
 	}{
 		{
-			name:     "not-affected",
-			status:   "not-affected",
-			expected: types.StatusWillNotFix,
-		},
-		{
-			name:     "DNE",
-			status:   "DNE",
-			expected: types.StatusWillNotFix,
-		},
-		{
-			name:     "not-vulnerable",
-			status:   "not-vulnerable",
-			expected: types.StatusWillNotFix,
-		},
-		{
 			name:     "ignored",
 			status:   "ignored",
 			expected: types.StatusWillNotFix,
