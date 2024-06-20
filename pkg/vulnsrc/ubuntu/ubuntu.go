@@ -23,7 +23,7 @@ const (
 )
 
 var (
-	targetStatuses        = []string{"needs-triage", "ignored", "needed", "pending", "deferred", "released"}
+	targetStatuses        = []string{"ignored", "needed", "pending", "deferred", "released"}
 	UbuntuReleasesMapping = map[string]string{
 		"precise": "12.04",
 		"quantal": "12.10",
