@@ -23,7 +23,7 @@ const (
 )
 
 var (
-	targetStatuses        = []string{"ignored", "needed", "pending", "deferred", "released"}
+	targetStatuses        = []string{"needs-triage", "ignored", "needed", "pending", "deferred", "released"}
 	UbuntuReleasesMapping = map[string]string{
 		"precise": "12.04",
 		"quantal": "12.10",
@@ -170,12 +170,12 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 			}
 
 			adv := types.Advisory{}
-			status = StatusFromUbuntuStatus(status.Status)
-			if status == types.StatusFixed {
+			normalised_status := StatusFromUbuntuStatus(status.Status)
+			if normalised_status == types.StatusFixed {
 				adv.FixedVersion = status.Note
 			} else {
 				// Store the status only if it's unfixed
-				adv.Status = status
+				adv.Status = normalised_status
 			}
 			if err := dbc.PutAdvisoryDetail(tx, cve.Candidate, pkgName, []string{platformName}, adv); err != nil {
 				return xerrors.Errorf("failed to save Ubuntu advisory: %w", err)
