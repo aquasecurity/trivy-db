@@ -3,11 +3,12 @@ package ubuntu_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
