@@ -26,9 +26,9 @@ const (
 	OpenSUSE
 	OpenSUSETumbleweed
 
-	platformOpenSUSETumbleweedFormat  = "openSUSE Tumbleweed"
-	platformOpenSUSELeapFormat  = "openSUSE Leap %s"
-	platformSUSELinuxFormat = "SUSE Linux Enterprise %s"
+	platformOpenSUSELeapFormat       = "openSUSE Leap %s"
+	platformOpenSUSETumbleweedFormat = "openSUSE Tumbleweed"
+	platformSUSELinuxFormat          = "SUSE Linux Enterprise %s"
 )
 
 var (
