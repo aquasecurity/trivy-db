@@ -23,7 +23,7 @@ const (
 )
 
 var (
-	targetStatuses        = []string{"needs-triage", "ignored", "needed", "pending", "deferred", "released"}
+	targetStatuses        = []string{"ignored", "needed", "pending", "deferred", "released"}
 	UbuntuReleasesMapping = map[string]string{
 		"precise": "12.04",
 		"quantal": "12.10",
@@ -228,7 +228,6 @@ func StatusFromUbuntuStatus(status string) types.Status {
 	case "released":
 		return types.StatusFixed
 	default:
-		// Also covers "needs-triage"
 		return types.StatusUnknown
 	}
 }

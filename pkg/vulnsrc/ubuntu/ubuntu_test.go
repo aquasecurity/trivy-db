@@ -69,11 +69,6 @@ func TestUbuntuStatusFromStatus(t *testing.T) {
 		expected types.Status
 	}{
 		{
-			name:     "needs-triage",
-			status:   "needs-triage",
-			expected: types.StatusUnknown,
-		},
-		{
 			name:     "ignored",
 			status:   "ignored",
 			expected: types.StatusWillNotFix,
