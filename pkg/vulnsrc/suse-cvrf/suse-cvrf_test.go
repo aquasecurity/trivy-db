@@ -71,7 +71,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name: "happy path with openSUSE Tumbleweed",
 			dir:  filepath.Join("testdata", "happy", "openSUSE Tumbleweed"),
-			dist: OpenSUSE,
+			dist: OpenSUSETumbleweed,
 			wantValues: []vulnsrctest.WantValues{
 				{
 					Key: []string{"data-source", "openSUSE Tumbleweed"},
@@ -99,8 +99,9 @@ func TestVulnSrc_Update(t *testing.T) {
 						Title:       "python-logilab-common-1.0.2-1.4 on GA media",
 						Description: "These are all security issues fixed in the python-logilab-common-1.0.2-1.4 package on the GA media of openSUSE Tumbleweed.",
 						References: []string{
-							"https://www.suse.com/security/cve/CVE-2014-1838/",
 							"https://www.suse.com/support/security/rating/",
+							"https://www.suse.com/security/cve/CVE-2014-1838/",
+							"https://www.suse.com/security/cve/CVE-2014-1839/",
 						},
 						Severity: types.SeverityMedium,
 					},
