@@ -34,7 +34,6 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"advisory-detail", "CVE-2020-1234", "ubuntu 18.04", "xen"},
 					Value: types.Advisory{
 						FixedVersion: "1.2.3",
-						Status:       types.StatusFixed,
 					},
 				},
 				{
