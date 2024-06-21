@@ -102,7 +102,7 @@ func TestVulnSrc_Update(t *testing.T) {
 							"https://www.suse.com/security/cve/CVE-2014-1838/",
 							"https://www.suse.com/support/security/rating/",
 						},
-						Severity: types.SeverityModerate,
+						Severity: types.SeverityMedium,
 					},
 				},
 				{
