@@ -38,6 +38,12 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
+					Key: []string{"advisory-detail", "CVE-2020-1234", "ubuntu 18.04", "trusty"},
+					Value: types.Advisory{
+						Status: types.StatusFixDeferred,
+					},
+				},
+				{
 					Key: []string{"vulnerability-detail", "CVE-2020-1234", "ubuntu"},
 					Value: types.VulnerabilityDetail{
 						Description: "Observable response discrepancy in some Intel(R) Processors may allow an authorized user to potentially enable information disclosure via local access.",
