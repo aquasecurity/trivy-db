@@ -1,6 +1,7 @@
 package vulndb
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -112,6 +113,16 @@ func (t TrivyDB) Build(targets []string) error {
 	}
 
 	return nil
+}
+
+// Return a timestamp that would be a valid OCI tag (e.g. 2022-11-17-18-09-07)
+func (t TrivyDB) Timestamp() (string, error) {
+	meta, err := t.metadata.Get()
+	if err != nil {
+		return "", err
+	}
+	u := meta.UpdatedAt
+	return fmt.Sprintf("%.4d-%.2d-%.2d-%.2d-%.2d-%.2d", u.Year(), u.Month(), u.Day(), u.Hour(), u.Minute(), u.Second()), nil
 }
 
 func (t TrivyDB) vulnSrc(target string) (vulnsrc.VulnSrc, bool) {
