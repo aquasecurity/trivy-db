@@ -2,7 +2,6 @@ package vulndb
 
 import (
 	"log"
-	"path/filepath"
 	"time"
 
 	bolt "go.etcd.io/bbolt"
@@ -44,7 +43,7 @@ func WithVulnSrcs(srcs map[types.SourceID]vulnsrc.VulnSrc) Option {
 	}
 }
 
-func New(cacheDir string, updateInterval time.Duration, opts ...Option) *TrivyDB {
+func New(cacheDir, outputDir string, updateInterval time.Duration, opts ...Option) *TrivyDB {
 	// Initialize map
 	vulnSrcs := map[types.SourceID]vulnsrc.VulnSrc{}
 	for _, v := range vulnsrc.All {
@@ -54,7 +53,7 @@ func New(cacheDir string, updateInterval time.Duration, opts ...Option) *TrivyDB
 	dbc := db.Config{}
 	tdb := &TrivyDB{
 		dbc:            dbc,
-		metadata:       metadata.NewClient(filepath.Join(cacheDir, "db")),
+		metadata:       metadata.NewClient(outputDir),
 		vulnClient:     vulnerability.New(dbc),
 		vulnSrcs:       vulnSrcs,
 		cacheDir:       cacheDir,

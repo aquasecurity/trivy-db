@@ -39,6 +39,11 @@ func (ac *AppConfig) NewApp(version string) *cli.App {
 					Usage: "cache directory path",
 					Value: utils.CacheDir(),
 				},
+				cli.StringFlag{
+					Name:  "output-dir",
+					Usage: "output directory path",
+					Value: "out",
+				},
 				cli.DurationFlag{
 					Name:   "update-interval",
 					Usage:  "update interval",
