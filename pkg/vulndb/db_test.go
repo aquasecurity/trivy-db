@@ -1,8 +1,6 @@
 package vulndb_test
 
 import (
-	"encoding/json"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -107,14 +105,9 @@ func TestTrivyDB_Insert(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			f, err := os.Open(metadata.Path(cacheDir))
-			require.NoError(t, err)
-
 			// Compare metadata JSON file
-			var got metadata.Metadata
-			err = json.NewDecoder(f).Decode(&got)
+			got, err := metadata.NewClient(cacheDir).Get()
 			require.NoError(t, err)
-
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -143,13 +136,20 @@ func TestTrivyDB_Build(t *testing.T) {
 			},
 			wantValues: []wantKV{
 				{
-					key: []string{"Red Hat Enterprise Linux 8", "python-jinja2", "CVE-2019-10906"},
+					key: []string{
+						"Red Hat Enterprise Linux 8",
+						"python-jinja2",
+						"CVE-2019-10906",
+					},
 					value: types.Advisory{
 						FixedVersion: "2.10.1-2.el8_0",
 					},
 				},
 				{
-					key: []string{"vulnerability", "CVE-2019-10906"},
+					key: []string{
+						"vulnerability",
+						"CVE-2019-10906",
+					},
 					value: types.Vulnerability{
 						Title:       "python-jinja2: str.format_map allows sandbox escape",
 						Description: "In Pallets Jinja before 2.10.1, str.format_map allows a sandbox escape.",

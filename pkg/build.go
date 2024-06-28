@@ -1,6 +1,8 @@
 package pkg
 
 import (
+	"path/filepath"
+
 	"github.com/urfave/cli"
 	"golang.org/x/xerrors"
 
@@ -10,7 +12,7 @@ import (
 
 func build(c *cli.Context) error {
 	cacheDir := c.String("cache-dir")
-	if err := db.Init(cacheDir); err != nil {
+	if err := db.Init(filepath.Join(cacheDir, "db")); err != nil {
 		return xerrors.Errorf("db initialize error: %w", err)
 	}
 
