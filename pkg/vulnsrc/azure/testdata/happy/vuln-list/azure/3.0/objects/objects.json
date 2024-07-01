@@ -1,0 +1,14 @@
+{
+  "RpminfoObjects": [
+    {
+      "ID": "oval:com.microsoft.azurelinux:obj:38656001",
+      "Version": "1",
+      "Name": "ceph"
+    },
+    {
+      "ID": "oval:com.microsoft.azurelinux:obj:38611001",
+      "Version": "1",
+      "Name": "tensorflow"
+    }
+  ]
+}

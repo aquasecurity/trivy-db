@@ -17,15 +17,6 @@ import (
 )
 
 var (
-	cblDir         = filepath.Join("mariner")
-	platformFormat = "CBL-Mariner %s"
-
-	source = types.DataSource{
-		ID:   vulnerability.CBLMariner,
-		Name: "CBL-Mariner Vulnerability Data",
-		URL:  "https://github.com/microsoft/CBL-MarinerVulnerabilityData",
-	}
-
 	ErrNotSupported = xerrors.New("format not supported")
 )
 
@@ -36,21 +27,31 @@ type resolvedTest struct {
 }
 
 type VulnSrc struct {
-	dbc db.Operation
+	Dbc            db.Operation
+	VulnListDir    string
+	Source         types.DataSource
+	PlatformFormat string
 }
 
 func NewVulnSrc() VulnSrc {
 	return VulnSrc{
-		dbc: db.Config{},
+		Dbc:         db.Config{},
+		VulnListDir: filepath.Join("mariner"),
+		Source: types.DataSource{
+			ID:   vulnerability.CBLMariner,
+			Name: "CBL-Mariner Vulnerability Data",
+			URL:  "https://github.com/microsoft/CBL-MarinerVulnerabilityData",
+		},
+		PlatformFormat: "CBL-Mariner %s",
 	}
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return source.ID
+	return vs.Source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	rootDir := filepath.Join(dir, "vuln-list", cblDir)
+	rootDir := filepath.Join(dir, "vuln-list", vs.VulnListDir)
 	versions, err := os.ReadDir(rootDir)
 	if err != nil {
 		return xerrors.Errorf("unable to list directory entries (%s): %w", rootDir, err)
@@ -185,9 +186,9 @@ func followTestRefs(test oval.RpmInfoTest, objects map[string]string, states map
 }
 
 func (vs VulnSrc) save(majorVer string, entries []Entry) error {
-	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		platformName := fmt.Sprintf(platformFormat, majorVer)
-		if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+	err := vs.Dbc.BatchUpdate(func(tx *bolt.Tx) error {
+		platformName := fmt.Sprintf(vs.PlatformFormat, majorVer)
+		if err := vs.Dbc.PutDataSource(tx, platformName, vs.Source); err != nil {
 			return xerrors.Errorf("failed to put data source: %w", err)
 		}
 
@@ -215,7 +216,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, entries []Entry) erro
 			continue
 		}
 
-		if err := vs.dbc.PutAdvisoryDetail(tx, cveID, entry.PkgName, []string{platformName}, advisory); err != nil {
+		if err := vs.Dbc.PutAdvisoryDetail(tx, cveID, entry.PkgName, []string{platformName}, advisory); err != nil {
 			return xerrors.Errorf("failed to save CBL-Mariner advisory detail: %w", err)
 		}
 
@@ -226,11 +227,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, entries []Entry) erro
 			Description: entry.Metadata.Description,
 			References:  []string{entry.Metadata.Reference.RefURL},
 		}
-		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, source.ID, vuln); err != nil {
+		if err := vs.Dbc.PutVulnerabilityDetail(tx, cveID, vs.Source.ID, vuln); err != nil {
 			return xerrors.Errorf("failed to save CBL-Mariner vulnerability detail: %w", err)
 		}
 
-		if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
+		if err := vs.Dbc.PutVulnerabilityID(tx, cveID); err != nil {
 			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 		}
 	}
@@ -238,8 +239,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, entries []Entry) erro
 }
 
 func (vs VulnSrc) Get(release, pkgName string) ([]types.Advisory, error) {
-	bucket := fmt.Sprintf(platformFormat, release)
-	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
+	bucket := fmt.Sprintf(vs.PlatformFormat, release)
+	advisories, err := vs.Dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get CBL-Marina advisories: %w", err)
 	}
