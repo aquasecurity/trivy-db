@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	bolt "go.etcd.io/bbolt"
@@ -14,7 +15,6 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
-	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -95,7 +95,7 @@ func (vs *VulnSrc) walkFunc(r io.Reader, path string) error {
 		return nil
 	}
 	version := paths[len(paths)-2]
-	if !ustrings.InSlice(version, targetVersions) {
+	if !slices.Contains(targetVersions, version) {
 		log.Printf("unsupported Amazon version: %s\n", version)
 		return nil
 	}
