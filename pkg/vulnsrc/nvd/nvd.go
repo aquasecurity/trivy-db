@@ -73,6 +73,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []Cve) error {
 
 		cvssScore, cvssVector, severity := getCvssV2(cve.Metrics.CvssMetricV2)
 		cvssScoreV3, cvssVectorV3, severityV3 := getCvssV3(cve.Metrics.CvssMetricV31, cve.Metrics.CvssMetricV30)
+		cvssScoreV40, cvssVectorV40, severityV40 := getCvssV40(cve.Metrics.CvssMetricV40)
 
 		var references []string
 		for _, ref := range cve.References {
@@ -104,8 +105,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []Cve) error {
 			CvssVector:       cvssVector,
 			CvssScoreV3:      cvssScoreV3,
 			CvssVectorV3:     cvssVectorV3,
+			CvssScoreV40:     cvssScoreV40,
+			CvssVectorV40:    cvssVectorV40,
 			Severity:         severity,
 			SeverityV3:       severityV3,
+			SeverityV40:      severityV40,
 			CweIDs:           lo.Uniq(cweIDs),
 			References:       references,
 			Title:            "",
@@ -155,6 +159,20 @@ func getCvssV3(metricsV31, metricsV30 []CvssMetricV3) (score float64, vector str
 			score = metricV3.CvssData.BaseScore
 			vector = metricV3.CvssData.VectorString
 			severity, _ = types.NewSeverity(metricV3.CvssData.BaseSeverity)
+			return
+		}
+	}
+	return
+}
+
+// getCvssV40 selects vector, score and severity from V40 metrics
+func getCvssV40(metricsV40 []CvssMetricV40) (score float64, vector string, severity types.Severity) {
+	for _, metricV40 := range metricsV40 {
+		// save only NVD metric
+		if metricV40.Source == nvdSource {
+			score = metricV40.CvssData.BaseScore
+			vector = metricV40.CvssData.VectorString
+			severity, _ = types.NewSeverity(metricV40.CvssData.BaseSeverity)
 			return
 		}
 	}
