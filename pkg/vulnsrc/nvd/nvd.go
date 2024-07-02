@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	gocvss40 "github.com/pandatix/go-cvss/40"
 	"github.com/samber/lo"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
@@ -171,9 +172,13 @@ func getCvssV40(metricsV40 []CvssMetricV40) (score float64, vector string, sever
 		// save only NVD metric
 		if metricV40.Source == nvdSource {
 			score = metricV40.CvssData.BaseScore
-			vector = metricV40.CvssData.VectorString
+			cvss40, err := gocvss40.ParseVector(strings.TrimSuffix(metricV40.CvssData.VectorString, "/"))
+			if err != nil {
+				log.Printf("failed to parse CVSSv4.0 vector. vector: %s, err: %s", metricV40.CvssData.VectorString, err)
+				return 0, "", types.SeverityUnknown
+			}
 			severity, _ = types.NewSeverity(metricV40.CvssData.BaseSeverity)
-			return
+			return score, cvss40.Vector(), severity
 		}
 	}
 	return

@@ -63,7 +63,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						CvssScoreV3:      9.8,
 						CvssVectorV3:     "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
 						CvssScoreV40:     6.9,
-						CvssVectorV40:    "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+						CvssVectorV40:    "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
 						SeverityV3:       types.SeverityCritical,
 						SeverityV40:      types.SeverityMedium,
 						CweIDs:           []string{"CWE-287"},
