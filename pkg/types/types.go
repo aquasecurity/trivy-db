@@ -11,10 +11,12 @@ type Severity int
 type VendorSeverity map[SourceID]Severity
 
 type CVSS struct {
-	V2Vector string  `json:"V2Vector,omitempty"`
-	V3Vector string  `json:"V3Vector,omitempty"`
-	V2Score  float64 `json:"V2Score,omitempty"`
-	V3Score  float64 `json:"V3Score,omitempty"`
+	V2Vector  string  `json:"V2Vector,omitempty"`
+	V3Vector  string  `json:"V3Vector,omitempty"`
+	V40Vector string  `json:"V40Vector,omitempty"`
+	V2Score   float64 `json:"V2Score,omitempty"`
+	V3Score   float64 `json:"V3Score,omitempty"`
+	V40Score  float64 `json:"V40Score,omitempty"`
 }
 
 type CVSSVector struct {
@@ -70,8 +72,11 @@ type VulnerabilityDetail struct {
 	CvssVector       string     `json:",omitempty"`
 	CvssScoreV3      float64    `json:",omitempty"`
 	CvssVectorV3     string     `json:",omitempty"`
+	CvssScoreV40     float64    `json:",omitempty"`
+	CvssVectorV40    string     `json:",omitempty"`
 	Severity         Severity   `json:",omitempty"`
 	SeverityV3       Severity   `json:",omitempty"`
+	SeverityV40      Severity   `json:",omitempty"`
 	CweIDs           []string   `json:",omitempty"` // e.g. CWE-78, CWE-89
 	References       []string   `json:",omitempty"`
 	Title            string     `json:",omitempty"`

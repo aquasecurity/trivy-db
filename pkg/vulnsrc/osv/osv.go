@@ -8,7 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/goark/go-cvss/v3/metric"
+	gocvss30 "github.com/pandatix/go-cvss/30"
+	gocvss31 "github.com/pandatix/go-cvss/31"
 	"github.com/samber/lo"
 	bolt "go.etcd.io/bbolt"
 	"go.uber.org/zap"
@@ -327,12 +328,28 @@ func parseSeverity(severities []Severity) (string, float64, error) {
 			// e.g. https://github.com/github/advisory-database/blob/2d3bc73d2117893b217233aeb95b9236c7b93761/advisories/github-reviewed/2019/05/GHSA-j59f-6m4q-62h6/GHSA-j59f-6m4q-62h6.json#L14
 			// Trim the suffix to avoid errors
 			cvssVectorV3 := strings.TrimSuffix(s.Score, "/")
-			metrics, err := metric.NewTemporal().Decode(cvssVectorV3)
-			if err != nil {
-				return "", 0, xerrors.Errorf("failed to decode CVSSv3 vector: %w", err)
+			switch {
+			case strings.HasPrefix(cvssVectorV3, "CVSS:3.0"):
+				cvss, err := gocvss30.ParseVector(cvssVectorV3)
+				if err != nil {
+					return "", 0, xerrors.Errorf("failed to parse CVSSv3.0 vector: %w", err)
+				}
+				// cvss.EnvironmentalScore() returns the optimal score required from Vector.
+				// If the Environmental Metrics is not set, it will be the same value as TemporalScore(),
+				// and if Temporal Metrics is not set, it will be the same value as Basescore().
+				return cvssVectorV3, cvss.EnvironmentalScore(), nil
+			case strings.HasPrefix(s.Score, "CVSS:3.1"):
+				cvss, err := gocvss31.ParseVector(cvssVectorV3)
+				if err != nil {
+					return "", 0, xerrors.Errorf("failed to parse CVSSv3.1 vector: %w", err)
+				}
+				// cvss.EnvironmentalScore() returns the optimal score required from Vector.
+				// If the Environmental Metrics is not set, it will be the same value as TemporalScore(),
+				// and if Temporal Metrics is not set, it will be the same value as Basescore().
+				return cvssVectorV3, cvss.EnvironmentalScore(), nil
+			default:
+				return "", 0, xerrors.Errorf("vector:%s does not have CVSS v3 prefix: \"CVSS:3.0\" or \"CVSS:3.1\"", s.Score)
 			}
-			cvssScoreV3 := metrics.Score()
-			return cvssVectorV3, cvssScoreV3, nil
 		}
 	}
 	return "", 0, nil
