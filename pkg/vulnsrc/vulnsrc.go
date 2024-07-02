@@ -17,6 +17,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/mariner"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/openeuler"
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/photon"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat"
@@ -55,6 +56,7 @@ var (
 		wolfi.NewVulnSrc(),
 		chainguard.NewVulnSrc(),
 		bitnami.NewVulnSrc(),
+		openeuler.NewVulnSrc(),
 
 		k8svulndb.NewVulnSrc(),
 
