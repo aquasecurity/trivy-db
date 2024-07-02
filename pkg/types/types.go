@@ -101,9 +101,8 @@ type Advisory struct {
 
 	Arches []string `json:",omitempty"`
 
-	// It is filled only when FixedVersion is empty since it is obvious the state is "Fixed" when FixedVersion is not empty.
-	// e.g. Will not fix and Affected
-	Status Status `json:"-"`
+	// This is used to provide the status when a status is known & support by the the vulnsrc
+	Status Status `json:",omitempty"`
 
 	// Trivy DB has "vulnerability" bucket and severities are usually stored in the bucket per a vulnerability ID.
 	// In some cases, the advisory may have multiple severities depending on the packages.
