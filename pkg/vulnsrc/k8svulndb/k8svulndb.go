@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	k8sDir = filepath.Join("vuln-list-k8s", "upstream")
+	k8sDir = filepath.Join("vuln-list-k8s", "vulns")
 )
 
 func NewVulnSrc() osv.OSV {
