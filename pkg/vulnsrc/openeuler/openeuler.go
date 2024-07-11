@@ -133,10 +133,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []Cvrf) error {
 func getAffectedPackages(productTree ProductTree) []AffectedPackage {
 	var pkgs []AffectedPackage
 	for _, branch := range productTree.Branches {
-		// It doesn't matter whether the packages are `x86_64` or `aarch64`,
-		// because the number and content of those two kinds of packages are the same.
-		if branch.Type != "Package Arch" || branch.Name != "aarch64" {
-			// `aarch64` is chosen because it is more typical for openEuler
+		// `src` pkgs only contain source code and used for
+		// rebuilding pkgs of `aarch64`, `x86_64` or others,
+		// but not be installed into openEuler.
+		if branch.Type != "Package Arch" || branch.Name == "src" {
 			continue
 		}
 		for _, production := range branch.Productions {
@@ -145,20 +145,12 @@ func getAffectedPackages(productTree ProductTree) []AffectedPackage {
 				continue
 			}
 
-			// for example
-			// "ProductID": "ignition-debuginfo-2.14.0-2"
-			// "Text": "ignition-debuginfo-2.14.0-2.oe2203sp1.aarch64.rpm"
-			productID := production.ProductID
-			if productID == "" {
-				// productID is always contained in production.Text
-				parts := strings.Split(production.Text, ".oe")
-				productID = parts[0]
-			}
-
-			pkg := getPackage(productID)
+			pkg := getPackage(production.ProductID, branch.Name)
 			if pkg == nil {
-				log.Printf("invalid package name")
-				continue
+				// productID and FixVersion are also always contained
+				// in `production.Text`.
+				parts := strings.Split(production.Text, ".oe")
+				pkg = getPackage(parts[0], branch.Name)
 			}
 
 			pkgs = append(pkgs, AffectedPackage{
@@ -194,10 +186,14 @@ func getDetail(notes []DocumentNote) string {
 	return ""
 }
 
-func getPackage(product string) *Package {
+func getPackage(product string, arch string) *Package {
 	name, version := splitPkgName(product)
+	if name == "" || version == "" {
+		return nil
+	}
 	return &Package{
 		Name:         name,
+		Arch:         arch,
 		FixedVersion: version,
 	}
 }
@@ -217,14 +213,14 @@ func splitPkgName(product string) (string, string) {
 	if index == -1 {
 		return "", ""
 	}
-	release = pkgWithVersion[index+1:] + release
-	pkgWithVersion = pkgWithVersion[:index]
+	version := pkgWithVersion[index+1:] + release
+	name := pkgWithVersion[:index]
 
-	return pkgWithVersion, release
+	return name, version
 }
 
 func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) {
-	var bucket string = fmt.Sprintf(openEulerFormat, version)
+	bucket := fmt.Sprintf(openEulerFormat, version)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get openEuler advisories: %w", err)
