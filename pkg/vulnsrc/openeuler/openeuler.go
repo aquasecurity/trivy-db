@@ -83,17 +83,17 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []Cvrf) error {
 			continue
 		}
 
-		for _, affectedPkg := range affectedPkgs {
+		for pkg, arches := range affectedPkgs {
 			advisory := types.Advisory{
-				FixedVersion: affectedPkg.Package.FixedVersion,
+				FixedVersion: pkg.FixedVersion,
+				Arches:       arches,
 			}
-
-			if err := vs.dbc.PutDataSource(tx, affectedPkg.OSVer, source); err != nil {
+			if err := vs.dbc.PutDataSource(tx, pkg.OSVer, source); err != nil {
 				return xerrors.Errorf("failed to put data source: %w", err)
 			}
-			if err := vs.dbc.PutAdvisoryDetail(tx, cvrf.Tracking.ID, affectedPkg.Package.Name,
-				[]string{affectedPkg.OSVer}, advisory); err != nil {
-				return xerrors.Errorf("unable to save %s CVRF: %w", affectedPkg.OSVer, err)
+			if err := vs.dbc.PutAdvisoryDetail(tx, cvrf.Tracking.ID, pkg.Name,
+				[]string{pkg.OSVer}, advisory); err != nil {
+				return xerrors.Errorf("unable to save %s CVRF: %w", pkg.OSVer, err)
 			}
 		}
 
@@ -130,12 +130,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []Cvrf) error {
 	return nil
 }
 
-func getAffectedPackages(productTree ProductTree) []AffectedPackage {
-	var pkgs []AffectedPackage
+func getAffectedPackages(productTree ProductTree) AffectedPackages {
+	pkgs := AffectedPackages{}
 	for _, branch := range productTree.Branches {
-		// `src` pkgs only contain source code and used for
-		// rebuilding pkgs of `aarch64`, `x86_64` or others,
-		// but not be installed into openEuler.
+		// `src` pkgs are not installed in openEuler.
 		if branch.Type != "Package Arch" || branch.Name == "src" {
 			continue
 		}
@@ -145,18 +143,15 @@ func getAffectedPackages(productTree ProductTree) []AffectedPackage {
 				continue
 			}
 
-			pkg := getPackage(production.ProductID, branch.Name)
+			// e.g., ignition-debuginfo-2.14.0-2
+			pkg := getPackage(production.ProductID, osVer)
 			if pkg == nil {
 				// productID and FixVersion are also always contained
 				// in `production.Text`.
 				parts := strings.Split(production.Text, ".oe")
-				pkg = getPackage(parts[0], branch.Name)
+				pkg = getPackage(parts[0], osVer)
 			}
-
-			pkgs = append(pkgs, AffectedPackage{
-				OSVer:   osVer,
-				Package: *pkg,
-			})
+			pkgs[*pkg] = append(pkgs[*pkg], branch.Name)
 		}
 	}
 	return pkgs
@@ -186,14 +181,14 @@ func getDetail(notes []DocumentNote) string {
 	return ""
 }
 
-func getPackage(product string, arch string) *Package {
+func getPackage(product string, osVer string) *Package {
 	name, version := splitPkgName(product)
 	if name == "" || version == "" {
 		return nil
 	}
 	return &Package{
 		Name:         name,
-		Arch:         arch,
+		OSVer:        osVer,
 		FixedVersion: version,
 	}
 }

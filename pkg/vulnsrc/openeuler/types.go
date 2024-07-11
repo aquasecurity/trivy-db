@@ -97,11 +97,8 @@ type Remediation struct {
 
 type Package struct {
 	Name         string
-	Arch         string
+	OSVer        string
 	FixedVersion string
 }
-
-type AffectedPackage struct {
-	Package Package
-	OSVer   string
-}
+type Arches []string
+type AffectedPackages map[Package]Arches

@@ -40,12 +40,14 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"advisory-detail", "openEuler-SA-2024-1349", "openEuler-22.03-LTS-SP2", "perf"},
 					Value: types.Advisory{
 						FixedVersion: "5.10.0-153.48.0.126",
+						Arches:       []string{"aarch64", "x86_64"},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "openEuler-SA-2024-1349", "openEuler-22.03-LTS-SP2", "kernel-tools"},
 					Value: types.Advisory{
 						FixedVersion: "5.10.0-153.48.0.126",
+						Arches:       []string{"aarch64", "x86_64"},
 					},
 				},
 				{
@@ -108,6 +110,7 @@ func TestVulnSrc_Get(t *testing.T) {
 				{
 					VulnerabilityID: "openEuler-SA-2024-1349",
 					FixedVersion:    "5.10.0-153.48.0.126",
+					Arches:          []string{"aarch64", "x86_64"},
 				},
 			},
 		},
