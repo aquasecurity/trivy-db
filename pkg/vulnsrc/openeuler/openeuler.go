@@ -17,9 +17,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-type Distribution int
-
-const OpenEulerFormat = "openEuler-%s"
+const openEulerFormat = "openEuler-%s"
 
 var (
 	eulerDir = "openeuler"
@@ -134,9 +132,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []Cvrf) error {
 
 func getAffectedPackages(productTree ProductTree) []AffectedPackage {
 	var pkgs []AffectedPackage
-
 	for _, branch := range productTree.Branches {
+		// It doesn't matter whether the packages are `x86_64` or `aarch64`,
+		// because the number and content of those two kinds of packages are the same.
 		if branch.Type != "Package Arch" || branch.Name != "aarch64" {
+			// `aarch64` is chosen because it is more typical for openEuler
 			continue
 		}
 		for _, production := range branch.Productions {
@@ -145,8 +145,12 @@ func getAffectedPackages(productTree ProductTree) []AffectedPackage {
 				continue
 			}
 
+			// for example
+			// "ProductID": "ignition-debuginfo-2.14.0-2"
+			// "Text": "ignition-debuginfo-2.14.0-2.oe2203sp1.aarch64.rpm"
 			productID := production.ProductID
 			if productID == "" {
+				// productID is always contained in production.Text
 				parts := strings.Split(production.Text, ".oe")
 				productID = parts[0]
 			}
@@ -173,13 +177,12 @@ func getOSVersion(cpe string) string {
 		return ""
 	}
 	version := parts[4]
-	substrings := strings.Split(version, "-")
 	// e.g. 23.09, 22.03-LTS, 22.03-LTS-SP3
-	if len(substrings) < 1 || len(substrings) > 3 {
+	if len(strings.Split(version, "-")) > 3 {
 		log.Printf("invalid openEuler version: %s", version)
 		return ""
 	}
-	return fmt.Sprintf(OpenEulerFormat, version)
+	return fmt.Sprintf(openEulerFormat, version)
 }
 
 func getDetail(notes []DocumentNote) string {
@@ -200,30 +203,28 @@ func getPackage(product string) *Package {
 }
 
 func splitPkgName(product string) (string, string) {
-	var version string
-	var pkgName string
-
 	// Trim release
 	index := strings.LastIndex(product, "-")
 	if index == -1 {
 		return "", ""
 	}
-	version = product[index:]
-	pkgName = product[:index]
+
+	release := product[index:]
+	pkgWithVersion := product[:index]
 
 	// Trim version
-	index = strings.LastIndex(pkgName, "-")
+	index = strings.LastIndex(pkgWithVersion, "-")
 	if index == -1 {
 		return "", ""
 	}
-	version = pkgName[index+1:] + version
-	pkgName = pkgName[:index]
+	release = pkgWithVersion[index+1:] + release
+	pkgWithVersion = pkgWithVersion[:index]
 
-	return pkgName, version
+	return pkgWithVersion, release
 }
 
 func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) {
-	var bucket string = fmt.Sprintf(OpenEulerFormat, version)
+	var bucket string = fmt.Sprintf(openEulerFormat, version)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get openEuler advisories: %w", err)
