@@ -97,6 +97,7 @@ type Remediation struct {
 
 type Package struct {
 	Name         string
+	Arch         string
 	FixedVersion string
 }
 
