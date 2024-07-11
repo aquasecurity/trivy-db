@@ -96,27 +96,14 @@ func TestVulnSrc_Get(t *testing.T) {
 		fixtures []string
 		version  string
 		pkgName  string
-		dist     Distribution
 		want     []types.Advisory
 		wantErr  string
 	}{
 		{
-			name:     "happy path 1",
+			name:     "happy path",
 			fixtures: []string{"testdata/fixtures/happy.yaml"},
 			version:  "22.03-LTS-SP2",
 			pkgName:  "perf",
-			want: []types.Advisory{
-				{
-					VulnerabilityID: "openEuler-SA-2024-1349",
-					FixedVersion:    "5.10.0-153.48.0.126",
-				},
-			},
-		},
-		{
-			name:     "happy path 2",
-			fixtures: []string{"testdata/fixtures/happy.yaml"},
-			version:  "22.03-LTS-SP2",
-			pkgName:  "perf-debuginfo",
 			want: []types.Advisory{
 				{
 					VulnerabilityID: "openEuler-SA-2024-1349",
