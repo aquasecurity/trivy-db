@@ -8,6 +8,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
@@ -151,6 +153,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		fixtures []string
 		version  string
 		pkgName  string
+		arch     string
 		want     []types.Advisory
 		wantErr  string
 	}{
@@ -159,6 +162,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			fixtures: []string{"testdata/fixtures/happy.yaml"},
 			version:  "22.03-LTS-SP2",
 			pkgName:  "perf",
+			arch:     "aarch64",
 			want: []types.Advisory{
 				{
 					VulnerabilityID: "openEuler-SA-2024-1349",
@@ -171,7 +175,15 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 		},
 		{
-			name:     "no advisories are returned",
+			name:     "no arch found",
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			version:  "22.03-LTS-SP2",
+			pkgName:  "perf",
+			arch:     "noarch",
+			want:     nil,
+		},
+		{
+			name:     "no advisories found",
 			fixtures: []string{"testdata/fixtures/happy.yaml"},
 			version:  "23.09",
 			pkgName:  "perf",
@@ -187,14 +199,18 @@ func TestVulnSrc_Get(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			_ = dbtest.InitDB(t, tt.fixtures)
+			defer db.Close()
+
 			vs := NewVulnSrc()
-			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
-				Fixtures:   tt.fixtures,
-				WantValues: tt.want,
-				Release:    tt.version,
-				PkgName:    tt.pkgName,
-				WantErr:    tt.wantErr,
-			})
+			got, err := vs.Get(tt.version, tt.pkgName, tt.arch)
+			if tt.wantErr != "" {
+				assert.ErrorContains(t, err, tt.wantErr)
+				return
+			}
+
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

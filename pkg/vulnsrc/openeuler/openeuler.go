@@ -10,6 +10,7 @@ import (
 
 	"github.com/samber/lo"
 	bolt "go.etcd.io/bbolt"
+	"golang.org/x/exp/slices"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
@@ -232,11 +233,20 @@ func splitPkgName(product string) (string, string) {
 	return name, version
 }
 
-func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) {
+func (vs VulnSrc) Get(version, pkgName, arch string) ([]types.Advisory, error) {
 	bucket := fmt.Sprintf(openEulerFormat, version)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to get openEuler advisories: %w", err)
+	}
+
+	// Filter advisories by arch
+	advisories = lo.Filter(advisories, func(adv types.Advisory, _ int) bool {
+		return slices.Contains(adv.Arches, arch)
+	})
+
+	if len(advisories) == 0 {
+		return nil, nil
 	}
 	return advisories, nil
 }
