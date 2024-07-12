@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/samber/lo"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
@@ -77,20 +78,26 @@ func (vs VulnSrc) save(cvrfs []Cvrf) error {
 }
 
 func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []Cvrf) error {
+	var uniqOSVers = make(map[string]struct{})
 	for _, cvrf := range cvrfs {
 		affectedPkgs := getAffectedPackages(cvrf.ProductTree)
 		if len(affectedPkgs) == 0 {
 			continue
 		}
 
-		for pkg, arches := range affectedPkgs {
+		for _, pkg := range affectedPkgs {
 			advisory := types.Advisory{
 				FixedVersion: pkg.FixedVersion,
-				Arches:       arches,
+				Arches:       lo.Keys(pkg.Archs),
 			}
-			if err := vs.dbc.PutDataSource(tx, pkg.OSVer, source); err != nil {
-				return xerrors.Errorf("failed to put data source: %w", err)
+			// Don't put the same data source multiple times.
+			if _, ok := uniqOSVers[pkg.OSVer]; !ok {
+				uniqOSVers[pkg.OSVer] = struct{}{}
+				if err := vs.dbc.PutDataSource(tx, pkg.OSVer, source); err != nil {
+					return xerrors.Errorf("failed to put data source: %w", err)
+				}
 			}
+
 			if err := vs.dbc.PutAdvisoryDetail(tx, cvrf.Tracking.ID, pkg.Name,
 				[]string{pkg.OSVer}, advisory); err != nil {
 				return xerrors.Errorf("unable to save %s CVRF: %w", pkg.OSVer, err)
@@ -130,31 +137,45 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []Cvrf) error {
 	return nil
 }
 
-func getAffectedPackages(productTree ProductTree) AffectedPackages {
-	pkgs := AffectedPackages{}
+func getAffectedPackages(productTree ProductTree) []Package {
+	var pkgs = make(map[string]Package) // pkgID => Package
 	for _, branch := range productTree.Branches {
 		// `src` pkgs are not installed in openEuler.
-		if branch.Type != "Package Arch" || branch.Name == "src" {
+		if branch.Type != "Package Arch" || branch.Name == "src" || branch.Name == "" {
 			continue
 		}
 		for _, production := range branch.Productions {
 			osVer := getOSVersion(production.CPE)
 			if osVer == "" {
+				log.Printf("unable to parse OS version: %s", production.CPE)
 				continue
 			}
 
-			// e.g., ignition-debuginfo-2.14.0-2
-			pkg := getPackage(production.ProductID, osVer)
-			if pkg == nil {
-				// productID and FixVersion are also always contained
-				// in `production.Text`.
-				parts := strings.Split(production.Text, ".oe")
-				pkg = getPackage(parts[0], osVer)
+			// e.g., `ignition-debuginfo-2.14.0-2` or `perf-5.10.0-153.48.0.126.oe2203sp2.aarch64.rpm`
+			pkgName, pkgVersion := parseProduction(production)
+			if pkgName == "" || pkgVersion == "" {
+				log.Printf("unable to parse Production: %s", production)
+				continue
 			}
-			pkgs[*pkg] = append(pkgs[*pkg], branch.Name)
+
+			pkg := Package{
+				Name:         pkgName,
+				FixedVersion: pkgVersion,
+				Archs: map[string]struct{}{
+					branch.Name: {},
+				},
+				OSVer: osVer,
+			}
+
+			id := fmt.Sprintf("%s-%s-%s", pkgName, pkgVersion, osVer)
+			if p, ok := pkgs[id]; ok {
+				pkg.Archs = lo.Assign(pkg.Archs, p.Archs)
+			}
+
+			pkgs[id] = pkg
 		}
 	}
-	return pkgs
+	return lo.Values(pkgs)
 }
 
 func getOSVersion(cpe string) string {
@@ -181,16 +202,13 @@ func getDetail(notes []DocumentNote) string {
 	return ""
 }
 
-func getPackage(product string, osVer string) *Package {
-	name, version := splitPkgName(product)
+func parseProduction(production Production) (string, string) {
+	name, version := splitPkgName(production.ProductID)
 	if name == "" || version == "" {
-		return nil
+		text, _, _ := strings.Cut(production.Text, ".oe")
+		name, version = splitPkgName(text)
 	}
-	return &Package{
-		Name:         name,
-		OSVer:        osVer,
-		FixedVersion: version,
-	}
+	return name, version
 }
 
 func splitPkgName(product string) (string, string) {

@@ -97,8 +97,7 @@ type Remediation struct {
 
 type Package struct {
 	Name         string
-	OSVer        string
 	FixedVersion string
+	OSVer        string
+	Archs        map[string]struct{} // Use map to avoid duplicates
 }
-type Arches []string
-type AffectedPackages map[Package]Arches
