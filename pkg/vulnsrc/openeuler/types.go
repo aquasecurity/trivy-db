@@ -99,5 +99,5 @@ type Package struct {
 	Name         string
 	FixedVersion string
 	OSVer        string
-	Archs        map[string]struct{} // Use map to avoid duplicates
+	Archs        []string
 }

@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/samber/lo"
@@ -87,9 +88,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []Cvrf) error {
 		}
 
 		for _, pkg := range affectedPkgs {
+			arches := lo.Uniq(pkg.Archs)
+			sort.Strings(arches)
 			advisory := types.Advisory{
 				FixedVersion: pkg.FixedVersion,
-				Arches:       lo.Keys(pkg.Archs),
+				Arches:       arches,
 			}
 			// Don't put the same data source multiple times.
 			if _, ok := uniqOSVers[pkg.OSVer]; !ok {
@@ -162,15 +165,13 @@ func getAffectedPackages(productTree ProductTree) []Package {
 			pkg := Package{
 				Name:         pkgName,
 				FixedVersion: pkgVersion,
-				Archs: map[string]struct{}{
-					branch.Name: {},
-				},
-				OSVer: osVer,
+				Archs:        []string{branch.Name},
+				OSVer:        osVer,
 			}
 
 			id := fmt.Sprintf("%s-%s-%s", pkgName, pkgVersion, osVer)
 			if p, ok := pkgs[id]; ok {
-				pkg.Archs = lo.Assign(pkg.Archs, p.Archs)
+				pkg.Archs = append(pkg.Archs, p.Archs...)
 			}
 
 			pkgs[id] = pkg
