@@ -63,8 +63,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.Advisory{
 						FixedVersion: "5.10.0-153.48.0.126",
 						Arches: []string{
-							"x86_64",
 							"aarch64",
+							"x86_64",
 						},
 					},
 				},
@@ -93,8 +93,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.Advisory{
 						FixedVersion: "5.10.0-153.48.0.126",
 						Arches: []string{
-							"x86_64",
 							"aarch64",
+							"x86_64",
 						},
 					},
 				},
