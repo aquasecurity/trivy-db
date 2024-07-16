@@ -19,10 +19,7 @@ type CustomPut func(dbc Operation, tx *bolt.Tx, adv interface{}) error
 
 const SchemaVersion = 2
 
-var (
-	db    *bolt.DB
-	dbDir string
-)
+var db *bolt.DB
 
 type Operation interface {
 	BatchUpdate(fn func(*bolt.Tx) error) (err error)
@@ -58,12 +55,11 @@ type Operation interface {
 type Config struct {
 }
 
-func Init(cacheDir string) (err error) {
-	dbPath := Path(cacheDir)
-	dbDir = filepath.Dir(dbPath)
+func Init(dbDir string) (err error) {
 	if err = os.MkdirAll(dbDir, 0700); err != nil {
 		return xerrors.Errorf("failed to mkdir: %w", err)
 	}
+	dbPath := Path(dbDir)
 
 	// bbolt sometimes occurs the fatal error of "unexpected fault address".
 	// In that case, the local DB should be broken and needs to be removed.
@@ -85,12 +81,8 @@ func Init(cacheDir string) (err error) {
 	return nil
 }
 
-func Dir(cacheDir string) string {
-	return filepath.Join(cacheDir, "db")
-}
-
-func Path(cacheDir string) string {
-	dbPath := filepath.Join(Dir(cacheDir), "trivy.db")
+func Path(dbDir string) string {
+	dbPath := filepath.Join(dbDir, "trivy.db")
 	return dbPath
 }
 

@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	version "github.com/knqyf263/go-rpm-version"
@@ -129,7 +130,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			}
 
 			platformName := affectedPkg.PlatformName()
-			if !ustrings.InSlice(platformName, targetPlatforms) {
+			if !slices.Contains(targetPlatforms, platformName) {
 				continue
 			}
 

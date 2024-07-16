@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"path/filepath"
+	"slices"
 
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
@@ -13,7 +14,6 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
-	"github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -157,7 +157,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 	for packageName, patch := range cve.Patches {
 		pkgName := string(packageName)
 		for release, status := range patch {
-			if !strings.InSlice(status.Status, targetStatuses) {
+			if !slices.Contains(targetStatuses, status.Status) {
 				continue
 			}
 			osVersion, ok := UbuntuReleasesMapping[string(release)]

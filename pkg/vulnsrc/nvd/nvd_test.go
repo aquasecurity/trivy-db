@@ -56,6 +56,22 @@ func TestVulnSrc_Update(t *testing.T) {
 						PublishedDate:    utils.MustTimeParse("2023-11-28T00:15:07.140Z"),
 					},
 				},
+				{
+					Key: []string{"vulnerability-detail", "CVE-2024-5732", "nvd"},
+					Value: types.VulnerabilityDetail{
+						Description:      "A vulnerability was found in Clash up to 0.20.1 on Windows. It has been declared as critical. This vulnerability affects unknown code of the component Proxy Port. The manipulation leads to improper authentication. The attack can be initiated remotely. The exploit has been disclosed to the public and may be used. It is recommended to change the configuration settings. VDB-267406 is the identifier assigned to this vulnerability.",
+						CvssScoreV3:      9.8,
+						CvssVectorV3:     "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+						CvssScoreV40:     6.9,
+						CvssVectorV40:    "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+						SeverityV3:       types.SeverityCritical,
+						SeverityV40:      types.SeverityMedium,
+						CweIDs:           []string{"CWE-287"},
+						References:       []string{"https://github.com/GTA12138/vul/blob/main/clash%20for%20windows.md", "https://vuldb.com/?ctiid.267406", "https://vuldb.com/?id.267406", "https://vuldb.com/?submit.345469"},
+						LastModifiedDate: utils.MustTimeParse("2024-06-11T17:57:13.767Z"),
+						PublishedDate:    utils.MustTimeParse("2024-06-07T10:15:12.293Z"),
+					},
+				},
 			},
 		},
 		{
