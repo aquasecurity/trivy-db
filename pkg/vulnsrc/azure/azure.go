@@ -280,7 +280,7 @@ func (vs VulnSrc) Get(release, pkgName string) ([]types.Advisory, error) {
 	bucket := fmt.Sprintf(vs.platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get %s advisories: %w", bucket, vs.source.ID, err)
+		return nil, xerrors.Errorf("failed to get %s advisories: %w", bucket, err)
 	}
 	return advisories, nil
 }
