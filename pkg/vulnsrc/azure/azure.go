@@ -16,8 +16,33 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
+type Distribution int
+
+const (
+	Azure Distribution = iota
+	Mariner
+
+	azureDir            = "azure"
+	azurePlatformFormat = "Azure Linux %s"
+
+	marinerDir            = "mariner"
+	marinerPlatformFormat = "CBL-Mariner %s"
+)
+
 var (
 	ErrNotSupported = xerrors.New("format not supported")
+
+	azureSource = types.DataSource{
+		ID:   vulnerability.AzureLinux,
+		Name: "Azure Linux Vulnerability Data",
+		URL:  "https://github.com/microsoft/AzureLinuxVulnerabilityData",
+	}
+
+	marinerSource = types.DataSource{
+		ID:   vulnerability.CBLMariner,
+		Name: "CBL-Mariner Vulnerability Data",
+		URL:  "https://github.com/microsoft/AzureLinuxVulnerabilityData",
+	}
 )
 
 type resolvedTest struct {
@@ -27,31 +52,44 @@ type resolvedTest struct {
 }
 
 type VulnSrc struct {
-	Dbc            db.Operation
-	AzureDir       string
-	Source         types.DataSource
-	PlatformFormat string
+	dbc            db.Operation
+	azureDir       string
+	source         types.DataSource
+	platformFormat string
 }
 
-func NewVulnSrc() VulnSrc {
+func NewVulnSrc(dist Distribution) VulnSrc {
+	vulnSrc := azureVulnSrc()
+	if dist == Mariner {
+		vulnSrc = marinerVulnSrc()
+	}
+	return vulnSrc
+}
+
+func azureVulnSrc() VulnSrc {
 	return VulnSrc{
-		Dbc:      db.Config{},
-		AzureDir: filepath.Join("azure"),
-		Source: types.DataSource{
-			ID:   vulnerability.AzureLinux,
-			Name: "Azure Linux Vulnerability Data",
-			URL:  "https://github.com/microsoft/AzureLinuxVulnerabilityData",
-		},
-		PlatformFormat: "Azure Linux %s",
+		dbc:            db.Config{},
+		azureDir:       azureDir,
+		source:         azureSource,
+		platformFormat: azurePlatformFormat,
+	}
+}
+
+func marinerVulnSrc() VulnSrc {
+	return VulnSrc{
+		dbc:            db.Config{},
+		azureDir:       marinerDir,
+		source:         marinerSource,
+		platformFormat: marinerPlatformFormat,
 	}
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return vs.Source.ID
+	return vs.source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	rootDir := filepath.Join(dir, "vuln-list", vs.AzureDir)
+	rootDir := filepath.Join(dir, "vuln-list", vs.azureDir)
 	versions, err := os.ReadDir(rootDir)
 	if err != nil {
 		return xerrors.Errorf("unable to list directory entries (%s): %w", rootDir, err)
@@ -186,9 +224,9 @@ func followTestRefs(test oval.RpmInfoTest, objects map[string]string, states map
 }
 
 func (vs VulnSrc) save(majorVer string, entries []Entry) error {
-	err := vs.Dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		platformName := fmt.Sprintf(vs.PlatformFormat, majorVer)
-		if err := vs.Dbc.PutDataSource(tx, platformName, vs.Source); err != nil {
+	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
+		platformName := fmt.Sprintf(vs.platformFormat, majorVer)
+		if err := vs.dbc.PutDataSource(tx, platformName, vs.source); err != nil {
 			return xerrors.Errorf("failed to put data source: %w", err)
 		}
 
@@ -216,7 +254,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, entries []Entry) erro
 			continue
 		}
 
-		if err := vs.Dbc.PutAdvisoryDetail(tx, cveID, entry.PkgName, []string{platformName}, advisory); err != nil {
+		if err := vs.dbc.PutAdvisoryDetail(tx, cveID, entry.PkgName, []string{platformName}, advisory); err != nil {
 			return xerrors.Errorf("failed to save %s advisory detail: %w", platformName, err)
 		}
 
@@ -227,11 +265,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, entries []Entry) erro
 			Description: entry.Metadata.Description,
 			References:  []string{entry.Metadata.Reference.RefURL},
 		}
-		if err := vs.Dbc.PutVulnerabilityDetail(tx, cveID, vs.Source.ID, vuln); err != nil {
+		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vs.source.ID, vuln); err != nil {
 			return xerrors.Errorf("failed to save %s vulnerability detail: %w", platformName, err)
 		}
 
-		if err := vs.Dbc.PutVulnerabilityID(tx, cveID); err != nil {
+		if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
 			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
 		}
 	}
@@ -239,10 +277,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, entries []Entry) erro
 }
 
 func (vs VulnSrc) Get(release, pkgName string) ([]types.Advisory, error) {
-	bucket := fmt.Sprintf(vs.PlatformFormat, release)
-	advisories, err := vs.Dbc.GetAdvisories(bucket, pkgName)
+	bucket := fmt.Sprintf(vs.platformFormat, release)
+	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get %s advisories: %w", bucket, err)
+		return nil, xerrors.Errorf("failed to get %s advisories: %w", bucket, vs.source.ID, err)
 	}
 	return advisories, nil
 }
