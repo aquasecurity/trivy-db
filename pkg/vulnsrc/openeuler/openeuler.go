@@ -151,14 +151,14 @@ func getAffectedPackages(productTree ProductTree) []Package {
 		for _, production := range branch.Productions {
 			osVer := getOSVersion(production.CPE)
 			if osVer == "" {
-				log.Printf("unable to parse OS version: %s", production.CPE)
+				log.Printf("Unable to parse OS version: %s", production.CPE)
 				continue
 			}
 
 			// e.g., `ignition-debuginfo-2.14.0-2` or `perf-5.10.0-153.48.0.126.oe2203sp2.aarch64.rpm`
 			pkgName, pkgVersion := parseProduction(production)
 			if pkgName == "" || pkgVersion == "" {
-				log.Printf("unable to parse Production: %s", production)
+				log.Printf("Unable to parse Production: %s", production)
 				continue
 			}
 
@@ -189,7 +189,7 @@ func getOSVersion(cpe string) string {
 	version := parts[4]
 	// e.g. 23.09, 22.03-LTS, 22.03-LTS-SP3
 	if len(strings.Split(version, "-")) > 3 {
-		log.Printf("invalid openEuler version: %s", version)
+		log.Printf("Invalid openEuler version: %s", version)
 		return ""
 	}
 	return fmt.Sprintf(openEulerFormat, version)
