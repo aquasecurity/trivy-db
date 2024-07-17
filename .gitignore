@@ -17,8 +17,9 @@ coverage.txt
 
 **/.DS_Store
 
-assets
-cache
+/assets
+/cache
+/out
 
 # trivy-db Outputs
 trivy-db

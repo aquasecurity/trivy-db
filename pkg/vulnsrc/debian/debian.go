@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	debver "github.com/knqyf263/go-deb-version"
@@ -16,7 +17,6 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
-	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -204,7 +204,7 @@ func (vs VulnSrc) parseCVE(dir string) error {
 			}
 
 			// Skip not-affected, removed or undetermined advisories
-			if ustrings.InSlice(ann.Kind, skipStatuses) {
+			if slices.Contains(skipStatuses, ann.Kind) {
 				vs.notAffected[bkt] = struct{}{}
 				continue
 			}
@@ -310,7 +310,7 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 				}
 
 				// Skip not-affected, removed or undetermined advisories
-				if ustrings.InSlice(ann.Kind, skipStatuses) {
+				if slices.Contains(skipStatuses, ann.Kind) {
 					vs.notAffected[bkt] = struct{}{}
 					continue
 				}

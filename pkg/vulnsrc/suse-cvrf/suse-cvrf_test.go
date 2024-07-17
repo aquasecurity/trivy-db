@@ -69,6 +69,50 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
+			name: "happy path with openSUSE Tumbleweed",
+			dir:  filepath.Join("testdata", "happy", "openSUSE Tumbleweed"),
+			dist: OpenSUSETumbleweed,
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "openSUSE Tumbleweed"},
+					Value: types.DataSource{
+						ID:   vulnerability.SuseCVRF,
+						Name: "SUSE CVRF",
+						URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "openSUSE-SU-2024:10400-1", "openSUSE Tumbleweed", "python3-logilab-common"},
+					Value: types.Advisory{
+						FixedVersion: "1.2.2-1.2",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "openSUSE-SU-2024:10400-1", "openSUSE Tumbleweed", "python-logilab-common"},
+					Value: types.Advisory{
+						FixedVersion: "1.0.2-1.4",
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "openSUSE-SU-2024:10400-1", "suse-cvrf"},
+					Value: types.VulnerabilityDetail{
+						Title:       "python-logilab-common-1.0.2-1.4 on GA media",
+						Description: "These are all security issues fixed in the python-logilab-common-1.0.2-1.4 package on the GA media of openSUSE Tumbleweed.",
+						References: []string{
+							"https://www.suse.com/support/security/rating/",
+							"https://www.suse.com/security/cve/CVE-2014-1838/",
+							"https://www.suse.com/security/cve/CVE-2014-1839/",
+						},
+						Severity: types.SeverityMedium,
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "openSUSE-SU-2024:10400-1"},
+					Value: map[string]interface{}{},
+				},
+			},
+		},
+		{
 			name: "happy path with SUSE Enterprise Linux",
 			dir:  filepath.Join("testdata", "happy", "SUSE Enterprise Linux"),
 			dist: SUSEEnterpriseLinux,
@@ -466,6 +510,10 @@ func TestGetOSVersion(t *testing.T) {
 		{
 			inputPlatformName:    "openSUSE Leap 15.1 NonFree",
 			expectedPlatformName: "openSUSE Leap 15.1",
+		},
+		{
+			inputPlatformName:    "openSUSE Tumbleweed",
+			expectedPlatformName: "openSUSE Tumbleweed",
 		},
 		// Below tests exclude platformNames
 		{
