@@ -1,8 +1,9 @@
 SHELL=/bin/bash
 LDFLAGS=-ldflags "-s -w"
-CACHE_DIR=cache
-OUT_DIR=out
-ASSET_DIR=assets
+
+CACHE_DIR ?= cache
+OUT_DIR ?= out
+ASSET_DIR ?= assets
 
 GOPATH=$(shell go env GOPATH)
 GOBIN=$(GOPATH)/bin
