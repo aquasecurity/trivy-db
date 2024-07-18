@@ -1,4 +1,4 @@
-package mariner
+package azure
 
 import (
 	"fmt"
@@ -12,21 +12,37 @@ import (
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/mariner/oval"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/azure/oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-var (
-	cblDir         = filepath.Join("mariner")
-	platformFormat = "CBL-Mariner %s"
+type Distribution int
 
-	source = types.DataSource{
-		ID:   vulnerability.CBLMariner,
-		Name: "CBL-Mariner Vulnerability Data",
-		URL:  "https://github.com/microsoft/CBL-MarinerVulnerabilityData",
+const (
+	Azure Distribution = iota
+	Mariner
+
+	azureDir            = "azure"
+	azurePlatformFormat = "Azure Linux %s"
+
+	marinerDir            = "mariner"
+	marinerPlatformFormat = "CBL-Mariner %s"
+)
+
+var (
+	ErrNotSupported = xerrors.New("format not supported")
+
+	azureSource = types.DataSource{
+		ID:   vulnerability.AzureLinux,
+		Name: "Azure Linux Vulnerability Data",
+		URL:  "https://github.com/microsoft/AzureLinuxVulnerabilityData",
 	}
 
-	ErrNotSupported = xerrors.New("format not supported")
+	marinerSource = types.DataSource{
+		ID:   vulnerability.CBLMariner,
+		Name: "CBL-Mariner Vulnerability Data",
+		URL:  "https://github.com/microsoft/AzureLinuxVulnerabilityData",
+	}
 )
 
 type resolvedTest struct {
@@ -36,21 +52,44 @@ type resolvedTest struct {
 }
 
 type VulnSrc struct {
-	dbc db.Operation
+	dbc            db.Operation
+	azureDir       string
+	source         types.DataSource
+	platformFormat string
 }
 
-func NewVulnSrc() VulnSrc {
+func NewVulnSrc(dist Distribution) VulnSrc {
+	vulnSrc := azureVulnSrc()
+	if dist == Mariner {
+		vulnSrc = marinerVulnSrc()
+	}
+	return vulnSrc
+}
+
+func azureVulnSrc() VulnSrc {
 	return VulnSrc{
-		dbc: db.Config{},
+		dbc:            db.Config{},
+		azureDir:       azureDir,
+		source:         azureSource,
+		platformFormat: azurePlatformFormat,
+	}
+}
+
+func marinerVulnSrc() VulnSrc {
+	return VulnSrc{
+		dbc:            db.Config{},
+		azureDir:       marinerDir,
+		source:         marinerSource,
+		platformFormat: marinerPlatformFormat,
 	}
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return source.ID
+	return vs.source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	rootDir := filepath.Join(dir, "vuln-list", cblDir)
+	rootDir := filepath.Join(dir, "vuln-list", vs.azureDir)
 	versions, err := os.ReadDir(rootDir)
 	if err != nil {
 		return xerrors.Errorf("unable to list directory entries (%s): %w", rootDir, err)
@@ -186,13 +225,13 @@ func followTestRefs(test oval.RpmInfoTest, objects map[string]string, states map
 
 func (vs VulnSrc) save(majorVer string, entries []Entry) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		platformName := fmt.Sprintf(platformFormat, majorVer)
-		if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
+		platformName := fmt.Sprintf(vs.platformFormat, majorVer)
+		if err := vs.dbc.PutDataSource(tx, platformName, vs.source); err != nil {
 			return xerrors.Errorf("failed to put data source: %w", err)
 		}
 
 		if err := vs.commit(tx, platformName, entries); err != nil {
-			return xerrors.Errorf("CBL-Mariner %s commit error: %w", majorVer, err)
+			return xerrors.Errorf("%s commit error: %w", platformName, err)
 		}
 		return nil
 	})
@@ -216,7 +255,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, entries []Entry) erro
 		}
 
 		if err := vs.dbc.PutAdvisoryDetail(tx, cveID, entry.PkgName, []string{platformName}, advisory); err != nil {
-			return xerrors.Errorf("failed to save CBL-Mariner advisory detail: %w", err)
+			return xerrors.Errorf("failed to save %s advisory detail: %w", platformName, err)
 		}
 
 		severity, _ := types.NewSeverity(strings.ToUpper(entry.Metadata.Severity))
@@ -226,8 +265,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, entries []Entry) erro
 			Description: entry.Metadata.Description,
 			References:  []string{entry.Metadata.Reference.RefURL},
 		}
-		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, source.ID, vuln); err != nil {
-			return xerrors.Errorf("failed to save CBL-Mariner vulnerability detail: %w", err)
+		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vs.source.ID, vuln); err != nil {
+			return xerrors.Errorf("failed to save %s vulnerability detail: %w", platformName, err)
 		}
 
 		if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
@@ -238,10 +277,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, entries []Entry) erro
 }
 
 func (vs VulnSrc) Get(release, pkgName string) ([]types.Advisory, error) {
-	bucket := fmt.Sprintf(platformFormat, release)
+	bucket := fmt.Sprintf(vs.platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get CBL-Marina advisories: %w", err)
+		return nil, xerrors.Errorf("failed to get %s advisories: %w", bucket, err)
 	}
 	return advisories, nil
 }

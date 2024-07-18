@@ -1,6 +1,6 @@
-package mariner
+package azure
 
-import "github.com/aquasecurity/trivy-db/pkg/vulnsrc/mariner/oval"
+import "github.com/aquasecurity/trivy-db/pkg/vulnsrc/azure/oval"
 
 type operator string
 
