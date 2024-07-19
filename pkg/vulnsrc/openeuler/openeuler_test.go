@@ -30,18 +30,6 @@ func TestVulnSrc_Update(t *testing.T) {
 			name: "happy path with openEuler",
 			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []vulnsrctest.WantValues{
-				// Manually added `perf` for `openEuler-22.03` for this test
-				{
-					Key: []string{
-						"data-source",
-						"openEuler-22.03",
-					},
-					Value: types.DataSource{
-						ID:   vulnerability.OpenEuler,
-						Name: "openEuler CVRF",
-						URL:  "https://repo.openeuler.org/security/data/cvrf",
-					},
-				},
 				{
 					Key: []string{
 						"data-source",
@@ -58,37 +46,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"advisory-detail",
 						"openEuler-SA-2024-1349",
 						"openEuler-22.03-LTS-SP2",
-						"perf",
-					},
-					Value: types.Advisory{
-						FixedVersion: "5.10.0-153.48.0.126",
-						Arches: []string{
-							"aarch64",
-							"x86_64",
-						},
-					},
-				},
-				// Manually added `perf` for `openEuler-22.03` for this test
-				{
-					Key: []string{
-						"advisory-detail",
-						"openEuler-SA-2024-1349",
-						"openEuler-22.03",
-						"perf",
-					},
-					Value: types.Advisory{
-						FixedVersion: "5.10.0-153.48.0.126",
-						Arches: []string{
-							"aarch64",
-						},
-					},
-				},
-				{
-					Key: []string{
-						"advisory-detail",
-						"openEuler-SA-2024-1349",
-						"openEuler-22.03-LTS-SP2",
-						"kernel-tools",
+						"kernel",
 					},
 					Value: types.Advisory{
 						FixedVersion: "5.10.0-153.48.0.126",
@@ -161,7 +119,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			name:     "happy path",
 			fixtures: []string{"testdata/fixtures/happy.yaml"},
 			version:  "22.03-LTS-SP2",
-			pkgName:  "perf",
+			pkgName:  "kernel",
 			arch:     "aarch64",
 			want: []types.Advisory{
 				{
@@ -178,7 +136,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			name:     "no arch found",
 			fixtures: []string{"testdata/fixtures/happy.yaml"},
 			version:  "22.03-LTS-SP2",
-			pkgName:  "perf",
+			pkgName:  "kernel",
 			arch:     "noarch",
 			want:     nil,
 		},
@@ -186,14 +144,14 @@ func TestVulnSrc_Get(t *testing.T) {
 			name:     "no advisories found",
 			fixtures: []string{"testdata/fixtures/happy.yaml"},
 			version:  "23.09",
-			pkgName:  "perf",
+			pkgName:  "kernel",
 			want:     nil,
 		},
 		{
 			name:     "GetAdvisories returns an error",
 			fixtures: []string{"testdata/fixtures/sad.yaml"},
 			version:  "22.03-LTS-SP2",
-			pkgName:  "perf",
+			pkgName:  "kernel",
 			wantErr:  "failed to unmarshal advisory JSON",
 		},
 	}
