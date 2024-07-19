@@ -27,7 +27,7 @@ func ParseDefinitions(dir string) ([]Definition, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("CBL-Mariner OVAL walk error: %w", err)
+		return nil, xerrors.Errorf("Azure Linux OVAL walk error: %w", err)
 	}
 
 	return defs, nil
