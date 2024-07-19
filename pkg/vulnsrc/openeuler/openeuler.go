@@ -88,7 +88,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []Cvrf) error {
 		}
 
 		for _, pkg := range affectedPkgs {
-			arches := lo.Uniq(pkg.Archs)
+			arches := lo.Uniq(pkg.Arches)
 			sort.Strings(arches)
 			advisory := types.Advisory{
 				FixedVersion: pkg.FixedVersion,
@@ -142,10 +142,15 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []Cvrf) error {
 }
 
 func getAffectedPackages(productTree ProductTree) []Package {
-	var pkgs = make(map[string]Package) // pkgID => Package
+	var pkgs []Package // pkgID => Package
+	var arches []string
 	for _, branch := range productTree.Branches {
-		// `src` pkgs are not installed in openEuler.
-		if branch.Type != "Package Arch" || branch.Name == "src" || branch.Name == "" {
+		// `src` pkgs are the really affected pkgs.
+		if branch.Type != "Package Arch" || branch.Name == "" {
+			continue
+		}
+		if branch.Name != "src" {
+			arches = append(arches, branch.Name)
 			continue
 		}
 		for _, production := range branch.Productions {
@@ -154,30 +159,27 @@ func getAffectedPackages(productTree ProductTree) []Package {
 				log.Printf("Unable to parse OS version: %s", production.CPE)
 				continue
 			}
-
-			// e.g., `ignition-debuginfo-2.14.0-2` or `perf-5.10.0-153.48.0.126.oe2203sp2.aarch64.rpm`
+			// e.g., `ignition-2.14.0-2` or `ignition-2.14.0-2.oe2203sp2.src.rpm`
 			pkgName, pkgVersion := parseProduction(production)
 			if pkgName == "" || pkgVersion == "" {
 				log.Printf("Unable to parse Production: %s", production)
 				continue
 			}
-
 			pkg := Package{
 				Name:         pkgName,
 				FixedVersion: pkgVersion,
-				Archs:        []string{branch.Name},
+				Arches:       []string{},
 				OSVer:        osVer,
 			}
-
-			id := fmt.Sprintf("%s-%s-%s", pkgName, pkgVersion, osVer)
-			if p, ok := pkgs[id]; ok {
-				pkg.Archs = append(pkg.Archs, p.Archs...)
-			}
-
-			pkgs[id] = pkg
+			pkgs = append(pkgs, pkg)
 		}
 	}
-	return lo.Values(pkgs)
+
+	for i := range pkgs {
+		pkgs[i].Arches = arches
+	}
+
+	return pkgs
 }
 
 func getOSVersion(cpe string) string {

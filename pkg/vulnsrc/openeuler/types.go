@@ -99,5 +99,5 @@ type Package struct {
 	Name         string
 	FixedVersion string
 	OSVer        string
-	Archs        []string
+	Arches       []string
 }
