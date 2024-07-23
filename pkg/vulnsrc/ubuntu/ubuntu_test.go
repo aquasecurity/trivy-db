@@ -38,7 +38,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2020-1234", "ubuntu 18.04", "trusty"},
+					Key: []string{"advisory-detail", "CVE-2020-1234", "ubuntu 18.04", "wpa"},
 					Value: types.Advisory{
 						Status: types.StatusFixDeferred,
 					},
