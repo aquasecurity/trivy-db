@@ -24,9 +24,11 @@ type Distribution int
 const (
 	SUSEEnterpriseLinux Distribution = iota
 	OpenSUSE
+	OpenSUSETumbleweed
 
-	platformOpenSUSEFormat  = "openSUSE Leap %s"
-	platformSUSELinuxFormat = "SUSE Linux Enterprise %s"
+	platformOpenSUSELeapFormat       = "openSUSE Leap %s"
+	platformOpenSUSETumbleweedFormat = "openSUSE Tumbleweed"
+	platformSUSELinuxFormat          = "SUSE Linux Enterprise %s"
 )
 
 var (
@@ -55,6 +57,9 @@ func (vs VulnSrc) Name() types.SourceID {
 	if vs.dist == OpenSUSE {
 		return "opensuse-cvrf"
 	}
+	if vs.dist == OpenSUSETumbleweed {
+		return "opensuse-tumbleweed-cvrf"
+	}
 	return source.ID
 }
 
@@ -65,7 +70,7 @@ func (vs VulnSrc) Update(dir string) error {
 	switch vs.dist {
 	case SUSEEnterpriseLinux:
 		rootDir = filepath.Join(rootDir, "suse")
-	case OpenSUSE:
+	case OpenSUSE, OpenSUSETumbleweed:
 		rootDir = filepath.Join(rootDir, "opensuse")
 	default:
 		return xerrors.New("unknown distribution")
@@ -185,6 +190,10 @@ func getOSVersion(platformName string) string {
 		// SUSE Linux Enterprise Module for SUSE Manager Server 4.0
 		return ""
 	}
+	if strings.HasPrefix(platformName, "openSUSE Tumbleweed") {
+		// Tumbleweed has no version, it is a rolling release
+		return platformOpenSUSETumbleweedFormat
+	}
 	if strings.HasPrefix(platformName, "openSUSE Leap") {
 		// openSUSE Leap 15.0
 		ss := strings.Split(platformName, " ")
@@ -196,7 +205,7 @@ func getOSVersion(platformName string) string {
 			log.Printf("invalid version: %s, err: %s", platformName, err)
 			return ""
 		}
-		return fmt.Sprintf(platformOpenSUSEFormat, ss[2])
+		return fmt.Sprintf(platformOpenSUSELeapFormat, ss[2])
 	}
 	if strings.Contains(platformName, "SUSE Linux Enterprise") {
 		// e.g. SUSE Linux Enterprise Storage 7, SUSE Linux Enterprise Micro 5.1
@@ -276,7 +285,9 @@ func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) 
 	case SUSEEnterpriseLinux:
 		bucket = fmt.Sprintf(platformSUSELinuxFormat, version)
 	case OpenSUSE:
-		bucket = fmt.Sprintf(platformOpenSUSEFormat, version)
+		bucket = fmt.Sprintf(platformOpenSUSELeapFormat, version)
+	case OpenSUSETumbleweed:
+		bucket = platformOpenSUSETumbleweedFormat
 	default:
 		return nil, xerrors.New("unknown distribution")
 	}

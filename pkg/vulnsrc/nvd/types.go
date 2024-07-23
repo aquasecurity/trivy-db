@@ -23,9 +23,25 @@ type Reference struct {
 }
 
 type Metrics struct {
-	CvssMetricV31 []CvssMetricV3 `json:"cvssMetricV31,omitempty"`
-	CvssMetricV30 []CvssMetricV3 `json:"cvssMetricV30,omitempty"`
-	CvssMetricV2  []CvssMetricV2 `json:"cvssMetricV2,omitempty"`
+	CvssMetricV40 []CvssMetricV40 `json:"cvssMetricV40,omitempty"`
+	CvssMetricV31 []CvssMetricV3  `json:"cvssMetricV31,omitempty"`
+	CvssMetricV30 []CvssMetricV3  `json:"cvssMetricV30,omitempty"`
+	CvssMetricV2  []CvssMetricV2  `json:"cvssMetricV2,omitempty"`
+}
+
+// CvssMetricV40 is based on https://csrc.nist.gov/schema/nvd/api/2.0/cve_api_json_2.0.schema.
+type CvssMetricV40 struct {
+	Source   string      `json:"source"`
+	Type     string      `json:"type"`
+	CvssData CvssDataV40 `json:"cvssData"`
+}
+
+// CvssDataV40 is based on https://csrc.nist.gov/schema/nvd/api/2.0/external/cvss-v4.0.json
+type CvssDataV40 struct {
+	Version      string  `json:"version"`
+	VectorString string  `json:"vectorString"`
+	BaseScore    float64 `json:"baseScore"`
+	BaseSeverity string  `json:"baseSeverity"`
 }
 
 // CvssMetricV3 is based on https://csrc.nist.gov/schema/nvd/api/2.0/cve_api_json_2.0.schema.

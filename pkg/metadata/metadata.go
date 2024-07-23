@@ -7,8 +7,6 @@ import (
 	"time"
 
 	"golang.org/x/xerrors"
-
-	"github.com/aquasecurity/trivy-db/pkg/db"
 )
 
 const metadataFile = "metadata.json"
@@ -26,16 +24,13 @@ type Client struct {
 }
 
 // NewClient is the factory method for the metadata Client
-func NewClient(cacheDir string) Client {
-	filePath := Path(cacheDir)
+func NewClient(dbDir string) Client {
 	return Client{
-		filePath: filePath,
+		filePath: Path(dbDir),
 	}
 }
 
-// Path returns the metaData file path
-func Path(cacheDir string) string {
-	dbDir := db.Dir(cacheDir)
+func Path(dbDir string) string {
 	return filepath.Join(dbDir, metadataFile)
 }
 
