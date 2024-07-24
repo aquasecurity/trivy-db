@@ -23,12 +23,14 @@ type Distribution int
 
 const (
 	SUSEEnterpriseLinux Distribution = iota
+	SUSEEnterpriseLinuxMicro
 	OpenSUSE
 	OpenSUSETumbleweed
 
-	platformOpenSUSELeapFormat       = "openSUSE Leap %s"
-	platformOpenSUSETumbleweedFormat = "openSUSE Tumbleweed"
-	platformSUSELinuxFormat          = "SUSE Linux Enterprise %s"
+	platformOpenSUSELeapFormat             = "openSUSE Leap %s"
+	platformOpenSUSETumbleweedFormat       = "openSUSE Tumbleweed"
+	platformSUSELinuxFormat                = "SUSE Linux Enterprise %s"
+	platformSUSELinuxEnterpriseMicroFormat = "SUSE Linux Enterprise Micro %s"
 )
 
 var (
@@ -68,7 +70,7 @@ func (vs VulnSrc) Update(dir string) error {
 
 	rootDir := filepath.Join(dir, "vuln-list", suseDir)
 	switch vs.dist {
-	case SUSEEnterpriseLinux:
+	case SUSEEnterpriseLinux, SUSEEnterpriseLinuxMicro:
 		rootDir = filepath.Join(rootDir, "suse")
 	case OpenSUSE, OpenSUSETumbleweed:
 		rootDir = filepath.Join(rootDir, "opensuse")
@@ -207,9 +209,22 @@ func getOSVersion(platformName string) string {
 		}
 		return fmt.Sprintf(platformOpenSUSELeapFormat, ss[2])
 	}
+	if strings.HasPrefix(platformName, "SUSE Linux Enterprise Micro") {
+		// SUSE Linux Enterprise Micro 5.3
+		ss := strings.Split(platformName, " ")
+		if len(ss) < 5 {
+			log.Printf("invalid version: %s", platformName)
+			return ""
+		}
+		if _, err := version.Parse(ss[4]); err != nil {
+			log.Printf("invalid version: %s, err: %s", platformName, err)
+			return ""
+		}
+		return fmt.Sprintf(platformSUSELinuxEnterpriseMicroFormat, ss[4])
+	}
 	if strings.Contains(platformName, "SUSE Linux Enterprise") {
 		// e.g. SUSE Linux Enterprise Storage 7, SUSE Linux Enterprise Micro 5.1
-		if strings.HasPrefix(platformName, "SUSE Linux Enterprise Storage") || strings.HasPrefix(platformName, "SUSE Linux Enterprise Micro") {
+		if strings.HasPrefix(platformName, "SUSE Linux Enterprise Storage") {
 			return ""
 		}
 
@@ -282,6 +297,8 @@ func splitPkgName(pkgName string) (string, string) {
 func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) {
 	var bucket string
 	switch vs.dist {
+	case SUSEEnterpriseLinuxMicro:
+		bucket = fmt.Sprintf(platformSUSELinuxEnterpriseMicroFormat, version)
 	case SUSEEnterpriseLinux:
 		bucket = fmt.Sprintf(platformSUSELinuxFormat, version)
 	case OpenSUSE:
