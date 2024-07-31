@@ -194,6 +194,56 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
+			name: "happy path with SLE Micro CVRF including SUSE Linux Enterprise Micro",
+			dir:  filepath.Join("testdata", "happy", "SUSE Linux Enterprise Micro"),
+			dist: SUSEEnterpriseLinuxMicro,
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "SUSE Linux Enterprise Micro 5.3"},
+					Value: types.DataSource{
+						ID:   vulnerability.SuseCVRF,
+						Name: "SUSE CVRF",
+						URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "SUSE-SU-2024:2546-1", "SUSE Linux Enterprise Micro 5.3", "gnutls"},
+
+					Value: types.Advisory{
+						FixedVersion: "3.7.3-150400.8.1",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "SUSE-SU-2024:2546-1", "SUSE Linux Enterprise Micro 5.3", "libgnutls30"},
+					Value: types.Advisory{
+						FixedVersion: "3.7.3-150400.8.1",
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "SUSE-SU-2024:2546-1", "suse-cvrf"},
+					Value: types.VulnerabilityDetail{
+						Title:       "Security update for gnutls",
+						Description: "This update for gnutls fixes the following issues:\n\n- CVE-2024-28835: Fixed a certtool crash when verifying a certificate\n  chain (bsc#1221747).\n- CVE-2024-28834: Fixed a side-channel attack in the deterministic\n  ECDSA (bsc#1221746).\n\nOther fixes:\n\n- Fixed a memory leak when using the entropy collector (bsc#1221242).\n",
+						References: []string{
+							"https://www.suse.com/support/update/announcement/2024/suse-su-20242546-1/",
+							"https://lists.suse.com/pipermail/sle-security-updates/2024-July/018994.html",
+							"https://www.suse.com/support/security/rating/",
+							"https://bugzilla.suse.com/1221242",
+							"https://bugzilla.suse.com/1221746",
+							"https://bugzilla.suse.com/1221747",
+							"https://www.suse.com/security/cve/CVE-2024-28834/",
+							"https://www.suse.com/security/cve/CVE-2024-28835/",
+						},
+						Severity: types.SeverityMedium,
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "SUSE-SU-2024:2546-1"},
+					Value: map[string]interface{}{},
+				},
+			},
+		},
+		{
 			name:    "sad path (dir doesn't exist)",
 			dir:     filepath.Join("testdata", "badPath"),
 			dist:    OpenSUSE,
@@ -594,7 +644,7 @@ func TestGetOSVersion(t *testing.T) {
 		},
 		{
 			inputPlatformName:    "SUSE Linux Enterprise Micro 5.1",
-			expectedPlatformName: "",
+			expectedPlatformName: "SUSE Linux Enterprise Micro 5.1",
 		},
 	}
 	for _, tc := range testCases {
