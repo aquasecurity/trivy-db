@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -191,9 +192,15 @@ func getAffectedPackages(productTree ProductTree) []Package {
 }
 
 func getOSVersion(cpe string) string {
-	// e.g. cpe:/a:openEuler:openEuler:22.03-LTS-SP3
+	// e.g., cpe:/a:openEuler:openEuler:22.03-LTS-SP3
 	parts := strings.Split(cpe, ":")
 	if len(parts) != 5 || parts[2] != "openEuler" {
+		// e.g., cpe:/a:openEuler:openEuler-22.03-LTS
+		pattern := `^openEuler-\d+\.\d+(-LTS(-SP\d+)?)?$`
+		matched, _ := regexp.MatchString(pattern, parts[len(parts)-1])
+		if matched {
+			return parts[len(parts)-1]
+		}
 		return ""
 	}
 
