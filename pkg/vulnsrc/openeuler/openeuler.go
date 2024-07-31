@@ -88,11 +88,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []Cvrf) error {
 		}
 
 		for _, pkg := range affectedPkgs {
-			arches := lo.Uniq(pkg.Arches)
-			sort.Strings(arches)
 			advisory := types.Advisory{
 				FixedVersion: pkg.FixedVersion,
-				Arches:       arches,
+				Arches:       pkg.Arches,
 			}
 			// Don't put the same data source multiple times.
 			if _, ok := uniqOSVers[pkg.OSVer]; !ok {
@@ -142,15 +140,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []Cvrf) error {
 }
 
 func getAffectedPackages(productTree ProductTree) []Package {
-	var pkgs []Package // pkgID => Package
-	var arches []string
+	var pkgs []Package
+	var osArches = make(map[string][]string) // OS version => arches
 	for _, branch := range productTree.Branches {
 		// `src` pkgs are the really affected pkgs.
 		if branch.Type != "Package Arch" || branch.Name == "" {
-			continue
-		}
-		if branch.Name != "src" {
-			arches = append(arches, branch.Name)
 			continue
 		}
 		for _, production := range branch.Productions {
@@ -159,6 +153,18 @@ func getAffectedPackages(productTree ProductTree) []Package {
 				log.Printf("Unable to parse OS version: %s", production.CPE)
 				continue
 			}
+
+			// Store possible architectures for OS version.
+			// We need this to find affected architectures for src pkg later.
+			if branch.Name != "src" {
+				if arches, ok := osArches[osVer]; ok {
+					osArches[osVer] = append(arches, branch.Name)
+				} else {
+					osArches[osVer] = []string{branch.Name}
+				}
+				continue
+			}
+
 			// e.g., `ignition-2.14.0-2` or `ignition-2.14.0-2.oe2203sp2.src.rpm`
 			pkgName, pkgVersion := parseProduction(production)
 			if pkgName == "" || pkgVersion == "" {
@@ -168,14 +174,16 @@ func getAffectedPackages(productTree ProductTree) []Package {
 			pkg := Package{
 				Name:         pkgName,
 				FixedVersion: pkgVersion,
-				Arches:       []string{},
 				OSVer:        osVer,
 			}
 			pkgs = append(pkgs, pkg)
 		}
 	}
 
-	for i := range pkgs {
+	// Fill affected architectures
+	for i, pkg := range pkgs {
+		arches := lo.Uniq(osArches[pkg.OSVer])
+		sort.Strings(arches)
 		pkgs[i].Arches = arches
 	}
 
@@ -188,7 +196,12 @@ func getOSVersion(cpe string) string {
 	if len(parts) != 5 || parts[2] != "openEuler" {
 		return ""
 	}
+
+	// There are cases when different `SP<X>` OSes have different fixed versions
+	// see https://github.com/aquasecurity/trivy-db/pull/397#discussion_r1680608109
+	// So we need to keep the full version (with `LTS` and `SPX` suffixes)
 	version := parts[4]
+
 	// e.g. 23.09, 22.03-LTS, 22.03-LTS-SP3
 	if len(strings.Split(version, "-")) > 3 {
 		log.Printf("Invalid openEuler version: %s", version)
@@ -223,15 +236,15 @@ func splitPkgName(product string) (string, string) {
 	}
 
 	release := product[index:]
-	pkgWithVersion := product[:index]
+	nameWithVersion := product[:index]
 
 	// Trim version
-	index = strings.LastIndex(pkgWithVersion, "-")
+	index = strings.LastIndex(nameWithVersion, "-")
 	if index == -1 {
 		return "", ""
 	}
-	version := pkgWithVersion[index+1:] + release
-	name := pkgWithVersion[:index]
+	version := nameWithVersion[index+1:] + release
+	name := nameWithVersion[:index]
 
 	return name, version
 }
