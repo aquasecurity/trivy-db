@@ -33,7 +33,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"data-source",
-						"openEuler-22.03-LTS-SP2",
+						"openEuler-20.03-LTS",
 					},
 					Value: types.DataSource{
 						ID:   vulnerability.OpenEuler,
@@ -44,14 +44,41 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"advisory-detail",
-						"openEuler-SA-2024-1349",
-						"openEuler-22.03-LTS-SP2",
-						"kernel",
+						"openEuler-SA-2021-1061",
+						"openEuler-20.03-LTS",
+						"openjpeg",
 					},
 					Value: types.Advisory{
-						FixedVersion: "5.10.0-153.48.0.126",
+						FixedVersion: "1.5.1-25",
 						Arches: []string{
 							"aarch64",
+							"noarch",
+							"x86_64",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"openEuler-20.03-LTS-SP1",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.OpenEuler,
+						Name: "openEuler CVRF",
+						URL:  "https://repo.openeuler.org/security/data/cvrf",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"openEuler-SA-2021-1061",
+						"openEuler-20.03-LTS-SP1",
+						"openjpeg",
+					},
+					Value: types.Advisory{
+						FixedVersion: "1.5.1-25",
+						Arches: []string{
+							"noarch",
 							"x86_64",
 						},
 					},
@@ -59,16 +86,16 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"vulnerability-detail",
-						"openEuler-SA-2024-1349",
+						"openEuler-SA-2021-1061",
 						"openeuler",
 					},
 					Value: types.VulnerabilityDetail{
-						Title:       "An update for kernel is now available for openEuler-22.03-LTS-SP2",
-						Description: "The Linux Kernel, the operating system core itself.\n\nSecurity Fix(es):\n\nIn the Linux kernel...",
+						Title:       "An update for openjpeg is now available for openEuler-20.03-LTS and openEuler-20.03-LTS-SP1",
+						Description: "\n\nSecurity Fix(es):\n\nHeap-based buffer overflow in the JPEG2000 image tile decoder in OpenJPEG before 1.5.2...",
 						References: []string{
-							"https://www.openeuler.org/en/security/safety-bulletin/detail.html?id=openEuler-SA-2024-1349",
-							"https://www.openeuler.org/en/security/cve/detail.html?id=CVE-2023-52604",
-							"https://nvd.nist.gov/vuln/detail/CVE-2023-52604",
+							"https://openeuler.org/en/security/safety-bulletin/detail.html?id=openEuler-SA-2021-1061",
+							"https://openeuler.org/en/security/cve/detail.html?id=CVE-2014-0158",
+							"https://nvd.nist.gov/vuln/detail/CVE-2014-0158",
 						},
 						Severity: types.SeverityHigh,
 					},
@@ -76,7 +103,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"vulnerability-id",
-						"openEuler-SA-2024-1349",
+						"openEuler-SA-2021-1061",
 					},
 					Value: map[string]interface{}{},
 				},
