@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 
@@ -192,25 +191,28 @@ func getAffectedPackages(productTree ProductTree) []Package {
 }
 
 func getOSVersion(cpe string) string {
-	// e.g., cpe:/a:openEuler:openEuler:22.03-LTS-SP3
+	// e.g. cpe:/a:openEuler:openEuler:22.03-LTS-SP3
 	parts := strings.Split(cpe, ":")
-	if len(parts) != 5 || parts[2] != "openEuler" {
-		// e.g., cpe:/a:openEuler:openEuler-22.03-LTS
-		pattern := `^openEuler-\d+\.\d+(-LTS(-SP\d+)?)?$`
-		matched, _ := regexp.MatchString(pattern, parts[len(parts)-1])
-		if matched {
-			return parts[len(parts)-1]
-		}
+	// Wrong CPE format
+	if len(parts) < 4 || len(parts) > 5 || parts[2] != "openEuler" {
 		return ""
+	}
+
+	// There are 2 separators between OS name and version: `:` (default) and `-` (There are several cases).
+	// e.g. cpe:/a:openEuler:openEuler:22.03-LTS-SP3 and
+	var version string
+	if len(parts) == 5 { // e.g. `cpe:/a:openEuler:openEuler:22.03-LTS-SP3` => `22.03-LTS-SP3`
+		version = parts[4]
+	} else { // e.g. `cpe:/a:openEuler:openEuler-22.03-LTS` => `openEuler-22.03-LTS` => `22.03-LTS`
+		if osName, ver, ok := strings.Cut(parts[3], "-"); ok && osName == "openEuler" {
+			version = ver
+		}
 	}
 
 	// There are cases when different `SP<X>` OSes have different fixed versions
 	// see https://github.com/aquasecurity/trivy-db/pull/397#discussion_r1680608109
 	// So we need to keep the full version (with `LTS` and `SPX` suffixes)
-	version := parts[4]
-
-	// e.g. 23.09, 22.03-LTS, 22.03-LTS-SP3
-	if len(strings.Split(version, "-")) > 3 {
+	if len(strings.Split(version, "-")) > 3 || version == "" {
 		log.Printf("Invalid openEuler version: %s", version)
 		return ""
 	}
