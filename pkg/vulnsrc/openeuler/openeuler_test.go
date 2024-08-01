@@ -232,6 +232,14 @@ func TestGetOSVersion(t *testing.T) {
 			expectedOsVersion: "openEuler-21.03",
 		},
 		{
+			inputPlatformCPE:  "cpe:/a:openEuler:openEuler-22.03-LTS",
+			expectedOsVersion: "openEuler-22.03-LTS",
+		},
+		{
+			inputPlatformCPE:  "cpe:/a:openEuler:openEuler",
+			expectedOsVersion: "",
+		},
+		{
 			inputPlatformCPE:  "cpe:/a:openEuler:openEuler:20.03-LTS-LTS-SP4",
 			expectedOsVersion: "",
 		},
