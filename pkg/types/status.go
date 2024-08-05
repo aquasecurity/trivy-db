@@ -11,6 +11,9 @@ var (
 	//
 	// In addition to them, Red Hat has "will_not_fix" and "fix_deferred".
 	// cf. https://access.redhat.com/blogs/product-security/posts/2066793
+	//
+	// In addition to them, Ubuntu has "DNE", "ignored", "needed", "pending"
+	// https://askubuntu.com/a/1509706
 	Statuses = []string{
 		"unknown",
 		"not_affected",
@@ -29,7 +32,7 @@ const (
 	StatusAffected
 	StatusFixed
 	StatusUnderInvestigation
-	StatusWillNotFix // Red Hat specific
+	StatusWillNotFix
 	StatusFixDeferred
 	StatusEndOfLife
 )
