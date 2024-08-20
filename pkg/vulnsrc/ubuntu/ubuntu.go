@@ -170,7 +170,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 			}
 
 			adv := types.Advisory{}
-			normalised_status := StatusFromUbuntuStatus(status.Status)
+			normalisedStatus := StatusFromUbuntuStatus(status.Status)
 			if normalised_status == types.StatusFixed {
 				adv.FixedVersion = status.Note
 			} else {
