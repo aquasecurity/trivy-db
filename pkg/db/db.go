@@ -55,7 +55,7 @@ type Operation interface {
 type Config struct {
 }
 
-func Init(dbDir string) (err error) {
+func Init(dbDir string, dbOpts *bolt.Options) (err error) {
 	if err = os.MkdirAll(dbDir, 0700); err != nil {
 		return xerrors.Errorf("failed to mkdir: %w", err)
 	}
@@ -69,12 +69,12 @@ func Init(dbDir string) (err error) {
 			if err = os.Remove(dbPath); err != nil {
 				return
 			}
-			db, err = bolt.Open(dbPath, 0600, nil)
+			db, err = bolt.Open(dbPath, 0600, dbOpts)
 		}
 		debug.SetPanicOnFault(false)
 	}()
 
-	db, err = bolt.Open(dbPath, 0600, nil)
+	db, err = bolt.Open(dbPath, 0600, dbOpts)
 	if err != nil {
 		return xerrors.Errorf("failed to open db: %w", err)
 	}
