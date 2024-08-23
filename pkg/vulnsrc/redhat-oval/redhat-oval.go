@@ -248,6 +248,10 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 		return nil, xerrors.Errorf("CPE convert error: %w", err)
 	}
 
+	if len(cpeIndices) == 0 {
+		return nil, xerrors.Errorf("No CPE indices found")
+	}
+
 	rawAdvisories, err := vs.dbc.ForEachAdvisory([]string{rootBucket}, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to iterate advisories: %w", err)
