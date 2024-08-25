@@ -10,7 +10,7 @@ import (
 
 func build(c *cli.Context) error {
 	outputDir := c.String("output-dir")
-	if err := db.Init(outputDir); err != nil {
+	if err := db.Init(outputDir, nil); err != nil {
 		return xerrors.Errorf("db initialize error: %w", err)
 	}
 

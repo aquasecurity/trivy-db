@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"go.etcd.io/bbolt"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 )
@@ -15,6 +16,7 @@ func TestInit(t *testing.T) {
 	tests := []struct {
 		name   string
 		dbPath string
+		dbOpts *bbolt.Options
 	}{
 		{
 			name:   "normal db",
@@ -27,6 +29,12 @@ func TestInit(t *testing.T) {
 		{
 			name:   "no db",
 			dbPath: "",
+		},
+		{
+			name: "normal db with options",
+			dbOpts: &bbolt.Options{
+				NoSync: true,
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -43,7 +51,7 @@ func TestInit(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			err := db.Init(tmpDir)
+			err := db.Init(tmpDir, tt.dbOpts)
 			require.NoError(t, err)
 		})
 	}

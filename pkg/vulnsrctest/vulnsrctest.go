@@ -34,7 +34,7 @@ func TestUpdate(t *testing.T, vulnsrc Updater, args TestUpdateArgs) {
 	tempDir := t.TempDir()
 	dbPath := db.Path(tempDir)
 
-	err := db.Init(tempDir)
+	err := db.Init(tempDir, nil)
 	require.NoError(t, err)
 	defer db.Close()
 
