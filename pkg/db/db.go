@@ -20,6 +20,7 @@ type CustomPut func(dbc Operation, tx *bolt.Tx, adv interface{}) error
 const SchemaVersion = 2
 
 var db *bolt.DB
+var dbOptions *bolt.Options
 
 type Operation interface {
 	BatchUpdate(fn func(*bolt.Tx) error) (err error)
@@ -55,7 +56,11 @@ type Operation interface {
 type Config struct {
 }
 
-func Init(dbDir string, dbOpts *bolt.Options) (err error) {
+func WithOptions(opts *bolt.Options) {
+	dbOptions = opts
+}
+
+func Init(dbDir string) (err error) {
 	if err = os.MkdirAll(dbDir, 0700); err != nil {
 		return xerrors.Errorf("failed to mkdir: %w", err)
 	}
@@ -69,12 +74,12 @@ func Init(dbDir string, dbOpts *bolt.Options) (err error) {
 			if err = os.Remove(dbPath); err != nil {
 				return
 			}
-			db, err = bolt.Open(dbPath, 0600, dbOpts)
+			db, err = bolt.Open(dbPath, 0600, dbOptions)
 		}
 		debug.SetPanicOnFault(false)
 	}()
 
-	db, err = bolt.Open(dbPath, 0600, dbOpts)
+	db, err = bolt.Open(dbPath, 0600, dbOptions)
 	if err != nil {
 		return xerrors.Errorf("failed to open db: %w", err)
 	}

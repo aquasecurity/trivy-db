@@ -94,7 +94,7 @@ func TestTrivyDB_Insert(t *testing.T) {
 			cacheDir := filepath.Join(t.TempDir(), tt.fields.cacheDir)
 			outputDir := t.TempDir()
 
-			require.NoError(t, db.Init(cacheDir, nil))
+			require.NoError(t, db.Init(cacheDir))
 			defer db.Close()
 
 			c := vulndb.New(cacheDir, outputDir, 12*time.Hour, vulndb.WithClock(tt.fields.clock), vulndb.WithVulnSrcs(vulnsrcs))

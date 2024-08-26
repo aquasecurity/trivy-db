@@ -30,12 +30,6 @@ func TestInit(t *testing.T) {
 			name:   "no db",
 			dbPath: "",
 		},
-		{
-			name: "normal db with options",
-			dbOpts: &bbolt.Options{
-				NoSync: true,
-			},
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -51,7 +45,9 @@ func TestInit(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			err := db.Init(tmpDir, tt.dbOpts)
+			db.WithOptions(tt.dbOpts)
+			err := db.Init(tmpDir)
+			db.WithOptions(nil)
 			require.NoError(t, err)
 		})
 	}

@@ -23,7 +23,7 @@ func InitDB(t *testing.T, fixtureFiles []string) string {
 	require.NoError(t, loader.Close())
 
 	// Initialize DB
-	require.NoError(t, db.Init(dbDir, nil))
+	require.NoError(t, db.Init(dbDir))
 
 	return dbDir
 }
