@@ -45,9 +45,7 @@ func TestInit(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			db.WithOptions(tt.dbOpts)
-			err := db.Init(tmpDir)
-			db.WithOptions(nil)
+			err := db.Init(tmpDir, db.WithBoltOptions(tt.dbOpts))
 			require.NoError(t, err)
 		})
 	}
