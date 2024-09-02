@@ -248,6 +248,10 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 		return nil, xerrors.Errorf("CPE convert error: %w", err)
 	}
 
+	if len(cpeIndices) == 0 {
+		return nil, xerrors.Errorf("unable to find CPE indices. See https://github.com/aquasecurity/trivy-db/issues/435 for details")
+	}
+
 	rawAdvisories, err := vs.dbc.ForEachAdvisory([]string{rootBucket}, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to iterate advisories: %w", err)
