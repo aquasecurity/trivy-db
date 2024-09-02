@@ -918,7 +918,7 @@ func TestVulnSrc_Get(t *testing.T) {
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/cpe.yaml",
 			},
-			wantErr: "No CPE indices found",
+			wantErr: "unable to find CPE indices.",
 		},
 		{
 			name: "no advisory bucket",
@@ -936,7 +936,7 @@ func TestVulnSrc_Get(t *testing.T) {
 				repositories: []string{"rhel-8-for-x86_64-baseos-rpms"},
 			},
 			fixtures: []string{"testdata/fixtures/happy.yaml"},
-			wantErr:  "No CPE indices found",
+			wantErr:  "unable to find CPE indices.",
 		},
 		{
 			name: "broken JSON",
