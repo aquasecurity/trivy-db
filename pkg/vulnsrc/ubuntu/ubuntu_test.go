@@ -76,11 +76,6 @@ func TestUbuntuStatusFromStatus(t *testing.T) {
 		expected types.Status
 	}{
 		{
-			name:     "ignored",
-			status:   "ignored",
-			expected: types.StatusWillNotFix,
-		},
-		{
 			name:     "deferred",
 			status:   "deferred",
 			expected: types.StatusFixDeferred,

@@ -23,7 +23,7 @@ const (
 )
 
 var (
-	targetStatuses        = []string{"ignored", "needed", "pending", "deferred", "released"}
+	targetStatuses        = []string{"needed", "pending", "deferred", "released"}
 	UbuntuReleasesMapping = map[string]string{
 		"precise": "12.04",
 		"quantal": "12.10",
@@ -221,8 +221,6 @@ func SeverityFromPriority(priority string) types.Severity {
 // StatusFromUbuntuStatus normalises Ubuntu status into common Trivy Types
 func StatusFromUbuntuStatus(status string) types.Status {
 	switch status {
-	case "ignored":
-		return types.StatusWillNotFix
 	case "needed", "pending", "deferred":
 		return types.StatusFixDeferred
 	case "released":
