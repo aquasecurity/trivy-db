@@ -106,7 +106,8 @@ type Advisory struct {
 
 	Arches []string `json:",omitempty"`
 
-	// This is used to provide the status when a status is known & support by the the vulnsrc
+	// Status is used to provide the status when a status is known and supported by the data source (e.g. "Will not fix").
+	// When a patch is available, the status will be empty since the status is obviously "Fixed".
 	Status Status `json:",omitempty"`
 
 	// Trivy DB has "vulnerability" bucket and severities are usually stored in the bucket per a vulnerability ID.
