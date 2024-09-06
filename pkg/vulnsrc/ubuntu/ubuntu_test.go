@@ -3,6 +3,8 @@ package ubuntu_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -36,6 +38,12 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
+					Key: []string{"advisory-detail", "CVE-2020-1234", "ubuntu 18.04", "wpa"},
+					Value: types.Advisory{
+						Status: types.StatusFixDeferred,
+					},
+				},
+				{
 					Key: []string{"vulnerability-detail", "CVE-2020-1234", "ubuntu"},
 					Value: types.VulnerabilityDetail{
 						Description: "Observable response discrepancy in some Intel(R) Processors may allow an authorized user to potentially enable information disclosure via local access.",
@@ -57,6 +65,47 @@ func TestVulnSrc_Update(t *testing.T) {
 				WantValues: tt.wantValues,
 				WantErr:    tt.wantErr,
 			})
+		})
+	}
+}
+
+func TestUbuntuStatusFromStatus(t *testing.T) {
+	tests := []struct {
+		name     string
+		status   string
+		expected types.Status
+	}{
+		{
+			name:     "deferred",
+			status:   "deferred",
+			expected: types.StatusFixDeferred,
+		},
+		{
+			name:     "needed",
+			status:   "needed",
+			expected: types.StatusFixDeferred,
+		},
+		{
+			name:     "pending",
+			status:   "pending",
+			expected: types.StatusFixDeferred,
+		},
+		{
+			name:     "released",
+			status:   "released",
+			expected: types.StatusFixed,
+		},
+		{
+			name:     "unknown",
+			status:   "unknown",
+			expected: types.StatusUnknown,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			actual := ubuntu.StatusFromUbuntuStatus(test.status)
+			assert.Equal(t, test.expected, actual)
 		})
 	}
 }
