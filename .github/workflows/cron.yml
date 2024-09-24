@@ -88,6 +88,6 @@ jobs:
           tags=(latest ${{ env.VERSION }})
           for tag in ${tags[@]}; do
             ./oras push --artifact-type application/vnd.aquasec.trivy.config.v1+json \
-              public.ecr.aws/aquasecurity/trivy:${tag} \
+              public.ecr.aws/aquasecurity/trivy-db:${tag} \
               db.tar.gz:application/vnd.aquasec.trivy.db.layer.v1.tar+gzip
           done
