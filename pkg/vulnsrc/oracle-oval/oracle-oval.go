@@ -3,12 +3,13 @@ package oracleoval
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/samber/lo"
-	"golang.org/x/exp/slices"
 	"io"
 	"log"
 	"path/filepath"
+	"slices"
 	"strings"
+
+	"github.com/samber/lo"
 
 	version "github.com/knqyf263/go-rpm-version"
 	bolt "go.etcd.io/bbolt"
@@ -141,7 +142,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 				}
 
 				platformName := affectedPkg.PlatformName()
-				if !ustrings.InSlice(platformName, targetPlatforms) {
+				if !slices.Contains(targetPlatforms, platformName) {
 					continue
 				}
 

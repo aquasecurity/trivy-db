@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	debver "github.com/knqyf263/go-deb-version"
@@ -16,7 +17,6 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
-	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -204,7 +204,7 @@ func (vs VulnSrc) parseCVE(dir string) error {
 			}
 
 			// Skip not-affected, removed or undetermined advisories
-			if ustrings.InSlice(ann.Kind, skipStatuses) {
+			if slices.Contains(skipStatuses, ann.Kind) {
 				vs.notAffected[bkt] = struct{}{}
 				continue
 			}
@@ -225,15 +225,27 @@ func (vs VulnSrc) parseCVE(dir string) error {
 				continue
 			}
 
+			fixedVersion := ann.Version
+			kind := ann.Kind
+			if latestVersion, ok := vs.pkgVersions[bucket{codeName: ann.Release, pkgName: ann.Package}]; ok {
+				// If the fixed version has not yet been released, then set the state to "unfixed".
+				if comp, err := compareVersions(latestVersion, fixedVersion); err == nil && comp < 0 {
+					fixedVersion = ""
+					if kind == "fixed" {
+						kind = "unfixed"
+					}
+				}
+			}
+
 			advisory := Advisory{
-				FixedVersion: ann.Version, // It might be empty because of no-dsa.
+				FixedVersion: fixedVersion, // It might be empty because of no-dsa.
 				Severity:     severities[ann.Package],
 			}
 
-			if ann.Version == "" {
+			if fixedVersion == "" {
 				// Populate State only when FixedVersion is empty.
 				// e.g. no-dsa
-				advisory.State = ann.Kind
+				advisory.State = kind
 			}
 
 			// This advisory might be overwritten by DLA/DSA.
@@ -298,7 +310,7 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 				}
 
 				// Skip not-affected, removed or undetermined advisories
-				if ustrings.InSlice(ann.Kind, skipStatuses) {
+				if slices.Contains(skipStatuses, ann.Kind) {
 					vs.notAffected[bkt] = struct{}{}
 					continue
 				}
@@ -458,12 +470,12 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 
 	detail := types.Advisory{
 		VendorIDs:    adv.VendorIDs,
-		State:        adv.State,
+		Status:       newStatus(adv.State),
 		Severity:     severityFromUrgency(adv.Severity),
 		FixedVersion: adv.FixedVersion,
 	}
 
-	if err := dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.PkgName, []string{adv.Platform}, detail); err != nil {
+	if err := dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.PkgName, []string{adv.Platform}, &detail); err != nil {
 		return xerrors.Errorf("failed to save Debian advisory: %w", err)
 	}
 
@@ -659,4 +671,20 @@ func compareVersions(v1, v2 string) (int, error) {
 	}
 
 	return ver1.Compare(ver2), nil
+}
+
+func newStatus(s string) types.Status {
+	switch strings.ToLower(s) {
+	// "end-of-life" is considered as vulnerable
+	// e.g. https://security-tracker.debian.org/tracker/CVE-2022-1488
+	case "no-dsa", "unfixed":
+		return types.StatusAffected
+	case "ignored":
+		return types.StatusWillNotFix
+	case "postponed":
+		return types.StatusFixDeferred
+	case "end-of-life":
+		return types.StatusEndOfLife
+	}
+	return types.StatusUnknown
 }

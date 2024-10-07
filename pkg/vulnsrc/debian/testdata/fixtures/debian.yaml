@@ -5,7 +5,7 @@
         - key: CVE-2021-38370
           value:
             FixedVersion: ""
-            State: "no-dsa"
+            Status: 2
         - key: CVE-2008-5514
           value:
             FixedVersion: "2.02-3.1"

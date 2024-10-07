@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	bolt "go.etcd.io/bbolt"
-
 	"golang.org/x/xerrors"
 )
 

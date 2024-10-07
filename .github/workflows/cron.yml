@@ -13,11 +13,20 @@ jobs:
     name: Build DB
     runs-on: ubuntu-latest
     steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 32768 # vuln-list dirs + language repositories use more than 12GB of storage
+          remove-android: "true"
+          remove-docker-images: "true"
+          remove-dotnet: "true"
+          remove-haskell: "true"
+
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
 
@@ -44,7 +53,7 @@ jobs:
         run: mv assets/db.tar.gz .
 
       - name: Login to GitHub Packages Container registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ env.GH_USER }}
@@ -63,5 +72,22 @@ jobs:
           for tag in ${tags[@]}; do
             ./oras push --artifact-type application/vnd.aquasec.trivy.config.v1+json \
               ghcr.io/${{ github.repository }}:${tag} \
+              db.tar.gz:application/vnd.aquasec.trivy.db.layer.v1.tar+gzip
+          done
+
+      - name: Login to ECR
+        uses: docker/login-action@v3
+        with:
+          registry: public.ecr.aws
+          username: ${{ secrets.ECR_ACCESS_KEY_ID }}
+          password: ${{ secrets.ECR_SECRET_ACCESS_KEY }}
+
+      - name: Upload assets to ECR
+        run: |
+          ./oras version
+          tags=(latest ${{ env.VERSION }})
+          for tag in ${tags[@]}; do
+            ./oras push --artifact-type application/vnd.aquasec.trivy.config.v1+json \
+              public.ecr.aws/aquasecurity/trivy-db:${tag} \
               db.tar.gz:application/vnd.aquasec.trivy.db.layer.v1.tar+gzip
           done

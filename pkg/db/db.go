@@ -19,10 +19,7 @@ type CustomPut func(dbc Operation, tx *bolt.Tx, adv interface{}) error
 
 const SchemaVersion = 2
 
-var (
-	db    *bolt.DB
-	dbDir string
-)
+var db *bolt.DB
 
 type Operation interface {
 	BatchUpdate(fn func(*bolt.Tx) error) (err error)
@@ -55,15 +52,30 @@ type Operation interface {
 	RedHatNVRToCPEs(nvr string) (cpeIndices []int, err error)
 }
 
-type Config struct {
+type Config struct{}
+
+type Option func(*Options)
+
+type Options struct {
+	boltOptions *bolt.Options
 }
 
-func Init(cacheDir string) (err error) {
-	dbPath := Path(cacheDir)
-	dbDir = filepath.Dir(dbPath)
+func WithBoltOptions(boltOpts *bolt.Options) Option {
+	return func(opts *Options) {
+		opts.boltOptions = boltOpts
+	}
+}
+
+func Init(dbDir string, opts ...Option) (err error) {
+	dbOptions := &Options{}
+	for _, opt := range opts {
+		opt(dbOptions)
+	}
+
 	if err = os.MkdirAll(dbDir, 0700); err != nil {
 		return xerrors.Errorf("failed to mkdir: %w", err)
 	}
+	dbPath := Path(dbDir)
 
 	// bbolt sometimes occurs the fatal error of "unexpected fault address".
 	// In that case, the local DB should be broken and needs to be removed.
@@ -73,24 +85,20 @@ func Init(cacheDir string) (err error) {
 			if err = os.Remove(dbPath); err != nil {
 				return
 			}
-			db, err = bolt.Open(dbPath, 0600, nil)
+			db, err = bolt.Open(dbPath, 0600, dbOptions.boltOptions)
 		}
 		debug.SetPanicOnFault(false)
 	}()
 
-	db, err = bolt.Open(dbPath, 0600, nil)
+	db, err = bolt.Open(dbPath, 0600, dbOptions.boltOptions)
 	if err != nil {
 		return xerrors.Errorf("failed to open db: %w", err)
 	}
 	return nil
 }
 
-func Dir(cacheDir string) string {
-	return filepath.Join(cacheDir, "db")
-}
-
-func Path(cacheDir string) string {
-	dbPath := filepath.Join(Dir(cacheDir), "trivy.db")
+func Path(dbDir string) string {
+	dbPath := filepath.Join(dbDir, "trivy.db")
 	return dbPath
 }
 

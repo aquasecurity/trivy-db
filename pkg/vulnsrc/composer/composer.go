@@ -24,7 +24,7 @@ var (
 		URL:  "https://github.com/FriendsOfPHP/security-advisories",
 	}
 
-	bucketName = bucket.Name(string(vulnerability.Composer), source.Name)
+	bucketName = bucket.Name(vulnerability.Composer, source.Name)
 )
 
 type RawAdvisory struct {

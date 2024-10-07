@@ -1,0 +1,124 @@
+{
+  "schema_version": "1.5.0",
+  "id": "BIT-2020-7059",
+  "details": "When using fgetss() function to read data with stripping tags, in PHP versions 7.2.x below 7.2.27, 7.3.x below 7.3.14 and 7.4.x below 7.4.2 it is possible to supply data that will cause this function to read past the allocated buffer. This may lead to information disclosure or crash.",
+  "aliases": [
+    "CVE-2020-7059"
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "bitnami",
+        "name": "php",
+        "purl": "pkg:bitnami/php"
+      },
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:H"
+        }
+      ],
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "7.2.0"
+            },
+            {
+              "fixed": "7.2.27"
+            }
+          ]
+        },
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "7.3.0"
+            },
+            {
+              "fixed": "7.3.14"
+            }
+          ]
+        },
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "7.4.0"
+            },
+            {
+              "fixed": "7.4.2"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "database_specific": {
+    "severity": "Critical",
+    "cpes": [
+      "cpe:2.3:a:php:php:*:*:*:*:*:*:*:*"
+    ]
+  },
+  "references": [
+    {
+      "type": "WEB",
+      "url": "http://lists.opensuse.org/opensuse-security-announce/2020-03/msg00023.html"
+    },
+    {
+      "type": "WEB",
+      "url": "https://bugs.php.net/bug.php?id=79099"
+    },
+    {
+      "type": "WEB",
+      "url": "https://lists.debian.org/debian-lts-announce/2020/02/msg00030.html"
+    },
+    {
+      "type": "WEB",
+      "url": "https://seclists.org/bugtraq/2020/Feb/27"
+    },
+    {
+      "type": "WEB",
+      "url": "https://seclists.org/bugtraq/2020/Feb/31"
+    },
+    {
+      "type": "WEB",
+      "url": "https://seclists.org/bugtraq/2021/Jan/3"
+    },
+    {
+      "type": "WEB",
+      "url": "https://security.gentoo.org/glsa/202003-57"
+    },
+    {
+      "type": "WEB",
+      "url": "https://security.netapp.com/advisory/ntap-20200221-0002/"
+    },
+    {
+      "type": "WEB",
+      "url": "https://usn.ubuntu.com/4279-1/"
+    },
+    {
+      "type": "WEB",
+      "url": "https://www.debian.org/security/2020/dsa-4626"
+    },
+    {
+      "type": "WEB",
+      "url": "https://www.debian.org/security/2020/dsa-4628"
+    },
+    {
+      "type": "WEB",
+      "url": "https://www.oracle.com/security-alerts/cpuApr2021.html"
+    },
+    {
+      "type": "WEB",
+      "url": "https://www.oracle.com/security-alerts/cpujul2020.html"
+    },
+    {
+      "type": "WEB",
+      "url": "https://www.tenable.com/security/tns-2021-14"
+    }
+  ],
+  "published": "2023-06-12T14:25:39.868Z",
+  "modified": "2023-07-27T06:48:49.626Z"
+}

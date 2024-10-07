@@ -9,19 +9,19 @@ import (
 )
 
 func build(c *cli.Context) error {
-	cacheDir := c.String("cache-dir")
-	if err := db.Init(cacheDir); err != nil {
+	outputDir := c.String("output-dir")
+	if err := db.Init(outputDir); err != nil {
 		return xerrors.Errorf("db initialize error: %w", err)
 	}
 
+	cacheDir := c.String("cache-dir")
 	targets := c.StringSlice("only-update")
 	updateInterval := c.Duration("update-interval")
 
-	vdb := vulndb.New(cacheDir, updateInterval)
+	vdb := vulndb.New(cacheDir, outputDir, updateInterval)
 	if err := vdb.Build(targets); err != nil {
 		return xerrors.Errorf("build error: %w", err)
 	}
 
 	return nil
-
 }

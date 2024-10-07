@@ -6,10 +6,11 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
@@ -63,6 +64,50 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "openSUSE-SU-2019:2598-1"},
+					Value: map[string]interface{}{},
+				},
+			},
+		},
+		{
+			name: "happy path with openSUSE Tumbleweed",
+			dir:  filepath.Join("testdata", "happy", "openSUSE Tumbleweed"),
+			dist: OpenSUSETumbleweed,
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "openSUSE Tumbleweed"},
+					Value: types.DataSource{
+						ID:   vulnerability.SuseCVRF,
+						Name: "SUSE CVRF",
+						URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "openSUSE-SU-2024:10400-1", "openSUSE Tumbleweed", "python3-logilab-common"},
+					Value: types.Advisory{
+						FixedVersion: "1.2.2-1.2",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "openSUSE-SU-2024:10400-1", "openSUSE Tumbleweed", "python-logilab-common"},
+					Value: types.Advisory{
+						FixedVersion: "1.0.2-1.4",
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "openSUSE-SU-2024:10400-1", "suse-cvrf"},
+					Value: types.VulnerabilityDetail{
+						Title:       "python-logilab-common-1.0.2-1.4 on GA media",
+						Description: "These are all security issues fixed in the python-logilab-common-1.0.2-1.4 package on the GA media of openSUSE Tumbleweed.",
+						References: []string{
+							"https://www.suse.com/support/security/rating/",
+							"https://www.suse.com/security/cve/CVE-2014-1838/",
+							"https://www.suse.com/security/cve/CVE-2014-1839/",
+						},
+						Severity: types.SeverityMedium,
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "openSUSE-SU-2024:10400-1"},
 					Value: map[string]interface{}{},
 				},
 			},
@@ -144,6 +189,56 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "openSUSE-SU-2019:0003-1"},
+					Value: map[string]interface{}{},
+				},
+			},
+		},
+		{
+			name: "happy path with SLE Micro CVRF including SUSE Linux Enterprise Micro",
+			dir:  filepath.Join("testdata", "happy", "SUSE Linux Enterprise Micro"),
+			dist: SUSEEnterpriseLinuxMicro,
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "SUSE Linux Enterprise Micro 5.3"},
+					Value: types.DataSource{
+						ID:   vulnerability.SuseCVRF,
+						Name: "SUSE CVRF",
+						URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "SUSE-SU-2024:2546-1", "SUSE Linux Enterprise Micro 5.3", "gnutls"},
+
+					Value: types.Advisory{
+						FixedVersion: "3.7.3-150400.8.1",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "SUSE-SU-2024:2546-1", "SUSE Linux Enterprise Micro 5.3", "libgnutls30"},
+					Value: types.Advisory{
+						FixedVersion: "3.7.3-150400.8.1",
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "SUSE-SU-2024:2546-1", "suse-cvrf"},
+					Value: types.VulnerabilityDetail{
+						Title:       "Security update for gnutls",
+						Description: "This update for gnutls fixes the following issues:\n\n- CVE-2024-28835: Fixed a certtool crash when verifying a certificate\n  chain (bsc#1221747).\n- CVE-2024-28834: Fixed a side-channel attack in the deterministic\n  ECDSA (bsc#1221746).\n\nOther fixes:\n\n- Fixed a memory leak when using the entropy collector (bsc#1221242).\n",
+						References: []string{
+							"https://www.suse.com/support/update/announcement/2024/suse-su-20242546-1/",
+							"https://lists.suse.com/pipermail/sle-security-updates/2024-July/018994.html",
+							"https://www.suse.com/support/security/rating/",
+							"https://bugzilla.suse.com/1221242",
+							"https://bugzilla.suse.com/1221746",
+							"https://bugzilla.suse.com/1221747",
+							"https://www.suse.com/security/cve/CVE-2024-28834/",
+							"https://www.suse.com/security/cve/CVE-2024-28835/",
+						},
+						Severity: types.SeverityMedium,
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "SUSE-SU-2024:2546-1"},
 					Value: map[string]interface{}{},
 				},
 			},
@@ -466,6 +561,10 @@ func TestGetOSVersion(t *testing.T) {
 			inputPlatformName:    "openSUSE Leap 15.1 NonFree",
 			expectedPlatformName: "openSUSE Leap 15.1",
 		},
+		{
+			inputPlatformName:    "openSUSE Tumbleweed",
+			expectedPlatformName: "openSUSE Tumbleweed",
+		},
 		// Below tests exclude platformNames
 		{
 			inputPlatformName:    "openSUSE Leap NonFree 15.1",
@@ -545,7 +644,7 @@ func TestGetOSVersion(t *testing.T) {
 		},
 		{
 			inputPlatformName:    "SUSE Linux Enterprise Micro 5.1",
-			expectedPlatformName: "",
+			expectedPlatformName: "SUSE Linux Enterprise Micro 5.1",
 		},
 	}
 	for _, tc := range testCases {

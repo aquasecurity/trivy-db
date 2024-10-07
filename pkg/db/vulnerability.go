@@ -3,10 +3,10 @@ package db
 import (
 	"encoding/json"
 
-	"github.com/aquasecurity/trivy-db/pkg/types"
-
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
+
+	"github.com/aquasecurity/trivy-db/pkg/types"
 )
 
 const (

@@ -149,7 +149,7 @@ func (vs VulnSrc) mergeAdvisories(advisories map[bucket]Advisory, defs map[bucke
 			found := false
 			for i := range old.Entries {
 				// New advisory should contain a single fixed version and list of arches.
-				if old.Entries[i].FixedVersion == def.Entry.FixedVersion && old.Entries[i].State == def.Entry.State &&
+				if old.Entries[i].FixedVersion == def.Entry.FixedVersion && old.Entries[i].Status == def.Entry.Status &&
 					slices.Equal(old.Entries[i].Arches, def.Entry.Arches) && slices.Equal(old.Entries[i].Cves, def.Entry.Cves) {
 					found = true
 					old.Entries[i].AffectedCPEList = ustrings.Merge(old.Entries[i].AffectedCPEList, def.Entry.AffectedCPEList)
@@ -248,6 +248,10 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 		return nil, xerrors.Errorf("CPE convert error: %w", err)
 	}
 
+	if len(cpeIndices) == 0 {
+		return nil, xerrors.Errorf("unable to find CPE indices. See https://github.com/aquasecurity/trivy-db/issues/435 for details")
+	}
+
 	rawAdvisories, err := vs.dbc.ForEachAdvisory([]string{rootBucket}, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to iterate advisories: %w", err)
@@ -270,7 +274,7 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 					Severity:     cve.Severity,
 					FixedVersion: entry.FixedVersion,
 					Arches:       entry.Arches,
-					State:        entry.State,
+					Status:       entry.Status,
 					DataSource:   &v.Source,
 				}
 
@@ -362,8 +366,11 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 						Cves:            cveEntries,
 						FixedVersion:    affectedPkg.FixedVersion,
 						AffectedCPEList: advisory.Metadata.Advisory.AffectedCpeList,
-						State:           advisory.Metadata.Advisory.Affected.Resolution.State,
 						Arches:          affectedPkg.Arches,
+
+						// The status is obviously "fixed" when there is a patch.
+						// To keep the database size small, we don't store the status for patched vulns.
+						// Status:		  StatusFixed,
 					},
 				}
 			} else { // For unpatched vulnerabilities
@@ -382,7 +389,7 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 							FixedVersion:    affectedPkg.FixedVersion,
 							AffectedCPEList: advisory.Metadata.Advisory.AffectedCpeList,
 							Arches:          affectedPkg.Arches,
-							State:           advisory.Metadata.Advisory.Affected.Resolution.State,
+							Status:          newStatus(advisory.Metadata.Advisory.Affected.Resolution.State),
 						},
 					}
 				}
@@ -477,4 +484,18 @@ func severityFromImpact(sev string) types.Severity {
 		return types.SeverityCritical
 	}
 	return types.SeverityUnknown
+}
+
+func newStatus(s string) types.Status {
+	switch strings.ToLower(s) {
+	case "affected", "fix deferred":
+		return types.StatusAffected
+	case "under investigation":
+		return types.StatusUnderInvestigation
+	case "will not fix":
+		return types.StatusWillNotFix
+	case "out of support scope":
+		return types.StatusEndOfLife
+	}
+	return types.StatusUnknown
 }

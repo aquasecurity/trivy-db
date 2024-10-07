@@ -23,7 +23,10 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []vulnsrctest.WantValues{
 				{
-					Key: []string{"data-source", "debian 9"},
+					Key: []string{
+						"data-source",
+						"debian 9",
+					},
 					Value: types.DataSource{
 						ID:   vulnerability.Debian,
 						Name: "Debian Security Tracker",
@@ -32,79 +35,166 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				// Ref. https://security-tracker.debian.org/tracker/CVE-2021-33560
 				{
-					Key: []string{"advisory-detail", "CVE-2021-33560", "debian 9", "libgcrypt20"},
-					Value: types.Advisory{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2021-33560",
+						"debian 9",
+						"libgcrypt20",
+					},
+					Value: &types.Advisory{
 						VendorIDs:    []string{"DLA-2691-1"},
 						FixedVersion: "1.7.6-2+deb9u4",
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2021-33560", "debian 10", "libgcrypt20"},
-					Value: types.Advisory{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2021-33560",
+						"debian 10",
+						"libgcrypt20",
+					},
+					Value: &types.Advisory{
 						FixedVersion: "1.8.4-5+deb10u1",
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2021-33560", "debian 11", "libgcrypt20"},
-					Value: types.Advisory{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2021-33560",
+						"debian 11",
+						"libgcrypt20",
+					},
+					Value: &types.Advisory{
 						FixedVersion: "1.8.7-6",
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2021-29629", "debian 10", "dacs"},
-					Value: types.Advisory{
-						State:    "ignored",
+					Key: []string{
+						"advisory-detail",
+						"CVE-2021-29629",
+						"debian 10",
+						"dacs",
+					},
+					Value: &types.Advisory{
 						Severity: types.SeverityLow,
+						Status:   types.StatusWillNotFix,
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "DSA-3714-1", "debian 8", "akonadi"},
-					Value: types.Advisory{
+					Key: []string{
+						"advisory-detail",
+						"DSA-3714-1",
+						"debian 8",
+						"akonadi",
+					},
+					Value: &types.Advisory{
 						VendorIDs:    []string{"DSA-3714-1"},
 						FixedVersion: "1.13.0-2+deb8u2",
 					},
 				},
 				{
 					// wrong no-dsa
-					Key: []string{"advisory-detail", "CVE-2020-8631", "debian 11", "cloud-init"},
-					Value: types.Advisory{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2020-8631",
+						"debian 11",
+						"cloud-init",
+					},
+					Value: &types.Advisory{
 						FixedVersion: "19.4-2",
 					},
 				},
 				{
-					Key: []string{"vulnerability-detail", "CVE-2021-33560", string(vulnerability.Debian)},
+					// Fix version not released yet
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-5981",
+						"debian 11",
+						"gnutls28",
+					},
+					Value: &types.Advisory{
+						Status: types.StatusAffected,
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2021-33560",
+						string(vulnerability.Debian),
+					},
 					Value: types.VulnerabilityDetail{
 						Title: "Libgcrypt before 1.8.8 and 1.9.x before 1.9.3 mishandles ElGamal encry ...",
 					},
 				},
 				{
-					Key: []string{"vulnerability-detail", "CVE-2021-29629", string(vulnerability.Debian)},
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2021-29629",
+						string(vulnerability.Debian),
+					},
 					Value: types.VulnerabilityDetail{
 						Title: "In FreeBSD 13.0-STABLE before n245765-bec0d2c9c841, 12.2-STABLE before ...",
 					},
 				},
 				{
-					Key: []string{"vulnerability-detail", "DSA-3714-1", string(vulnerability.Debian)},
+					Key: []string{
+						"vulnerability-detail",
+						"DSA-3714-1",
+						string(vulnerability.Debian),
+					},
 					Value: types.VulnerabilityDetail{
 						Title: "akonadi - update",
 					},
 				},
 				{
-					Key:   []string{"vulnerability-id", "CVE-2021-33560"},
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2023-5981",
+						string(vulnerability.Debian),
+					},
+					Value: types.VulnerabilityDetail{
+						Title: "A vulnerability was found that the response times to malformed ciphert ...",
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2021-33560",
+					},
 					Value: map[string]interface{}{},
 				},
 				{
-					Key:   []string{"vulnerability-id", "CVE-2021-29629"},
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2021-29629",
+					},
 					Value: map[string]interface{}{},
 				},
 				{
-					Key:   []string{"vulnerability-id", "DSA-3714-1"},
+					Key: []string{
+						"vulnerability-id",
+						"DSA-3714-1",
+					},
+					Value: map[string]interface{}{},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2023-5981",
+					},
 					Value: map[string]interface{}{},
 				},
 			},
 			noBuckets: [][]string{
-				{"advisory-detail", "CVE-2021-29629", "debian 9"}, // not-affected in debian stretch
-				{"advisory-detail", "CVE-2016-4606"},              // not-affected in sid
+				{
+					"advisory-detail",
+					"CVE-2021-29629",
+					"debian 9",
+				}, // not-affected in debian stretch
+				{
+					"advisory-detail",
+					"CVE-2016-4606",
+				}, // not-affected in sid
 			},
 		},
 		{
@@ -162,7 +252,7 @@ func TestVulnSrc_Get(t *testing.T) {
 				},
 				{
 					VulnerabilityID: "CVE-2021-38370",
-					State:           "no-dsa",
+					Status:          types.StatusAffected,
 				},
 			},
 		},

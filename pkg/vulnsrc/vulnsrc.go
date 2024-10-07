@@ -5,7 +5,8 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alma"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/amazon"
-	archlinux "github.com/aquasecurity/trivy-db/pkg/vulnsrc/arch-linux"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/azure"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bitnami"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bundler"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/chainguard"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/composer"
@@ -13,11 +14,10 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/glad"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/govulndb"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/mariner"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/k8svulndb"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/photon"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat"
 	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
@@ -41,7 +41,6 @@ var (
 		// OS packages
 		alma.NewVulnSrc(),
 		alpine.NewVulnSrc(),
-		archlinux.NewVulnSrc(),
 		redhat.NewVulnSrc(),
 		redhatoval.NewVulnSrc(),
 		debian.NewVulnSrc(),
@@ -52,9 +51,13 @@ var (
 		susecvrf.NewVulnSrc(susecvrf.SUSEEnterpriseLinux),
 		susecvrf.NewVulnSrc(susecvrf.OpenSUSE),
 		photon.NewVulnSrc(),
-		mariner.NewVulnSrc(),
+		azure.NewVulnSrc(azure.Azure),
+		azure.NewVulnSrc(azure.Mariner),
 		wolfi.NewVulnSrc(),
 		chainguard.NewVulnSrc(),
+		bitnami.NewVulnSrc(),
+
+		k8svulndb.NewVulnSrc(),
 
 		// Language-specific packages
 		bundler.NewVulnSrc(),
@@ -62,7 +65,6 @@ var (
 		node.NewVulnSrc(),
 		ghsa.NewVulnSrc(),
 		glad.NewVulnSrc(),
-		govulndb.NewVulnSrc(),
-		osv.NewVulnSrc(),
+		govulndb.NewVulnSrc(), // For Go stdlib packages
 	}
 )

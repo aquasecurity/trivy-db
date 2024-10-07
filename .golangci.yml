@@ -1,0 +1,40 @@
+run:
+  go: '1.19'
+  timeout: 5m
+  skip-dirs:
+    - cache
+    - assets
+linters:
+  enable:
+    - gofmt
+    - bodyclose
+    - staticcheck
+    - unused
+    - gci
+    - gomodguard
+    - tenv
+    - gosimple
+    - govet
+  disable:
+    - errcheck
+    - ineffassign
+    - structcheck
+linters-settings:
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/aquasecurity/)
+      - blank
+      - dot
+  gomodguard:
+    blocked:
+      modules:
+        - github.com/hashicorp/go-version:
+            recommendations:
+              - github.com/aquasecurity/go-version
+            reason: "`aquasecurity/go-version` is degisned for our use-cases"
+        - github.com/Masterminds/semver:
+            recommendations:
+              - github.com/aquasecurity/go-version
+            reason: "`aquasecurity/go-version` is degisned for our use-cases"

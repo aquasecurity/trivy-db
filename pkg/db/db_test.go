@@ -6,14 +6,17 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/stretchr/testify/require"
+	"go.etcd.io/bbolt"
+
+	"github.com/aquasecurity/trivy-db/pkg/db"
 )
 
 func TestInit(t *testing.T) {
 	tests := []struct {
 		name   string
 		dbPath string
+		dbOpts *bbolt.Options
 	}{
 		{
 			name:   "normal db",
@@ -30,7 +33,7 @@ func TestInit(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tmpDir:= t.TempDir()
+			tmpDir := t.TempDir()
 
 			if tt.dbPath != "" {
 				dbPath := db.Path(tmpDir)
@@ -42,7 +45,7 @@ func TestInit(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			err := db.Init(tmpDir)
+			err := db.Init(tmpDir, db.WithBoltOptions(tt.dbOpts))
 			require.NoError(t, err)
 		})
 	}

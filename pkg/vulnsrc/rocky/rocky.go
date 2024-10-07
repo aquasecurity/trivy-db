@@ -17,7 +17,6 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
-	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -110,12 +109,12 @@ func (vs *VulnSrc) parse(rootDir string) (map[string][]RLSA, error) {
 			majorVer = dirs[0][:strings.Index(dirs[0], ".")]
 		}
 		repo, arch := dirs[1], dirs[2]
-		if !ustrings.InSlice(repo, targetRepos) {
+		if !slices.Contains(targetRepos, repo) {
 			log.Printf("Unsupported Rocky repo: %s", repo)
 			return nil
 		}
 
-		if !ustrings.InSlice(arch, targetArches) {
+		if !slices.Contains(targetArches, arch) {
 			log.Printf("Unsupported Rocky arch: %s", arch)
 			return nil
 		}
@@ -222,6 +221,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 			input.PlatformName = platformName
 			input.CveID = cveID
 			input.Vuln = vuln
+			input.Erratum = erratum // For Trivy Premium
 
 			savedInputs[cveID] = input
 		}
@@ -272,12 +272,13 @@ func (r *Rocky) Get(release, pkgName, arch string) ([]types.Advisory, error) {
 		}
 
 		// For backward compatibility
-		// The old trivy-db has no entries, but has fixed versions only.
+		// The old trivy-db has no entries, but has fixed versions and custom fields.
 		if len(adv.Entries) == 0 {
 			advisories = append(advisories, types.Advisory{
 				VulnerabilityID: vulnID,
 				FixedVersion:    adv.FixedVersion,
 				DataSource:      &v.Source,
+				Custom:          adv.Custom,
 			})
 			continue
 		}
