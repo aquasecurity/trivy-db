@@ -9,9 +9,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/samber/lo"
-
 	version "github.com/knqyf263/go-rpm-version"
+	"github.com/samber/lo"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
