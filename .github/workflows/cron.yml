@@ -106,7 +106,7 @@ jobs:
             for tag in "${tags[@]}"; do
               echo "Pushing artifact with tag: ${tag}"
           
-              if oras push --artifact-type application/vnd.aquasec.trivy.config.v1+json \
+              if ./oras push --artifact-type application/vnd.aquasec.trivy.config.v1+json \
                 "${full_registry_url}:${tag}" \
                 db.tar.gz:application/vnd.aquasec.trivy.db.layer.v1.tar+gzip; then
                 echo "Successfully pushed to ${full_registry_url}:${tag}"
