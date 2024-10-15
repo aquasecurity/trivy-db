@@ -191,11 +191,11 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			// Keep only the normal version in adv.FixedVersion for backward compatibility.
 			adv.FixedVersion, adv.PatchedVersions = patchedVersions(adv.PatchedVersions)
 			input.Advisories[pkg] = adv
+		}
 
-			err := vs.Put(tx, input)
-			if err != nil {
-				return xerrors.Errorf("db put error: %w", err)
-			}
+		err := vs.Put(tx, input)
+		if err != nil {
+			return xerrors.Errorf("db put error: %w", err)
 		}
 	}
 
@@ -226,7 +226,11 @@ func patchedVersions(vers []string) (string, []string) {
 		}
 		patchedVers[flavor] = ver
 	}
-	return patchedVers[NormalPackageFlavor], lo.Values(patchedVers)
+
+	versions := lo.Values(patchedVers)
+	slices.Sort(versions)
+
+	return patchedVers[NormalPackageFlavor], versions
 }
 
 // PackageFlavor determinants the package "flavor" based on its version string
@@ -311,7 +315,11 @@ func referencesFromContains(sources []string, matches []string) []string {
 			}
 		}
 	}
-	return lo.Uniq(references)
+
+	references = lo.Uniq(references)
+	slices.Sort(references)
+
+	return references
 }
 
 func severityFromThreat(sev string) types.Severity {
