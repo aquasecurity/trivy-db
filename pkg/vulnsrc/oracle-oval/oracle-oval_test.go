@@ -421,6 +421,9 @@ func TestVulnSrc_Get(t *testing.T) {
 				{
 					VulnerabilityID: "ELSA-2019-1145",
 					FixedVersion:    "32:9.11.4-17.P2.el8_0",
+					PatchedVersions: []string{
+						"32:9.11.4-17.P2.el8_0",
+					},
 				},
 			},
 		},
