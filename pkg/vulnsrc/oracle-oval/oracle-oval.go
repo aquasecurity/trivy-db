@@ -140,7 +140,8 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 				return xerrors.Errorf("failed to put data source: %w", err)
 			}
 
-			// TODO can we refactor that?
+			// Clean affectedPkg.Package.FixedVersion to find same packages,
+			// when we merge fixed versions from multiple ELSA files
 			fixedVersion := affectedPkg.Package.FixedVersion
 			affectedPkg.Package.FixedVersion = ""
 

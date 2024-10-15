@@ -52,9 +52,3 @@ type Date struct {
 func (p *AffectedPackage) PlatformName() string {
 	return fmt.Sprintf(platformFormat, p.OSVer)
 }
-
-type vulnPkg struct {
-	OSVer   string
-	PkgName string
-	VulnID  string
-}
