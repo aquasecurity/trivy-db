@@ -74,9 +74,8 @@ jobs:
 
       - name: Install oras
         run: |
-          # upgrade to ORAS 1.0.0
-          curl -LO https://github.com/oras-project/oras/releases/download/v1.0.0/oras_1.0.0_linux_amd64.tar.gz
-          tar -xvf ./oras_1.0.0_linux_amd64.tar.gz
+          curl -LO https://github.com/oras-project/oras/releases/download/v1.2.0/oras_1.2.0_linux_amd64.tar.gz
+          tar -xvf ./oras_1.2.0_linux_amd64.tar.gz
 
 
       - name: Upload assets to registries
