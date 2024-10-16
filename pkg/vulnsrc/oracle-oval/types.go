@@ -36,19 +36,20 @@ type Criterion struct {
 }
 
 type Package struct {
-	Name         string
-	FixedVersion string
+	Name  string
+	OSVer string
 }
 
 type AffectedPackage struct {
-	Package Package
-	OSVer   string
+	Package      Package
+	Arch         string
+	FixedVersion string
 }
 
 type Date struct {
 	Date string `json:"date"`
 }
 
-func (p *AffectedPackage) PlatformName() string {
+func (p *Package) PlatformName() string {
 	return fmt.Sprintf(platformFormat, p.OSVer)
 }
