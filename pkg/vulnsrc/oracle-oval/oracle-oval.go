@@ -268,6 +268,7 @@ func mergeAdvisoriesEntries(advisories types.Advisories) types.Advisories {
 	fixedVer, patchedVers := patchedVersions(lo.Keys(entries))
 
 	advs := types.Advisories{
+		// Save Fixed version for normal flavor for backwards compatibility
 		FixedVersion: fixedVer,
 	}
 	for _, ver := range patchedVers {
