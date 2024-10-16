@@ -10,8 +10,6 @@
                 Arches:
                   - aarch64
                   - x86_64
-                VendorIds:
-                  - ELSA-2019-1145
 - bucket: Oracle Linux 7
   pairs:
     - bucket: rsyslog
@@ -23,11 +21,7 @@
               - FixedVersion: 8.24.0-57.0.1.el7_9.3
                 Arches:
                   - x86_64
-                VendorIds:
-                  - ELSA-2022-4803
               - FixedVersion: 8.24.0-57.0.4.el7_9.3
                 Arches:
                   - aarch64
-                VendorIds:
-                  - ELSA-2022-4803
 

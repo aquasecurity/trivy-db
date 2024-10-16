@@ -165,7 +165,6 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 				entry := types.Advisory{
 					FixedVersion: affectedPkg.Package.FixedVersion,
 					Arches:       []string{affectedPkg.Arch},
-					VendorIDs:    []string{elsaID},
 				}
 
 				// if the advisory for this package and CVE have been kept - just add the new architecture
@@ -181,9 +180,6 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 					if found {
 						if !slices.Contains(old.Arches, affectedPkg.Arch) {
 							adv.Entries[i].Arches = append(old.Arches, affectedPkg.Arch)
-						}
-						if !slices.Contains(old.VendorIDs, elsaID) {
-							adv.Entries[i].VendorIDs = append(old.VendorIDs, elsaID)
 						}
 						input.Advisories[pkgName] = adv
 					} else if !found {
