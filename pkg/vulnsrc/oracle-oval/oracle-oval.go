@@ -179,11 +179,12 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 				input.OVALs = append(input.OVALs, savedInput.OVALs...)
 
 				for newPkg, newAdvs := range input.Advisories {
-					if savedAdvs, pkgFound := savedInput.Advisories[newPkg]; pkgFound {
-						newAdvs.Entries = append(newAdvs.Entries, savedAdvs.Entries...)
-						input.Advisories[newPkg] = newAdvs
+					if savedPkgAdvs, pkgFound := savedInput.Advisories[newPkg]; pkgFound {
+						newAdvs.Entries = append(savedPkgAdvs.Entries, newAdvs.Entries...)
 					}
+					savedInput.Advisories[newPkg] = newAdvs
 				}
+				input.Advisories = savedInput.Advisories
 			}
 			putInputs[input.VulnID] = input
 		}
