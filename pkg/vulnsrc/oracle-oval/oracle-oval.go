@@ -143,8 +143,8 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			advs := types.Advisories{
 				Entries: []types.Advisory{
 					{
-						PatchedVersions: []string{affectedPkg.FixedVersion},
-						Arches:          []string{affectedPkg.Arch},
+						FixedVersion: affectedPkg.FixedVersion,
+						Arches:       []string{affectedPkg.Arch},
 					},
 				},
 			}
@@ -212,8 +212,8 @@ const (
 	KsplicePackageFlavor PkgFlavor = "ksplice"
 )
 
-// patchedVersions removes duplicates and returns normal flavor + only one version for each flavor.
-func patchedVersions(vers []string) (string, []string) {
+// resolveVersions removes duplicates and returns normal flavor + only one version for each flavor.
+func resolveVersions(vers []string) (string, []string) {
 	vers = lo.Uniq(vers)
 
 	patchedVers := make(map[PkgFlavor]string)
@@ -259,19 +259,18 @@ func mergeAdvisoriesEntries(advisories types.Advisories) types.Advisories {
 	entries := make(map[string][]string)
 	for _, entry := range advisories.Entries {
 		arches := entry.Arches
-		// Before a merge, a entry always contains only one PatchedVersion and one Arch
-		if savedArches, ok := entries[entry.PatchedVersions[0]]; ok {
+		if savedArches, ok := entries[entry.FixedVersion]; ok {
 			arches = append(arches, savedArches...)
 		}
-		entries[entry.PatchedVersions[0]] = arches
+		entries[entry.FixedVersion] = arches
 	}
-	fixedVer, patchedVers := patchedVersions(lo.Keys(entries))
+	fixedVer, resolvedVers := resolveVersions(lo.Keys(entries))
 
 	advs := types.Advisories{
 		// Save Fixed version for normal flavor for backwards compatibility
 		FixedVersion: fixedVer,
 	}
-	for _, ver := range patchedVers {
+	for _, ver := range resolvedVers {
 		advs.Entries = append(advs.Entries, types.Advisory{
 			FixedVersion: ver,
 			Arches:       lo.Uniq(entries[ver]),
