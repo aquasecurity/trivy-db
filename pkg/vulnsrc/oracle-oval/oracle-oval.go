@@ -172,15 +172,15 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			if savedInput, ok := putInputs[input.VulnID]; ok {
 				input.OVALs = append(input.OVALs, savedInput.OVALs...)
 
-				// Merge advisories
-				for savedPkg, savedAdvisory := range savedInput.Advisories {
-					if adv, advFound := input.Advisories[savedPkg]; advFound {
+				for newPkg, newAdv := range input.Advisories {
+					if savedPkgAdv, pkgFound := savedInput.Advisories[newPkg]; pkgFound {
 						// Merge patchedVersions.
 						// We will remove duplicates later.
-						adv.PatchedVersions = append(adv.PatchedVersions, savedAdvisory.PatchedVersions...)
-						input.Advisories[savedPkg] = adv
+						newAdv.PatchedVersions = append(savedPkgAdv.PatchedVersions, newAdv.PatchedVersions...)
 					}
+					savedInput.Advisories[newPkg] = newAdv
 				}
+				input.Advisories = savedInput.Advisories
 			}
 			putInputs[input.VulnID] = input
 		}
