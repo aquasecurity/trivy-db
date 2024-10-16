@@ -232,6 +232,11 @@ func resolveVersions(vers []string) (string, []string) {
 	versions := lo.Values(patchedVers)
 	slices.Sort(versions)
 
+	fixedVersion := patchedVers[NormalPackageFlavor]
+	if fixedVersion == "" {
+		fixedVersion = versions[0]
+	}
+
 	return patchedVers[NormalPackageFlavor], versions
 }
 
@@ -255,25 +260,32 @@ func PackageFlavor(version string) PkgFlavor {
 }
 
 func mergeAdvisoriesEntries(advisories types.Advisories) types.Advisories {
-	// fixedVersion -> arches
-	entries := make(map[string][]string)
+	// arch -> fixedVersions
+	fixedVersionsByArch := make(map[string][]string)
 	for _, entry := range advisories.Entries {
-		arches := entry.Arches
-		if savedArches, ok := entries[entry.FixedVersion]; ok {
-			arches = append(arches, savedArches...)
+		// entries before merging always contain only one arch
+		arch := entry.Arches[0]
+		fixedVers := []string{
+			entry.FixedVersion,
 		}
-		entries[entry.FixedVersion] = arches
-	}
-	fixedVer, resolvedVers := resolveVersions(lo.Keys(entries))
 
-	advs := types.Advisories{
-		// Save Fixed version for normal flavor for backwards compatibility
-		FixedVersion: fixedVer,
+		if savedVers, ok := fixedVersionsByArch[arch]; ok {
+			fixedVers = append(fixedVers, savedVers...)
+		}
+		fixedVersionsByArch[arch] = fixedVers
 	}
-	for _, ver := range resolvedVers {
+
+	var advs types.Advisories
+	for arch, fixedVers := range fixedVersionsByArch {
+		fixedVer, resolvedVers := resolveVersions(fixedVers)
+		if arch == "x86_64" {
+			advs.FixedVersion = fixedVer
+		}
 		advs.Entries = append(advs.Entries, types.Advisory{
-			FixedVersion: ver,
-			Arches:       lo.Uniq(entries[ver]),
+			Arches: []string{
+				arch,
+			},
+			PatchedVersions: resolvedVers,
 		})
 	}
 
