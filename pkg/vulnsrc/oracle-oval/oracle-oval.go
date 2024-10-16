@@ -193,7 +193,6 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 	for _, input := range putInputs {
 		for pkg, advs := range input.Advisories {
 			input.Advisories[pkg] = mergeAdvisoriesEntries(advs)
-
 		}
 
 		err := vs.Put(tx, input)
@@ -266,17 +265,19 @@ func mergeAdvisoriesEntries(advisories types.Advisories) types.Advisories {
 		}
 		entries[entry.PatchedVersions[0]] = arches
 	}
-	_, patchedVers := patchedVersions(lo.Keys(entries))
+	fixedVer, patchedVers := patchedVersions(lo.Keys(entries))
 
-	advisories.Entries = nil // Clear saved entries
+	advs := types.Advisories{
+		FixedVersion: fixedVer,
+	}
 	for _, ver := range patchedVers {
-		advisories.Entries = append(advisories.Entries, types.Advisory{
+		advs.Entries = append(advs.Entries, types.Advisory{
 			FixedVersion: ver,
 			Arches:       lo.Uniq(entries[ver]),
 		})
 	}
 
-	return advisories
+	return advs
 }
 
 func (o *Oracle) Put(tx *bolt.Tx, input PutInput) error {
