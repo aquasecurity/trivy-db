@@ -302,7 +302,7 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:  filepath.Join("testdata", "multi-arch"),
 			wantValues: []vulnsrctest.WantValues{
 				{
-					Key: []string{"data-source", "Oracle Linux 7"},
+					Key: []string{"data-source", "Oracle Linux 5"},
 					Value: types.DataSource{
 						ID:   vulnerability.OracleOVAL,
 						Name: "Oracle Linux OVAL definitions",
@@ -310,19 +310,20 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2022-24903", "Oracle Linux 7", "rsyslog"},
+					Key: []string{"advisory-detail", "CVE-2014-7169", "Oracle Linux 5", "bash"},
 					Value: types.Advisories{
-						FixedVersion: "8.24.0-57.0.1.el7_9.3",
+						FixedVersion: "3.2-33.el5.1.0.1",
 						Entries: []types.Advisory{
 							{
-								FixedVersion: "8.24.0-57.0.4.el7_9.3",
+								FixedVersion: "3.2-33.el5.1.0.2",
 								Arches: []string{
-									"aarch64",
+									"i386",
 								},
 							},
 							{
-								FixedVersion: "8.24.0-57.0.1.el7_9.3",
+								FixedVersion: "3.2-33.el5.1.0.1",
 								Arches: []string{
+									"ia64",
 									"x86_64",
 								},
 							},
@@ -330,19 +331,19 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"vulnerability-detail", "CVE-2022-24903", string(vulnerability.OracleOVAL)},
+					Key: []string{"vulnerability-detail", "CVE-2014-7169", string(vulnerability.OracleOVAL)},
 					Value: types.VulnerabilityDetail{
-						Title:       "ELSA-2022-4803:  rsyslog security update (IMPORTANT)",
-						Description: "[8.24.0-57.0.4.el7_9.3]\n- Newer gcc complains about implicit declaration of prctl. Added header file to quiesce the compiler\n\n[8.24.0-57.3]\n- Address CVE-2022-24903, Heap-based overflow in TCP syslog server\n  resolves: rhbz#2081395",
+						Title:       "ELSA-2014-1306:  bash security update (IMPORTANT)",
+						Description: "[4.2.45-5.4]\n- CVE-2014-7169\n  Resolves: #1146324\n\n[4.2.45-5.3]\n- amend patch to match upstream's\n  Related: #1146324\n\n[4.2.45-5.2]\n- Fix-up the patch\n  Related: #1141647",
 						References: []string{
-							"https://linux.oracle.com/cve/CVE-2022-24903.html",
-							"https://linux.oracle.com/errata/ELSA-2022-4803.html",
+							"https://linux.oracle.com/cve/CVE-2014-7169.html",
+							"https://linux.oracle.com/errata/ELSA-2014-1306.html",
 						},
 						Severity: types.SeverityHigh,
 					},
 				},
 				{
-					Key:   []string{"vulnerability-id", "CVE-2022-24903"},
+					Key:   []string{"vulnerability-id", "CVE-2014-7169"},
 					Value: map[string]interface{}{},
 				},
 			},
