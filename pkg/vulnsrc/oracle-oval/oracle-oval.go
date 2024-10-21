@@ -127,7 +127,12 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 		advisories := map[Package]types.Advisories{}
 		affectedPkgs := walkOracle(oval.Criteria, "", "", []AffectedPackage{})
 		for _, affectedPkg := range affectedPkgs {
-			if affectedPkg.Package.Name == "" {
+			// there are cases when advisory doesn't have arch
+			// it looks as bug
+			// because CVE doesn't contain this ELSA
+			// e.g. https://linux.oracle.com/errata/ELSA-2018-0013.html
+			// https://linux.oracle.com/cve/CVE-2017-5715.html
+			if affectedPkg.Package.Name == "" || affectedPkg.Arch == "" {
 				continue
 			}
 
@@ -278,6 +283,8 @@ func mergeAdvisoriesEntries(advisories types.Advisories) types.Advisories {
 	var advs types.Advisories
 	for arch, fixedVers := range fixedVersionsByArch {
 		fixedVer, resolvedVers := resolveVersions(fixedVers)
+		// Keep FixedVersion for backward compatibility
+		// Keep only `x86_64` version
 		if arch == "x86_64" {
 			advs.FixedVersion = fixedVer
 		}
@@ -289,6 +296,25 @@ func mergeAdvisoriesEntries(advisories types.Advisories) types.Advisories {
 		})
 	}
 
+	advs = mergeArchesByPatchedVersion(advs)
+
+	return advs
+}
+
+// mergeArchesByPatchedVersion merges arches into one array if `patchedVersions` are equal
+func mergeArchesByPatchedVersion(advs types.Advisories) types.Advisories {
+	var entries []types.Advisory
+	for _, adv := range advs.Entries {
+		if i := slices.IndexFunc(entries, func(advisory types.Advisory) bool {
+			return slices.Equal(advisory.PatchedVersions, adv.PatchedVersions)
+		}); i != -1 {
+			entries[i].Arches = append(entries[i].Arches, adv.Arches...)
+		} else {
+			entries = append(entries, adv)
+		}
+	}
+
+	advs.Entries = entries
 	return advs
 }
 
