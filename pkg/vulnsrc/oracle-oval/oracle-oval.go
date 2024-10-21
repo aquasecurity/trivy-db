@@ -7,6 +7,7 @@ import (
 	"log"
 	"path/filepath"
 	"slices"
+	"sort"
 	"strings"
 
 	version "github.com/knqyf263/go-rpm-version"
@@ -182,7 +183,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 							adv.Entries[i].Arches = append(old.Arches, affectedPkg.Arch)
 						}
 						input.Advisories[pkgName] = adv
-					} else if !found {
+					} else {
 						adv.Entries = append(adv.Entries, entry)
 						input.Advisories[pkgName] = adv
 					}
@@ -225,8 +226,13 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			return xerrors.Errorf("failed to put data source: %w", err)
 		}
 	}
-	for _, pkgs := range savedInputs {
-		for _, input := range pkgs {
+	inputs := lo.Entries(savedInputs)
+	sort.Slice(inputs, func(i, j int) bool {
+		return inputs[i].Key < inputs[j].Key // sort by platform
+	})
+	for _, entry := range inputs {
+		for _, input := range entry.Value {
+			input = removeExtraVersions(input)
 			err := vs.Put(tx, input)
 			if err != nil {
 				return xerrors.Errorf("db put error: %w", err)
@@ -235,6 +241,42 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 	}
 
 	return nil
+}
+
+func removeExtraVersions(input PutInput) PutInput {
+	for pkgName, adv := range input.Advisories {
+		// arch -> fixedVersion
+		fixedVersions := map[string]string{}
+		for _, entry := range adv.Entries {
+			for _, arch := range entry.Arches {
+				fixedVersions[arch] = entry.FixedVersion
+				if arch == "x86_64" {
+					adv.FixedVersion = entry.FixedVersion
+				}
+			}
+		}
+		var entries []types.Advisory
+		for arch, fixedVer := range fixedVersions {
+			if i := slices.IndexFunc(entries, func(advisory types.Advisory) bool {
+				return advisory.FixedVersion == fixedVer
+			}); i != -1 {
+				entries[i].Arches = append(entries[i].Arches, arch)
+				slices.Sort(entries[i].Arches)
+			} else {
+				entries = append(entries, types.Advisory{
+					FixedVersion: fixedVer,
+					Arches:       []string{arch},
+				})
+			}
+		}
+
+		sort.Slice(entries, func(i, j int) bool {
+			return entries[i].Arches[0] < entries[j].Arches[0]
+		})
+		adv.Entries = entries
+		input.Advisories[pkgName] = adv
+	}
+	return input
 }
 
 func (o *Oracle) Put(tx *bolt.Tx, input PutInput) error {
