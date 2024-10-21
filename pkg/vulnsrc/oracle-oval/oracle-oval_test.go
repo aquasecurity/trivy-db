@@ -37,37 +37,69 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2007-0493", "Oracle Linux 5", "bind-devel"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "30:9.3.3-8.el5",
-						PatchedVersions: []string{
-							"30:9.3.3-8.el5",
+						Entries: []types.Advisory{
+							{
+								Arches: []string{
+									"i386",
+									"x86_64",
+								},
+								PatchedVersions: []string{
+									"30:9.3.3-8.el5",
+								},
+							},
 						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2007-0494", "Oracle Linux 5", "bind-devel"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "30:9.3.3-8.el5",
-						PatchedVersions: []string{
-							"30:9.3.3-8.el5",
+						Entries: []types.Advisory{
+							{
+								Arches: []string{
+									"i386",
+									"x86_64",
+								},
+								PatchedVersions: []string{
+									"30:9.3.3-8.el5",
+								},
+							},
 						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2007-0493", "Oracle Linux 5", "bind-sdb"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "30:9.3.3-8.el5",
-						PatchedVersions: []string{
-							"30:9.3.3-8.el5",
+						Entries: []types.Advisory{
+							{
+								Arches: []string{
+									"i386",
+									"x86_64",
+								},
+								PatchedVersions: []string{
+									"30:9.3.3-8.el5",
+								},
+							},
 						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2007-0494", "Oracle Linux 5", "bind-sdb"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "30:9.3.3-8.el5",
-						PatchedVersions: []string{
-							"30:9.3.3-8.el5",
+						Entries: []types.Advisory{
+							{
+								Arches: []string{
+									"i386",
+									"x86_64",
+								},
+								PatchedVersions: []string{
+									"30:9.3.3-8.el5",
+								},
+							},
 						},
 					},
 				},
@@ -77,8 +109,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						Title:       "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)",
 						Description: "[30:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229",
 						References: []string{
-							"http://linux.oracle.com/cve/CVE-2007-0493.html",
-							"http://linux.oracle.com/errata/ELSA-2007-0057.html",
+							"https://linux.oracle.com/cve/CVE-2007-0493.html",
+							"https://linux.oracle.com/errata/ELSA-2007-0057.html",
 						},
 						Severity: types.SeverityMedium,
 					},
@@ -89,8 +121,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						Title:       "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)",
 						Description: "[30:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229",
 						References: []string{
-							"http://linux.oracle.com/cve/CVE-2007-0494.html",
-							"http://linux.oracle.com/errata/ELSA-2007-0057.html",
+							"https://linux.oracle.com/cve/CVE-2007-0494.html",
+							"https://linux.oracle.com/errata/ELSA-2007-0057.html",
 						},
 						Severity: types.SeverityMedium,
 					},
@@ -127,73 +159,129 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 6", "kernel-uek-doc"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el6uek",
-						PatchedVersions: []string{
-							"4.1.12-124.24.3.el6uek",
+						Entries: []types.Advisory{
+							{
+								Arches: []string{
+									"x86_64",
+								},
+								PatchedVersions: []string{
+									"4.1.12-124.24.3.el6uek",
+								},
+							},
 						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 6", "kernel-uek-doc"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el6uek",
-						PatchedVersions: []string{
-							"4.1.12-124.24.3.el6uek",
+						Entries: []types.Advisory{
+							{
+								Arches: []string{
+									"x86_64",
+								},
+								PatchedVersions: []string{
+									"4.1.12-124.24.3.el6uek",
+								},
+							},
 						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 6", "kernel-uek-firmware"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el6uek",
-						PatchedVersions: []string{
-							"4.1.12-124.24.3.el6uek",
+						Entries: []types.Advisory{
+							{
+								Arches: []string{
+									"x86_64",
+								},
+								PatchedVersions: []string{
+									"4.1.12-124.24.3.el6uek",
+								},
+							},
 						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 6", "kernel-uek-firmware"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el6uek",
-						PatchedVersions: []string{
-							"4.1.12-124.24.3.el6uek",
+						Entries: []types.Advisory{
+							{
+								Arches: []string{
+									"x86_64",
+								},
+								PatchedVersions: []string{
+									"4.1.12-124.24.3.el6uek",
+								},
+							},
 						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 7", "kernel-uek-doc"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el7uek",
-						PatchedVersions: []string{
-							"4.1.12-124.24.3.el7uek",
+						Entries: []types.Advisory{
+							{
+								Arches: []string{
+									"x86_64",
+								},
+								PatchedVersions: []string{
+									"4.1.12-124.24.3.el7uek",
+								},
+							},
 						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 7", "kernel-uek-doc"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el7uek",
-						PatchedVersions: []string{
-							"4.1.12-124.24.3.el7uek",
+						Entries: []types.Advisory{
+							{
+								Arches: []string{
+									"x86_64",
+								},
+								PatchedVersions: []string{
+									"4.1.12-124.24.3.el7uek",
+								},
+							},
 						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 7", "kernel-uek-firmware"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el7uek",
-						PatchedVersions: []string{
-							"4.1.12-124.24.3.el7uek",
+						Entries: []types.Advisory{
+							{
+								Arches: []string{
+									"x86_64",
+								},
+								PatchedVersions: []string{
+									"4.1.12-124.24.3.el7uek",
+								},
+							},
 						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 7", "kernel-uek-firmware"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el7uek",
-						PatchedVersions: []string{
-							"4.1.12-124.24.3.el7uek",
+						Entries: []types.Advisory{
+							{
+								Arches: []string{
+									"x86_64",
+								},
+								PatchedVersions: []string{
+									"4.1.12-124.24.3.el7uek",
+								},
+							},
 						},
 					},
 				},
@@ -360,10 +448,17 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{"advisory-detail", "ELSA-2007-0057", "Oracle Linux 5", "bind-devel"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "9.3.3-8.el5",
-						PatchedVersions: []string{
-							"9.3.3-8.el5",
+						Entries: []types.Advisory{
+							{
+								Arches: []string{
+									"x86_64",
+								},
+								PatchedVersions: []string{
+									"9.3.3-8.el5",
+								},
+							},
 						},
 					},
 				},
