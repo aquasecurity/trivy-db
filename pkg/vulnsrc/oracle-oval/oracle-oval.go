@@ -243,7 +243,7 @@ func resolveVersions(vers []string) (string, []string) {
 		fixedVersion = versions[0]
 	}
 
-	return patchedVers[NormalPackageFlavor], versions
+	return fixedVersion, versions
 }
 
 // PackageFlavor determinants the package "flavor" based on its version string
