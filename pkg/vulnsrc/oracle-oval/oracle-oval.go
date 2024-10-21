@@ -7,6 +7,7 @@ import (
 	"log"
 	"path/filepath"
 	"slices"
+	"sort"
 	"strings"
 
 	version "github.com/knqyf263/go-rpm-version"
@@ -309,10 +310,15 @@ func mergeArchesByPatchedVersion(advs types.Advisories) types.Advisories {
 			return slices.Equal(advisory.PatchedVersions, adv.PatchedVersions)
 		}); i != -1 {
 			entries[i].Arches = append(entries[i].Arches, adv.Arches...)
+			slices.Sort(entries[i].Arches)
 		} else {
 			entries = append(entries, adv)
 		}
 	}
+
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Arches[0] < entries[j].Arches[0]
+	})
 
 	advs.Entries = entries
 	return advs

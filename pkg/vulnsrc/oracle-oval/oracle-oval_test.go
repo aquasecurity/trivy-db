@@ -245,77 +245,103 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2021-20232", "Oracle Linux 8", "gnutls"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "3.6.16-4.el8",
-						PatchedVersions: []string{
-							"10:3.6.16-4.0.1.el8_fips",
-							"3.6.16-4.el8",
+						Entries: []types.Advisory{
+							{
+								Arches: []string{
+									"aarch64",
+									"x86_64",
+								},
+								PatchedVersions: []string{
+									"10:3.6.16-4.0.1.el8_fips",
+									"3.6.16-4.el8",
+								},
+							},
 						},
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2021-3580", "Oracle Linux 8", "gnutls"},
-					Value: types.Advisory{
-						PatchedVersions: []string{
-							"10:3.6.16-4.0.1.el8_fips",
-						},
-					},
-				},
-				{
-					Key: []string{"advisory-detail", "CVE-2021-20231", "Oracle Linux 8", "gnutls"},
-					Value: types.Advisory{
+					Key: []string{"advisory-detail", "CVE-2021-20232", "Oracle Linux 8", "gnutls-c++"},
+					Value: types.Advisories{
 						FixedVersion: "3.6.16-4.el8",
-						PatchedVersions: []string{
-							"3.6.16-4.el8",
+						Entries: []types.Advisory{
+							{
+								Arches: []string{
+									"aarch64",
+								},
+								PatchedVersions: []string{
+									"3.6.16-5.el8",
+								},
+							},
+							{
+								Arches: []string{
+									"x86_64",
+								},
+								PatchedVersions: []string{
+									"10:3.6.16-4.0.1.el8_fips",
+									"3.6.16-4.el8",
+								},
+							},
 						},
 					},
 				},
 				{
-					Key: []string{"vulnerability-detail", "CVE-2021-3580", "oracle-oval"},
+					Key: []string{"advisory-detail", "CVE-2021-20232", "Oracle Linux 8", "gnutls-dane"},
+					Value: types.Advisories{
+						FixedVersion: "3.6.16-4.el8",
+						Entries: []types.Advisory{
+							{
+								Arches: []string{
+									"aarch64",
+								},
+								PatchedVersions: []string{
+									"3.6.16-4.el8",
+								},
+							},
+							{
+								Arches: []string{
+									"x86_64",
+								},
+								PatchedVersions: []string{
+									"10:3.6.16-4.0.1.el8_fips",
+									"3.6.16-4.el8",
+								},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2021-20232", "Oracle Linux 8", "nettle"},
+					Value: types.Advisories{
+						FixedVersion: "3.4.1-7.el8",
+						Entries: []types.Advisory{
+							{
+								Arches: []string{
+									"aarch64",
+									"x86_64",
+								},
+								PatchedVersions: []string{
+									"3.4.1-7.el8",
+								},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "CVE-2021-20232", "oracle-oval"},
 					Value: types.VulnerabilityDetail{
 						Title:       "ELSA-2022-9221:  gnutls security update (MODERATE)",
 						Description: "[3.6.16-4.0.1_fips]\n- Allow RSA keygen with modulus sizes bigger than 3072 bits and validate the seed length\n  as defined in FIPS 186-4 section B.3.2 [Orabug: 33200526]\n- Allow bigger known RSA modulus sizes when calling\n  rsa_generate_fips186_4_keypair directly [Orabug: 33200526]\n- Change Epoch from 1 to 10\n\n[3.6.16-4]\n- p11tool: Document ID reuse behavior when importing certs (#1776250)\n\n[3.6.16-3]\n- Treat SHA-1 signed CA in the trusted set differently (#1965445)\n\n[3.6.16-2]\n- Filter certificate_types in TLS 1.2 CR based on signature algorithms (#1942216)\n\n[3.6.16-1]\n- Update to upstream 3.6.16 release (#1956783)\n- Fix potential use-after-free in key_share handling (#1927597)\n- Fix potential use-after-free in pre_shared_key handling (#1927593)\n- Stop gnutls-serv relying on AI_ADDRCONFIG to decide listening address (#1908334)\n- Fix cert expiration issue in tests (#1908110)\n\n[3.6.14-10]\n- Port fixes for potential miscalculation in ecdsa_verify (#1942931)\n\n[3.6.14-9]\n- Revert the previous change",
 						References: []string{
-							"https://linux.oracle.com/cve/CVE-2021-3580.html",
+							"https://linux.oracle.com/cve/CVE-2021-20232.html",
 							"https://linux.oracle.com/errata/ELSA-2022-9221.html",
-						},
-						Severity: types.SeverityMedium,
-					},
-				},
-				{
-					Key: []string{"vulnerability-detail", "CVE-2021-3580", "oracle-oval"},
-					Value: types.VulnerabilityDetail{
-						Title:       "ELSA-2022-9221:  gnutls security update (MODERATE)",
-						Description: "[3.6.16-4.0.1_fips]\n- Allow RSA keygen with modulus sizes bigger than 3072 bits and validate the seed length\n  as defined in FIPS 186-4 section B.3.2 [Orabug: 33200526]\n- Allow bigger known RSA modulus sizes when calling\n  rsa_generate_fips186_4_keypair directly [Orabug: 33200526]\n- Change Epoch from 1 to 10\n\n[3.6.16-4]\n- p11tool: Document ID reuse behavior when importing certs (#1776250)\n\n[3.6.16-3]\n- Treat SHA-1 signed CA in the trusted set differently (#1965445)\n\n[3.6.16-2]\n- Filter certificate_types in TLS 1.2 CR based on signature algorithms (#1942216)\n\n[3.6.16-1]\n- Update to upstream 3.6.16 release (#1956783)\n- Fix potential use-after-free in key_share handling (#1927597)\n- Fix potential use-after-free in pre_shared_key handling (#1927593)\n- Stop gnutls-serv relying on AI_ADDRCONFIG to decide listening address (#1908334)\n- Fix cert expiration issue in tests (#1908110)\n\n[3.6.14-10]\n- Port fixes for potential miscalculation in ecdsa_verify (#1942931)\n\n[3.6.14-9]\n- Revert the previous change",
-						References: []string{
-							"https://linux.oracle.com/cve/CVE-2021-3580.html",
-							"https://linux.oracle.com/errata/ELSA-2022-9221.html",
-						},
-						Severity: types.SeverityMedium,
-					},
-				},
-				{
-					Key: []string{"vulnerability-detail", "CVE-2021-20231", "oracle-oval"},
-					Value: types.VulnerabilityDetail{
-						Title:       "ELSA-2021-4451:  gnutls and nettle security, bug fix, and enhancement update (MODERATE)",
-						Description: "gnutls\n[3.6.16-4]\n- p11tool: Document ID reuse behavior when importing certs (#1776250)\n\n[3.6.16-3]\n- Treat SHA-1 signed CA in the trusted set differently (#1965445)\n\n[3.6.16-2]\n- Filter certificate_types in TLS 1.2 CR based on signature algorithms (#1942216)\n\n[3.6.16-1]\n- Update to upstream 3.6.16 release (#1956783)\n- Fix potential use-after-free in key_share handling (#1927597)\n- Fix potential use-after-free in pre_shared_key handling (#1927593)\n- Stop gnutls-serv relying on AI_ADDRCONFIG to decide listening address (#1908334)\n- Fix cert expiration issue in tests (#1908110)\n\n[3.6.14-10]\n- Port fixes for potential miscalculation in ecdsa_verify (#1942931)\n\n[3.6.14-9]\n- Revert the previous change\n\nnettle\n[3.4.1-7]\n- Backport CVE-2021-3580 from upstream 3.7.3 release (#1967990)\n\n[3.4.1-6]\n- Enable CTR mode optimization when the block size is 16\n\n[3.4.1-5]\n- Backport powerpc64 optimization patches from upstream (#1855228)\n  Patch from Christopher M. Riedl.",
-						References: []string{
-							"https://linux.oracle.com/cve/CVE-2021-20231.html",
-							"https://linux.oracle.com/errata/ELSA-2021-4451.html",
 						},
 						Severity: types.SeverityMedium,
 					},
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2021-20232"},
-					Value: map[string]interface{}{},
-				},
-				{
-					Key:   []string{"vulnerability-id", "CVE-2021-3580"},
-					Value: map[string]interface{}{},
-				},
-				{
-					Key:   []string{"vulnerability-id", "CVE-2021-20231"},
 					Value: map[string]interface{}{},
 				},
 			},
