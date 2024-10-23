@@ -6,7 +6,7 @@ SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
 RUN apk --no-cache add make gzip
 
-RUN go install
+RUN go mod download
 RUN make db-fetch-langs
 RUN make db-fetch-vuln-list
 RUN make build
