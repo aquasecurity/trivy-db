@@ -249,9 +249,11 @@ func removeExtraVersions(input PutInput) PutInput {
 		fixedVersions := map[string]string{}
 		for _, entry := range adv.Entries {
 			for _, arch := range entry.Arches {
-				fixedVersions[arch] = entry.FixedVersion
-				if arch == "x86_64" {
-					adv.FixedVersion = entry.FixedVersion
+				if entry.FixedVersion != "0.0.0" {
+					fixedVersions[arch] = entry.FixedVersion
+					if arch == "x86_64" {
+						adv.FixedVersion = entry.FixedVersion
+					}
 				}
 			}
 		}
@@ -274,6 +276,10 @@ func removeExtraVersions(input PutInput) PutInput {
 			return entries[i].Arches[0] < entries[j].Arches[0]
 		})
 		adv.Entries = entries
+
+		if adv.FixedVersion == "0.0.0" {
+			adv.FixedVersion = ""
+		}
 		input.Advisories[pkgName] = adv
 	}
 	return input
