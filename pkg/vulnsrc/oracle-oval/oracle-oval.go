@@ -266,39 +266,53 @@ func PackageFlavor(version string) PkgFlavor {
 }
 
 func mergeAdvisoriesEntries(advisories types.Advisories) types.Advisories {
-	// arch -> fixedVersions
+	var advs types.Advisories
 	fixedVersionsByArch := make(map[string][]string)
 	for _, entry := range advisories.Entries {
-		// entries before merging always contain only one arch
-		arch := entry.Arches[0]
-		fixedVers := []string{
+		arch := entry.Arches[0] // Before merging `arches` always contains only 1 arch
+		fixedVersions := []string{
 			entry.FixedVersion,
 		}
-
-		if savedVers, ok := fixedVersionsByArch[arch]; ok {
-			fixedVers = append(fixedVers, savedVers...)
+		if savedVersion, ok := fixedVersionsByArch[arch]; ok {
+			fixedVersions = append(fixedVersions, savedVersion...)
 		}
-		fixedVersionsByArch[arch] = fixedVers
+		fixedVersionsByArch[arch] = fixedVersions
 	}
 
-	var advs types.Advisories
-	for arch, fixedVers := range fixedVersionsByArch {
-		fixedVer, resolvedVers := resolveVersions(fixedVers)
-		// Keep FixedVersion for backward compatibility
-		// Keep only `x86_64` version
+	// fixedVersion -> arches
+	allFixedVersions := make(map[string]types.Advisory)
+	for arch, fixedVersions := range fixedVersionsByArch {
+		fixedVersion, resolvedVersions := resolveVersions(fixedVersions)
 		if arch == "x86_64" {
-			advs.FixedVersion = fixedVer
+			advs.FixedVersion = fixedVersion
 		}
-		advs.Entries = append(advs.Entries, types.Advisory{
-			Arches: []string{
-				arch,
-			},
-			PatchedVersions: resolvedVers,
+		for _, ver := range resolvedVersions {
+			adv := types.Advisory{
+				FixedVersion: ver,
+				Arches: []string{
+					arch,
+				},
+			}
+			if savedEntry, ok := allFixedVersions[ver]; ok {
+				adv.Arches = append(adv.Arches, savedEntry.Arches...)
+			}
+			allFixedVersions[ver] = adv
+
+		}
+	}
+
+	entries := lo.Values(allFixedVersions)
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].FixedVersion < entries[j].FixedVersion
+	})
+
+	for _, entry := range entries {
+		sort.Slice(entry.Arches, func(i, j int) bool {
+			return entry.Arches[i] < entry.Arches[j]
 		})
 	}
 
-	advs = mergeArchesByPatchedVersion(advs)
-
+	advs.Entries = entries
 	return advs
 }
 

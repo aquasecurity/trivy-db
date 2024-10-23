@@ -45,9 +45,7 @@ func TestVulnSrc_Update(t *testing.T) {
 									"i386",
 									"x86_64",
 								},
-								PatchedVersions: []string{
-									"30:9.3.3-8.el5",
-								},
+								FixedVersion: "30:9.3.3-8.el5",
 							},
 						},
 					},
@@ -62,9 +60,7 @@ func TestVulnSrc_Update(t *testing.T) {
 									"i386",
 									"x86_64",
 								},
-								PatchedVersions: []string{
-									"30:9.3.3-8.el5",
-								},
+								FixedVersion: "30:9.3.3-8.el5",
 							},
 						},
 					},
@@ -79,9 +75,7 @@ func TestVulnSrc_Update(t *testing.T) {
 									"i386",
 									"x86_64",
 								},
-								PatchedVersions: []string{
-									"30:9.3.3-8.el5",
-								},
+								FixedVersion: "30:9.3.3-8.el5",
 							},
 						},
 					},
@@ -96,9 +90,7 @@ func TestVulnSrc_Update(t *testing.T) {
 									"i386",
 									"x86_64",
 								},
-								PatchedVersions: []string{
-									"30:9.3.3-8.el5",
-								},
+								FixedVersion: "30:9.3.3-8.el5",
 							},
 						},
 					},
@@ -166,9 +158,7 @@ func TestVulnSrc_Update(t *testing.T) {
 								Arches: []string{
 									"x86_64",
 								},
-								PatchedVersions: []string{
-									"4.1.12-124.24.3.el6uek",
-								},
+								FixedVersion: "4.1.12-124.24.3.el6uek",
 							},
 						},
 					},
@@ -182,9 +172,7 @@ func TestVulnSrc_Update(t *testing.T) {
 								Arches: []string{
 									"x86_64",
 								},
-								PatchedVersions: []string{
-									"4.1.12-124.24.3.el6uek",
-								},
+								FixedVersion: "4.1.12-124.24.3.el6uek",
 							},
 						},
 					},
@@ -198,9 +186,7 @@ func TestVulnSrc_Update(t *testing.T) {
 								Arches: []string{
 									"x86_64",
 								},
-								PatchedVersions: []string{
-									"4.1.12-124.24.3.el6uek",
-								},
+								FixedVersion: "4.1.12-124.24.3.el6uek",
 							},
 						},
 					},
@@ -214,9 +200,7 @@ func TestVulnSrc_Update(t *testing.T) {
 								Arches: []string{
 									"x86_64",
 								},
-								PatchedVersions: []string{
-									"4.1.12-124.24.3.el6uek",
-								},
+								FixedVersion: "4.1.12-124.24.3.el6uek",
 							},
 						},
 					},
@@ -230,9 +214,7 @@ func TestVulnSrc_Update(t *testing.T) {
 								Arches: []string{
 									"x86_64",
 								},
-								PatchedVersions: []string{
-									"4.1.12-124.24.3.el7uek",
-								},
+								FixedVersion: "4.1.12-124.24.3.el7uek",
 							},
 						},
 					},
@@ -246,9 +228,7 @@ func TestVulnSrc_Update(t *testing.T) {
 								Arches: []string{
 									"x86_64",
 								},
-								PatchedVersions: []string{
-									"4.1.12-124.24.3.el7uek",
-								},
+								FixedVersion: "4.1.12-124.24.3.el7uek",
 							},
 						},
 					},
@@ -262,9 +242,7 @@ func TestVulnSrc_Update(t *testing.T) {
 								Arches: []string{
 									"x86_64",
 								},
-								PatchedVersions: []string{
-									"4.1.12-124.24.3.el7uek",
-								},
+								FixedVersion: "4.1.12-124.24.3.el7uek",
 							},
 						},
 					},
@@ -278,9 +256,7 @@ func TestVulnSrc_Update(t *testing.T) {
 								Arches: []string{
 									"x86_64",
 								},
-								PatchedVersions: []string{
-									"4.1.12-124.24.3.el7uek",
-								},
+								FixedVersion: "4.1.12-124.24.3.el7uek",
 							},
 						},
 					},
@@ -341,10 +317,14 @@ func TestVulnSrc_Update(t *testing.T) {
 									"aarch64",
 									"x86_64",
 								},
-								PatchedVersions: []string{
-									"10:3.6.16-4.0.1.el8_fips",
-									"3.6.16-4.el8",
+								FixedVersion: "10:3.6.16-4.0.1.el8_fips",
+							},
+							{
+								Arches: []string{
+									"aarch64",
+									"x86_64",
 								},
+								FixedVersion: "3.6.16-4.el8",
 							},
 						},
 					},
@@ -356,20 +336,21 @@ func TestVulnSrc_Update(t *testing.T) {
 						Entries: []types.Advisory{
 							{
 								Arches: []string{
-									"aarch64",
+									"x86_64",
 								},
-								PatchedVersions: []string{
-									"3.6.16-5.el8",
-								},
+								FixedVersion: "10:3.6.16-4.0.1.el8_fips",
 							},
 							{
 								Arches: []string{
 									"x86_64",
 								},
-								PatchedVersions: []string{
-									"10:3.6.16-4.0.1.el8_fips",
-									"3.6.16-4.el8",
+								FixedVersion: "3.6.16-4.el8",
+							},
+							{
+								Arches: []string{
+									"aarch64",
 								},
+								FixedVersion: "3.6.16-5.el8",
 							},
 						},
 					},
@@ -381,20 +362,16 @@ func TestVulnSrc_Update(t *testing.T) {
 						Entries: []types.Advisory{
 							{
 								Arches: []string{
-									"aarch64",
+									"x86_64",
 								},
-								PatchedVersions: []string{
-									"3.6.16-4.el8",
-								},
+								FixedVersion: "10:3.6.16-4.0.1.el8_fips",
 							},
 							{
 								Arches: []string{
+									"aarch64",
 									"x86_64",
 								},
-								PatchedVersions: []string{
-									"10:3.6.16-4.0.1.el8_fips",
-									"3.6.16-4.el8",
-								},
+								FixedVersion: "3.6.16-4.el8",
 							},
 						},
 					},
@@ -409,9 +386,7 @@ func TestVulnSrc_Update(t *testing.T) {
 									"aarch64",
 									"x86_64",
 								},
-								PatchedVersions: []string{
-									"3.4.1-7.el8",
-								},
+								FixedVersion: "3.4.1-7.el8",
 							},
 						},
 					},
@@ -455,9 +430,7 @@ func TestVulnSrc_Update(t *testing.T) {
 								Arches: []string{
 									"x86_64",
 								},
-								PatchedVersions: []string{
-									"9.3.3-8.el5",
-								},
+								FixedVersion: "9.3.3-8.el5",
 							},
 						},
 					},
