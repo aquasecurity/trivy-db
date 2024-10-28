@@ -1,24 +1,29 @@
 {
-  "Title": "ELSA-2007-0057:  Moderate: bind security update  (MODERATE)",
-  "Description": "[30:9.3.3-8]\n - added fix for #224445 - CVE-2007-0493 BIND might crash after\n   attempting to read free()-ed memory\n - added fix for #225229 - CVE-2007-0494 BIND dnssec denial of service\n - Resolves: rhbz#224445\n - Resolves: rhbz#225229",
+  "Title": "ELSA-2021-4451:  gnutls and nettle security, bug fix, and enhancement update (MODERATE)",
+  "Description": "gnutls\n[3.6.16-4]\n- p11tool: Document ID reuse behavior when importing certs (#1776250)\n\n[3.6.16-3]\n- Treat SHA-1 signed CA in the trusted set differently (#1965445)\n\n[3.6.16-2]\n- Filter certificate_types in TLS 1.2 CR based on signature algorithms (#1942216)\n\n[3.6.16-1]\n- Update to upstream 3.6.16 release (#1956783)\n- Fix potential use-after-free in key_share handling (#1927597)\n- Fix potential use-after-free in pre_shared_key handling (#1927593)\n- Stop gnutls-serv relying on AI_ADDRCONFIG to decide listening address (#1908334)\n- Fix cert expiration issue in tests (#1908110)\n\n[3.6.14-10]\n- Port fixes for potential miscalculation in ecdsa_verify (#1942931)\n\n[3.6.14-9]\n- Revert the previous change\n\nnettle\n[3.4.1-7]\n- Backport CVE-2021-3580 from upstream 3.7.3 release (#1967990)\n\n[3.4.1-6]\n- Enable CTR mode optimization when the block size is 16\n\n[3.4.1-5]\n- Backport powerpc64 optimization patches from upstream (#1855228)\n  Patch from Christopher M. Riedl.",
   "Platform": [
-    "Oracle Linux 5"
+    "Oracle Linux 8"
   ],
   "References": [
     {
       "Source": "elsa",
-      "URI": "https://linux.oracle.com/errata/ELSA-2007-0057.html",
-      "ID": "ELSA-2007-0057"
+      "URI": "https://linux.oracle.com/errata/ELSA-2021-4451.html",
+      "ID": "ELSA-2021-4451"
     },
     {
       "Source": "CVE",
-      "URI": "https://linux.oracle.com/cve/CVE-2007-0493.html",
-      "ID": "CVE-2007-0493"
+      "URI": "https://linux.oracle.com/cve/CVE-2021-20232.html",
+      "ID": "CVE-2021-20232"
     },
     {
       "Source": "CVE",
-      "URI": "https://linux.oracle.com/cve/CVE-2007-0494.html",
-      "ID": "CVE-2007-0494"
+      "URI": "https://linux.oracle.com/cve/CVE-2021-3580.html",
+      "ID": "CVE-2021-3580"
+    },
+    {
+      "Source": "CVE",
+      "URI": "https://linux.oracle.com/cve/CVE-2021-20231.html",
+      "ID": "CVE-2021-20231"
     }
   ],
   "Criteria": {
@@ -38,10 +43,10 @@
                     "Criterias": null,
                     "Criterions": [
                       {
-                        "Comment": "bind is earlier than 30:9.3.3-8.el5"
+                        "Comment": "gnutls is earlier than 0:3.6.16-4.el8"
                       },
                       {
-                        "Comment": "bind is signed with the Oracle Linux 5 key"
+                        "Comment": "gnutls is signed with the Oracle Linux 8 key"
                       }
                     ]
                   },
@@ -50,10 +55,10 @@
                     "Criterias": null,
                     "Criterions": [
                       {
-                        "Comment": "bind-chroot is earlier than 30:9.3.3-8.el5"
+                        "Comment": "gnutls-c++ is earlier than 0:3.6.16-4.el8"
                       },
                       {
-                        "Comment": "bind-chroot is signed with the Oracle Linux 5 key"
+                        "Comment": "gnutls-c++ is signed with the Oracle Linux 8 key"
                       }
                     ]
                   },
@@ -62,10 +67,10 @@
                     "Criterias": null,
                     "Criterions": [
                       {
-                        "Comment": "bind-devel is earlier than 30:9.3.3-8.el5"
+                        "Comment": "gnutls-dane is earlier than 0:3.6.16-4.el8"
                       },
                       {
-                        "Comment": "bind-devel is signed with the Oracle Linux 5 key"
+                        "Comment": "gnutls-dane is signed with the Oracle Linux 8 key"
                       }
                     ]
                   },
@@ -74,10 +79,10 @@
                     "Criterias": null,
                     "Criterions": [
                       {
-                        "Comment": "bind-libbind-devel is earlier than 30:9.3.3-8.el5"
+                        "Comment": "gnutls-devel is earlier than 0:3.6.16-4.el8"
                       },
                       {
-                        "Comment": "bind-libbind-devel is signed with the Oracle Linux 5 key"
+                        "Comment": "gnutls-devel is signed with the Oracle Linux 8 key"
                       }
                     ]
                   },
@@ -86,10 +91,10 @@
                     "Criterias": null,
                     "Criterions": [
                       {
-                        "Comment": "bind-libs is earlier than 30:9.3.3-8.el5"
+                        "Comment": "gnutls-utils is earlier than 0:3.6.16-4.el8"
                       },
                       {
-                        "Comment": "bind-libs is signed with the Oracle Linux 5 key"
+                        "Comment": "gnutls-utils is signed with the Oracle Linux 8 key"
                       }
                     ]
                   },
@@ -98,10 +103,10 @@
                     "Criterias": null,
                     "Criterions": [
                       {
-                        "Comment": "bind-sdb is earlier than 30:9.3.3-8.el5"
+                        "Comment": "nettle is earlier than 0:3.4.1-7.el8"
                       },
                       {
-                        "Comment": "bind-sdb is signed with the Oracle Linux 5 key"
+                        "Comment": "nettle is signed with the Oracle Linux 8 key"
                       }
                     ]
                   },
@@ -110,22 +115,10 @@
                     "Criterias": null,
                     "Criterions": [
                       {
-                        "Comment": "bind-utils is earlier than 30:9.3.3-8.el5"
+                        "Comment": "nettle-devel is earlier than 0:3.4.1-7.el8"
                       },
                       {
-                        "Comment": "bind-utils is signed with the Oracle Linux 5 key"
-                      }
-                    ]
-                  },
-                  {
-                    "Operator": "AND",
-                    "Criterias": null,
-                    "Criterions": [
-                      {
-                        "Comment": "caching-nameserver is earlier than 30:9.3.3-8.el5"
-                      },
-                      {
-                        "Comment": "caching-nameserver is signed with the Oracle Linux 5 key"
+                        "Comment": "nettle-devel is signed with the Oracle Linux 8 key"
                       }
                     ]
                   }
@@ -135,7 +128,7 @@
             ],
             "Criterions": [
               {
-                "Comment": "Oracle Linux arch is x86_64"
+                "Comment": "Oracle Linux arch is aarch64"
               }
             ]
           },
@@ -150,10 +143,10 @@
                     "Criterias": null,
                     "Criterions": [
                       {
-                        "Comment": "bind is earlier than 30:9.3.3-8.el5"
+                        "Comment": "gnutls is earlier than 0:3.6.16-4.el8"
                       },
                       {
-                        "Comment": "bind is signed with the Oracle Linux 5 key"
+                        "Comment": "gnutls is signed with the Oracle Linux 8 key"
                       }
                     ]
                   },
@@ -162,10 +155,10 @@
                     "Criterias": null,
                     "Criterions": [
                       {
-                        "Comment": "bind-chroot is earlier than 30:9.3.3-8.el5"
+                        "Comment": "gnutls-c++ is earlier than 0:3.6.16-4.el8"
                       },
                       {
-                        "Comment": "bind-chroot is signed with the Oracle Linux 5 key"
+                        "Comment": "gnutls-c++ is signed with the Oracle Linux 8 key"
                       }
                     ]
                   },
@@ -174,10 +167,10 @@
                     "Criterias": null,
                     "Criterions": [
                       {
-                        "Comment": "bind-devel is earlier than 30:9.3.3-8.el5"
+                        "Comment": "gnutls-dane is earlier than 0:3.6.16-4.el8"
                       },
                       {
-                        "Comment": "bind-devel is signed with the Oracle Linux 5 key"
+                        "Comment": "gnutls-dane is signed with the Oracle Linux 8 key"
                       }
                     ]
                   },
@@ -186,10 +179,10 @@
                     "Criterias": null,
                     "Criterions": [
                       {
-                        "Comment": "bind-libbind-devel is earlier than 30:9.3.3-8.el5"
+                        "Comment": "gnutls-devel is earlier than 0:3.6.16-4.el8"
                       },
                       {
-                        "Comment": "bind-libbind-devel is signed with the Oracle Linux 5 key"
+                        "Comment": "gnutls-devel is signed with the Oracle Linux 8 key"
                       }
                     ]
                   },
@@ -198,10 +191,10 @@
                     "Criterias": null,
                     "Criterions": [
                       {
-                        "Comment": "bind-libs is earlier than 30:9.3.3-8.el5"
+                        "Comment": "gnutls-utils is earlier than 0:3.6.16-4.el8"
                       },
                       {
-                        "Comment": "bind-libs is signed with the Oracle Linux 5 key"
+                        "Comment": "gnutls-utils is signed with the Oracle Linux 8 key"
                       }
                     ]
                   },
@@ -210,10 +203,10 @@
                     "Criterias": null,
                     "Criterions": [
                       {
-                        "Comment": "bind-sdb is earlier than 30:9.3.3-8.el5"
+                        "Comment": "nettle is earlier than 0:3.4.1-7.el8"
                       },
                       {
-                        "Comment": "bind-sdb is signed with the Oracle Linux 5 key"
+                        "Comment": "nettle is signed with the Oracle Linux 8 key"
                       }
                     ]
                   },
@@ -222,22 +215,10 @@
                     "Criterias": null,
                     "Criterions": [
                       {
-                        "Comment": "bind-utils is earlier than 30:9.3.3-8.el5"
+                        "Comment": "nettle-devel is earlier than 0:3.4.1-7.el8"
                       },
                       {
-                        "Comment": "bind-utils is signed with the Oracle Linux 5 key"
-                      }
-                    ]
-                  },
-                  {
-                    "Operator": "AND",
-                    "Criterias": null,
-                    "Criterions": [
-                      {
-                        "Comment": "caching-nameserver is earlier than 30:9.3.3-8.el5"
-                      },
-                      {
-                        "Comment": "caching-nameserver is signed with the Oracle Linux 5 key"
+                        "Comment": "nettle-devel is signed with the Oracle Linux 8 key"
                       }
                     ]
                   }
@@ -247,7 +228,7 @@
             ],
             "Criterions": [
               {
-                "Comment": "Oracle Linux arch is i386"
+                "Comment": "Oracle Linux arch is x86_64"
               }
             ]
           }
@@ -257,7 +238,7 @@
     ],
     "Criterions": [
       {
-        "Comment": "Oracle Linux 5 is installed"
+        "Comment": "Oracle Linux 8 is installed"
       }
     ]
   },
@@ -265,16 +246,21 @@
   "Cves": [
     {
       "Impact": "",
-      "Href": "https://linux.oracle.com/cve/CVE-2007-0493.html",
-      "ID": "CVE-2007-0493"
+      "Href": "https://linux.oracle.com/cve/CVE-2021-20232.html",
+      "ID": "CVE-2021-20232"
     },
     {
       "Impact": "",
-      "Href": "https://linux.oracle.com/cve/CVE-2007-0494.html",
-      "ID": "CVE-2007-0494"
+      "Href": "https://linux.oracle.com/cve/CVE-2021-3580.html",
+      "ID": "CVE-2021-3580"
+    },
+    {
+      "Impact": "",
+      "Href": "https://linux.oracle.com/cve/CVE-2021-20231.html",
+      "ID": "CVE-2021-20231"
     }
   ],
   "Issued": {
-    "Date": "2007-06-26"
+    "Date": "2021-11-16"
   }
 }
