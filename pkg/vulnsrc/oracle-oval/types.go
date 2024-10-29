@@ -43,6 +43,7 @@ type Package struct {
 type AffectedPackage struct {
 	Package Package
 	OSVer   string
+	Arch    string
 }
 
 type Date struct {

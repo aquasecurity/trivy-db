@@ -7,9 +7,11 @@ import (
 	"log"
 	"path/filepath"
 	"slices"
+	"sort"
 	"strings"
 
 	version "github.com/knqyf263/go-rpm-version"
+	"github.com/samber/lo"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
@@ -34,16 +36,17 @@ var (
 )
 
 type PutInput struct {
-	VulnID     string                             // CVE-ID or ELSA-ID
-	Vuln       types.VulnerabilityDetail          // vulnerability detail such as CVSS and description
-	Advisories map[AffectedPackage]types.Advisory // pkg => advisory
-	OVAL       OracleOVAL                         // for extensibility, not used in trivy-db
+	VulnID       string                      // CVE-ID or ELSA-ID
+	PlatformName string                      // Oracle Linux 5/6/7...
+	Vuln         types.VulnerabilityDetail   // vulnerability detail such as CVSS and description
+	Advisories   map[string]types.Advisories // pkgName => advisories
+	OVAL         OracleOVAL                  // for extensibility, not used in trivy-db
 }
 
 type DB interface {
 	db.Operation
 	Put(*bolt.Tx, PutInput) error
-	Get(release, pkgName string) ([]types.Advisory, error)
+	Get(release, pkgName, arch string) ([]types.Advisory, error)
 }
 
 type VulnSrc struct {
@@ -111,6 +114,9 @@ func (vs *VulnSrc) put(ovals []OracleOVAL) error {
 }
 
 func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
+	foundPlatformNames := map[string]struct{}{}
+	// platform => vulnID => PutInput
+	savedInputs := map[string]map[string]PutInput{}
 	for _, oval := range ovals {
 		elsaID := strings.Split(oval.Title, ":")[0]
 
@@ -122,46 +128,112 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			vulnIDs = append(vulnIDs, elsaID)
 		}
 
-		advisories := map[AffectedPackage]types.Advisory{}
-		affectedPkgs := walkOracle(oval.Criteria, "", []AffectedPackage{})
-		for _, affectedPkg := range affectedPkgs {
-			if affectedPkg.Package.Name == "" {
-				continue
-			}
-
-			platformName := affectedPkg.PlatformName()
-			if !slices.Contains(targetPlatforms, platformName) {
-				continue
-			}
-
-			if err := vs.PutDataSource(tx, platformName, source); err != nil {
-				return xerrors.Errorf("failed to put data source: %w", err)
-			}
-
-			advisories[affectedPkg] = types.Advisory{
-				FixedVersion: affectedPkg.Package.FixedVersion,
-			}
-		}
-
-		var references []string
-		for _, ref := range oval.References {
-			references = append(references, ref.URI)
-		}
-
 		for _, vulnID := range vulnIDs {
-			vuln := types.VulnerabilityDetail{
-				Description: oval.Description,
-				References:  referencesFromContains(references, []string{elsaID, vulnID}),
-				Title:       oval.Title,
-				Severity:    severityFromThreat(oval.Severity),
-			}
+			affectedPkgs := walkOracle(oval.Criteria, "", "", []AffectedPackage{})
+			for _, affectedPkg := range affectedPkgs {
+				pkgName := affectedPkg.Package.Name
+				// there are cases when advisory doesn't have arch
+				// it looks as bug
+				// because CVE doesn't contain this ELSA
+				// e.g. https://linux.oracle.com/errata/ELSA-2018-0013.html
+				// https://linux.oracle.com/cve/CVE-2017-5715.html
+				if pkgName == "" || affectedPkg.Arch == "" {
+					continue
+				}
 
-			err := vs.Put(tx, PutInput{
-				VulnID:     vulnID,
-				Vuln:       vuln,
-				Advisories: advisories,
-				OVAL:       oval,
-			})
+				platformName := affectedPkg.PlatformName()
+				if !slices.Contains(targetPlatforms, platformName) {
+					continue
+				}
+
+				// save unique platform name
+				// will save datasources for these platforms later
+				if _, ok := foundPlatformNames[platformName]; !ok {
+					foundPlatformNames[platformName] = struct{}{}
+				}
+
+				input := PutInput{
+					Advisories: map[string]types.Advisories{},
+				}
+				savedPlatformVulns := map[string]PutInput{}
+				if savedVulns, ok := savedInputs[platformName]; ok {
+					savedPlatformVulns = savedVulns
+					if in, ok := savedVulns[vulnID]; ok {
+						input = in
+					}
+				}
+
+				entry := types.Advisory{
+					FixedVersion: affectedPkg.Package.FixedVersion,
+					Arches:       []string{affectedPkg.Arch},
+				}
+
+				// if the advisory for this package and CVE have been kept - just add the new architecture
+				if adv, ok := input.Advisories[pkgName]; ok {
+					// update `fixedVersion` if `fixedVersion` for `x86_64` was not previously saved
+					adv.FixedVersion = fixedVersion(adv.FixedVersion, entry.FixedVersion, affectedPkg.Arch)
+
+					old, i, found := lo.FindIndexOf(adv.Entries, func(adv types.Advisory) bool {
+						return adv.FixedVersion == entry.FixedVersion
+					})
+
+					// If the advisory with the same fixed version and ELSA-ID is present - just add the new architecture
+					if found {
+						if !slices.Contains(old.Arches, affectedPkg.Arch) {
+							adv.Entries[i].Arches = append(old.Arches, affectedPkg.Arch)
+						}
+						input.Advisories[pkgName] = adv
+					} else {
+						adv.Entries = append(adv.Entries, entry)
+						input.Advisories[pkgName] = adv
+					}
+				} else {
+					input.Advisories[pkgName] = types.Advisories{
+						// will save `0.0.0` version for non-`x86_64` arch
+						// to avoid false positives when using old Trivy with new database
+						FixedVersion: fixedVersion("0.0.0", entry.FixedVersion, affectedPkg.Arch), // For backward compatibility
+						Entries:      []types.Advisory{entry},
+					}
+				}
+				if len(input.Advisories) == 0 {
+					continue
+				}
+
+				var references []string
+				for _, ref := range oval.References {
+					references = append(references, ref.URI)
+				}
+
+				vuln := types.VulnerabilityDetail{
+					Description: oval.Description,
+					References:  referencesFromContains(references, []string{elsaID, vulnID}),
+					Title:       oval.Title,
+					Severity:    severityFromThreat(oval.Severity),
+				}
+
+				input.VulnID = vulnID
+				input.Vuln = vuln
+				input.PlatformName = platformName
+
+				savedPlatformVulns[vulnID] = input
+				savedInputs[platformName] = savedPlatformVulns
+			}
+		}
+	}
+
+	for platformName := range foundPlatformNames {
+		if err := vs.PutDataSource(tx, platformName, source); err != nil {
+			return xerrors.Errorf("failed to put data source: %w", err)
+		}
+	}
+	inputs := lo.Entries(savedInputs)
+	sort.Slice(inputs, func(i, j int) bool {
+		return inputs[i].Key < inputs[j].Key // sort by platform
+	})
+	for _, entry := range inputs {
+		for _, input := range entry.Value {
+			input = removeExtraVersions(input)
+			err := vs.Put(tx, input)
 			if err != nil {
 				return xerrors.Errorf("db put error: %w", err)
 			}
@@ -169,6 +241,48 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 	}
 
 	return nil
+}
+
+func removeExtraVersions(input PutInput) PutInput {
+	for pkgName, adv := range input.Advisories {
+		// arch -> fixedVersion
+		fixedVersions := map[string]string{}
+		for _, entry := range adv.Entries {
+			for _, arch := range entry.Arches {
+				if entry.FixedVersion != "0.0.0" {
+					fixedVersions[arch] = entry.FixedVersion
+					if arch == "x86_64" {
+						adv.FixedVersion = entry.FixedVersion
+					}
+				}
+			}
+		}
+		var entries []types.Advisory
+		for arch, fixedVer := range fixedVersions {
+			if i := slices.IndexFunc(entries, func(advisory types.Advisory) bool {
+				return advisory.FixedVersion == fixedVer
+			}); i != -1 {
+				entries[i].Arches = append(entries[i].Arches, arch)
+				slices.Sort(entries[i].Arches)
+			} else {
+				entries = append(entries, types.Advisory{
+					FixedVersion: fixedVer,
+					Arches:       []string{arch},
+				})
+			}
+		}
+
+		sort.Slice(entries, func(i, j int) bool {
+			return entries[i].Arches[0] < entries[j].Arches[0]
+		})
+		adv.Entries = entries
+
+		if adv.FixedVersion == "0.0.0" {
+			adv.FixedVersion = ""
+		}
+		input.Advisories[pkgName] = adv
+	}
+	return input
 }
 
 func (o *Oracle) Put(tx *bolt.Tx, input PutInput) error {
@@ -181,29 +295,59 @@ func (o *Oracle) Put(tx *bolt.Tx, input PutInput) error {
 		return xerrors.Errorf("failed to save %s: %w", input.VulnID, err)
 	}
 
-	for pkg, advisory := range input.Advisories {
-		platformName := pkg.PlatformName()
-		if err := o.PutAdvisoryDetail(tx, input.VulnID, pkg.Package.Name, []string{platformName}, advisory); err != nil {
+	for pkgName, advisory := range input.Advisories {
+		if err := o.PutAdvisoryDetail(tx, input.VulnID, pkgName, []string{input.PlatformName}, advisory); err != nil {
 			return xerrors.Errorf("failed to save Oracle Linux advisory: %w", err)
 		}
 	}
 	return nil
 }
 
-func (o *Oracle) Get(release string, pkgName string) ([]types.Advisory, error) {
+func (o *Oracle) Get(release string, pkgName, arch string) ([]types.Advisory, error) {
 	bucket := fmt.Sprintf(platformFormat, release)
-	advisories, err := o.GetAdvisories(bucket, pkgName)
+	rawAdvisories, err := o.ForEachAdvisory([]string{bucket}, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get Oracle Linux advisories: %w", err)
+		return nil, xerrors.Errorf("unable to iterate advisories: %w", err)
 	}
+	var advisories []types.Advisory
+	for vulnID, v := range rawAdvisories {
+		var adv types.Advisories
+		if err = json.Unmarshal(v.Content, &adv); err != nil {
+			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
+		}
+
+		// For backward compatibility
+		// The old trivy-db has no entries, but has fixed versions only.
+		if len(adv.Entries) == 0 {
+			advisories = append(advisories, types.Advisory{
+				VulnerabilityID: vulnID,
+				FixedVersion:    adv.FixedVersion,
+				DataSource:      &v.Source,
+			})
+			continue
+		}
+
+		for _, entry := range adv.Entries {
+			if !slices.Contains(entry.Arches, arch) {
+				continue
+			}
+			entry.VulnerabilityID = vulnID
+			entry.DataSource = &v.Source
+			advisories = append(advisories, entry)
+		}
+	}
+
 	return advisories, nil
 }
 
-func walkOracle(cri Criteria, osVer string, pkgs []AffectedPackage) []AffectedPackage {
+func walkOracle(cri Criteria, osVer, arch string, pkgs []AffectedPackage) []AffectedPackage {
 	for _, c := range cri.Criterions {
 		if strings.HasPrefix(c.Comment, "Oracle Linux ") &&
 			strings.HasSuffix(c.Comment, " is installed") {
 			osVer = strings.TrimSuffix(strings.TrimPrefix(c.Comment, "Oracle Linux "), " is installed")
+		}
+		if strings.HasPrefix(c.Comment, "Oracle Linux arch is ") {
+			arch = strings.TrimPrefix(c.Comment, "Oracle Linux arch is ")
 		}
 		ss := strings.Split(c.Comment, " is earlier than ")
 		if len(ss) != 2 {
@@ -212,6 +356,7 @@ func walkOracle(cri Criteria, osVer string, pkgs []AffectedPackage) []AffectedPa
 
 		pkgs = append(pkgs, AffectedPackage{
 			OSVer: osVer,
+			Arch:  arch,
 			Package: Package{
 				Name:         ss[0],
 				FixedVersion: version.NewVersion(ss[1]).String(),
@@ -220,7 +365,7 @@ func walkOracle(cri Criteria, osVer string, pkgs []AffectedPackage) []AffectedPa
 	}
 
 	for _, c := range cri.Criterias {
-		pkgs = walkOracle(c, osVer, pkgs)
+		pkgs = walkOracle(c, osVer, arch, pkgs)
 	}
 	return pkgs
 }
@@ -249,4 +394,13 @@ func severityFromThreat(sev string) types.Severity {
 		return types.SeverityCritical
 	}
 	return types.SeverityUnknown
+}
+
+// fixedVersion checks for the arch and only updates version for `x86_64`
+// only used for types.Advisories.FixedVersion for backward compatibility
+func fixedVersion(prevVersion, newVersion, arch string) string {
+	if arch == "x86_64" || arch == "noarch" {
+		return newVersion
+	}
+	return prevVersion
 }
