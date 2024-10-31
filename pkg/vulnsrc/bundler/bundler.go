@@ -25,7 +25,7 @@ var (
 		URL:  "https://github.com/rubysec/ruby-advisory-db",
 	}
 
-	bucketName = bucket.Name(string(vulnerability.RubyGems), source.Name)
+	bucketName = bucket.Name(vulnerability.RubyGems, source.Name)
 )
 
 type RawAdvisory struct {

@@ -6,22 +6,19 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.17
-        id: go
+          go-version-file: go.mod
 
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v1
-      - name: yaml-lint
-        uses: ibiqlik/action-yamllint@v3
       - name: Lint
-        uses: golangci/golangci-lint-action@v3.1.0
+        uses: golangci/golangci-lint-action@v6.0.1
         with:
-          version: v1.45.2
-          args: -D errcheck
+          version: v1.54
+          args: --verbose
 
       - name: Test
         run: |

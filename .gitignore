@@ -13,9 +13,13 @@ coverage.txt
 *.out
 
 .idea
+.vscode
 
-assets
-cache
+**/.DS_Store
+
+/assets
+/cache
+/out
 
 # trivy-db Outputs
 trivy-db

@@ -3,16 +3,15 @@ package redhat
 import (
 	"encoding/json"
 	"fmt"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"io"
-	"io/ioutil"
 	"log"
 	"path/filepath"
 	"strconv"
 	"strings"
 
 	bolt "go.etcd.io/bbolt"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
@@ -22,7 +21,8 @@ import (
 )
 
 const (
-	redhatDir = "redhat"
+	vulnListDir = "vuln-list-redhat"
+	apiDir      = "api"
 
 	resourceURL = "https://access.redhat.com/security/cve/%s"
 )
@@ -42,11 +42,11 @@ func (vs VulnSrc) Name() types.SourceID {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	rootDir := filepath.Join(dir, "vuln-list", redhatDir)
+	rootDir := filepath.Join(dir, vulnListDir, apiDir)
 
 	var cves []RedhatCVE
 	err := utils.FileWalk(rootDir, func(r io.Reader, _ string) error {
-		content, err := ioutil.ReadAll(r)
+		content, err := io.ReadAll(r)
 		if err != nil {
 			return err
 		}

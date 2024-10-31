@@ -1,0 +1,37 @@
+{
+  "RpminfoState": [
+    {
+      "ID": "oval:com.redhat.cve:ste:20042779001",
+      "Version": "636",
+      "Arch": {},
+      "Evr": {},
+      "SignatureKeyID": {
+        "Text": "199e2f91fd431d51",
+        "Operation": "equals"
+      }
+    }
+  ],
+  "RpmverifyfileStates": [
+    {
+      "ID": "oval:com.redhat.cve:ste:20042779002",
+      "AttrVersion": "636",
+      "Name": {
+        "Text": "^redhat-release",
+        "Operation": "pattern match"
+      },
+      "Version": {
+        "Text": "^7[^\\d]",
+        "Operation": "pattern match"
+      }
+    },
+    {
+      "ID": "oval:com.redhat.cve:ste:20042779003",
+      "AttrVersion": "636",
+      "Name": {
+        "Text": "^redhat-release",
+        "Operation": "pattern match"
+      },
+      "Version": {}
+    }
+  ]
+}

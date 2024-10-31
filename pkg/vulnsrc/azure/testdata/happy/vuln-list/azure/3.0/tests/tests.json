@@ -1,0 +1,28 @@
+{
+  "RpminfoTests": [
+    {
+      "Check": "at least one",
+      "Comment": "Package ceph is earlier than 18.2.1-1, affected by CVE-2018-1999023",
+      "ID": "oval:com.microsoft.azurelinux:tst:38656000",
+      "Version": "1",
+      "Object": {
+        "ObjectRef": "oval:com.microsoft.azurelinux:obj:38656001"
+      },
+      "State": {
+        "StateRef": "oval:com.microsoft.azurelinux:ste:38656002"
+      }
+    },
+    {
+      "Check": "at least one",
+      "Comment": "Package tensorflow is earlier than 2.16.1-1, affected by CVE-2023-27534",
+      "ID": "oval:com.microsoft.azurelinux:tst:38611000",
+      "Version": "1",
+      "Object": {
+        "ObjectRef": "oval:com.microsoft.azurelinux:obj:38611001"
+      },
+      "State": {
+        "StateRef": "oval:com.microsoft.azurelinux:ste:38611002"
+      }
+    }
+  ]
+}

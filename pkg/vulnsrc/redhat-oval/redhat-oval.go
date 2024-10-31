@@ -8,16 +8,17 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
-	"github.com/aquasecurity/trivy-db/pkg/utils/ints"
-
 	bolt "go.etcd.io/bbolt"
+	"golang.org/x/exp/slices"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/utils/ints"
 	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
@@ -27,7 +28,9 @@ const (
 )
 
 var (
-	redhatDir = filepath.Join("oval", "redhat")
+	ovalDir     = "oval"
+	cpeDir      = "cpe"
+	vulnListDir = "vuln-list-redhat"
 
 	moduleRegexp = regexp.MustCompile(`Module\s+(.*)\s+is enabled`)
 
@@ -66,7 +69,7 @@ func (vs VulnSrc) Update(dir string) error {
 	}
 
 	// List version directories
-	rootDir := filepath.Join(dir, "vuln-list", redhatDir)
+	rootDir := filepath.Join(dir, vulnListDir, ovalDir)
 	versions, err := os.ReadDir(rootDir)
 	if err != nil {
 		return xerrors.Errorf("unable to list directory entries (%s): %w", rootDir, err)
@@ -91,7 +94,6 @@ func (vs VulnSrc) Update(dir string) error {
 			}
 
 			advisories = vs.mergeAdvisories(advisories, definitions)
-
 		}
 	}
 
@@ -103,7 +105,7 @@ func (vs VulnSrc) Update(dir string) error {
 }
 
 func (vs VulnSrc) parseRepositoryCpeMapping(dir string, uniqCPEs CPEMap) (map[string][]string, error) {
-	filePath := filepath.Join(dir, "vuln-list", "redhat-cpe", "repository-to-cpe.json")
+	filePath := filepath.Join(dir, vulnListDir, cpeDir, "repository-to-cpe.json")
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, xerrors.Errorf("file open error: %w", err)
@@ -123,7 +125,7 @@ func (vs VulnSrc) parseRepositoryCpeMapping(dir string, uniqCPEs CPEMap) (map[st
 }
 
 func (vs VulnSrc) parseNvrCpeMapping(dir string, uniqCPEs CPEMap) (map[string][]string, error) {
-	filePath := filepath.Join(dir, "vuln-list", "redhat-cpe", "nvr-to-cpe.json")
+	filePath := filepath.Join(dir, vulnListDir, cpeDir, "nvr-to-cpe.json")
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, xerrors.Errorf("file open error: %w", err)
@@ -147,7 +149,8 @@ func (vs VulnSrc) mergeAdvisories(advisories map[bucket]Advisory, defs map[bucke
 			found := false
 			for i := range old.Entries {
 				// New advisory should contain a single fixed version and list of arches.
-				if old.Entries[i].FixedVersion == def.Entry.FixedVersion && archesEqual(old.Entries[i].Arches, def.Entry.Arches) {
+				if old.Entries[i].FixedVersion == def.Entry.FixedVersion && old.Entries[i].Status == def.Entry.Status &&
+					slices.Equal(old.Entries[i].Arches, def.Entry.Arches) && slices.Equal(old.Entries[i].Cves, def.Entry.Cves) {
 					found = true
 					old.Entries[i].AffectedCPEList = ustrings.Merge(old.Entries[i].AffectedCPEList, def.Entry.AffectedCPEList)
 				}
@@ -245,6 +248,10 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 		return nil, xerrors.Errorf("CPE convert error: %w", err)
 	}
 
+	if len(cpeIndices) == 0 {
+		return nil, xerrors.Errorf("unable to find CPE indices. See https://github.com/aquasecurity/trivy-db/issues/435 for details")
+	}
+
 	rawAdvisories, err := vs.dbc.ForEachAdvisory([]string{rootBucket}, pkgName)
 	if err != nil {
 		return nil, xerrors.Errorf("unable to iterate advisories: %w", err)
@@ -252,10 +259,6 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 
 	var advisories []types.Advisory
 	for vulnID, v := range rawAdvisories {
-		if len(v.Content) == 0 {
-			continue
-		}
-
 		var adv Advisory
 		if err = json.Unmarshal(v.Content, &adv); err != nil {
 			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
@@ -271,6 +274,8 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 					Severity:     cve.Severity,
 					FixedVersion: entry.FixedVersion,
 					Arches:       entry.Arches,
+					Status:       entry.Status,
+					DataSource:   &v.Source,
 				}
 
 				if strings.HasPrefix(vulnID, "CVE-") {
@@ -347,6 +352,9 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 					Severity: severityFromImpact(cve.Impact),
 				})
 			}
+			sort.Slice(cveEntries, func(i, j int) bool {
+				return cveEntries[i].ID < cveEntries[j].ID
+			})
 
 			if rhsaID != "" { // For patched vulnerabilities
 				bkt := bucket{
@@ -359,6 +367,10 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 						FixedVersion:    affectedPkg.FixedVersion,
 						AffectedCPEList: advisory.Metadata.Advisory.AffectedCpeList,
 						Arches:          affectedPkg.Arches,
+
+						// The status is obviously "fixed" when there is a patch.
+						// To keep the database size small, we don't store the status for patched vulns.
+						// Status:		  StatusFixed,
 					},
 				}
 			} else { // For unpatched vulnerabilities
@@ -377,6 +389,7 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 							FixedVersion:    affectedPkg.FixedVersion,
 							AffectedCPEList: advisory.Metadata.Advisory.AffectedCpeList,
 							Arches:          affectedPkg.Arches,
+							Status:          newStatus(advisory.Metadata.Advisory.Affected.Resolution.State),
 						},
 					}
 				}
@@ -385,7 +398,6 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 
 		updateCPEs(advisory.Metadata.Advisory.AffectedCpeList, uniqCPEs)
 	}
-
 	return defs
 }
 
@@ -414,6 +426,7 @@ func walkCriterion(cri criteria, tests map[string]rpmInfoTest) (string, []pkg) {
 		var arches []string
 		if t.Arch != "" {
 			arches = strings.Split(t.Arch, "|") // affected arches are merged with '|'(e.g. 'aarch64|ppc64le|x86_64')
+			sort.Strings(arches)
 		}
 
 		packages = append(packages, pkg{
@@ -473,14 +486,16 @@ func severityFromImpact(sev string) types.Severity {
 	return types.SeverityUnknown
 }
 
-func archesEqual(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
+func newStatus(s string) types.Status {
+	switch strings.ToLower(s) {
+	case "affected", "fix deferred":
+		return types.StatusAffected
+	case "under investigation":
+		return types.StatusUnderInvestigation
+	case "will not fix":
+		return types.StatusWillNotFix
+	case "out of support scope":
+		return types.StatusEndOfLife
 	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
+	return types.StatusUnknown
 }

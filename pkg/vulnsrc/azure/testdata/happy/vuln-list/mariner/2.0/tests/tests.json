@@ -1,0 +1,40 @@
+{
+  "RpminfoTests": [
+    {
+      "Check": "at least one",
+      "Comment": "Package wireshark is installed with version 3.4.4 or earlier",
+      "ID": "oval:com.microsoft.cbl-mariner:tst:1643374850000435",
+      "Version": "1643374850",
+      "Object": {
+        "ObjectRef": "oval:com.microsoft.cbl-mariner:obj:1643374850000429"
+      },
+      "State": {
+        "StateRef": "oval:com.microsoft.cbl-mariner:ste:1643374850000031"
+      }
+    },
+    {
+      "Check": "at least one",
+      "Comment": "Package openssl is earlier than 1.1.1k-28, affected by CVE-2023-5678",
+      "ID": "oval:com.microsoft.cbl-mariner:tst:31880000",
+      "Version": "0",
+      "Object": {
+        "ObjectRef": "oval:com.microsoft.cbl-mariner:obj:31880001"
+      },
+      "State": {
+        "StateRef": "oval:com.microsoft.cbl-mariner:ste:31880002"
+      }
+    },
+    {
+      "Check": "at least one",
+      "Comment": "Package edk2 is earlier than 20230301gitf80f052277c8-38, affected by CVE-2023-5678",
+      "ID": "oval:com.microsoft.cbl-mariner:tst:31872000",
+      "Version": "0",
+      "Object": {
+        "ObjectRef": "oval:com.microsoft.cbl-mariner:obj:31872001"
+      },
+      "State": {
+        "StateRef": "oval:com.microsoft.cbl-mariner:ste:31872002"
+      }
+    }
+  ]
+}

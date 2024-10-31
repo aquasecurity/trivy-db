@@ -15,16 +15,16 @@
       "epoch": "32",
       "version": "9.11.26",
       "release": "4.el8_4",
-      "arch": "i686",
-      "filename": "bind-export-libs-9.11.26-4.el8_4.i686.rpm"
+      "arch": "x86_64",
+      "filename": "bind-export-libs-9.11.26-4.el8_4.x86_64.rpm"
     },
     {
       "name": "bind-export-libs",
       "epoch": "32",
       "version": "9.11.26",
       "release": "4.el8_4",
-      "arch": "x86_64",
-      "filename": "bind-export-libs-9.11.26-4.el8_4.x86_64.rpm"
+      "arch": "i686",
+      "filename": "bind-export-libs-9.11.26-4.el8_4.i686.rpm"
     },
     {
       "name": "bind-export-devel",

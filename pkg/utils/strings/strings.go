@@ -25,15 +25,6 @@ func IsInt(s string) bool {
 	return err == nil
 }
 
-func InSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
 func Merge(a, b []string) []string {
 	uniq := map[string]struct{}{}
 	for _, v := range append(a, b...) {

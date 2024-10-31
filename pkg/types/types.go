@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -10,10 +11,12 @@ type Severity int
 type VendorSeverity map[SourceID]Severity
 
 type CVSS struct {
-	V2Vector string  `json:"V2Vector,omitempty"`
-	V3Vector string  `json:"V3Vector,omitempty"`
-	V2Score  float64 `json:"V2Score,omitempty"`
-	V3Score  float64 `json:"V3Score,omitempty"`
+	V2Vector  string  `json:"V2Vector,omitempty"`
+	V3Vector  string  `json:"V3Vector,omitempty"`
+	V40Vector string  `json:"V40Vector,omitempty"`
+	V2Score   float64 `json:"V2Score,omitempty"`
+	V3Score   float64 `json:"V3Score,omitempty"`
+	V40Score  float64 `json:"V40Score,omitempty"`
 }
 
 type CVSSVector struct {
@@ -69,8 +72,11 @@ type VulnerabilityDetail struct {
 	CvssVector       string     `json:",omitempty"`
 	CvssScoreV3      float64    `json:",omitempty"`
 	CvssVectorV3     string     `json:",omitempty"`
+	CvssScoreV40     float64    `json:",omitempty"`
+	CvssVectorV40    string     `json:",omitempty"`
 	Severity         Severity   `json:",omitempty"`
 	SeverityV3       Severity   `json:",omitempty"`
+	SeverityV40      Severity   `json:",omitempty"`
 	CweIDs           []string   `json:",omitempty"` // e.g. CWE-78, CWE-89
 	References       []string   `json:",omitempty"`
 	Title            string     `json:",omitempty"`
@@ -98,13 +104,11 @@ type Advisory struct {
 	VulnerabilityID string   `json:",omitempty"` // CVE-ID or vendor ID
 	VendorIDs       []string `json:",omitempty"` // e.g. RHSA-ID and DSA-ID
 
-	// Rpm packages have advisories for different architectures with same package name
-	// This field is required to separate these packages.
-	Arches []string `json:"-"`
+	Arches []string `json:",omitempty"`
 
 	// It is filled only when FixedVersion is empty since it is obvious the state is "Fixed" when FixedVersion is not empty.
 	// e.g. Will not fix and Affected
-	State string `json:",omitempty"`
+	Status Status `json:"-"`
 
 	// Trivy DB has "vulnerability" bucket and severities are usually stored in the bucket per a vulnerability ID.
 	// In some cases, the advisory may have multiple severities depending on the packages.
@@ -127,6 +131,47 @@ type Advisory struct {
 
 	// Custom is basically for extensibility and is not supposed to be used in OSS
 	Custom interface{} `json:",omitempty"`
+}
+
+// _Advisory is an internal struct for Advisory to avoid infinite MarshalJSON loop.
+type _Advisory Advisory
+
+type dbAdvisory struct {
+	_Advisory
+	IntStatus int `json:"Status,omitempty"`
+}
+
+// MarshalJSON customizes how an Advisory is marshaled to JSON.
+// It is used when saving the Advisory to the BoltDB database.
+// To reduce the size of the database, the Status field is converted to an integer before being saved,
+// while the status is normally exported as a string in JSON.
+// This is done by creating an anonymous struct that has all the same fields as Advisory,
+// but with the Status field replaced by an IntStatus field of type int.
+func (a *Advisory) MarshalJSON() ([]byte, error) {
+	advisory := dbAdvisory{
+		_Advisory: _Advisory(*a),
+		IntStatus: int(a.Status),
+	}
+	return json.Marshal(advisory)
+}
+
+func (a *Advisory) UnmarshalJSON(data []byte) error {
+	var advisory dbAdvisory
+	if err := json.Unmarshal(data, &advisory); err != nil {
+		return err
+	}
+	advisory._Advisory.Status = Status(advisory.IntStatus)
+	*a = Advisory(advisory._Advisory)
+	return nil
+}
+
+// Advisories saves fixed versions for each arches/vendorIDs
+// e.g. this is required when CVE has different fixed versions for different arches
+type Advisories struct {
+	FixedVersion string     `json:",omitempty"` // For backward compatibility
+	Entries      []Advisory `json:",omitempty"`
+	// Custom is basically for extensibility and is not supposed to be used in OSS
+	Custom interface{} `json:",omitempty"` // For backward compatibility
 }
 
 type Vulnerability struct {

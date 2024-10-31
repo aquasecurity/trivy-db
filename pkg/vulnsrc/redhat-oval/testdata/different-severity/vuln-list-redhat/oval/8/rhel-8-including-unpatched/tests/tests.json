@@ -1,0 +1,130 @@
+{
+  "RpminfoTests": [
+    {
+      "Check": "at least one",
+      "Comment": "libarchive-devel is installed",
+      "ID": "oval:com.redhat.cve:tst:20181000879001",
+      "Version": "636",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20181000879001"
+      },
+      "State": {}
+    },
+    {
+      "Check": "at least one",
+      "Comment": "libarchive-devel is signed with Red Hat redhatrelease2 key",
+      "ID": "oval:com.redhat.cve:tst:20181000879002",
+      "Version": "636",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20181000879001"
+      },
+      "State": {
+        "StateRef": "oval:com.redhat.cve:ste:20052541001"
+      }
+    },
+    {
+      "Check": "at least one",
+      "Comment": "bsdtar is installed",
+      "ID": "oval:com.redhat.cve:tst:20181000879003",
+      "Version": "636",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20181000879002"
+      },
+      "State": {}
+    },
+    {
+      "Check": "at least one",
+      "Comment": "bsdtar is signed with Red Hat redhatrelease2 key",
+      "ID": "oval:com.redhat.cve:tst:20181000879004",
+      "Version": "636",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20181000879002"
+      },
+      "State": {
+        "StateRef": "oval:com.redhat.cve:ste:20052541001"
+      }
+    },
+    {
+      "Check": "at least one",
+      "Comment": "libarchive is installed",
+      "ID": "oval:com.redhat.cve:tst:20181000879005",
+      "Version": "636",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20181000879003"
+      },
+      "State": {}
+    },
+    {
+      "Check": "at least one",
+      "Comment": "libarchive is signed with Red Hat redhatrelease2 key",
+      "ID": "oval:com.redhat.cve:tst:20181000879006",
+      "Version": "636",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20181000879003"
+      },
+      "State": {
+        "StateRef": "oval:com.redhat.cve:ste:20052541001"
+      }
+    },
+    {
+      "Check": "at least one",
+      "Comment": "libarchive-debugsource is installed",
+      "ID": "oval:com.redhat.cve:tst:20181000879007",
+      "Version": "636",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20181000879004"
+      },
+      "State": {}
+    },
+    {
+      "Check": "at least one",
+      "Comment": "libarchive-debugsource is signed with Red Hat redhatrelease2 key",
+      "ID": "oval:com.redhat.cve:tst:20181000879008",
+      "Version": "636",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20181000879004"
+      },
+      "State": {
+        "StateRef": "oval:com.redhat.cve:ste:20052541001"
+      }
+    }
+  ],
+  "RpmverifyfileTests": [
+    {
+      "Check": "at least one",
+      "Comment": "Red Hat Enterprise Linux 8 is installed",
+      "ID": "oval:com.redhat.cve:tst:20052541003",
+      "Version": "636",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20052541002"
+      },
+      "State": {
+        "StateRef": "oval:com.redhat.cve:ste:20052541002"
+      }
+    },
+    {
+      "Check": "none satisfy",
+      "Comment": "Red Hat Enterprise Linux must be installed",
+      "ID": "oval:com.redhat.cve:tst:20052541004",
+      "Version": "636",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20052541002"
+      },
+      "State": {
+        "StateRef": "oval:com.redhat.cve:ste:20052541003"
+      }
+    },
+    {
+      "Check": "at least one",
+      "Comment": "Red Hat CoreOS 4 is installed",
+      "ID": "oval:com.redhat.rhba:tst:20191992004",
+      "Version": "635",
+      "Object": {
+        "ObjectRef": "oval:com.redhat.cve:obj:20052541002"
+      },
+      "State": {
+        "StateRef": "oval:com.redhat.rhba:ste:20191992004"
+      }
+    }
+  ]
+}

@@ -25,7 +25,9 @@
 Trivy uses `trivy-db` internally to manipulate vulnerability DB. This DB has vulnerability information from NVD, Red Hat, Debian, etc.
 
 ### CLI
-`trivy-db` builds vulnerability DBs on GitHub Actions and uploads them to GitHub Release periodically.
+The `trivy-db` CLI tool builds vulnerability DBs. A [GitHub Actions workflow](.github/workflows/cron.yml)
+periodically builds a fresh version of the vulnerability DB using `trivy-db` and uploads it to the GitHub
+Container Registry (see [Download the vulnerability database](#download-the-vulnerability-database) below).
 
 ```
 NAME:
@@ -39,7 +41,6 @@ VERSION:
 
 COMMANDS:
      build    build a database file
-     upload   upload database files to GitHub Release
      help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
@@ -55,4 +56,36 @@ Alternatively Docker is supported, you can run `docker build . -t trivy-db`.
 If you want to build a trivy integration test DB, please run `make create-test-db`
 
 ## Update interval
-Every 6 hours
+Trivy DB is built every 6 hours.
+By default, the update interval specified in the metadata file is 24 hours.
+If you need to update Trivy DB more frequently, you can upload a new Trivy DB manually.
+
+## Download the vulnerability database
+### version 1 (deprecated)
+Trivy DB v1 reached the end of support on February 2023. Please upgrade Trivy to v0.23.0 or later.
+
+Read more about the Trivy DB v1 deprecation in [the discussion](https://github.com/aquasecurity/trivy/discussions/1653).
+
+### version 2
+Trivy DB v2 is hosted on [GHCR](https://github.com/orgs/aquasecurity/packages/container/package/trivy-db).
+Although GitHub displays the `docker pull` command by default, please note that it cannot be downloaded using `docker pull` as it is not a container image.
+
+You can download the actual compiled database via [Trivy](https://aquasecurity.github.io/trivy/) or [Oras CLI](https://oras.land/cli/).
+
+Trivy:
+```sh
+TRIVY_TEMP_DIR=$(mktemp -d)
+trivy --cache-dir $TRIVY_TEMP_DIR image --download-db-only
+tar -cf ./db.tar.gz -C $TRIVY_TEMP_DIR/db metadata.json trivy.db
+rm -rf $TRIVY_TEMP_DIR
+```
+oras >= v0.13.0:
+```sh
+$ oras pull ghcr.io/aquasecurity/trivy-db:2
+```
+
+oras < v0.13.0:
+```sh
+$ oras pull -a ghcr.io/aquasecurity/trivy-db:2
+```
+The database can be used for [Air-Gapped Environment](https://aquasecurity.github.io/trivy/latest/docs/advanced/air-gap/).

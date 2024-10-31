@@ -3,41 +3,32 @@ package bucket_test
 import (
 	"testing"
 
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestBucketName(t *testing.T) {
 	testCases := []struct {
 		name       string
-		ecosystem  string
+		ecosystem  types.Ecosystem
 		dataSource string
 		want       string
 		wantErr    string
 	}{
 		{
-			name:       "happy path go",
-			ecosystem:  "go",
+			name:       "go",
+			ecosystem:  vulnerability.Go,
 			dataSource: "GitLab Advisory Database",
 			want:       "go::GitLab Advisory Database",
 		},
 		{
-			name:       "happy path golang",
-			ecosystem:  "golang",
-			dataSource: "GitLab Advisory Database",
-			want:       "go::GitLab Advisory Database",
-		},
-		{
-			name:       "happy path maven",
-			ecosystem:  "maven",
-			dataSource: "GitLab Advisory Database",
-			want:       "maven::GitLab Advisory Database",
-		},
-		{
-			name:       "sad path unknown",
-			ecosystem:  "unknown",
-			dataSource: "GitLab Advisory Database",
-			wantErr:    "unknown ecosystem",
+			name:       "rubygems",
+			ecosystem:  vulnerability.RubyGems,
+			dataSource: "GitHub Advisory Database",
+			want:       "rubygems::GitHub Advisory Database",
 		},
 	}
 

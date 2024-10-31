@@ -1,12 +1,13 @@
 package bundler_test
 
 import (
+	"path/filepath"
+	"testing"
+
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bundler"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
-	"path/filepath"
-	"testing"
 )
 
 func TestVulnSrc_Update(t *testing.T) {
