@@ -126,7 +126,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 		}
 
 		advisories := map[Package]types.Advisories{}
-		affectedPkgs := walkOracle(oval.Criteria, "", "", []AffectedPackage{})
+		affectedPkgs := walkOracle(oval.Criteria, "", []AffectedPackage{})
 		for _, affectedPkg := range affectedPkgs {
 			if affectedPkg.Package.Name == "" {
 				continue
@@ -302,7 +302,7 @@ func (o *Oracle) Get(release string, pkgName string) ([]types.Advisory, error) {
 	return advisories, nil
 }
 
-func walkOracle(cri Criteria, osVer, arch string, pkgs []AffectedPackage) []AffectedPackage {
+func walkOracle(cri Criteria, osVer string, pkgs []AffectedPackage) []AffectedPackage {
 	for _, c := range cri.Criterions {
 		if strings.HasPrefix(c.Comment, "Oracle Linux ") &&
 			strings.HasSuffix(c.Comment, " is installed") {
@@ -323,7 +323,7 @@ func walkOracle(cri Criteria, osVer, arch string, pkgs []AffectedPackage) []Affe
 	}
 
 	for _, c := range cri.Criterias {
-		pkgs = walkOracle(c, osVer, arch, pkgs)
+		pkgs = walkOracle(c, osVer, pkgs)
 	}
 	return pkgs
 }
