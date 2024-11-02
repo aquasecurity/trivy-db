@@ -499,13 +499,61 @@ func TestVulnSrc_Get(t *testing.T) {
 	}{
 		{
 			name:     "happy path",
-			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/data-source.yaml"},
 			version:  "8",
 			pkgName:  "bind",
 			want: []types.Advisory{
 				{
 					VulnerabilityID: "ELSA-2019-1145",
 					FixedVersion:    "32:9.11.4-17.P2.el8_0",
+					DataSource: &types.DataSource{
+						ID:   "oracle-oval",
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
+				},
+			},
+		},
+		{
+			name:     "happy path. Multiple versions for one CVE",
+			fixtures: []string{"testdata/fixtures/multiple-versions.yaml", "testdata/fixtures/data-source.yaml"},
+			version:  "8",
+			pkgName:  "gnutls",
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2021-20232",
+					FixedVersion:    "10:3.6.16-4.0.1.el8_fips",
+					DataSource: &types.DataSource{
+						ID:   "oracle-oval",
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
+				},
+				{
+					VulnerabilityID: "CVE-2021-20232",
+					FixedVersion:    "3.6.16-4.el8",
+					DataSource: &types.DataSource{
+						ID:   "oracle-oval",
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
+				},
+			},
+		},
+		{
+			name:     "happy path. Old trivy-db",
+			fixtures: []string{"testdata/fixtures/old.yaml", "testdata/fixtures/data-source.yaml"},
+			version:  "8",
+			pkgName:  "bind",
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "ELSA-2019-1145",
+					FixedVersion:    "32:9.11.4-17.P2.el8_0",
+					DataSource: &types.DataSource{
+						ID:   "oracle-oval",
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
 				},
 			},
 		},

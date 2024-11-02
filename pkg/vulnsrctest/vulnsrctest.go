@@ -87,5 +87,5 @@ func TestGet(t *testing.T, vulnsrc Getter, args TestGetArgs) {
 	})
 
 	assert.NoError(t, err)
-	assert.ElementsMatch(t, args.WantValues, got)
+	assert.Equal(t, args.WantValues, got)
 }
