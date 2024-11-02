@@ -10,13 +10,14 @@ import (
 	"strings"
 
 	version "github.com/knqyf263/go-rpm-version"
+	"github.com/samber/lo"
 	bolt "go.etcd.io/bbolt"
+	"golang.org/x/exp/maps"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
-	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -37,7 +38,7 @@ type PutInput struct {
 	VulnID     string                             // CVE-ID or ELSA-ID
 	Vuln       types.VulnerabilityDetail          // vulnerability detail such as CVSS and description
 	Advisories map[AffectedPackage]types.Advisory // pkg => advisory
-	OVAL       OracleOVAL                         // for extensibility, not used in trivy-db
+	OVALs      []OracleOVAL                       // for extensibility, not used in trivy-db
 }
 
 type DB interface {
@@ -111,6 +112,7 @@ func (vs *VulnSrc) put(ovals []OracleOVAL) error {
 }
 
 func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
+	putInputs := make(map[string]PutInput)
 	for _, oval := range ovals {
 		elsaID := strings.Split(oval.Title, ":")[0]
 
@@ -138,8 +140,13 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 				return xerrors.Errorf("failed to put data source: %w", err)
 			}
 
+			// Clean affectedPkg.Package.FixedVersion to find same packages,
+			// when we merge fixed versions from multiple ELSA files
+			fixedVersion := affectedPkg.Package.FixedVersion
+			affectedPkg.Package.FixedVersion = ""
+
 			advisories[affectedPkg] = types.Advisory{
-				FixedVersion: affectedPkg.Package.FixedVersion,
+				PatchedVersions: []string{fixedVersion},
 			}
 		}
 
@@ -156,19 +163,94 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 				Severity:    severityFromThreat(oval.Severity),
 			}
 
-			err := vs.Put(tx, PutInput{
+			input := PutInput{
 				VulnID:     vulnID,
 				Vuln:       vuln,
-				Advisories: advisories,
-				OVAL:       oval,
-			})
-			if err != nil {
-				return xerrors.Errorf("db put error: %w", err)
+				Advisories: maps.Clone(advisories),
+				OVALs:      []OracleOVAL{oval},
 			}
+			if savedInput, ok := putInputs[input.VulnID]; ok {
+				input.OVALs = append(input.OVALs, savedInput.OVALs...)
+
+				for newPkg, newAdv := range input.Advisories {
+					if savedPkgAdv, pkgFound := savedInput.Advisories[newPkg]; pkgFound {
+						// Merge patchedVersions.
+						// We will remove duplicates later.
+						newAdv.PatchedVersions = append(savedPkgAdv.PatchedVersions, newAdv.PatchedVersions...)
+					}
+					savedInput.Advisories[newPkg] = newAdv
+				}
+				input.Advisories = savedInput.Advisories
+			}
+			putInputs[input.VulnID] = input
+		}
+	}
+
+	for _, input := range putInputs {
+		for pkg, adv := range input.Advisories {
+			// Remove duplicates and multiple version for one flavor.
+			// Keep only the normal version in adv.FixedVersion for backward compatibility.
+			adv.FixedVersion, adv.PatchedVersions = patchedVersions(adv.PatchedVersions)
+			input.Advisories[pkg] = adv
+		}
+
+		err := vs.Put(tx, input)
+		if err != nil {
+			return xerrors.Errorf("db put error: %w", err)
 		}
 	}
 
 	return nil
+}
+
+type PkgFlavor string
+
+const (
+	NormalPackageFlavor  PkgFlavor = "normal"
+	FipsPackageFlavor    PkgFlavor = "fips"
+	KsplicePackageFlavor PkgFlavor = "ksplice"
+)
+
+// patchedVersions removes duplicates and returns normal flavor + only one version for each flavor.
+func patchedVersions(vers []string) (string, []string) {
+	vers = lo.Uniq(vers)
+
+	patchedVers := make(map[PkgFlavor]string)
+	for _, ver := range vers {
+		flavor := PackageFlavor(ver)
+		if savedVer, ok := patchedVers[flavor]; ok {
+			v := version.NewVersion(ver)
+			sv := version.NewVersion(savedVer)
+			if v.LessThan(sv) {
+				ver = savedVer
+			}
+		}
+		patchedVers[flavor] = ver
+	}
+
+	versions := lo.Values(patchedVers)
+	slices.Sort(versions)
+
+	return patchedVers[NormalPackageFlavor], versions
+}
+
+// PackageFlavor determinants the package "flavor" based on its version string
+//   - normal
+//   - FIPS validated
+//   - ksplice userspace
+func PackageFlavor(version string) PkgFlavor {
+	version = strings.ToLower(version)
+	if strings.HasSuffix(version, "_fips") {
+		return FipsPackageFlavor
+	}
+
+	subs := strings.Split(version, ".")
+	for _, s := range subs {
+		if strings.HasPrefix(s, "ksplice") {
+			return KsplicePackageFlavor
+		}
+	}
+	return NormalPackageFlavor
 }
 
 func (o *Oracle) Put(tx *bolt.Tx, input PutInput) error {
@@ -234,7 +316,11 @@ func referencesFromContains(sources []string, matches []string) []string {
 			}
 		}
 	}
-	return ustrings.Unique(references)
+
+	references = lo.Uniq(references)
+	slices.Sort(references)
+
+	return references
 }
 
 func severityFromThreat(sev string) types.Severity {
