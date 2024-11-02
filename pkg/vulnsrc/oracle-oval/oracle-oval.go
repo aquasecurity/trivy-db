@@ -250,15 +250,17 @@ func resolveVersions(vers []string) (string, []string) {
 type PkgFlavor string
 
 const (
-	NormalPackageFlavor  PkgFlavor = "normal"
-	FipsPackageFlavor    PkgFlavor = "fips"
-	KsplicePackageFlavor PkgFlavor = "ksplice"
+	NormalPackageFlavor   PkgFlavor = "normal"
+	FipsPackageFlavor     PkgFlavor = "fips"
+	Ksplice1PackageFlavor PkgFlavor = "ksplice1"
+	Ksplice2PackageFlavor PkgFlavor = "ksplice2"
 )
 
 // PackageFlavor determinants the package "flavor" based on its version string
 //   - normal
 //   - FIPS validated
-//   - ksplice userspace
+//   - ksplice1 userspace
+//   - ksplice2 userspace
 func PackageFlavor(version string) PkgFlavor {
 	version = strings.ToLower(version)
 	if strings.HasSuffix(version, "_fips") {
@@ -267,8 +269,12 @@ func PackageFlavor(version string) PkgFlavor {
 
 	subs := strings.Split(version, ".")
 	for _, s := range subs {
-		if strings.HasPrefix(s, "ksplice") {
-			return KsplicePackageFlavor
+		if strings.HasPrefix(s, "ksplice1") {
+			return Ksplice1PackageFlavor
+		}
+
+		if strings.HasPrefix(s, "ksplice2") {
+			return Ksplice2PackageFlavor
 		}
 	}
 	return NormalPackageFlavor

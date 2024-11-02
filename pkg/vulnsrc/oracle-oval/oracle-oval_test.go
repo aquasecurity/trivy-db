@@ -381,6 +381,9 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.Advisories{
 						Entries: []types.Advisory{
 							{
+								FixedVersion: "2:2.28-151.0.1.ksplice1.el8",
+							},
+							{
 								FixedVersion: "2:2.28-151.0.1.ksplice2.el8",
 							},
 						},
