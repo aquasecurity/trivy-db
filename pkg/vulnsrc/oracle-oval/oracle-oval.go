@@ -295,10 +295,36 @@ func (o *Oracle) Put(tx *bolt.Tx, input PutInput) error {
 
 func (o *Oracle) Get(release string, pkgName string) ([]types.Advisory, error) {
 	bucket := fmt.Sprintf(platformFormat, release)
-	advisories, err := o.GetAdvisories(bucket, pkgName)
+	rawAdvisories, err := o.ForEachAdvisory([]string{bucket}, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get Oracle Linux advisories: %w", err)
+		return nil, xerrors.Errorf("unable to iterate advisories: %w", err)
 	}
+	var advisories []types.Advisory
+	for vulnID, v := range rawAdvisories {
+		var adv types.Advisories
+		if err = json.Unmarshal(v.Content, &adv); err != nil {
+			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
+		}
+
+		// For backward compatibility
+		// The old trivy-db has no entries, but has fixed versions and custom fields.
+		if len(adv.Entries) == 0 {
+			advisories = append(advisories, types.Advisory{
+				VulnerabilityID: vulnID,
+				FixedVersion:    adv.FixedVersion,
+				DataSource:      &v.Source,
+				Custom:          adv.Custom,
+			})
+			continue
+		}
+
+		for _, entry := range adv.Entries {
+			entry.VulnerabilityID = vulnID
+			entry.DataSource = &v.Source
+			advisories = append(advisories, entry)
+		}
+	}
+
 	return advisories, nil
 }
 
