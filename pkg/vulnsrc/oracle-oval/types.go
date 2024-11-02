@@ -1,10 +1,6 @@
 package oracleoval
 
-type bucket struct {
-	platform string
-	vulnID   string
-	pkgName  string
-}
+import "fmt"
 
 type OracleOVAL struct {
 	Title       string
@@ -14,6 +10,7 @@ type OracleOVAL struct {
 	Criteria    Criteria
 	Severity    string
 	Cves        []Cve
+	IssuedDate  Date `json:"issued,omitempty"`
 }
 
 type Reference struct {
@@ -39,31 +36,19 @@ type Criterion struct {
 }
 
 type Package struct {
-	Name         string
-	FixedVersion string
+	Name  string
+	OSVer string
 }
 
 type AffectedPackage struct {
-	Package Package
-	OSVer   string
+	Package      Package
+	FixedVersion string
 }
 
-type Advisory struct {
-	Entries []Entry `json:",omitempty"`
-	// Backwards compatibility.  Eventually could be removed
-	FixedVersion string `json:",omitempty"`
+type Date struct {
+	Date string `json:"date"`
 }
 
-// Entry holds the unique advisory information per package flavor
-type Entry struct {
-	FixedVersion string   `json:",omitempty"`
-	VendorIDs    []string `json:",omitempty"`
+func (p *Package) PlatformName() string {
+	return fmt.Sprintf(platformFormat, p.OSVer)
 }
-
-type PackageFlavor int
-
-const (
-	PackageFlavorNormal PackageFlavor = iota
-	PackageFlavorFips
-	PackageFlavorKsplice
-)
