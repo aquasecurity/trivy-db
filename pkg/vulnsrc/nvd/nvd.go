@@ -35,13 +35,13 @@ type VulnSrc struct {
 	DB
 }
 
-type Nvd struct {
+type NVD struct {
 	db.Operation
 }
 
 func NewVulnSrc() *VulnSrc {
 	return &VulnSrc{
-		DB: &Nvd{Operation: db.Config{}},
+		DB: &NVD{Operation: db.Config{}},
 	}
 }
 
@@ -145,7 +145,7 @@ func getCvssV40(metricsV40 []CvssMetricV40) (score float64, vector string, sever
 }
 
 // Put saves a single CVE entry to the database.
-func (nvd *Nvd) Put(tx *bolt.Tx, cve Cve) error {
+func (nvd *NVD) Put(tx *bolt.Tx, cve Cve) error {
 	cvssScore, cvssVector, severity := getCvssV2(cve.Metrics.CvssMetricV2)
 	cvssScoreV3, cvssVectorV3, severityV3 := getCvssV3(cve.Metrics.CvssMetricV31, cve.Metrics.CvssMetricV30)
 	cvssScoreV40, cvssVectorV40, severityV40 := getCvssV40(cve.Metrics.CvssMetricV40)
