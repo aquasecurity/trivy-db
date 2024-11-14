@@ -131,18 +131,24 @@ func resolveDefinitions(defs []oval.Definition, tests map[string]resolvedTest) [
 	var entries []Entry
 
 	for _, def := range defs {
-		test, ok := tests[def.Criteria.Criterion.TestRef]
-		if !ok {
-			continue
-		}
-		entry := Entry{
-			PkgName:  test.Name,
-			Version:  test.Version,
-			Operator: test.Operator,
-			Metadata: def.Metadata,
-		}
+		// `Criterion` may contain a multiple testRefs
+		// e.g. `earlier than 1.20.7-1` and `greater than 0.0.0`
+		// cf. https://github.com/aquasecurity/vuln-list-update/pull/313
+		for _, criterion := range def.Criteria.Criterion {
+			// `tests` contains only supported operators
+			test, ok := tests[criterion.TestRef]
+			if !ok {
+				continue
+			}
+			entry := Entry{
+				PkgName:  test.Name,
+				Version:  test.Version,
+				Operator: test.Operator,
+				Metadata: def.Metadata,
+			}
 
-		entries = append(entries, entry)
+			entries = append(entries, entry)
+		}
 	}
 	return entries
 }
@@ -150,6 +156,7 @@ func resolveDefinitions(defs []oval.Definition, tests map[string]resolvedTest) [
 const (
 	lte operator = "less than or equal"
 	lt  operator = "less than"
+	gt  operator = "greater than"
 )
 
 func resolveTests(dir string) (map[string]resolvedTest, error) {
@@ -179,7 +186,10 @@ func resolveTests(dir string) (map[string]resolvedTest, error) {
 		if err != nil {
 			return nil, xerrors.Errorf("unable to follow test refs: %w", err)
 		}
-		tests[test.ID] = t
+
+		if t.Name != "" {
+			tests[test.ID] = t
+		}
 	}
 
 	return tests, nil
@@ -210,6 +220,11 @@ func followTestRefs(test oval.RpmInfoTest, objects map[string]string, states map
 
 	if state.Evr.Datatype != "evr_string" {
 		return resolvedTest{}, xerrors.Errorf("state data type (%s): %w", state.Evr.Datatype, ErrNotSupported)
+	}
+
+	// We don't currently support `greater than` operator
+	if state.Evr.Operation == string(gt) {
+		return resolvedTest{}, nil
 	}
 
 	if state.Evr.Operation != string(lte) && state.Evr.Operation != string(lt) {
