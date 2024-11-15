@@ -20,9 +20,11 @@
   },
   "Criteria": {
     "Operator": "AND",
-    "Criterion": {
-      "Comment": "Package edk2 is earlier than 20230301gitf80f052277c8-38, affected by CVE-2023-5678",
-      "TestRef": "oval:com.microsoft.cbl-mariner:tst:31872000"
-    }
+    "Criterion": [
+      {
+        "Comment": "Package edk2 is earlier than 20230301gitf80f052277c8-38, affected by CVE-2023-5678",
+        "TestRef": "oval:com.microsoft.cbl-mariner:tst:31872000"
+      }
+    ]
   }
 }

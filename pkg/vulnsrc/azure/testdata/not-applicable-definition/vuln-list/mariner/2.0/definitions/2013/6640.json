@@ -20,9 +20,11 @@
   },
   "Criteria": {
     "Operator": "AND",
-    "Criterion": {
-      "Comment": "Package libnotify is installed with version 0.7.9 or earlier",
-      "TestRef": "oval:com.microsoft.cbl-mariner:tst:1653048070000135"
-    }
+    "Criterion": [
+      {
+        "Comment": "Package libnotify is installed with version 0.7.9 or earlier",
+        "TestRef": "oval:com.microsoft.cbl-mariner:tst:1653048070000135"
+      }
+    ]
   }
 }

@@ -9,6 +9,16 @@
       "ID": "oval:com.microsoft.azurelinux:obj:38611001",
       "Version": "1",
       "Name": "tensorflow"
+    },
+    {
+      "ID": "oval:com.microsoft.azurelinux:obj:52881004",
+      "Version": "1",
+      "Name": "golang"
+    },
+    {
+      "ID": "oval:com.microsoft.azurelinux:obj:52881001",
+      "Version": "1",
+      "Name": "golang"
     }
   ]
 }

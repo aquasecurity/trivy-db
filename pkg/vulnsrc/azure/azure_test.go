@@ -59,6 +59,17 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{
+						"advisory-detail",
+						"CVE-2023-29409",
+						"Azure Linux 3.0",
+						"golang",
+					},
+					Value: types.Advisory{
+						FixedVersion: "0:1.20.7-1.azl3",
+					},
+				},
+				{
+					Key: []string{
 						"vulnerability-detail",
 						"CVE-2023-27534",
 						"azure",
@@ -85,6 +96,19 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{
+						"vulnerability-detail",
+						"CVE-2023-29409",
+						"azure",
+					},
+					Value: types.VulnerabilityDetail{
+						Severity:    types.SeverityMedium,
+						Title:       "CVE-2023-29409 affecting package golang for versions less than 1.20.7-1",
+						Description: "CVE-2023-29409 affecting package golang for versions less than 1.20.7-1. A patched version of the package is available.",
+						References:  []string{"https://nvd.nist.gov/vuln/detail/CVE-2023-29409"},
+					},
+				},
+				{
+					Key: []string{
 						"vulnerability-id",
 						"CVE-2023-27534",
 					},
@@ -94,6 +118,13 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{
 						"vulnerability-id",
 						"CVE-2018-1999023",
+					},
+					Value: map[string]interface{}{},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2023-29409",
 					},
 					Value: map[string]interface{}{},
 				},
@@ -271,6 +302,12 @@ func TestVulnSrc_Update(t *testing.T) {
 			dist:    azure.Mariner,
 			dir:     filepath.Join("testdata", "sad", "empty-stateref-tests"),
 			wantErr: "unable to follow test refs: invalid test, no state ref",
+		},
+		{
+			name:    "sad path Criterion is not array",
+			dist:    azure.Mariner,
+			dir:     filepath.Join("testdata", "sad", "criterion-is-not-array"),
+			wantErr: "cannot unmarshal object into Go struct field Criteria.Criteria.Criterion of type []oval.Criterion",
 		},
 	}
 	for _, tt := range tests {
