@@ -3,6 +3,7 @@ package db
 import (
 	"bytes"
 	"encoding/json"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime/debug"
@@ -58,6 +59,13 @@ type Option func(*Options)
 
 type Options struct {
 	boltOptions *bolt.Options
+	mode        fs.FileMode
+}
+
+func WithMode(mode fs.FileMode) Option {
+	return func(opts *Options) {
+		opts.mode = mode
+	}
 }
 
 func WithBoltOptions(boltOpts *bolt.Options) Option {
@@ -67,7 +75,9 @@ func WithBoltOptions(boltOpts *bolt.Options) Option {
 }
 
 func Init(dbDir string, opts ...Option) (err error) {
-	dbOptions := &Options{}
+	dbOptions := &Options{
+		mode: 0600,
+	}
 	for _, opt := range opts {
 		opt(dbOptions)
 	}
@@ -90,7 +100,7 @@ func Init(dbDir string, opts ...Option) (err error) {
 		debug.SetPanicOnFault(false)
 	}()
 
-	db, err = bolt.Open(dbPath, 0600, dbOptions.boltOptions)
+	db, err = bolt.Open(dbPath, dbOptions.mode, dbOptions.boltOptions)
 	if err != nil {
 		return xerrors.Errorf("failed to open db: %w", err)
 	}
