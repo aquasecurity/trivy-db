@@ -379,6 +379,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"advisory-detail", "CVE-2016-10228", "Oracle Linux 8", "glibc"},
 					Value: types.Advisories{
+						FixedVersion: "2:2.28-151.0.1.ksplice2.el8",
 						Entries: []types.Advisory{
 							{
 								FixedVersion: "2:2.28-151.0.1.ksplice2.el8",
