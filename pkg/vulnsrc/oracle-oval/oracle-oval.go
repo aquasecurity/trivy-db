@@ -242,7 +242,11 @@ func resolveVersions(vers []string) (string, []string) {
 	versions := lo.Values(fixedVers)
 	slices.Sort(versions)
 
-	fixedVersion := fixedVers[NormalPackageFlavor]
+	fixedVersion, ok := fixedVers[NormalPackageFlavor]
+	// To keep the previous logic - use the ksplice/fips version if the normal flavor doesn't exist.
+	if !ok {
+		fixedVersion = versions[0]
+	}
 
 	return fixedVersion, versions
 }
@@ -306,7 +310,7 @@ func (o *Oracle) Get(release string, pkgName string) ([]types.Advisory, error) {
 			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
 		}
 
-		// For backward compatibility
+		// For backward compatibility (This code can be deleted after Dec 19th, 2024)
 		// The old trivy-db has no entries, but has fixed versions and custom fields.
 		if len(adv.Entries) == 0 {
 			advisories = append(advisories, types.Advisory{
