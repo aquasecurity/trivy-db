@@ -3,7 +3,6 @@ package db
 import (
 	"bytes"
 	"encoding/json"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime/debug"
