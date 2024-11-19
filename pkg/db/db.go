@@ -90,7 +90,7 @@ func Init(dbDir string, opts ...Option) (err error) {
 		debug.SetPanicOnFault(false)
 	}()
 
-	db, err = bolt.Open(dbPath, 0600, dbOptions.boltOptions)
+	db, err = bolt.Open(dbPath, 0644, dbOptions.boltOptions)
 	if err != nil {
 		return xerrors.Errorf("failed to open db: %w", err)
 	}
