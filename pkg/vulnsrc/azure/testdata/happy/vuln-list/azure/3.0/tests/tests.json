@@ -23,6 +23,30 @@
       "State": {
         "StateRef": "oval:com.microsoft.azurelinux:ste:38611002"
       }
+    },
+    {
+      "Check": "at least one",
+      "Comment": "Package golang is greater than 0.0.0, affected by CVE-2023-29409",
+      "ID": "oval:com.microsoft.azurelinux:tst:52881003",
+      "Version": "1",
+      "Object": {
+        "ObjectRef": "oval:com.microsoft.azurelinux:obj:52881004"
+      },
+      "State": {
+        "StateRef": "oval:com.microsoft.azurelinux:ste:52881005"
+      }
+    },
+    {
+      "Check": "at least one",
+      "Comment": "Package golang is earlier than 1.20.7-1, affected by CVE-2023-29409",
+      "ID": "oval:com.microsoft.azurelinux:tst:52881000",
+      "Version": "1",
+      "Object": {
+        "ObjectRef": "oval:com.microsoft.azurelinux:obj:52881001"
+      },
+      "State": {
+        "StateRef": "oval:com.microsoft.azurelinux:ste:52881002"
+      }
     }
   ]
 }

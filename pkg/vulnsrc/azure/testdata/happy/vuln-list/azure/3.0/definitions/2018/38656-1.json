@@ -21,9 +21,11 @@
   },
   "Criteria": {
     "Operator": "AND",
-    "Criterion": {
-      "Comment": "Package ceph is earlier than 18.2.1-1, affected by CVE-2018-1999023",
-      "TestRef": "oval:com.microsoft.azurelinux:tst:38656000"
-    }
+    "Criterion": [
+      {
+        "Comment": "Package ceph is earlier than 18.2.1-1, affected by CVE-2018-1999023",
+        "TestRef": "oval:com.microsoft.azurelinux:tst:38656000"
+      }
+    ]
   }
 }
