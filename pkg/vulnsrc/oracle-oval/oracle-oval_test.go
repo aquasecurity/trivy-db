@@ -37,26 +37,46 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2007-0493", "Oracle Linux 5", "bind-devel"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "30:9.3.3-8.el5",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "30:9.3.3-8.el5",
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2007-0494", "Oracle Linux 5", "bind-devel"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "30:9.3.3-8.el5",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "30:9.3.3-8.el5",
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2007-0493", "Oracle Linux 5", "bind-sdb"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "30:9.3.3-8.el5",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "30:9.3.3-8.el5",
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2007-0494", "Oracle Linux 5", "bind-sdb"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "30:9.3.3-8.el5",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "30:9.3.3-8.el5",
+							},
+						},
 					},
 				},
 				{
@@ -115,50 +135,90 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 6", "kernel-uek-doc"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el6uek",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "4.1.12-124.24.3.el6uek",
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 6", "kernel-uek-doc"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el6uek",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "4.1.12-124.24.3.el6uek",
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 6", "kernel-uek-firmware"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el6uek",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "4.1.12-124.24.3.el6uek",
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 6", "kernel-uek-firmware"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el6uek",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "4.1.12-124.24.3.el6uek",
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 7", "kernel-uek-doc"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el7uek",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "4.1.12-124.24.3.el7uek",
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 7", "kernel-uek-doc"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el7uek",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "4.1.12-124.24.3.el7uek",
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-1094", "Oracle Linux 7", "kernel-uek-firmware"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el7uek",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "4.1.12-124.24.3.el7uek",
+							},
+						},
 					},
 				},
 				{
 					Key: []string{"advisory-detail", "CVE-2018-19824", "Oracle Linux 7", "kernel-uek-firmware"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "4.1.12-124.24.3.el7uek",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "4.1.12-124.24.3.el7uek",
+							},
+						},
 					},
 				},
 				{
@@ -196,6 +256,155 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
+			name: "happy path multi flavors",
+			dir:  filepath.Join("testdata", "multi-flavor"),
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "Oracle Linux 8"},
+					Value: types.DataSource{
+						ID:   vulnerability.OracleOVAL,
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
+				},
+
+				{
+					Key: []string{"advisory-detail", "CVE-2021-20232", "Oracle Linux 8", "gnutls"},
+					Value: types.Advisories{
+						FixedVersion: "3.6.16-4.el8",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "10:3.6.16-4.0.1.el8_fips",
+							},
+							{
+								FixedVersion: "3.6.16-4.el8",
+							},
+						},
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2021-20232", "Oracle Linux 8", "nettle"},
+					Value: types.Advisories{
+						FixedVersion: "3.4.1-7.el8",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "3.4.1-7.el8",
+							},
+						},
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "CVE-2021-20232", "oracle-oval"},
+					Value: types.VulnerabilityDetail{
+						Title:       "ELSA-2022-9221:  gnutls security update (MODERATE)",
+						Description: "[3.6.16-4.0.1_fips]\n- Allow RSA keygen with modulus sizes bigger than 3072 bits and validate the seed length\n  as defined in FIPS 186-4 section B.3.2 [Orabug: 33200526]\n- Allow bigger known RSA modulus sizes when calling\n  rsa_generate_fips186_4_keypair directly [Orabug: 33200526]\n- Change Epoch from 1 to 10\n\n[3.6.16-4]\n- p11tool: Document ID reuse behavior when importing certs (#1776250)\n\n[3.6.16-3]\n- Treat SHA-1 signed CA in the trusted set differently (#1965445)\n\n[3.6.16-2]\n- Filter certificate_types in TLS 1.2 CR based on signature algorithms (#1942216)\n\n[3.6.16-1]\n- Update to upstream 3.6.16 release (#1956783)\n- Fix potential use-after-free in key_share handling (#1927597)\n- Fix potential use-after-free in pre_shared_key handling (#1927593)\n- Stop gnutls-serv relying on AI_ADDRCONFIG to decide listening address (#1908334)\n- Fix cert expiration issue in tests (#1908110)\n\n[3.6.14-10]\n- Port fixes for potential miscalculation in ecdsa_verify (#1942931)\n\n[3.6.14-9]\n- Revert the previous change",
+						References: []string{
+							"https://linux.oracle.com/cve/CVE-2021-20232.html",
+							"https://linux.oracle.com/errata/ELSA-2022-9221.html",
+						},
+						Severity: types.SeverityMedium,
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-2021-20232"},
+					Value: map[string]interface{}{},
+				},
+			},
+		},
+		{
+			name: "happy path multiple ELSAs",
+			dir:  filepath.Join("testdata", "multi-elsas"),
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "Oracle Linux 8"},
+					Value: types.DataSource{
+						ID:   vulnerability.OracleOVAL,
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
+				},
+
+				{
+					Key: []string{"advisory-detail", "CVE-2021-23133", "Oracle Linux 7", "kernel-uek"},
+					Value: types.Advisories{
+						FixedVersion: "5.4.17-2102.203.5.el7uek",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "5.4.17-2102.203.5.el7uek",
+							},
+						},
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2021-23133", "Oracle Linux 8", "kernel-uek"},
+					Value: types.Advisories{
+						FixedVersion: "5.4.17-2102.203.5.el8uek",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "5.4.17-2102.203.5.el8uek",
+							},
+						},
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "CVE-2021-23133", "oracle-oval"},
+					Value: types.VulnerabilityDetail{
+						Title:       "ELSA-2021-9362: Unbreakable Enterprise kernel security update (IMPORTANT)",
+						Description: "[5.4.17-2102.203.5]\n- rds/ib: move rds_ib_clear_irq_miss() to .h ...",
+						References: []string{
+							"https://linux.oracle.com/cve/CVE-2021-23133.html",
+							"https://linux.oracle.com/errata/ELSA-2021-9362.html",
+						},
+						Severity: types.SeverityHigh,
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-2021-23133"},
+					Value: map[string]interface{}{},
+				},
+			},
+		},
+		{
+			name: "multiple ksplice builds",
+			dir:  filepath.Join("testdata", "ksplice"),
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "Oracle Linux 8"},
+					Value: types.DataSource{
+						ID:   vulnerability.OracleOVAL,
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2016-10228", "Oracle Linux 8", "glibc"},
+					Value: types.Advisories{
+						FixedVersion: "2:2.28-151.0.1.ksplice2.el8",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "2:2.28-151.0.1.ksplice2.el8",
+							},
+						},
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "CVE-2016-10228", "oracle-oval"},
+					Value: types.VulnerabilityDetail{
+						Title: "ELSA-2021-9344:  glibc security update (IMPORTANT)",
+						References: []string{
+							"https://linux.oracle.com/cve/CVE-2016-10228.html",
+							"https://linux.oracle.com/errata/ELSA-2021-9344.html",
+						},
+						Severity: types.SeverityHigh,
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-2016-10228"},
+					Value: map[string]interface{}{},
+				},
+			},
+		},
+		{
 			name: "happy path ELSA-ID",
 			dir:  filepath.Join("testdata", "elsa-id"),
 			wantValues: []vulnsrctest.WantValues{
@@ -209,8 +418,13 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{"advisory-detail", "ELSA-2007-0057", "Oracle Linux 5", "bind-devel"},
-					Value: types.Advisory{
+					Value: types.Advisories{
 						FixedVersion: "9.3.3-8.el5",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "9.3.3-8.el5",
+							},
+						},
 					},
 				},
 				{
@@ -286,13 +500,61 @@ func TestVulnSrc_Get(t *testing.T) {
 	}{
 		{
 			name:     "happy path",
-			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			fixtures: []string{"testdata/fixtures/happy.yaml", "testdata/fixtures/data-source.yaml"},
 			version:  "8",
 			pkgName:  "bind",
 			want: []types.Advisory{
 				{
 					VulnerabilityID: "ELSA-2019-1145",
 					FixedVersion:    "32:9.11.4-17.P2.el8_0",
+					DataSource: &types.DataSource{
+						ID:   "oracle-oval",
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
+				},
+			},
+		},
+		{
+			name:     "happy path. Multiple versions for one CVE",
+			fixtures: []string{"testdata/fixtures/multiple-versions.yaml", "testdata/fixtures/data-source.yaml"},
+			version:  "8",
+			pkgName:  "gnutls",
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2021-20232",
+					FixedVersion:    "10:3.6.16-4.0.1.el8_fips",
+					DataSource: &types.DataSource{
+						ID:   "oracle-oval",
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
+				},
+				{
+					VulnerabilityID: "CVE-2021-20232",
+					FixedVersion:    "3.6.16-4.el8",
+					DataSource: &types.DataSource{
+						ID:   "oracle-oval",
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
+				},
+			},
+		},
+		{
+			name:     "happy path. Old trivy-db",
+			fixtures: []string{"testdata/fixtures/old.yaml", "testdata/fixtures/data-source.yaml"},
+			version:  "8",
+			pkgName:  "bind",
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "ELSA-2019-1145",
+					FixedVersion:    "32:9.11.4-17.P2.el8_0",
+					DataSource: &types.DataSource{
+						ID:   "oracle-oval",
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
 				},
 			},
 		},

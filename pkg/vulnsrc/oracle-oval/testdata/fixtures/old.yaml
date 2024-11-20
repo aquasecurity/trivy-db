@@ -5,5 +5,3 @@
         - key: ELSA-2019-1145
           value:
             FixedVersion: "32:9.11.4-17.P2.el8_0"
-            Entries:
-              - FixedVersion: "32:9.11.4-17.P2.el8_0"
