@@ -2,26 +2,11 @@
   pairs:
     - bucket: bind
       pairs:
-        - key: CVE-2018-5743
+        - key: ELSA-2019-1145
           value:
-            FixedVersion: 32:9.11.4-17.P2.el8_0
+            FixedVersion: "32:9.11.4-17.P2.el8_0"
             Entries:
-              - FixedVersion: 32:9.11.4-17.P2.el8_0
+              - FixedVersion: "32:9.11.4-17.P2.el8_0"
                 Arches:
                   - aarch64
                   - x86_64
-- bucket: Oracle Linux 7
-  pairs:
-    - bucket: rsyslog
-      pairs:
-        - key: CVE-2022-24903
-          value:
-            FixedVersion: 8.24.0-57.0.1.el7_9.3
-            Entries:
-              - FixedVersion: 8.24.0-57.0.1.el7_9.3
-                Arches:
-                  - x86_64
-              - FixedVersion: 8.24.0-57.0.4.el7_9.3
-                Arches:
-                  - aarch64
-

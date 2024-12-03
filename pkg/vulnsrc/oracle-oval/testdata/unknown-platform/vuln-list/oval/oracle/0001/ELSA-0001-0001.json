@@ -1,0 +1,55 @@
+{
+  "Title": "ELSA-0001-0001:  Moderate: empty security update  (N/A)",
+  "Description": "empty description",
+  "Platform": [
+    "Oracle Linux 1"
+  ],
+  "References": [
+    {
+      "Source": "elsa",
+      "URI": "http://linux.oracle.com/errata/ELSA-0001-0001.html",
+      "ID": "ELSA-0001-0001"
+    },
+    {
+      "Source": "CVE",
+      "URI": "http://linux.oracle.com/cve/CVE-0001-0001.html",
+      "ID": "CVE-0001-0001"
+    }
+  ],
+  "Criteria": {
+    "Operator": "AND",
+    "Criterias": [
+      {
+        "Operator": "OR",
+        "Criterias": [
+          {
+            "Operator": "AND",
+            "Criterias": null,
+            "Criterions": [
+              {
+                "Comment": "test is earlier than 30:9.3.3-8.el5"
+              },
+              {
+                "Comment": "test is signed with the Oracle Linux 5 key"
+              }
+            ]
+          }
+        ],
+        "Criterions": null
+      }
+    ],
+    "Criterions": [
+      {
+        "Comment": "Oracle Linux 1 is installed"
+      }
+    ]
+  },
+  "Severity": "N/A",
+  "Cves": [
+    {
+      "Impact": "",
+      "Href": "http://linux.oracle.com/cve/CVE-0001-0001.html",
+      "ID": "CVE-0001-0001"
+    }
+  ]
+}
