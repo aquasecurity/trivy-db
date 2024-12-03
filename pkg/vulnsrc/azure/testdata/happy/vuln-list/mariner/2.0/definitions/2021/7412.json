@@ -20,9 +20,11 @@
   },
   "Criteria": {
     "Operator": "AND",
-    "Criterion": {
-      "Comment": "Package wireshark is installed with version 3.4.4 or earlier",
-      "TestRef": "oval:com.microsoft.cbl-mariner:tst:1643374850000435"
-    }
+    "Criterion": [
+      {
+        "Comment": "Package wireshark is installed with version 3.4.4 or earlier",
+        "TestRef": "oval:com.microsoft.cbl-mariner:tst:1643374850000435"
+      }
+    ]
   }
 }

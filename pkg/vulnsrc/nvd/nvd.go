@@ -26,21 +26,30 @@ const (
 	nvdSource   = "nvd@nist.gov"
 )
 
-type VulnSrc struct {
-	dbc db.Operation
+type DB interface {
+	db.Operation
+	Put(*bolt.Tx, Cve) error
 }
 
-func NewVulnSrc() VulnSrc {
-	return VulnSrc{
-		dbc: db.Config{},
+type VulnSrc struct {
+	DB
+}
+
+type NVD struct {
+	db.Operation
+}
+
+func NewVulnSrc() *VulnSrc {
+	return &VulnSrc{
+		DB: &NVD{Operation: db.Config{}},
 	}
 }
 
-func (vs VulnSrc) Name() types.SourceID {
+func (vs *VulnSrc) Name() types.SourceID {
 	return vulnerability.NVD
 }
 
-func (vs VulnSrc) Update(dir string) error {
+func (vs *VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, vulnListDir, apiDir)
 
 	var cves []Cve
@@ -68,67 +77,18 @@ func (vs VulnSrc) Update(dir string) error {
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, cves []Cve) error {
+func (vs *VulnSrc) commit(tx *bolt.Tx, cves []Cve) error {
 	for _, cve := range cves {
-		cveID := cve.ID
-
-		cvssScore, cvssVector, severity := getCvssV2(cve.Metrics.CvssMetricV2)
-		cvssScoreV3, cvssVectorV3, severityV3 := getCvssV3(cve.Metrics.CvssMetricV31, cve.Metrics.CvssMetricV30)
-		cvssScoreV40, cvssVectorV40, severityV40 := getCvssV40(cve.Metrics.CvssMetricV40)
-
-		var references []string
-		for _, ref := range cve.References {
-			references = append(references, ref.URL)
-		}
-
-		var description string
-		for _, d := range cve.Descriptions {
-			if d.Value != "" {
-				description = d.Value
-				break
-			}
-		}
-		var cweIDs []string
-		for _, data := range cve.Weaknesses {
-			for _, desc := range data.Description {
-				if !strings.HasPrefix(desc.Value, "CWE") {
-					continue
-				}
-				cweIDs = append(cweIDs, desc.Value)
-			}
-		}
-
-		publishedDate, _ := time.Parse("2006-01-02T15:04:05", cve.Published)
-		lastModifiedDate, _ := time.Parse("2006-01-02T15:04:05", cve.LastModified)
-
-		vuln := types.VulnerabilityDetail{
-			CvssScore:        cvssScore,
-			CvssVector:       cvssVector,
-			CvssScoreV3:      cvssScoreV3,
-			CvssVectorV3:     cvssVectorV3,
-			CvssScoreV40:     cvssScoreV40,
-			CvssVectorV40:    cvssVectorV40,
-			Severity:         severity,
-			SeverityV3:       severityV3,
-			SeverityV40:      severityV40,
-			CweIDs:           lo.Uniq(cweIDs),
-			References:       references,
-			Title:            "",
-			Description:      description,
-			PublishedDate:    &publishedDate,
-			LastModifiedDate: &lastModifiedDate,
-		}
-
-		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vulnerability.NVD, vuln); err != nil {
+		if err := vs.Put(tx, cve); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (vs VulnSrc) save(cves []Cve) error {
+func (vs *VulnSrc) save(cves []Cve) error {
 	log.Println("NVD batch update")
-	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
+	err := vs.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, cves)
 	})
 	if err != nil {
@@ -182,4 +142,56 @@ func getCvssV40(metricsV40 []CvssMetricV40) (score float64, vector string, sever
 		}
 	}
 	return
+}
+
+// Put saves a single CVE entry to the database.
+func (nvd *NVD) Put(tx *bolt.Tx, cve Cve) error {
+	cvssScore, cvssVector, severity := getCvssV2(cve.Metrics.CvssMetricV2)
+	cvssScoreV3, cvssVectorV3, severityV3 := getCvssV3(cve.Metrics.CvssMetricV31, cve.Metrics.CvssMetricV30)
+	cvssScoreV40, cvssVectorV40, severityV40 := getCvssV40(cve.Metrics.CvssMetricV40)
+
+	var references []string
+	for _, ref := range cve.References {
+		references = append(references, ref.URL)
+	}
+
+	var description string
+	for _, d := range cve.Descriptions {
+		if d.Value != "" {
+			description = d.Value
+			break
+		}
+	}
+
+	var cweIDs []string
+	for _, data := range cve.Weaknesses {
+		for _, desc := range data.Description {
+			if strings.HasPrefix(desc.Value, "CWE") {
+				cweIDs = append(cweIDs, desc.Value)
+			}
+		}
+	}
+
+	publishedDate, _ := time.Parse("2006-01-02T15:04:05", cve.Published)
+	lastModifiedDate, _ := time.Parse("2006-01-02T15:04:05", cve.LastModified)
+
+	vuln := types.VulnerabilityDetail{
+		CvssScore:        cvssScore,
+		CvssVector:       cvssVector,
+		CvssScoreV3:      cvssScoreV3,
+		CvssVectorV3:     cvssVectorV3,
+		CvssScoreV40:     cvssScoreV40,
+		CvssVectorV40:    cvssVectorV40,
+		Severity:         severity,
+		SeverityV3:       severityV3,
+		SeverityV40:      severityV40,
+		CweIDs:           lo.Uniq(cweIDs),
+		References:       references,
+		Title:            "",
+		Description:      description,
+		PublishedDate:    &publishedDate,
+		LastModifiedDate: &lastModifiedDate,
+	}
+
+	return nvd.PutVulnerabilityDetail(tx, cve.ID, vulnerability.NVD, vuln)
 }

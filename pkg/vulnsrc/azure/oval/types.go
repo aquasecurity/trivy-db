@@ -11,7 +11,7 @@ type Definition struct {
 
 type Criteria struct {
 	Operator  string
-	Criterion Criterion
+	Criterion []Criterion
 }
 
 type Criterion struct {

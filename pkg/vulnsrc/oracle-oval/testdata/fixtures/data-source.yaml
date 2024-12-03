@@ -5,8 +5,6 @@
         ID: "oracle-oval"
         Name: "Oracle Linux OVAL definitions"
         URL: "https://linux.oracle.com/security/oval/"
-- bucket: data-source
-  pairs:
     - key: Oracle Linux 7
       value:
         ID: "oracle-oval"

@@ -56,7 +56,9 @@ Alternatively Docker is supported, you can run `docker build . -t trivy-db`.
 If you want to build a trivy integration test DB, please run `make create-test-db`
 
 ## Update interval
-Every 6 hours
+Trivy DB is built every 6 hours.
+By default, the update interval specified in the metadata file is 24 hours.
+If you need to update Trivy DB more frequently, you can upload a new Trivy DB manually.
 
 ## Download the vulnerability database
 ### version 1 (deprecated)
