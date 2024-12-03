@@ -7,6 +7,7 @@ import (
 	"log"
 	"path/filepath"
 	"slices"
+	"sort"
 	"strings"
 
 	version "github.com/knqyf263/go-rpm-version"
@@ -112,6 +113,7 @@ func (vs *VulnSrc) put(ovals []OracleOVAL) error {
 }
 
 func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
+	// CVE -> PutInput
 	putInputs := make(map[string]PutInput)
 	for _, oval := range ovals {
 		elsaID := strings.Split(oval.Title, ":")[0]
@@ -183,11 +185,11 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			if savedInput, ok := putInputs[input.VulnID]; ok {
 				input.OVALs = append(input.OVALs, savedInput.OVALs...)
 
-				for newPkg, newAdvs := range input.Advisories {
-					if savedPkgAdvs, pkgFound := savedInput.Advisories[newPkg]; pkgFound {
-						newAdvs.Entries = append(savedPkgAdvs.Entries, newAdvs.Entries...)
+				for inputPkg, inputAdvs := range input.Advisories {
+					if savedPkgAdvs, pkgFound := savedInput.Advisories[inputPkg]; pkgFound {
+						inputAdvs.Entries = append(savedPkgAdvs.Entries, inputAdvs.Entries...)
 					}
-					savedInput.Advisories[newPkg] = newAdvs
+					savedInput.Advisories[inputPkg] = inputAdvs
 				}
 				input.Advisories = savedInput.Advisories
 			}
@@ -197,7 +199,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 
 	for _, input := range putInputs {
 		for pkg, advs := range input.Advisories {
-			input.Advisories[pkg] = resolveAdvisoriesEntries(advs)
+			input.Advisories[pkg] = mergeAdvisoriesEntries(advs)
 		}
 
 		err := vs.Put(tx, input)
@@ -209,22 +211,57 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 	return nil
 }
 
-// resolveAdvisoriesEntries removes entries with the same fixedVersion.
-// Additionally, it only selects the latest fixedVersion for each flavor.
-func resolveAdvisoriesEntries(advisories types.Advisories) types.Advisories {
-	fixedVersions := lo.Map(advisories.Entries, func(entry types.Advisory, _ int) string {
-		return entry.FixedVersion
-	})
-	fixedVer, resolvedVers := resolveVersions(fixedVersions)
-	entries := lo.Map(resolvedVers, func(ver string, _ int) types.Advisory {
-		return types.Advisory{
-			FixedVersion: ver,
+// mergeAdvisoriesEntries merges arches for same fixedVersion in one entry.
+// Additionally, it only selects the latest fixedVersion for each flavor and each arch.
+func mergeAdvisoriesEntries(advisories types.Advisories) types.Advisories {
+	// arch -> all fixedVersions
+	fixedVersionsByArch := make(map[string][]string)
+	for _, entry := range advisories.Entries {
+		arch := entry.Arches[0] // Before merging `arches` always contains only 1 arch
+		fixedVersions := []string{
+			entry.FixedVersion,
 		}
-	})
-	return types.Advisories{
-		FixedVersion: fixedVer,
-		Entries:      entries,
+		if savedVersion, ok := fixedVersionsByArch[arch]; ok {
+			fixedVersions = append(fixedVersions, savedVersion...)
+		}
+		fixedVersionsByArch[arch] = fixedVersions
 	}
+
+	var advs types.Advisories
+	// fixedVersion -> arches
+	allFixedVersions := make(map[string]types.Advisory)
+	for arch, fixedVersions := range fixedVersionsByArch {
+		fixedVersion, resolvedVersions := resolveVersions(fixedVersions)
+		// always save FixedVersion for backward compatibility
+		if advs.FixedVersion == "" || arch == "x86_64" {
+			advs.FixedVersion = fixedVersion
+		}
+		for _, ver := range resolvedVersions {
+			adv := types.Advisory{
+				FixedVersion: ver,
+				Arches: []string{
+					arch,
+				},
+			}
+			if savedEntry, ok := allFixedVersions[ver]; ok {
+				adv.Arches = append(adv.Arches, savedEntry.Arches...)
+			}
+			allFixedVersions[ver] = adv
+
+		}
+	}
+
+	entries := lo.Values(allFixedVersions)
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].FixedVersion < entries[j].FixedVersion
+	})
+
+	for i := range entries {
+		sort.Strings(entries[i].Arches)
+	}
+
+	advs.Entries = entries
+	return advs
 }
 
 // resolveVersions removes duplicates and returns normal flavor + only one version for each flavor.
@@ -399,13 +436,4 @@ func severityFromThreat(sev string) types.Severity {
 		return types.SeverityCritical
 	}
 	return types.SeverityUnknown
-}
-
-// fixedVersion checks for the arch and only updates version for `x86_64`
-// only used for types.Advisories.FixedVersion for backward compatibility
-func fixedVersion(prevVersion, newVersion, arch string) string {
-	if arch == "x86_64" || arch == "noarch" {
-		return newVersion
-	}
-	return prevVersion
 }
