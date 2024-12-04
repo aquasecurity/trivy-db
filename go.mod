@@ -15,7 +15,7 @@ require (
 	github.com/masahiro331/go-mvn-version v0.0.0-20210429150710-d3157d602a08
 	github.com/pandatix/go-cvss v0.6.2
 	github.com/samber/lo v1.47.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/urfave/cli v1.22.16
 	go.etcd.io/bbolt v1.3.11
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
