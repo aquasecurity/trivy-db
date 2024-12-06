@@ -211,86 +211,80 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 	return nil
 }
 
-// mergeAdvisoriesEntries merges arches for same fixedVersion in one entry.
-// Additionally, it only selects the latest fixedVersion for each flavor and each arch.
-func mergeAdvisoriesEntries(advisories types.Advisories) types.Advisories {
-	// arch -> all fixedVersions
-	fixedVersionsByArch := make(map[string][]string)
-	for _, entry := range advisories.Entries {
-		arch := entry.Arches[0] // Before merging `arches` always contains only 1 arch
-		fixedVersions := []string{
-			entry.FixedVersion,
-		}
-		if savedVersion, ok := fixedVersionsByArch[arch]; ok {
-			fixedVersions = append(fixedVersions, savedVersion...)
-		}
-		fixedVersionsByArch[arch] = fixedVersions
-	}
-
-	var advs types.Advisories
-	// fixedVersion -> arches
-	allFixedVersions := make(map[string]types.Advisory)
-	for arch, fixedVersions := range fixedVersionsByArch {
-		fixedVersion, resolvedVersions := resolveVersions(fixedVersions)
-		// always save FixedVersion for backward compatibility
-		if advs.FixedVersion == "" || arch == "x86_64" {
-			advs.FixedVersion = fixedVersion
-		}
-		for _, ver := range resolvedVersions {
-			adv := types.Advisory{
-				FixedVersion: ver,
-				Arches: []string{
-					arch,
-				},
-			}
-			if savedEntry, ok := allFixedVersions[ver]; ok {
-				adv.Arches = append(adv.Arches, savedEntry.Arches...)
-			}
-			allFixedVersions[ver] = adv
-
-		}
-	}
-
-	entries := lo.Values(allFixedVersions)
-	sort.Slice(entries, func(i, j int) bool {
-		return entries[i].FixedVersion < entries[j].FixedVersion
-	})
-
-	for i := range entries {
-		sort.Strings(entries[i].Arches)
-	}
-
-	advs.Entries = entries
-	return advs
+type archFlavor struct {
+	Arch   string
+	Flavor PkgFlavor
 }
 
-// resolveVersions removes duplicates and returns normal flavor + only one version for each flavor.
-func resolveVersions(vers []string) (string, []string) {
-	vers = lo.Uniq(vers)
+// mergeAdvisoriesEntries merges advisories by picking the latest version for each arch+flavor.
+// There may be multiple advisories that fix the same vulnerability, possibly providing multiple fixed versions.
+// In this case, we need to determine the "latest" version, which is now defined as the highest (greatest) version number.
+//
+// Additionally, we choose a single fixed version for backward compatibility, which is derived from
+// the highest normal flavor version on the x86_64 architecture if available.
+func mergeAdvisoriesEntries(advisories types.Advisories) types.Advisories {
+	// Step 1: Select the latest version per (arch, flavor)
+	latestVersions := selectLatestVersions(advisories)
 
-	fixedVers := make(map[PkgFlavor]string)
-	for _, ver := range vers {
-		flavor := PackageFlavor(ver)
-		if savedVer, ok := fixedVers[flavor]; ok {
-			v := version.NewVersion(ver)
-			sv := version.NewVersion(savedVer)
-			if v.LessThan(sv) {
-				ver = savedVer
-			}
+	// Step 2: Aggregate arches by their chosen version
+	versionToArches := make(map[string][]string)
+	for k, v := range latestVersions {
+		versionToArches[v] = append(versionToArches[v], k.Arch)
+	}
+
+	// Step 3: Build final entries, sorted by version
+	entries := lo.MapToSlice(versionToArches, func(ver string, arches []string) types.Advisory {
+		sort.Strings(arches)
+		return types.Advisory{
+			FixedVersion: ver,
+			Arches:       arches,
 		}
-		fixedVers[flavor] = ver
+	})
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].FixedVersion < entries[j].FixedVersion // Sorting lexicographically
+	})
+
+	return types.Advisories{
+		FixedVersion: determinePrimaryFixedVersion(latestVersions), // For backward compatibility
+		Entries:      entries,
 	}
+}
 
-	versions := lo.Values(fixedVers)
-	slices.Sort(versions)
+// selectLatestVersions selects the latest (highest) version per (arch, flavor)
+func selectLatestVersions(advisories types.Advisories) map[archFlavor]string {
+	latestVersions := make(map[archFlavor]string) // key: archFlavor -> highest fixedVersion
+	for _, entry := range advisories.Entries {
+		if len(entry.Arches) == 0 || entry.FixedVersion == "" {
+			continue
+		}
+		arch := entry.Arches[0] // Before merging `arches`, it always contains only 1 arch
+		flavor := PackageFlavor(entry.FixedVersion)
+		key := archFlavor{
+			Arch:   arch,
+			Flavor: flavor,
+		}
 
-	fixedVersion, ok := fixedVers[NormalPackageFlavor]
-	// To keep the previous logic - use the ksplice/fips version if the normal flavor doesn't exist.
-	if !ok {
-		fixedVersion = versions[0]
+		currentVer := version.NewVersion(entry.FixedVersion)
+		if existing, ok := latestVersions[key]; !ok || currentVer.GreaterThan(version.NewVersion(existing)) {
+			// Keep the higher (latest) version
+			latestVersions[key] = entry.FixedVersion
+		}
 	}
+	return latestVersions
+}
 
-	return fixedVersion, versions
+// determinePrimaryFixedVersion determines primary fixed version for backward compatibility
+// It is chosen as the highest normal flavor version on x86_64 if any exist.
+// If no normal flavor version exists, the maximum version in lexical order is chosen.
+func determinePrimaryFixedVersion(latestVersions map[archFlavor]string) string {
+	primaryFixedVersion := latestVersions[archFlavor{
+		Arch:   "x86_64",
+		Flavor: NormalPackageFlavor,
+	}]
+	if primaryFixedVersion == "" {
+		primaryFixedVersion = lo.Max(lo.Values(latestVersions)) // Chose the maximum value in lexical order for idempotency
+	}
+	return primaryFixedVersion
 }
 
 type PkgFlavor string
