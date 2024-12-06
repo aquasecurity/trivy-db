@@ -42,6 +42,7 @@ type Package struct {
 
 type AffectedPackage struct {
 	Package      Package
+	Arch         string
 	FixedVersion string
 }
 

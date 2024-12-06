@@ -24,13 +24,29 @@
         "Criterias": [
           {
             "Operator": "AND",
-            "Criterias": null,
+            "Criterias": [
+              {
+                "Operator": "OR",
+                "Criterias": [
+                  {
+                    "Operator": "AND",
+                    "Criterias": null,
+                    "Criterions": [
+                      {
+                        "Comment": "bind-devel is earlier than 30:9.3.3-8.el5"
+                      },
+                      {
+                        "Comment": "bind-devel is signed with the Oracle Linux 5 key"
+                      }
+                    ]
+                  }
+                ],
+                "Criterions": null
+              }
+            ],
             "Criterions": [
               {
-                "Comment": "bind-devel is earlier than 0:9.3.3-8.el5"
-              },
-              {
-                "Comment": "bind-devel is signed with the Oracle Linux 5 key"
+                "Comment": "Oracle Linux arch is x86_64"
               }
             ]
           }
