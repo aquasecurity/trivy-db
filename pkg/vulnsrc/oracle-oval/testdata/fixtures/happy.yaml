@@ -7,3 +7,6 @@
             FixedVersion: "32:9.11.4-17.P2.el8_0"
             Entries:
               - FixedVersion: "32:9.11.4-17.P2.el8_0"
+                Arches:
+                  - aarch64
+                  - x86_64

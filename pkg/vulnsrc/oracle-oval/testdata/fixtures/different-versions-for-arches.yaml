@@ -1,0 +1,14 @@
+- bucket: Oracle Linux 7
+  pairs:
+    - bucket: rsyslog
+      pairs:
+        - key: CVE-2022-24903
+          value:
+            FixedVersion: "8.24.0-57.0.1.el7_9.3"
+            Entries:
+              - FixedVersion: "8.24.0-57.0.1.el7_9.3"
+                Arches:
+                  - x86_64
+              - FixedVersion: "8.24.0-57.0.4.el7_9.3"
+                Arches:
+                  - aarch64
