@@ -96,13 +96,13 @@ db-clean:
 
 .PHONY: db-fetch-vuln-list
 db-fetch-vuln-list:
-#	mkdir -p $(CACHE_DIR)/vuln-list
-#	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list/archive/main.tar.gz | tar xz -C $(CACHE_DIR)/vuln-list --strip-components=1
-#	mkdir -p $(CACHE_DIR)/vuln-list-redhat
-#	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-redhat/archive/main.tar.gz | tar xz -C $(CACHE_DIR)/vuln-list-redhat --strip-components=1
-#	mkdir -p $(CACHE_DIR)/vuln-list-debian
-#	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-debian/archive/main.tar.gz | tar xz -C $(CACHE_DIR)/vuln-list-debian --strip-components=1
-#	mkdir -p $(CACHE_DIR)/vuln-list-nvd
-#	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-nvd/archive/main.tar.gz | tar xz -C $(CACHE_DIR)/vuln-list-nvd --strip-components=1
+	mkdir -p $(CACHE_DIR)/vuln-list
+	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list/archive/main.tar.gz | tar xz -C $(CACHE_DIR)/vuln-list --strip-components=1
+	mkdir -p $(CACHE_DIR)/vuln-list-redhat
+	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-redhat/archive/main.tar.gz | tar xz -C $(CACHE_DIR)/vuln-list-redhat --strip-components=1
+	mkdir -p $(CACHE_DIR)/vuln-list-debian
+	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-debian/archive/main.tar.gz | tar xz -C $(CACHE_DIR)/vuln-list-debian --strip-components=1
+	mkdir -p $(CACHE_DIR)/vuln-list-nvd
+	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-nvd/archive/main.tar.gz | tar xz -C $(CACHE_DIR)/vuln-list-nvd --strip-components=1
 	mkdir -p $(CACHE_DIR)/vuln-list-aqua
 	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-aqua/archive/main.tar.gz | tar xz -C $(CACHE_DIR)/vuln-list-aqua --strip-components=1
