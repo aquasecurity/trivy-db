@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.6.7",
+  "id": "AQUA-2024-0001",
+  "modified": "2024-12-18T12:00:00Z",
+  "published": "2024-12-18T12:00:00Z",
+  "summary": "Vulnerable app versions contains xmrig cryptominer",
+  "details": "Affected versions of this package are vulnerable to Malicious Embedded Code. These versions have been compromised to install an xmrig cryptominer when installed from PyPI (e.g. via default pip options, without specifying a git URL).",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "PyPI",
+        "name": "ultralytics",
+        "purl": "pkg:pypi/ultralytics"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "8.3.41"
+            },
+            {
+              "fixed": "8.3.43"
+            },
+            {
+              "introduced": "8.3.45"
+            },
+            {
+              "fixed": "8.3.47"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "type": "REPORT",
+      "url": "https://github.com/ultralytics/ultralytics/issues/18027"
+    },
+    {
+      "type": "FIX",
+      "url": "https://github.com/ultralytics/ultralytics/issues/18030"
+    }
+  ]
+}
