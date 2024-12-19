@@ -5,6 +5,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alma"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/amazon"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/aqua"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/azure"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bitnami"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bundler"
@@ -66,5 +67,7 @@ var (
 		ghsa.NewVulnSrc(),
 		glad.NewVulnSrc(),
 		govulndb.NewVulnSrc(), // For Go stdlib packages
+
+		aqua.NewVulnSrc(),
 	}
 )
