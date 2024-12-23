@@ -91,7 +91,7 @@ jobs:
           
           # Define an array of registry base URLs and their corresponding repository names
           declare -A registries=(
-            ["${{ secrets.AQUSEC_ACR_REGISTRY_NAME }}"]="${lowercase_repo}"
+            ["${{ secrets.AQUSEC_ACR_REGISTRY_NAME }}"]=$(echo "$lowercase_repo" | cut -d'/' -f2)
           )
 
           # Loop through each registry and push the artifact
