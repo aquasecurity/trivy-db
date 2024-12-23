@@ -1,9 +1,8 @@
 ---
 name: Trivy DB
 on:
-  push:
-    branches:
-      - "lihitest_aqua_reg"
+  schedule:
+    - cron: '0 */6 * * *'
   workflow_dispatch:
 env:
   REPO_OWNER: ${{ github.repository_owner }} # used in 'make db-build'
@@ -91,6 +90,9 @@ jobs:
           
           # Define an array of registry base URLs and their corresponding repository names
           declare -A registries=(
+            ["ghcr.io"]="${lowercase_repo}"
+            ["public.ecr.aws"]="${lowercase_repo}"
+            ["docker.io"]="${lowercase_repo}"
             ["${{ secrets.AQUSEC_ACR_REGISTRY_NAME }}"]=$(echo "$lowercase_repo" | cut -d'/' -f2)
           )
 
