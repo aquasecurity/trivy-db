@@ -1,8 +1,9 @@
 ---
 name: Trivy DB
 on:
-  schedule:
-    - cron: '0 */6 * * *'
+  push:
+    branches:
+      - "lihitest_aqua_reg"
   workflow_dispatch:
 env:
   REPO_OWNER: ${{ github.repository_owner }} # used in 'make db-build'
@@ -32,7 +33,6 @@ jobs:
 
       - name: Install bbolt
         run: go install go.etcd.io/bbolt/cmd/bbolt@v1.3.5
-
 
       - name: Download vuln-list and advisories
         run: make db-fetch-langs db-fetch-vuln-list
@@ -72,11 +72,17 @@ jobs:
           username: ${{ secrets.ECR_ACCESS_KEY_ID }}
           password: ${{ secrets.ECR_SECRET_ACCESS_KEY }}
 
+      - name: login to Aqua Container Registry
+        uses: azure/docker-login@v2
+        with:
+          login-server: ${{ secrets.AQUSEC_ACR_REGISTRY_NAME }}
+          username: ${{ secrets.AQUASEC_ACR_USERNAME }}
+          password: ${{ secrets.AQUASEC_ACR_PASSWORD }}
+
       - name: Install oras
         run: |
           curl -LO https://github.com/oras-project/oras/releases/download/v1.2.0/oras_1.2.0_linux_amd64.tar.gz
           tar -xvf ./oras_1.2.0_linux_amd64.tar.gz
-
 
       - name: Upload assets to registries
         run: |
@@ -85,17 +91,9 @@ jobs:
           
           # Define an array of registry base URLs and their corresponding repository names
           declare -A registries=(
-            ["ghcr.io"]="${lowercase_repo}"
-            ["public.ecr.aws"]="${lowercase_repo}"
-            ["docker.io"]="${lowercase_repo}"
+            ["${{ secrets.AQUSEC_ACR_REGISTRY_NAME }}"]="${lowercase_repo}"
           )
-          
-          # Special case for docker.io if the organization is 'aquasecurity'
-          if [[ "${lowercase_repo}" == "aquasecurity/"* ]]; then
-            registries["docker.io"]="aquasec/${lowercase_repo#aquasecurity/}"
-            echo "Docker Hub repository adjusted for aquasecurity: ${registries["docker.io"]}"
-          fi
-          
+
           # Loop through each registry and push the artifact
           for registry in "${!registries[@]}"; do
             repo_name=${registries[$registry]}
@@ -119,14 +117,14 @@ jobs:
             
           echo "Artifact upload process completed."
 
-      - name: Microsoft Teams Notification
-        ## Until the PR with the fix for the AdaptivCard version is merged yet
-        ## https://github.com/Skitionek/notify-microsoft-teams/pull/96
-        ## Use the aquasecurity fork
-        uses: aquasecurity/notify-microsoft-teams@master
-        if: failure()
-        with:
-          webhook_url: ${{ secrets.TRIVY_MSTEAMS_WEBHOOK }}
-          needs: ${{ toJson(needs) }}
-          job: ${{ toJson(job) }}
-          steps: ${{ toJson(steps) }}
+#      - name: Microsoft Teams Notification
+#        ## Until the PR with the fix for the AdaptivCard version is merged yet
+#        ## https://github.com/Skitionek/notify-microsoft-teams/pull/96
+#        ## Use the aquasecurity fork
+#        uses: aquasecurity/notify-microsoft-teams@master
+#        if: failure()
+#        with:
+#          webhook_url: ${{ secrets.TRIVY_MSTEAMS_WEBHOOK }}
+#          needs: ${{ toJson(needs) }}
+#          job: ${{ toJson(job) }}
+#          steps: ${{ toJson(steps) }}
