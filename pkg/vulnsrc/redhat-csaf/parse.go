@@ -2,9 +2,7 @@ package redhatcsaf
 
 import (
 	"encoding/json"
-	"fmt"
 	"iter"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -14,93 +12,39 @@ import (
 	"github.com/package-url/packageurl-go"
 	"github.com/samber/lo"
 	"github.com/samber/oops"
-	"go.etcd.io/bbolt"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 )
 
-/*
-Temp BoltDB Schema for Raw Entries:
-
-root
-└── <module>::<package_name>         // e.g. "httpd:2.4::httpd"
-    ├── <vulnerability_id1>          // e.g. "RHSA-2020:4751"
-    │   └── value: [                 // JSON array of RawEntry
-    │       {
-    │           "FixedVersion": "0:2.4.37-30.module+el8.3.0+7001+0766b9e7",
-    │           "Status": "fixed",
-    │           "Severity": "low",
-    │           "Arch": "x86_64",
-    │           "CPE": "cpe:/a:redhat:enterprise_linux:8::appstream",
-    │           "Alias": "CVE-2018-17189"
-    │       },
-    │       ...
-    │   ]
-    └── <vulnerability_id2>
-        └── value: [...]
-*/
-
-// Fixed path for temporary BoltDB file
-// This file will be automatically removed when Clean() is called
-const dbPath = "redhat-csaf.db"
-
-// Parser represents a CSAF VEX parser.
 type Parser struct {
-	repoToCPE map[string][]string
-	nvrToCPE  map[string]string
-	cpeSet    OrderedSet[string]
-
-	// Due to the large size of CSAF VEX data, we use a temporary BoltDB file
-	// to store advisory data instead of keeping everything in memory.
-	// This temporary database will be automatically cleaned up when parsing is complete.
-	db *bbolt.DB
+	repoToCPE  map[string][]string
+	nvrToCPE   map[string]string
+	advisories map[Package]map[VulnerabilityID]RawEntries
+	cpeSet     OrderedSet[string]
 }
 
-// NewParser creates a new Parser instance.
-// If a database file already exists at the fixed path,
-// it will be loaded to resume a previous parsing session.
 func NewParser() Parser {
 	return Parser{
-		repoToCPE: map[string][]string{},
-		nvrToCPE:  map[string]string{},
-		cpeSet:    NewOrderedSet[string](),
+		repoToCPE:  map[string][]string{},
+		nvrToCPE:   map[string]string{},
+		advisories: map[Package]map[VulnerabilityID]RawEntries{},
+		cpeSet:     NewOrderedSet[string](),
 	}
 }
 
 func (p *Parser) Parse(dir string) error {
 	eb := oops.With("dir", dir)
-
-	// Open BoltDB
-	var err error
-	p.db, err = bbolt.Open(dbPath, 0600, nil)
-	if err != nil {
-		return eb.With("db_path", dbPath).Wrapf(err, "database open error")
-	}
-
-	err = p.db.Batch(func(tx *bbolt.Tx) error {
-		if err := p.parse(tx, dir); err != nil {
-			return eb.Wrap(err)
-		}
-		return nil
-	})
-	if err != nil {
-		return eb.Wrap(err)
-	}
-	return nil
-}
-
-func (p *Parser) parse(tx *bbolt.Tx, dir string) error {
 	//if err := p.parseRepositoryCPEMapping(dir); err != nil {
 	//	return eb.Tags("parse_repo_to_cpe").Wrap(err)
 	//}
-	if err := p.parseCSAF(tx, dir); err != nil {
-		return oops.Tags("parse_csaf").Wrap(err)
+	if err := p.parseCSAF(dir); err != nil {
+		return eb.Tags("parse_csaf").Wrap(err)
 	}
 	return nil
 }
 
-func (p *Parser) parseCSAF(tx *bbolt.Tx, dir string) error {
+func (p *Parser) parseCSAF(dir string) error {
 	rootDir := filepath.Join(dir, vulnListDir, csafDir)
 	eb := oops.Tags("parse_csaf_vex").With("root", rootDir)
 
@@ -114,7 +58,7 @@ func (p *Parser) parseCSAF(tx *bbolt.Tx, dir string) error {
 	defer bar.Finish()
 
 	for _, filePath := range filePaths {
-		if err := p.parseCSAFFile(tx, filePath); err != nil {
+		if err := p.parseCSAFFile(filePath); err != nil {
 			return eb.Wrap(err)
 		}
 		bar.Increment()
@@ -122,7 +66,7 @@ func (p *Parser) parseCSAF(tx *bbolt.Tx, dir string) error {
 	return nil
 }
 
-func (p *Parser) parseCSAFFile(tx *bbolt.Tx, filePath string) error {
+func (p *Parser) parseCSAFFile(filePath string) error {
 	eb := oops.Code("walk_error").With("path", filePath)
 	f, err := os.Open(filePath)
 	if err != nil {
@@ -135,7 +79,7 @@ func (p *Parser) parseCSAFFile(tx *bbolt.Tx, filePath string) error {
 		return eb.Wrapf(err, "JSON decode error")
 	}
 
-	if err = p.parseAdvisory(tx, adv); err != nil {
+	if err = p.parseAdvisory(adv); err != nil {
 		return eb.Wrapf(err, "advisory parse error")
 	}
 	return nil
@@ -185,13 +129,36 @@ func (p *Parser) parseRepositoryCPEMapping(dir string) error {
 	return nil
 }
 
-func (p *Parser) parseAdvisory(tx *bbolt.Tx, adv CSAFAdvisory) error {
+func (p *Parser) Advisories() iter.Seq2[Bucket, RawEntries] {
+	return func(yield func(Bucket, RawEntries) bool) {
+		for pkg, vulns := range p.advisories {
+			for vulnID, entries := range vulns {
+				if !yield(Bucket{
+					Package:         pkg,
+					VulnerabilityID: vulnID,
+				}, entries) {
+					return
+				}
+			}
+		}
+	}
+}
+
+func (p *Parser) AdvisoryNum() int {
+	var count int
+	for _, vulns := range p.advisories {
+		count += len(vulns)
+	}
+	return count
+}
+
+func (p *Parser) parseAdvisory(adv CSAFAdvisory) error {
 	// Process vulnerabilities
 	if len(adv.Vulnerabilities) != 1 {
 		return oops.With("number", len(adv.Vulnerabilities)).Errorf("invalid number of vulnerabilities")
 	}
 
-	if err := p.parseVulnerability(tx, adv, adv.Vulnerabilities[0]); err != nil {
+	if err := p.parseVulnerability(adv, adv.Vulnerabilities[0]); err != nil {
 		return oops.Wrapf(err, "failed to parse vulnerability")
 	}
 
@@ -200,7 +167,7 @@ func (p *Parser) parseAdvisory(tx *bbolt.Tx, adv CSAFAdvisory) error {
 
 // parseVulnerability retrieves CSAF VEX data for a specific vulnerability,
 // extracts raw per-package entries, and then converts them into advisories.
-func (p *Parser) parseVulnerability(tx *bbolt.Tx, adv CSAFAdvisory, vuln *csaf.Vulnerability) error {
+func (p *Parser) parseVulnerability(adv CSAFAdvisory, vuln *csaf.Vulnerability) error {
 	if vuln == nil {
 		return nil
 	}
@@ -250,9 +217,6 @@ func (p *Parser) parseVulnerability(tx *bbolt.Tx, adv CSAFAdvisory, vuln *csaf.V
 		for _, productID := range lo.FromPtr(remediation.ProductIds) {
 			if productID == nil {
 				continue
-			}
-			if *productID == "red_hat_satellite_6:yggdrasil" {
-				fmt.Println(*productID, *remediation.Category, status.String())
 			}
 			product, err := adv.LookUpProduct(*productID)
 			if err != nil {
@@ -322,7 +286,7 @@ func (p *Parser) parseVulnerability(tx *bbolt.Tx, adv CSAFAdvisory, vuln *csaf.V
 			}
 			uniq.Append(key)
 
-			p.addRawEntry(tx, pkg, vulnID, rawEntry)
+			p.addRawEntry(pkg, vulnID, rawEntry)
 		}
 	}
 	return nil
@@ -380,121 +344,12 @@ func (p *Parser) parseThreats(threats csaf.Threats) map[csaf.ProductID]types.Sev
 	return severities
 }
 
-// addRawEntry stores a raw entry in the temporary BoltDB file.
-// The entry is stored under <module>::<package_name> bucket with
-// vulnerability_id as key and JSON array of RawEntries as value.
-func (p *Parser) addRawEntry(tx *bbolt.Tx, pkg Package, vulnID VulnerabilityID, entry RawEntry) error {
-	eb := oops.With("module", pkg.Module).With("package", pkg.Name).With("vuln_id", vulnID)
-
-	// Create package bucket key
-	pkgKey := []byte(pkg.Module + "::" + pkg.Name)
-	eb.With("pkg_key", string(pkgKey))
-
-	// Get or create package bucket
-	pkgBucket, err := tx.CreateBucketIfNotExists(pkgKey)
-	if err != nil {
-		return eb.Wrapf(err, "failed to create package bucket")
+// addRawEntry stores raw, per-package entries from the CSAF VEX data without further aggregation or processing.
+func (p *Parser) addRawEntry(pkg Package, vulnID VulnerabilityID, entry RawEntry) {
+	if _, ok := p.advisories[pkg]; !ok {
+		p.advisories[pkg] = map[VulnerabilityID]RawEntries{}
 	}
-
-	// Get existing entries
-	var entries RawEntries
-	if data := pkgBucket.Get([]byte(vulnID)); data != nil {
-		if err := json.Unmarshal(data, &entries); err != nil {
-			return oops.Wrapf(err, "failed to unmarshal entries")
-		}
-	}
-
-	// Append new entry and store
-	entries = append(entries, entry)
-	data, err := json.Marshal(entries)
-	if err != nil {
-		return oops.Wrapf(err, "failed to marshal entries")
-	}
-
-	if err := pkgBucket.Put([]byte(vulnID), data); err != nil {
-		return oops.Wrapf(err, "failed to put entries")
-	}
-
-	return nil
-}
-
-// Advisories returns a sequence of advisories stored in the temporary database.
-// This method reads from nested buckets in BoltDB instead of memory to handle
-// large datasets efficiently.
-func (p *Parser) Advisories() iter.Seq2[Bucket, RawEntries] {
-	eb := oops.Tags("boltdb", "advisories")
-	return func(yield func(Bucket, RawEntries) bool) {
-		if err := p.db.View(func(tx *bbolt.Tx) error {
-			// Iterate through package buckets
-			return tx.ForEach(func(pkgKey []byte, pkgBucket *bbolt.Bucket) error {
-				if pkgBucket == nil {
-					return nil
-				}
-				eb = eb.Tags("boltdb").With("pkg_key", string(pkgKey))
-
-				// Split package key into module and name
-				var module, name string
-				before, after, ok := strings.Cut(string(pkgKey), "::")
-				if ok {
-					module, name = before, after
-				} else {
-					name = before
-				}
-				pkg := Package{
-					Module: module,
-					Name:   name,
-				}
-				eb = eb.With("module", module).With("package", name)
-
-				// Iterate through vulnerability entries
-				return pkgBucket.ForEach(func(vulnKey, data []byte) error {
-					if data == nil {
-						return nil
-					}
-					eb = eb.With("vuln_id", string(vulnKey))
-
-					var entries RawEntries
-					if err := json.Unmarshal(data, &entries); err != nil {
-						return eb.Wrapf(err, "failed to unmarshal entries")
-					}
-
-					bkt := Bucket{
-						Package:         pkg,
-						VulnerabilityID: VulnerabilityID(vulnKey),
-					}
-					if !yield(bkt, entries) {
-						return nil
-					}
-					return nil
-				})
-			})
-		}); err != nil {
-			log.Printf("failed to iterate through package buckets: %v", eb.Wrap(err))
-		}
-	}
-}
-
-// AdvisoryNum returns the total number of advisories stored in the database
-func (p *Parser) AdvisoryNum() int {
-	var count int
-	for range p.Advisories() {
-		count++
-	}
-	return count
-}
-
-// Clean closes the database connection and removes the temporary database file.
-// Comment out this method when debugging to preserve the database file.
-func (p *Parser) Clean() error {
-	if err := p.db.Close(); err != nil {
-		return oops.Wrapf(err, "failed to close database")
-	}
-
-	if err := os.Remove(dbPath); err != nil {
-		return oops.Wrapf(err, "failed to remove database file")
-	}
-
-	return nil
+	p.advisories[pkg][vulnID] = append(p.advisories[pkg][vulnID], entry)
 }
 
 func convertSeverity(impact string) types.Severity {
