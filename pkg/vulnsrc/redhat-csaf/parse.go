@@ -1,8 +1,11 @@
 package redhatcsaf
 
 import (
+	"encoding/gob"
 	"encoding/json"
 	"iter"
+	"log"
+	"maps"
 	"os"
 	"path"
 	"path/filepath"
@@ -17,29 +20,54 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 )
 
+// Fixed path for temporary data file
+// This file will be automatically removed when Clean() is called
+const dataPath = "redhat-csaf.data"
+
 type Parser struct {
 	repoToCPE  map[string][]string
-	nvrToCPE   map[string]string
+	nvrToCPE   map[string][]string
 	advisories map[Package]map[VulnerabilityID]RawEntries
 	cpeSet     OrderedSet[string]
 }
 
 func NewParser() Parser {
+	// Register types for gob encoding
+	gob.Register(Package{})
+	gob.Register(VulnerabilityID(""))
+	gob.Register(RawEntry{})
+	gob.Register(RawEntries{})
+	gob.Register(csaf.CPE(""))
+
 	return Parser{
 		repoToCPE:  map[string][]string{},
-		nvrToCPE:   map[string]string{},
+		nvrToCPE:   map[string][]string{},
 		advisories: map[Package]map[VulnerabilityID]RawEntries{},
 		cpeSet:     NewOrderedSet[string](),
 	}
 }
 
 func (p *Parser) Parse(dir string) error {
+	// Load advisories from the cache for debugging
+	if err := p.loadAdvisories(); err == nil {
+		log.Println("Loaded CSAF VEX data from the cache")
+		return nil
+	}
+
 	eb := oops.With("dir", dir)
-	//if err := p.parseRepositoryCPEMapping(dir); err != nil {
-	//	return eb.Tags("parse_repo_to_cpe").Wrap(err)
-	//}
+	if err := p.parseRepositoryCPEMapping(dir); err != nil {
+		return eb.Wrap(err)
+	}
+	if err := p.parseNVRCPEMapping(dir); err != nil {
+		return eb.Wrap(err)
+	}
 	if err := p.parseCSAF(dir); err != nil {
-		return eb.Tags("parse_csaf").Wrap(err)
+		return eb.Wrap(err)
+	}
+
+	// Serialization after all files are processed
+	if err := p.serializeAdvisories(); err != nil {
+		return eb.Wrap(err)
 	}
 	return nil
 }
@@ -129,27 +157,24 @@ func (p *Parser) parseRepositoryCPEMapping(dir string) error {
 	return nil
 }
 
-func (p *Parser) Advisories() iter.Seq2[Bucket, RawEntries] {
-	return func(yield func(Bucket, RawEntries) bool) {
-		for pkg, vulns := range p.advisories {
-			for vulnID, entries := range vulns {
-				if !yield(Bucket{
-					Package:         pkg,
-					VulnerabilityID: vulnID,
-				}, entries) {
-					return
-				}
-			}
-		}
-	}
-}
+func (p *Parser) parseNVRCPEMapping(dir string) error {
+	filePath := filepath.Join(dir, vulnListDir, cpeDir, "nvr-to-cpe.json")
+	eb := oops.Tags("nvr-to-cpe").With("path", filePath)
 
-func (p *Parser) AdvisoryNum() int {
-	var count int
-	for _, vulns := range p.advisories {
-		count += len(vulns)
+	f, err := os.Open(filePath)
+	if err != nil {
+		return eb.Wrapf(err, "file open error")
 	}
-	return count
+	defer f.Close()
+
+	if err = json.NewDecoder(f).Decode(&p.nvrToCPE); err != nil {
+		return eb.Wrapf(err, "JSON parse error")
+	}
+
+	for _, cpes := range p.nvrToCPE {
+		p.cpeSet.Append(cpes...)
+	}
+	return nil
 }
 
 func (p *Parser) parseAdvisory(adv CSAFAdvisory) error {
@@ -231,6 +256,9 @@ func (p *Parser) parseVulnerability(adv CSAFAdvisory, vuln *csaf.Vulnerability) 
 				// cf. https://access.redhat.com/security/cve/CVE-2023-39325
 				continue
 			}
+
+			// Add CPEs to the set
+			p.cpeSet.Append(string(product.Stream))
 
 			arch := product.Package.Qualifiers.Map()["arch"]
 			if arch == "src" {
@@ -350,6 +378,84 @@ func (p *Parser) addRawEntry(pkg Package, vulnID VulnerabilityID, entry RawEntry
 		p.advisories[pkg] = map[VulnerabilityID]RawEntries{}
 	}
 	p.advisories[pkg][vulnID] = append(p.advisories[pkg][vulnID], entry)
+}
+
+func (p *Parser) Advisories() iter.Seq2[Bucket, RawEntries] {
+	return func(yield func(Bucket, RawEntries) bool) {
+		for pkg, vulns := range p.advisories {
+			for vulnID, entries := range vulns {
+				if !yield(Bucket{
+					Package:         pkg,
+					VulnerabilityID: vulnID,
+				}, entries) {
+					return
+				}
+			}
+		}
+	}
+}
+
+func (p *Parser) AdvisoryNum() int {
+	var count int
+	for _, vulns := range p.advisories {
+		count += len(vulns)
+	}
+	return count
+}
+
+func (p *Parser) CPEList() CPEList {
+	return p.cpeSet.Values()
+}
+
+func (p *Parser) RepoToCPE() iter.Seq2[string, []string] {
+	return maps.All(p.repoToCPE)
+}
+
+func (p *Parser) NVRToCPE() iter.Seq2[string, []string] {
+	return maps.All(p.nvrToCPE)
+}
+
+// SerializeAdvisories saves the current advisories map to a file
+func (p *Parser) serializeAdvisories() error {
+	if os.Getenv("TRIVY_REDHAT_CSAF_VEX_DEBUG") == "" {
+		return nil
+	}
+	// Open file for writing
+	f, err := os.Create(dataPath)
+	if err != nil {
+		return oops.Wrapf(err, "failed to create file")
+	}
+	defer f.Close()
+
+	// Encode map to file using gob
+	enc := gob.NewEncoder(f)
+	if err = enc.Encode(p.advisories); err != nil {
+		return oops.Wrapf(err, "failed to encode data")
+	}
+
+	return nil
+}
+
+// loadAdvisories loads the advisories map from a file
+func (p *Parser) loadAdvisories() error {
+	if os.Getenv("TRIVY_REDHAT_CSAF_VEX_DEBUG") == "" {
+		return oops.Errorf("debug mode is disabled")
+	}
+
+	// Open file for reading
+	f, err := os.Open(dataPath)
+	if err != nil {
+		return oops.Wrapf(err, "failed to open file")
+	}
+	defer f.Close()
+
+	// Decode map from file using gob
+	dec := gob.NewDecoder(f)
+	if err = dec.Decode(&p.advisories); err != nil {
+		return oops.Wrapf(err, "failed to decode data")
+	}
+
+	return nil
 }
 
 func convertSeverity(impact string) types.Severity {
