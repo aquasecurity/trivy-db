@@ -50,6 +50,9 @@ func TestVulnSrc_Update(t *testing.T) {
 								Arches: []string{
 									"x86_64",
 								},
+								VendorIDs: []string{
+									"ELSA-2007-0057",
+								},
 							},
 						},
 					},
@@ -63,6 +66,9 @@ func TestVulnSrc_Update(t *testing.T) {
 								FixedVersion: "30:9.3.3-8.el5",
 								Arches: []string{
 									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2007-0057",
 								},
 							},
 						},
@@ -78,6 +84,9 @@ func TestVulnSrc_Update(t *testing.T) {
 								Arches: []string{
 									"x86_64",
 								},
+								VendorIDs: []string{
+									"ELSA-2007-0057",
+								},
 							},
 						},
 					},
@@ -91,6 +100,9 @@ func TestVulnSrc_Update(t *testing.T) {
 								FixedVersion: "30:9.3.3-8.el5",
 								Arches: []string{
 									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2007-0057",
 								},
 							},
 						},
@@ -160,6 +172,9 @@ func TestVulnSrc_Update(t *testing.T) {
 								Arches: []string{
 									"x86_64",
 								},
+								VendorIDs: []string{
+									"ELSA-2019-4510",
+								},
 							},
 						},
 					},
@@ -173,6 +188,9 @@ func TestVulnSrc_Update(t *testing.T) {
 								FixedVersion: "4.1.12-124.24.3.el6uek",
 								Arches: []string{
 									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2019-4510",
 								},
 							},
 						},
@@ -188,6 +206,9 @@ func TestVulnSrc_Update(t *testing.T) {
 								Arches: []string{
 									"x86_64",
 								},
+								VendorIDs: []string{
+									"ELSA-2019-4510",
+								},
 							},
 						},
 					},
@@ -201,6 +222,9 @@ func TestVulnSrc_Update(t *testing.T) {
 								FixedVersion: "4.1.12-124.24.3.el6uek",
 								Arches: []string{
 									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2019-4510",
 								},
 							},
 						},
@@ -216,6 +240,9 @@ func TestVulnSrc_Update(t *testing.T) {
 								Arches: []string{
 									"x86_64",
 								},
+								VendorIDs: []string{
+									"ELSA-2019-4510",
+								},
 							},
 						},
 					},
@@ -229,6 +256,9 @@ func TestVulnSrc_Update(t *testing.T) {
 								FixedVersion: "4.1.12-124.24.3.el7uek",
 								Arches: []string{
 									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2019-4510",
 								},
 							},
 						},
@@ -244,6 +274,9 @@ func TestVulnSrc_Update(t *testing.T) {
 								Arches: []string{
 									"x86_64",
 								},
+								VendorIDs: []string{
+									"ELSA-2019-4510",
+								},
 							},
 						},
 					},
@@ -257,6 +290,9 @@ func TestVulnSrc_Update(t *testing.T) {
 								FixedVersion: "4.1.12-124.24.3.el7uek",
 								Arches: []string{
 									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2019-4510",
 								},
 							},
 						},
@@ -320,17 +356,26 @@ func TestVulnSrc_Update(t *testing.T) {
 									"aarch64",
 									"x86_64",
 								},
+								VendorIDs: []string{
+									"ELSA-2022-9221",
+								},
 							},
 							{
 								FixedVersion: "3.6.16-4.el8",
 								Arches: []string{
 									"aarch64",
 								},
+								VendorIDs: []string{
+									"ELSA-2021-4451",
+								},
 							},
 							{
 								FixedVersion: "3.6.16-5.el8",
 								Arches: []string{
 									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2021-4451",
 								},
 							},
 						},
@@ -346,6 +391,9 @@ func TestVulnSrc_Update(t *testing.T) {
 								Arches: []string{
 									"aarch64",
 									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2021-4451",
 								},
 							},
 						},
@@ -393,6 +441,9 @@ func TestVulnSrc_Update(t *testing.T) {
 									"aarch64",
 									"x86_64",
 								},
+								VendorIDs: []string{
+									"ELSA-2021-9362",
+								},
 							},
 						},
 					},
@@ -407,6 +458,9 @@ func TestVulnSrc_Update(t *testing.T) {
 								Arches: []string{
 									"aarch64",
 									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2021-9362",
 								},
 							},
 						},
@@ -452,6 +506,9 @@ func TestVulnSrc_Update(t *testing.T) {
 								Arches: []string{
 									"x86_64",
 								},
+								VendorIDs: []string{
+									"ELSA-2021-9344",
+								},
 							},
 						},
 					},
@@ -494,6 +551,9 @@ func TestVulnSrc_Update(t *testing.T) {
 								FixedVersion: "30:9.3.3-8.el5",
 								Arches: []string{
 									"x86_64",
+								},
+								VendorIDs: []string{
+									"ELSA-2007-0057",
 								},
 							},
 						},

@@ -152,6 +152,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 					{
 						FixedVersion: affectedPkg.FixedVersion,
 						Arches:       []string{affectedPkg.Arch},
+						VendorIDs:    []string{elsaID},
 					},
 				},
 			}
@@ -216,32 +217,40 @@ type archFlavor struct {
 	Flavor PkgFlavor
 }
 
-// mergeAdvisoriesEntries merges advisories by picking the latest version for each arch+flavor.
-// There may be multiple advisories that fix the same vulnerability, possibly providing multiple fixed versions.
-// In this case, we need to determine the "latest" version, which is now defined as the highest (greatest) version number.
+// mergeAdvisoriesEntries merges advisories by selecting the latest version for each combination of architecture and flavor.
+// The "latest" version is determined as the highest (greatest) version number for each (arch, flavor) pair.
 //
-// Additionally, we choose a single fixed version for backward compatibility, which is derived from
-// the highest normal flavor version on the x86_64 architecture if available.
+// The process is as follows:
+// 1. Select the latest version for each (arch, flavor) combination.
+// 2. Aggregate architectures for each selected version into a single entry, grouping them by their version.
+// 3. Build the final list of advisories, sorted by version in ascending order.
+//
+// Additionally, for backward compatibility, we determine a single primary fixed version.
+// This is derived from the highest normal flavor version on the x86_64 architecture if available.
 func mergeAdvisoriesEntries(advisories types.Advisories) types.Advisories {
 	// Step 1: Select the latest version per (arch, flavor)
 	latestVersions := selectLatestVersions(advisories)
 
-	// Step 2: Aggregate arches by their chosen version
-	versionToArches := make(map[string][]string)
+	// Step 2: Aggregate architectures by their chosen version
+	versionToArches := make(map[string]types.Advisory)
 	for k, v := range latestVersions {
-		versionToArches[v] = append(versionToArches[v], k.Arch)
+		adv := versionToArches[v.FixedVersion]
+		adv.VendorIDs = v.VendorIDs
+		adv.Arches = append(adv.Arches, k.Arch)
+		versionToArches[v.FixedVersion] = adv // Save the modified value back to the map
 	}
 
 	// Step 3: Build final entries, sorted by version
-	entries := lo.MapToSlice(versionToArches, func(ver string, arches []string) types.Advisory {
-		sort.Strings(arches)
+	entries := lo.MapToSlice(versionToArches, func(ver string, arches types.Advisory) types.Advisory {
+		sort.Strings(arches.Arches) // Ensure architectures are sorted for consistency
 		return types.Advisory{
 			FixedVersion: ver,
-			Arches:       arches,
+			Arches:       arches.Arches,
+			VendorIDs:    arches.VendorIDs,
 		}
 	})
 	sort.Slice(entries, func(i, j int) bool {
-		return entries[i].FixedVersion < entries[j].FixedVersion // Sorting lexicographically
+		return entries[i].FixedVersion < entries[j].FixedVersion // Sort lexicographically
 	})
 
 	return types.Advisories{
@@ -250,9 +259,11 @@ func mergeAdvisoriesEntries(advisories types.Advisories) types.Advisories {
 	}
 }
 
-// selectLatestVersions selects the latest (highest) version per (arch, flavor)
-func selectLatestVersions(advisories types.Advisories) map[archFlavor]string {
-	latestVersions := make(map[archFlavor]string) // key: archFlavor -> highest fixedVersion
+// selectLatestVersions identifies and selects the highest (latest) version for each unique combination of architecture and flavor.
+// Each advisory entry contains a fixed version, a set of architectures, and associated vendor IDs.
+// This function ensures only the highest version for a given (arch, flavor) pair is retained.
+func selectLatestVersions(advisories types.Advisories) map[archFlavor]types.Advisory {
+	latestVersions := make(map[archFlavor]types.Advisory) // key: archFlavor -> highest fixedVersion
 	for _, entry := range advisories.Entries {
 		if len(entry.Arches) == 0 || entry.FixedVersion == "" {
 			continue
@@ -265,26 +276,39 @@ func selectLatestVersions(advisories types.Advisories) map[archFlavor]string {
 		}
 
 		currentVer := version.NewVersion(entry.FixedVersion)
-		if existing, ok := latestVersions[key]; !ok || currentVer.GreaterThan(version.NewVersion(existing)) {
+		if existing, ok := latestVersions[key]; !ok || currentVer.GreaterThan(version.NewVersion(existing.FixedVersion)) {
 			// Keep the higher (latest) version
-			latestVersions[key] = entry.FixedVersion
+			latestVersions[key] = types.Advisory{
+				FixedVersion: entry.FixedVersion,
+				VendorIDs:    entry.VendorIDs,
+				Arches:       entry.Arches,
+			}
 		}
 	}
 	return latestVersions
 }
 
-// determinePrimaryFixedVersion determines primary fixed version for backward compatibility
-// It is chosen as the highest normal flavor version on x86_64 if any exist.
-// If no normal flavor version exists, the maximum version in lexical order is chosen.
-func determinePrimaryFixedVersion(latestVersions map[archFlavor]string) string {
+// determinePrimaryFixedVersion determines the primary fixed version for backward compatibility.
+// The primary version is selected as follows:
+// 1. If there is a normal flavor version available for the "x86_64" architecture, the highest version among these is chosen.
+// 2. If no normal flavor version exists, the function falls back to the maximum version across all advisories in lexical order.
+//
+// This ensures backward compatibility by preferring the most relevant and common version for typical use cases.
+func determinePrimaryFixedVersion(latestVersions map[archFlavor]types.Advisory) string {
+	// Check for the highest version of the normal flavor on the "x86_64" architecture
 	primaryFixedVersion := latestVersions[archFlavor{
 		Arch:   "x86_64",
 		Flavor: NormalPackageFlavor,
 	}]
-	if primaryFixedVersion == "" {
-		primaryFixedVersion = lo.Max(lo.Values(latestVersions)) // Chose the maximum value in lexical order for idempotency
+
+	// If no normal flavor version exists, choose the maximum version lexicographically
+	if primaryFixedVersion.FixedVersion == "" {
+		primaryFixedVersion = lo.MaxBy(lo.Values(latestVersions), func(a, b types.Advisory) bool {
+			return a.FixedVersion > b.FixedVersion
+		})
 	}
-	return primaryFixedVersion
+
+	return primaryFixedVersion.FixedVersion
 }
 
 type PkgFlavor string
