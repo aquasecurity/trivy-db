@@ -183,11 +183,118 @@ func (p *Parser) parseAdvisory(adv CSAFAdvisory) error {
 		return oops.With("number", len(adv.Vulnerabilities)).Errorf("invalid number of vulnerabilities")
 	}
 
+	// orphaned, err := p.analyzeOrphanedSrcPackages(adv, adv.Vulnerabilities[0])
+	// if err != nil {
+	// 	return oops.Wrapf(err, "failed to analyze orphaned source packages")
+	// }
+	// if len(orphaned) > 0 {
+	// 	log.Printf("%s: %q", *adv.Vulnerabilities[0].CVE, orphaned)
+	// }
+
 	if err := p.parseVulnerability(adv, adv.Vulnerabilities[0]); err != nil {
 		return oops.Wrapf(err, "failed to parse vulnerability")
 	}
 
 	return nil
+}
+
+// TODO(debug): delete
+// analyzeOrphanedSrcPackages finds source packages (arch=src) that don't have corresponding binary packages
+// in the same remediation, considering module and stream information.
+func (p *Parser) analyzeOrphanedSrcPackages(adv CSAFAdvisory, vuln *csaf.Vulnerability) ([]string, error) {
+	if vuln == nil {
+		return nil, nil
+	}
+
+	var orphanedSrcPkgs []string
+
+	// Process remediations
+	for _, remediation := range vuln.Remediations {
+		if remediation == nil || remediation.ProductIds == nil {
+			continue
+		}
+		status := p.detectStatus(remediation)
+		if status != types.StatusFixed {
+			continue
+		}
+
+		// Map to track source packages and their names
+		type packageInfo struct {
+			productID string
+			hasNonSrc bool
+		}
+
+		// Use composite key for unique package identification
+		type packageKey struct {
+			name   string
+			module string
+			stream string
+		}
+		srcPackages := make(map[packageKey]*packageInfo)
+
+		// First pass: collect all packages
+		var products []Product
+		for _, productID := range lo.FromPtr(remediation.ProductIds) {
+			if productID == nil {
+				continue
+			}
+
+			product, err := adv.LookUpProduct(*productID)
+			if err != nil || product == nil || product.Package.Type != packageurl.TypeRPM {
+				continue
+			}
+			products = append(products, *product)
+
+			pkgName := product.Package.Name
+			if strings.HasPrefix(product.Package.Namespace, "redhat/") {
+				pkgName = strings.TrimPrefix(product.Package.Namespace, "redhat/") + "/" + pkgName
+			}
+
+			key := packageKey{
+				name:   pkgName,
+				module: product.Module,
+				stream: string(product.Stream),
+			}
+
+			// Track source packages
+			arch := product.Package.Qualifiers.Map()["arch"]
+			if arch == "src" {
+				srcPackages[key] = &packageInfo{productID: string(*productID)}
+			}
+		}
+
+		for _, product := range products {
+			pkgName := product.Package.Name
+			if strings.HasPrefix(product.Package.Namespace, "redhat/") {
+				pkgName = strings.TrimPrefix(product.Package.Namespace, "redhat/") + "/" + pkgName
+			}
+
+			key := packageKey{
+				name:   pkgName,
+				module: product.Module,
+				stream: string(product.Stream),
+			}
+
+			arch := product.Package.Qualifiers.Map()["arch"]
+			if arch == "src" {
+				continue
+			}
+			if pkg, exists := srcPackages[key]; exists {
+				// Mark that this source package has a binary counterpart
+				// with the same module and stream
+				pkg.hasNonSrc = true
+			}
+		}
+
+		// Second pass: collect orphaned source packages
+		for _, pkg := range srcPackages {
+			if !pkg.hasNonSrc {
+				orphanedSrcPkgs = append(orphanedSrcPkgs, pkg.productID)
+			}
+		}
+	}
+
+	return orphanedSrcPkgs, nil
 }
 
 // parseVulnerability retrieves CSAF VEX data for a specific vulnerability,
