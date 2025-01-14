@@ -2,6 +2,7 @@ package redhatcsaf
 
 import (
 	"fmt"
+	"log"
 	"slices"
 	"sort"
 	"strings"
@@ -180,19 +181,32 @@ func (a *Aggregator) aggregateCPEs(entries Entries) Entries {
 // The CVE entries are already sorted by ID.
 func encodeCVEs(cves []CVEEntry) string {
 	entries := lo.Map(cves, func(cve CVEEntry, _ int) string {
-		return fmt.Sprintf("%s:%d", cve.ID, cve.Severity)
+		return fmt.Sprintf("%s:%s", cve.ID, cve.Severity)
 	})
 	return strings.Join(entries, "|")
 }
 
 // decodeCVEs decodes a string representation of CVE entries
 func decodeCVEs(encoded string) []CVEEntry {
+	if encoded == "" {
+		return nil
+	}
+
 	return lo.FilterMap(strings.Split(encoded, "|"), func(entry string, _ int) (CVEEntry, bool) {
-		var id string
-		var severity types.Severity
-		if _, err := fmt.Sscanf(entry, "%s:%d", &id, &severity); err != nil {
+		// Split ID and severity
+		id, severityStr, found := strings.Cut(entry, ":")
+		if !found {
+			log.Printf("Invalid severity format: %q", entry)
 			return CVEEntry{}, false
 		}
+
+		// Parse severity
+		severity, err := types.NewSeverity(severityStr)
+		if err != nil {
+			log.Printf("Failed to parse severity for CVE %q: %v", id, err)
+			return CVEEntry{}, false
+		}
+
 		return CVEEntry{
 			ID:       id,
 			Severity: severity,
