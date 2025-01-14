@@ -3,6 +3,7 @@ package redhatcsaf
 import (
 	"fmt"
 	"log"
+	"path/filepath"
 
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
@@ -63,7 +64,8 @@ func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 	eb := oops.In("redhat_csaf_vex")
 
 	log.Println("Parsing CSAF VEX...")
-	if err := vs.parser.Parse(dir); err != nil {
+	vulnListDir := filepath.Join(dir, vulnListDir)
+	if err := vs.parser.Parse(vulnListDir); err != nil {
 		return eb.Wrapf(err, "failed to parse CSAF VEX")
 	}
 	log.Println("Parsed CSAF VEX")

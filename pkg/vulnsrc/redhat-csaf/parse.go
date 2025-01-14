@@ -73,7 +73,7 @@ func (p *Parser) Parse(dir string) error {
 }
 
 func (p *Parser) parseCSAF(dir string) error {
-	rootDir := filepath.Join(dir, vulnListDir, csafDir)
+	rootDir := filepath.Join(dir, csafDir)
 	eb := oops.Tags("parse_csaf_vex").With("root", rootDir)
 
 	// Collect all JSON files for the progress bar
@@ -136,7 +136,7 @@ func (p *Parser) collectFilePaths(rootDir string) ([]string, error) {
 }
 
 func (p *Parser) parseRepositoryCPEMapping(dir string) error {
-	filePath := filepath.Join(dir, vulnListDir, cpeDir, "repository-to-cpe.json")
+	filePath := filepath.Join(dir, cpeDir, "repository-to-cpe.json")
 	eb := oops.Tags("repository-to-cpe").With("path", filePath)
 
 	f, err := os.Open(filePath)
@@ -158,7 +158,7 @@ func (p *Parser) parseRepositoryCPEMapping(dir string) error {
 }
 
 func (p *Parser) parseNVRCPEMapping(dir string) error {
-	filePath := filepath.Join(dir, vulnListDir, cpeDir, "nvr-to-cpe.json")
+	filePath := filepath.Join(dir, cpeDir, "nvr-to-cpe.json")
 	eb := oops.Tags("nvr-to-cpe").With("path", filePath)
 
 	f, err := os.Open(filePath)
@@ -336,8 +336,6 @@ func (p *Parser) detectStatus(remediation *csaf.Remediation) types.Status {
 			return types.StatusFixDeferred
 		}
 	case csaf.CSAFRemediationCategoryVendorFix:
-		// If the advisory has a fixed version, it is considered as fixed.
-		// To keep the database size small, we don't store the "fixed" status.
 		return types.StatusFixed
 	}
 	return types.StatusUnknown
