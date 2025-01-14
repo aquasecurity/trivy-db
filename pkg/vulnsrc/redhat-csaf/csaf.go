@@ -1,9 +1,11 @@
 package redhatcsaf
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/samber/oops"
+	bolt "go.etcd.io/bbolt"
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
@@ -48,15 +50,32 @@ func (vs VulnSrc) Name() types.SourceID {
 }
 
 func (vs VulnSrc) Update(dir string) error {
+	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
+		return vs.update(tx, dir)
+	})
+	if err != nil {
+		return oops.Wrapf(err, "batch update error")
+	}
+	return nil
+}
+
+func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 	eb := oops.In("redhat_csaf_vex")
 
-	log.Print("Parsing CSAF VEX...")
+	log.Println("Parsing CSAF VEX...")
 	if err := vs.parser.Parse(dir); err != nil {
 		return eb.Wrapf(err, "failed to parse CSAF VEX")
 	}
-	log.Print("Parsed CSAF VEX")
+	log.Println("Parsed CSAF VEX")
 
-	log.Print("Inserting CSAF VEX...")
+	cpeList := vs.parser.CPEList()
+
+	log.Println("Inserting mappings...")
+	if err := vs.putMappings(tx, cpeList); err != nil {
+		return eb.Wrapf(err, "failed to put mappings")
+	}
+
+	log.Println("Inserting CSAF VEX...")
 	bar := utils.NewProgressBar(vs.parser.AdvisoryNum())
 	for bkt, rawEntries := range vs.parser.Advisories() {
 		eb = eb.Tags("aggregate").With("module", bkt.Module).With("package", bkt.Name).
@@ -72,7 +91,7 @@ func (vs VulnSrc) Update(dir string) error {
 		advisory := Advisory{Entries: entries}
 
 		// Store the advisory in the DB
-		if err := vs.putAdvisory(bkt, advisory); err != nil {
+		if err := vs.putAdvisory(tx, bkt, advisory, cpeList); err != nil {
 			return eb.Wrapf(err, "failed to put advisory")
 		}
 		bar.Increment()
@@ -82,31 +101,61 @@ func (vs VulnSrc) Update(dir string) error {
 	return nil
 }
 
-func (vs VulnSrc) putAdvisory(bkt Bucket, adv Advisory) error {
+func (vs VulnSrc) putMappings(tx *bolt.Tx, cpeList CPEList) error {
+	// TODO(debug): delete
+	vs.dbc.PutVulnerabilityDetail(tx, "aaa", source.ID, types.VulnerabilityDetail{})
+
+	// Store the data source
+	if err := vs.dbc.PutDataSource(tx, rootBucket, source); err != nil {
+		return xerrors.Errorf("failed to put data source: %w", err)
+	}
+
+	// Store the mapping between repository and CPE names
+	for repo, cpes := range vs.parser.RepoToCPE() {
+		if err := vs.dbc.PutRedHatRepositories(tx, repo, cpeList.Indices(cpes)); err != nil {
+			return oops.With("repo", repo).With("cpes", cpes).Wrapf(err, "repository put error")
+		}
+	}
+
+	// Store the mapping between NVR and CPE names
+	for nvr, cpes := range vs.parser.NVRToCPE() {
+		if err := vs.dbc.PutRedHatNVRs(tx, nvr, cpeList.Indices(cpes)); err != nil {
+			return oops.With("nvr", nvr).With("cpes", cpes).Wrapf(err, "NVR put error")
+		}
+	}
+
+	// Store CPE indices for debug information
+	for i, cpe := range cpeList {
+		if err := vs.dbc.PutRedHatCPEs(tx, i, cpe); err != nil {
+			return oops.With("cpe", cpe).Wrapf(err, "CPE put error")
+		}
+	}
 	return nil
-	//err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-	//	if err := vs.dbc.PutDataSource(tx, rootBucket, source); err != nil {
-	//		return xerrors.Errorf("failed to put data source: %w", err)
-	//	}
-	//
-	//	vulnID := string(bkt.VulnerabilityID)
-	//	pkgName := bkt.Package.Name // TODO: support modules
-	//	if err := vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{rootBucket}, adv); err != nil {
-	//		return xerrors.Errorf("failed to save Red Hat CSAF advisory: %w", err)
-	//	}
-	//
-	//	if err := vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
-	//		return xerrors.Errorf("failed to put vulnerability ID: %w", err)
-	//	}
-	//
-	//	return nil
-	//})
-	//
-	//if err != nil {
-	//	return xerrors.Errorf("batch update error: %w", err)
-	//}
-	//
-	//return nil
+}
+
+func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt Bucket, adv Advisory, cpeList CPEList) error {
+	for i := range adv.Entries {
+		// Convert CPE names to indices.
+		adv.Entries[i].AffectedCPEIndices = cpeList.Indices(adv.Entries[i].AffectedCPEList)
+	}
+
+	vulnID := string(bkt.VulnerabilityID)
+	pkgName := bkt.Package.Name
+	if bkt.Package.Module != "" {
+		// Add modular namespace
+		// e.g. nodejs:12::npm
+		pkgName = fmt.Sprintf("%s::%s", bkt.Package.Module, pkgName)
+	}
+
+	if err := vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{rootBucket}, adv); err != nil {
+		return xerrors.Errorf("failed to save Red Hat CSAF advisory: %w", err)
+	}
+
+	if err := vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
+		return xerrors.Errorf("failed to put vulnerability ID: %w", err)
+	}
+
+	return nil
 }
 
 //func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advisory, error) {
