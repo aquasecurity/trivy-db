@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/briandowns/spinner"
-	pb "gopkg.in/cheggaaa/pb.v1"
+	"github.com/cheggaaa/pb/v3"
 )
 
 var (
@@ -42,7 +42,7 @@ type ProgressBar struct {
 	client *pb.ProgressBar
 }
 
-func PbStartNew(total int) *ProgressBar {
+func NewProgressBar(total int) *ProgressBar {
 	if Quiet {
 		return &ProgressBar{}
 	}
