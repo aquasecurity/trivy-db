@@ -118,7 +118,11 @@ func (a *Aggregator) aggregateArches(entries Entries) Entries {
 		// Collect unique architectures
 		archSet := NewOrderedSet[string]()
 		for _, entry := range group {
-			archSet.Append(entry.Arches...)
+			// Filter out empty arches
+			arches := lo.Filter(entry.Arches, func(arch string, _ int) bool {
+				return arch != ""
+			})
+			archSet.Append(arches...)
 		}
 
 		// Create new entry with merged architectures
@@ -220,5 +224,8 @@ func encodeArches(arches []string) string {
 }
 
 func decodeArches(encoded string) []string {
+	if encoded == "" {
+		return nil
+	}
 	return strings.Split(encoded, "|")
 }
