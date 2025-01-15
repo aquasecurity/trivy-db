@@ -263,7 +263,9 @@ func (p *Parser) parseVulnerability(adv CSAFAdvisory, vuln *csaf.Vulnerability) 
 			arch := product.Package.Qualifiers.Map()["arch"]
 			if arch == "src" {
 				// If arch is "src", treat it as empty.
-				// This is applicable only with unfixed vulnerabilities (as far as we know).
+				// Normally src packages should be skipped, but for unpatched vulnerabilities
+				// only source packages are included (see https://issues.redhat.com/browse/SECDATA-856),
+				// so we include src packages in this case.
 				arch = ""
 			}
 
