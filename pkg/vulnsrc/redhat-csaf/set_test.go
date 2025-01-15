@@ -32,8 +32,7 @@ func TestSet_Contains(t *testing.T) {
 func TestSet_Values(t *testing.T) {
 	s := NewSet[int]()
 	s.Append(3, 1, 2)
-	values := s.Values()
-	assert.ElementsMatch(t, []int{1, 2, 3}, values)
+	assert.ElementsMatch(t, []int{1, 2, 3}, s.Values())
 }
 
 func TestNewOrderedSet(t *testing.T) {
@@ -45,6 +44,5 @@ func TestNewOrderedSet(t *testing.T) {
 func TestOrderedSet_Values(t *testing.T) {
 	s := NewOrderedSet[int]()
 	s.Append(3, 1, 2)
-	values := s.Values()
-	assert.Equal(t, []int{1, 2, 3}, values)
+	assert.Equal(t, []int{1, 2, 3}, s.Values())
 }

@@ -2,13 +2,11 @@ package redhatcsaf_test
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	redhatcsaf "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-csaf"
-	redhat "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 )
@@ -27,7 +25,7 @@ func TestVulnSrc_Update(t *testing.T) {
 	}{
 		{
 			name: "happy path",
-			dir:  filepath.Join("testdata"),
+			dir:  "testdata",
 			wantValues: []vulnsrctest.WantValues{
 				{
 					Key: []string{
@@ -35,9 +33,9 @@ func TestVulnSrc_Update(t *testing.T) {
 						"Red Hat",
 					},
 					Value: types.DataSource{
-						ID:   vulnerability.RedHatOVAL,
-						Name: "Red Hat OVAL v2",
-						URL:  "https://www.redhat.com/security/data/oval/v2/",
+						ID:   vulnerability.RedHatCSAFVEX,
+						Name: "Red Hat CSAF VEX",
+						URL:  "https://access.redhat.com/security/data/csaf/v2/vex/",
 					},
 				},
 				{
@@ -46,7 +44,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"cpe",
 						"0",
 					},
-					Value: "cpe:/a:redhat:enterprise_linux:7",
+					Value: "cpe:/o:redhat:enterprise_linux:8::baseos",
 				},
 				{
 					Key: []string{
@@ -54,47 +52,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"cpe",
 						"1",
 					},
-					Value: "cpe:/a:redhat:enterprise_linux:8",
-				},
-				{
-					Key: []string{
-						"Red Hat CPE",
-						"cpe",
-						"2",
-					},
-					Value: "cpe:/a:redhat:enterprise_linux:8::appstream",
-				},
-				{
-					Key: []string{
-						"Red Hat CPE",
-						"cpe",
-						"3",
-					},
-					Value: "cpe:/a:redhat:enterprise_linux:8::crb",
-				},
-				{
-					Key: []string{
-						"Red Hat CPE",
-						"cpe",
-						"4",
-					},
-					Value: "cpe:/a:redhat:rhel_eus:8.1",
-				},
-				{
-					Key: []string{
-						"Red Hat CPE",
-						"cpe",
-						"5",
-					},
-					Value: "cpe:/o:redhat:enterprise_linux:7::server",
-				},
-				{
-					Key: []string{
-						"Red Hat CPE",
-						"cpe",
-						"6",
-					},
-					Value: "cpe:/o:redhat:enterprise_linux:8::baseos",
+					Value: "cpe:/o:redhat:enterprise_linux:9::baseos",
 				},
 				{
 					Key: []string{
@@ -102,35 +60,35 @@ func TestVulnSrc_Update(t *testing.T) {
 						"repository",
 						"rhel-8-for-x86_64-baseos-rpms",
 					},
-					Value: []int{6},
+					Value: []int{0},
 				},
 				{
 					Key: []string{
 						"Red Hat CPE",
 						"nvr",
-						"3scale-amp-apicast-gateway-container-1.11-1-x86_64",
+						"pam-1.5.1-21.el9_5.x86_64",
 					},
-					Value: []int{5},
+					Value: []int{1},
 				},
 				{
 					Key: []string{
 						"advisory-detail",
-						"RawEntry-2020-11879",
+						"RHSA-2024:9941",
 						"Red Hat",
-						"evolution",
+						"pam",
 					},
-					Value: redhat.Advisory{
-						Entries: []redhat.Entry{
+					Value: redhatcsaf.Advisory{
+						Entries: []redhatcsaf.Entry{
 							{
-								Status:             types.StatusWillNotFix,
-								FixedVersion:       "",
+								FixedVersion: "1.5.1-21.el9_5",
+								CVEs: []redhatcsaf.CVEEntry{
+									{
+										ID:       "CVE-2024-10041",
+										Severity: types.SeverityMedium,
+									},
+								},
+								Arches:             []string{"aarch64", "x86_64"},
 								AffectedCPEIndices: []int{1},
-								Cves: []redhat.CveEntry{
-									{
-										ID:       "",
-										Severity: types.SeverityMedium,
-									},
-								},
 							},
 						},
 					},
@@ -138,175 +96,22 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"advisory-detail",
-						"RHSA-2020:5624",
+						"RHSA-2024:9999",
 						"Red Hat",
-						"thunderbird",
+						"test-namespace/test-package",
 					},
-					Value: redhat.Advisory{
-						Entries: []redhat.Entry{
+					Value: redhatcsaf.Advisory{
+						Entries: []redhatcsaf.Entry{
 							{
-								FixedVersion: "0:78.6.0-1.el8_3",
-								AffectedCPEIndices: []int{
-									1,
-									2,
-									6,
-								},
-								Arches: []string{
-									"aarch64",
-									"ppc64le",
-									"x86_64",
-								},
-								Cves: []redhat.CveEntry{
+								FixedVersion: "1:1.0.0-1.el9",
+								CVEs: []redhatcsaf.CVEEntry{
 									{
-										ID:       "RawEntry-2020-16042",
-										Severity: types.SeverityHigh,
-									},
-									{
-										ID:       "RawEntry-2020-26971",
+										ID:       "CVE-2024-9999",
 										Severity: types.SeverityHigh,
 									},
 								},
-							},
-						},
-					},
-				},
-				{
-					Key: []string{
-						"advisory-detail",
-						"RHSA-2020:5624",
-						"Red Hat",
-						"thunderbird-debugsource",
-					},
-					Value: redhat.Advisory{
-						Entries: []redhat.Entry{
-							{
-								FixedVersion: "0:78.6.0-1.el8_3",
-								AffectedCPEIndices: []int{
-									1,
-									2,
-									6,
-								},
-								Arches: []string{
-									"aarch64",
-									"ppc64le",
-									"x86_64",
-								},
-								Cves: []redhat.CveEntry{
-									{
-										ID:       "RawEntry-2020-16042",
-										Severity: types.SeverityHigh,
-									},
-									{
-										ID:       "RawEntry-2020-26971",
-										Severity: types.SeverityHigh,
-									},
-								},
-							},
-						},
-					},
-				},
-				{
-					Key: []string{
-						"advisory-detail",
-						"RHSA-2020:4751",
-						"Red Hat",
-						"httpd:2.4::httpd",
-					},
-					Value: redhat.Advisory{
-						Entries: []redhat.Entry{
-							{
-								FixedVersion: "0:2.4.37-30.module+el7.3.0+7001+0766b9e7",
-								AffectedCPEIndices: []int{
-									0,
-									5,
-								},
-								Arches: []string{
-									"aarch64",
-									"ppc64le",
-									"s390x",
-									"x86_64",
-								},
-								Cves: []redhat.CveEntry{
-									{
-										ID:       "RawEntry-2018-17189",
-										Severity: types.SeverityCritical,
-									},
-								},
-							},
-							{
-								FixedVersion: "0:2.4.37-30.module+el8.3.0+7001+0766b9e7",
-								AffectedCPEIndices: []int{
-									1,
-									2,
-								},
-								Arches: []string{
-									"aarch64",
-									"ppc64le",
-									"s390x",
-									"x86_64",
-								},
-								Cves: []redhat.CveEntry{
-									{
-										ID:       "RawEntry-2018-17189",
-										Severity: types.SeverityLow,
-									},
-								},
-							},
-						},
-					},
-				},
-				{
-					Key: []string{
-						"advisory-detail",
-						"RawEntry-2020-14342",
-						"Red Hat",
-						"cifs-utils",
-					},
-					Value: redhat.Advisory{
-						Entries: []redhat.Entry{
-							{
-								Status:       types.StatusAffected,
-								FixedVersion: "",
-								AffectedCPEIndices: []int{
-									3,
-									5,
-								},
-								Cves: []redhat.CveEntry{
-									{
-										Severity: types.SeverityLow,
-									},
-								},
-							},
-						},
-					},
-				},
-				{
-					Key: []string{
-						"advisory-detail",
-						"RHSA-2020:9999",
-						"Red Hat",
-						"thunderbird",
-					},
-					Value: redhat.Advisory{
-						Entries: []redhat.Entry{
-							{
-								FixedVersion:       "0:999.el8_3",
-								AffectedCPEIndices: []int{4},
-								Arches: []string{
-									"aarch64",
-									"ppc64le",
-									"x86_64",
-								},
-								Cves: []redhat.CveEntry{
-									{
-										ID:       "RawEntry-2020-26971",
-										Severity: types.SeverityCritical,
-									},
-									{
-										ID:       "RawEntry-2020-26972",
-										Severity: types.SeverityMedium,
-									},
-								},
+								Arches:             []string{"x86_64"},
+								AffectedCPEIndices: []int{1},
 							},
 						},
 					},
