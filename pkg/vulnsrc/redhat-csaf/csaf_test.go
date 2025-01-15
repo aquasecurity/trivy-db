@@ -172,6 +172,28 @@ func TestVulnSrc_Update(t *testing.T) {
 						},
 					},
 				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"RHSA-2024:9999",
+						"Red Hat",
+						"module:2.4::modular-package",
+					},
+					Value: redhatcsaf.Advisory{
+						Entries: []redhatcsaf.Entry{
+							{
+								FixedVersion: "2.4.37-65.module+el8.10.0+21982+14717793",
+								CVEs: []redhatcsaf.CVEEntry{
+									{
+										ID:       "CVE-2024-11111",
+										Severity: types.SeverityMedium,
+									},
+									{
+										ID:       "CVE-2024-22222",
+										Severity: types.SeverityMedium,
+									},
+								},
+								Arches:             []string{"aarch64"},
 								AffectedCPEIndices: []int{1},
 							},
 						},
