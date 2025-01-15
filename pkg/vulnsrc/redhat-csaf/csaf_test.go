@@ -52,6 +52,14 @@ func TestVulnSrc_Update(t *testing.T) {
 						"cpe",
 						"1",
 					},
+					Value: "cpe:/o:redhat:enterprise_linux:9::appstream",
+				},
+				{
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"2",
+					},
 					Value: "cpe:/o:redhat:enterprise_linux:9::baseos",
 				},
 				{
@@ -68,7 +76,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"nvr",
 						"pam-1.5.1-21.el9_5.x86_64",
 					},
-					Value: []int{1},
+					Value: []int{2},
 				},
 				{
 					Key: []string{
@@ -88,7 +96,7 @@ func TestVulnSrc_Update(t *testing.T) {
 									},
 								},
 								Arches:             []string{"aarch64", "x86_64"},
-								AffectedCPEIndices: []int{1},
+								AffectedCPEIndices: []int{2},
 							},
 						},
 					},
@@ -106,11 +114,64 @@ func TestVulnSrc_Update(t *testing.T) {
 								FixedVersion: "1:1.0.0-1.el9",
 								CVEs: []redhatcsaf.CVEEntry{
 									{
-										ID:       "CVE-2024-9999",
+										ID:       "CVE-2024-11111",
+										Severity: types.SeverityHigh,
+									},
+									{
+										ID:       "CVE-2024-22222",
+										Severity: types.SeverityCritical,
+									},
+								},
+								Arches:             []string{"aarch64", "x86_64"},
+								AffectedCPEIndices: []int{1, 2},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2024-11111", // Use CVE ID instead of RHSA ID for unpatched vulnerabilities
+						"Red Hat",
+						"affected-package",
+					},
+					Value: redhatcsaf.Advisory{
+						Entries: []redhatcsaf.Entry{
+							{
+								FixedVersion: "", // unpatched vulnerability
+								CVEs: []redhatcsaf.CVEEntry{
+									{
 										Severity: types.SeverityHigh,
 									},
 								},
-								Arches:             []string{"x86_64"},
+								Arches:             nil, // Arches is empty for source packages
+								AffectedCPEIndices: []int{2},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2024-22222", // Use CVE ID instead of RHSA ID for unpatched vulnerabilities
+						"Red Hat",
+						"affected-package",
+					},
+					Value: redhatcsaf.Advisory{
+						Entries: []redhatcsaf.Entry{
+							{
+								FixedVersion: "", // unpatched vulnerability
+								CVEs: []redhatcsaf.CVEEntry{
+									{
+										Severity: types.SeverityCritical,
+									},
+								},
+								Arches:             nil, // Arches is empty for source packages
+								AffectedCPEIndices: []int{2},
+							},
+						},
+					},
+				},
 								AffectedCPEIndices: []int{1},
 							},
 						},
