@@ -196,7 +196,7 @@ func decodeCVEs(encoded string) []CVEEntry {
 		// Split ID and severity
 		id, severityStr, found := strings.Cut(entry, ":")
 		if !found {
-			log.Printf("Invalid severity format: %q", entry)
+			log.Printf("Invalid encoded string: %q", entry)
 			return CVEEntry{}, false
 		}
 
