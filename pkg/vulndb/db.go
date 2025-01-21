@@ -1,7 +1,6 @@
 package vulndb
 
 import (
-	"log"
 	"time"
 
 	bolt "go.etcd.io/bbolt"
@@ -9,6 +8,7 @@ import (
 	"k8s.io/utils/clock"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/metadata"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc"
@@ -69,13 +69,13 @@ func New(cacheDir, outputDir string, updateInterval time.Duration, opts ...Optio
 }
 
 func (t TrivyDB) Insert(targets []string) error {
-	log.Println("Updating vulnerability database...")
+	log.Info("Updating vulnerability database...")
 	for _, target := range targets {
 		src, ok := t.vulnSrc(target)
 		if !ok {
 			return xerrors.Errorf("%s is not supported", target)
 		}
-		log.Printf("Updating %s data...\n", target)
+		log.WithPrefix(target).Info("Updating data...")
 
 		if err := src.Update(t.cacheDir); err != nil {
 			return xerrors.Errorf("%s update error: %w", target, err)

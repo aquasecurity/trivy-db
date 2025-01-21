@@ -2,7 +2,6 @@ package azure
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +10,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/azure/oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -53,6 +53,7 @@ type resolvedTest struct {
 
 type VulnSrc struct {
 	dbc            db.Operation
+	logger         *log.Logger
 	azureDir       string
 	source         types.DataSource
 	platformFormat string
@@ -69,6 +70,7 @@ func NewVulnSrc(dist Distribution) VulnSrc {
 func azureVulnSrc() VulnSrc {
 	return VulnSrc{
 		dbc:            db.Config{},
+		logger:         log.WithPrefix("azure"),
 		azureDir:       azureDir,
 		source:         azureSource,
 		platformFormat: azurePlatformFormat,
@@ -78,6 +80,7 @@ func azureVulnSrc() VulnSrc {
 func marinerVulnSrc() VulnSrc {
 	return VulnSrc{
 		dbc:            db.Config{},
+		logger:         log.WithPrefix("mariner"),
 		azureDir:       marinerDir,
 		source:         marinerSource,
 		platformFormat: marinerPlatformFormat,
@@ -97,7 +100,7 @@ func (vs VulnSrc) Update(dir string) error {
 
 	for _, ver := range versions {
 		versionDir := filepath.Join(rootDir, ver.Name())
-		entries, err := parseOVAL(filepath.Join(versionDir))
+		entries, err := vs.parseOVAL(filepath.Join(versionDir))
 		if err != nil {
 			return xerrors.Errorf("failed to parse CBL-Mariner OVAL: %w ", err)
 		}
@@ -110,8 +113,8 @@ func (vs VulnSrc) Update(dir string) error {
 	return nil
 }
 
-func parseOVAL(dir string) ([]Entry, error) {
-	log.Printf("    Parsing %s", dir)
+func (vs VulnSrc) parseOVAL(dir string) ([]Entry, error) {
+	vs.logger.Info("Parsing OVAL", log.String("dir", dir))
 
 	// Parse and resolve tests
 	tests, err := resolveTests(dir)

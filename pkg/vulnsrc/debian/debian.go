@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"slices"
@@ -15,6 +14,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -63,8 +63,9 @@ func WithCustomPut(put db.CustomPut) Option {
 }
 
 type VulnSrc struct {
-	put db.CustomPut
-	dbc db.Operation
+	put    db.CustomPut
+	dbc    db.Operation
+	logger *log.Logger
 
 	// Hold a map of codenames and major versions from distributions.json
 	// e.g. "buster" => "10"
@@ -96,6 +97,7 @@ func NewVulnSrc(opts ...Option) VulnSrc {
 	src := VulnSrc{
 		put:              defaultPut,
 		dbc:              db.Config{},
+		logger:           log.WithPrefix("debian"),
 		distributions:    map[string]string{},
 		details:          map[string]VulnerabilityDetail{},
 		pkgVersions:      map[bucket]string{},
@@ -183,7 +185,7 @@ func (vs VulnSrc) parseBug(dir string, fn func(bug) error) error {
 }
 
 func (vs VulnSrc) parseCVE(dir string) error {
-	log.Println("  Parsing CVE JSON files...")
+	vs.logger.Info("Parsing CVE JSON files...")
 	err := vs.parseBug(filepath.Join(dir, cveDir), func(bug bug) error {
 		// Hold severities per the packages
 		severities := map[string]string{}
@@ -261,7 +263,7 @@ func (vs VulnSrc) parseCVE(dir string) error {
 }
 
 func (vs VulnSrc) parseDLA(dir string) error {
-	log.Println("  Parsing DLA JSON files...")
+	vs.logger.Info("Parsing DLA JSON files...")
 	if err := vs.parseAdvisory(filepath.Join(dir, dlaDir)); err != nil {
 		return xerrors.Errorf("DLA parse error: %w", err)
 	}
@@ -269,7 +271,7 @@ func (vs VulnSrc) parseDLA(dir string) error {
 }
 
 func (vs VulnSrc) parseDSA(dir string) error {
-	log.Println("  Parsing DSA JSON files...")
+	vs.logger.Info("Parsing DSA JSON files...")
 	if err := vs.parseAdvisory(filepath.Join(dir, dsaDir)); err != nil {
 		return xerrors.Errorf("DSA parse error: %w", err)
 	}
@@ -346,14 +348,14 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 }
 
 func (vs VulnSrc) save() error {
-	log.Println("Saving Debian DB")
+	vs.logger.Info("Saving DB")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx)
 	})
 	if err != nil {
 		return xerrors.Errorf("batch update error: %w", err)
 	}
-	log.Println("Saved Debian DB")
+	vs.logger.Info("Saved DB")
 	return nil
 }
 
@@ -527,7 +529,7 @@ func severityFromUrgency(urgency string) types.Severity {
 }
 
 func (vs VulnSrc) parseDistributions(rootDir string) error {
-	log.Println("  Parsing distributions...")
+	vs.logger.Info("Parsing distributions...")
 	f, err := os.Open(filepath.Join(rootDir, distributionsFile))
 	if err != nil {
 		return xerrors.Errorf("failed to open file: %w", err)
@@ -559,7 +561,7 @@ func (vs VulnSrc) parseSources(dir string) error {
 			continue
 		}
 
-		log.Printf("  Parsing %s sources...", code)
+		vs.logger.Info("Parsing sources...", log.String("code", code))
 		err := utils.FileWalk(codePath, func(r io.Reader, path string) error {
 			// To parse Sources.json
 			var pkg struct {

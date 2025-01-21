@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -13,6 +12,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -35,6 +35,7 @@ var (
 
 type VulnSrc struct {
 	dbc        db.Operation
+	logger     *log.Logger
 	advisories map[string][]ALAS
 }
 
@@ -66,6 +67,7 @@ type Reference struct {
 func NewVulnSrc() VulnSrc {
 	return VulnSrc{
 		dbc:        db.Config{},
+		logger:     log.WithPrefix("amazon"),
 		advisories: map[string][]ALAS{},
 	}
 }
@@ -96,7 +98,7 @@ func (vs *VulnSrc) walkFunc(r io.Reader, path string) error {
 	}
 	version := paths[len(paths)-2]
 	if !slices.Contains(targetVersions, version) {
-		log.Printf("unsupported Amazon version: %s\n", version)
+		vs.logger.Warn("Unsupported Amazon version", "version", version)
 		return nil
 	}
 
@@ -110,7 +112,7 @@ func (vs *VulnSrc) walkFunc(r io.Reader, path string) error {
 }
 
 func (vs VulnSrc) save() error {
-	log.Println("Saving Amazon DB")
+	vs.logger.Info("Saving DB")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx)
 	})

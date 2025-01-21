@@ -12,7 +12,6 @@ import (
 	gocvss31 "github.com/pandatix/go-cvss/31"
 	"github.com/samber/lo"
 	bolt "go.etcd.io/bbolt"
-	"go.uber.org/zap"
 	"golang.org/x/exp/maps"
 	"golang.org/x/xerrors"
 
@@ -303,10 +302,10 @@ func parseAffectedVersions(affected Affected) ([]string, []string, error) {
 		// We don't need to add the versions that are already included in the ranges
 		ok, err := versionContains(affectedRanges, v)
 		if err != nil {
-			log.Logger.Errorw("Version comparison error",
-				zap.String("ecosystem", string(affected.Package.Ecosystem)),
-				zap.String("package", affected.Package.Name),
-				zap.Error(err),
+			log.WithPrefix("osv").Error("Version comparison error",
+				log.String("ecosystem", string(affected.Package.Ecosystem)),
+				log.String("package", affected.Package.Name),
+				log.Err(err),
 			)
 		}
 		if !ok {

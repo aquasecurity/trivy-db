@@ -214,7 +214,7 @@ func (dbc Config) forEach(bktNames []string) (map[string]Value, error) {
 
 			source, err := dbc.getDataSource(tx, r)
 			if err != nil {
-				log.Logger.Debugf("Data source error: %s", err)
+				log.WithPrefix("db").Debug("Data source error", log.Err(err))
 			}
 
 			bkt := root

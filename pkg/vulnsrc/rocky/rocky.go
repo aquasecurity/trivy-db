@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -15,6 +14,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -58,6 +58,7 @@ type DB interface {
 
 type VulnSrc struct {
 	DB
+	logger *log.Logger
 }
 
 type Rocky struct {
@@ -66,7 +67,8 @@ type Rocky struct {
 
 func NewVulnSrc() *VulnSrc {
 	return &VulnSrc{
-		DB: &Rocky{Operation: db.Config{}},
+		DB:     &Rocky{Operation: db.Config{}},
+		logger: log.WithPrefix("rocky"),
 	}
 }
 
@@ -99,7 +101,7 @@ func (vs *VulnSrc) parse(rootDir string) (map[string][]RLSA, error) {
 
 		dirs := strings.Split(strings.TrimPrefix(path, rootDir), string(filepath.Separator))[1:]
 		if len(dirs) != 5 {
-			log.Printf("Invalid path: %s", path)
+			vs.logger.Warn("Invalid path", log.String("path", path))
 			return nil
 		}
 
@@ -110,12 +112,12 @@ func (vs *VulnSrc) parse(rootDir string) (map[string][]RLSA, error) {
 		}
 		repo, arch := dirs[1], dirs[2]
 		if !slices.Contains(targetRepos, repo) {
-			log.Printf("Unsupported Rocky repo: %s", repo)
+			vs.logger.Warn("Unsupported Rocky repo", log.String("repo", repo))
 			return nil
 		}
 
 		if !slices.Contains(targetArches, arch) {
-			log.Printf("Unsupported Rocky arch: %s", arch)
+			vs.logger.Warn("Unsupported Rocky arch", log.String("arch", arch))
 			return nil
 		}
 
