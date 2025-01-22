@@ -29,29 +29,21 @@ const (
 type DB interface {
 	db.Operation
 	Put(*bolt.Tx, Cve) error
-	Logger() *log.Logger // TODO: remove this
 }
 
 type VulnSrc struct {
 	DB
+	logger *log.Logger
 }
 
 type NVD struct {
 	db.Operation
-	logger *log.Logger
-}
-
-func (n *NVD) Logger() *log.Logger {
-	return n.logger
 }
 
 func NewVulnSrc() *VulnSrc {
-	nvd := &NVD{
-		Operation: db.Config{},
-		logger:    log.WithPrefix("nvd"),
-	}
 	return &VulnSrc{
-		DB: nvd,
+		DB:     &NVD{Operation: db.Config{}},
+		logger: log.WithPrefix("nvd"),
 	}
 }
 
@@ -97,7 +89,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, cves []Cve) error {
 }
 
 func (vs *VulnSrc) save(cves []Cve) error {
-	vs.Logger().Info("NVD batch update")
+	vs.logger.Info("NVD batch update")
 	err := vs.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, cves)
 	})
@@ -137,16 +129,16 @@ func getCvssV3(metricsV31, metricsV30 []CvssMetricV3) (score float64, vector str
 }
 
 // getCvssV40 selects vector, score and severity from V40 metrics
-func (nvd *NVD) getCvssV40(metricsV40 []CvssMetricV40) (score float64, vector string, severity types.Severity) {
+func getCvssV40(metricsV40 []CvssMetricV40) (score float64, vector string, severity types.Severity) {
 	for _, metricV40 := range metricsV40 {
 		// save only NVD metric
 		if metricV40.Source == nvdSource {
 			score = metricV40.CvssData.BaseScore
 			cvss40, err := gocvss40.ParseVector(strings.TrimSuffix(metricV40.CvssData.VectorString, "/"))
 			if err != nil {
-				nvd.logger.Warn("failed to parse CVSSv4.0 vector",
+				log.WithPrefix("nvd").Warn("Failed to parse CVSSv4.0 vector",
 					log.String("vector", metricV40.CvssData.VectorString),
-					log.String("error", err.Error()))
+					log.Err(err))
 				return 0, "", types.SeverityUnknown
 			}
 			severity, _ = types.NewSeverity(metricV40.CvssData.BaseSeverity)
@@ -160,7 +152,7 @@ func (nvd *NVD) getCvssV40(metricsV40 []CvssMetricV40) (score float64, vector st
 func (nvd *NVD) Put(tx *bolt.Tx, cve Cve) error {
 	cvssScore, cvssVector, severity := getCvssV2(cve.Metrics.CvssMetricV2)
 	cvssScoreV3, cvssVectorV3, severityV3 := getCvssV3(cve.Metrics.CvssMetricV31, cve.Metrics.CvssMetricV30)
-	cvssScoreV40, cvssVectorV40, severityV40 := nvd.getCvssV40(cve.Metrics.CvssMetricV40)
+	cvssScoreV40, cvssVectorV40, severityV40 := getCvssV40(cve.Metrics.CvssMetricV40)
 
 	var references []string
 	for _, ref := range cve.References {
