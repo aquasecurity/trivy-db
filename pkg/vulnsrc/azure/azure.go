@@ -114,7 +114,7 @@ func (vs VulnSrc) Update(dir string) error {
 }
 
 func (vs VulnSrc) parseOVAL(dir string) ([]Entry, error) {
-	vs.logger.Info("Parsing OVAL", log.String("dir", dir))
+	vs.logger.Info("Parsing OVAL", log.DirPath(dir))
 
 	// Parse and resolve tests
 	tests, err := resolveTests(dir)

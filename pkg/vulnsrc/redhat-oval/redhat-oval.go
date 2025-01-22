@@ -296,7 +296,7 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 }
 
 func (vs VulnSrc) parseOVALStream(dir string, uniqCPEs CPEMap) (map[bucket]Definition, error) {
-	vs.logger.Info("Parsing OVAL stream", log.String("dir", dir))
+	vs.logger.Info("Parsing OVAL stream", log.DirPath(dir))
 
 	// Parse tests
 	tests, err := parseTests(dir)

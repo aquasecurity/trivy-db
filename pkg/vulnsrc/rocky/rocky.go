@@ -101,7 +101,7 @@ func (vs *VulnSrc) parse(rootDir string) (map[string][]RLSA, error) {
 
 		dirs := strings.Split(strings.TrimPrefix(path, rootDir), string(filepath.Separator))[1:]
 		if len(dirs) != 5 {
-			vs.logger.Warn("Invalid path", log.String("path", path))
+			vs.logger.Warn("Invalid path", log.FilePath(path))
 			return nil
 		}
 

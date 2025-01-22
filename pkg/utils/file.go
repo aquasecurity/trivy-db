@@ -26,7 +26,7 @@ func FileWalk(root string, walkFn func(r io.Reader, path string) error) error {
 		}
 
 		if info.Size() == 0 {
-			log.Info("Invalid file size", log.String("path", path), log.Int64("size", info.Size()))
+			log.Info("Invalid file size", log.FilePath(path), log.Int64("size", info.Size()))
 			return nil
 		}
 

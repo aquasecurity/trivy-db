@@ -42,6 +42,14 @@ func Err(err error) slog.Attr {
 	return slog.Attr{Key: "error", Value: slog.AnyValue(err)}
 }
 
+func FilePath(path string) slog.Attr {
+	return slog.Attr{Key: "file_path", Value: slog.AnyValue(path)}
+}
+
+func DirPath(path string) slog.Attr {
+	return slog.Attr{Key: "dir_path", Value: slog.AnyValue(path)}
+}
+
 // PrefixHandler is a simple wrapper around slog.Handler that adds a prefix to all messages
 type PrefixHandler struct {
 	prefix  string

@@ -91,7 +91,7 @@ func (vs *VulnSrc) parse(rootDir string) (map[string][]Erratum, error) {
 
 		dirs := strings.Split(path, string(filepath.Separator))
 		if len(dirs) < 3 {
-			vs.logger.Warn("Invalid path", log.String("path", path))
+			vs.logger.Warn("Invalid path", log.FilePath(path))
 			return nil
 		}
 
