@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"io"
 	"io/fs"
-	"log"
 	"os"
 	"path/filepath"
 
 	"golang.org/x/xerrors"
+
+	"github.com/aquasecurity/trivy-db/pkg/log"
 )
 
 func FileWalk(root string, walkFn func(r io.Reader, path string) error) error {
@@ -25,7 +26,7 @@ func FileWalk(root string, walkFn func(r io.Reader, path string) error) error {
 		}
 
 		if info.Size() == 0 {
-			log.Printf("invalid size: %s\n", path)
+			log.Info("Invalid file size", log.FilePath(path), log.Int64("size", info.Size()))
 			return nil
 		}
 

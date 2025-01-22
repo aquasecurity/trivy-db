@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"path/filepath"
 	"strings"
 
@@ -13,6 +12,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -47,7 +47,8 @@ type DB interface {
 }
 
 type VulnSrc struct {
-	DB // Those who want to customize Trivy DB can override put/get methods.
+	DB     // Those who want to customize Trivy DB can override put/get methods.
+	logger *log.Logger
 }
 
 // Alma implements the DB interface
@@ -57,7 +58,8 @@ type Alma struct {
 
 func NewVulnSrc() *VulnSrc {
 	return &VulnSrc{
-		DB: &Alma{Operation: db.Config{}},
+		DB:     &Alma{Operation: db.Config{}},
+		logger: log.WithPrefix("alma"),
 	}
 }
 
@@ -89,7 +91,7 @@ func (vs *VulnSrc) parse(rootDir string) (map[string][]Erratum, error) {
 
 		dirs := strings.Split(path, string(filepath.Separator))
 		if len(dirs) < 3 {
-			log.Printf("invalid path: %s\n", path)
+			vs.logger.Warn("Invalid path", log.FilePath(path))
 			return nil
 		}
 

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -16,6 +15,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/utils/ints"
@@ -42,17 +42,19 @@ var (
 )
 
 type VulnSrc struct {
-	dbc db.Operation
+	dbc    db.Operation
+	logger *log.Logger
 }
 
 func NewVulnSrc() VulnSrc {
 	return VulnSrc{
-		dbc: db.Config{},
+		dbc:    db.Config{},
+		logger: log.WithPrefix("redhat-oval"),
 	}
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return vulnerability.RedHatOVAL
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -88,7 +90,7 @@ func (vs VulnSrc) Update(dir string) error {
 				continue
 			}
 
-			definitions, err := parseOVALStream(filepath.Join(versionDir, f.Name()), uniqCPEs)
+			definitions, err := vs.parseOVALStream(filepath.Join(versionDir, f.Name()), uniqCPEs)
 			if err != nil {
 				return xerrors.Errorf("failed to parse OVAL stream: %w", err)
 			}
@@ -293,8 +295,8 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 	return advisories, nil
 }
 
-func parseOVALStream(dir string, uniqCPEs CPEMap) (map[bucket]Definition, error) {
-	log.Printf("    Parsing %s", dir)
+func (vs VulnSrc) parseOVALStream(dir string, uniqCPEs CPEMap) (map[bucket]Definition, error) {
+	vs.logger.Info("Parsing OVAL stream", log.DirPath(dir))
 
 	// Parse tests
 	tests, err := parseTests(dir)

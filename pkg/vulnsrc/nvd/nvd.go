@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"log"
 	"path/filepath"
 	"strings"
 	"time"
@@ -15,6 +14,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -33,6 +33,7 @@ type DB interface {
 
 type VulnSrc struct {
 	DB
+	logger *log.Logger
 }
 
 type NVD struct {
@@ -41,7 +42,8 @@ type NVD struct {
 
 func NewVulnSrc() *VulnSrc {
 	return &VulnSrc{
-		DB: &NVD{Operation: db.Config{}},
+		DB:     &NVD{Operation: db.Config{}},
+		logger: log.WithPrefix("nvd"),
 	}
 }
 
@@ -87,7 +89,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, cves []Cve) error {
 }
 
 func (vs *VulnSrc) save(cves []Cve) error {
-	log.Println("NVD batch update")
+	vs.logger.Info("NVD batch update")
 	err := vs.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, cves)
 	})
@@ -134,7 +136,9 @@ func getCvssV40(metricsV40 []CvssMetricV40) (score float64, vector string, sever
 			score = metricV40.CvssData.BaseScore
 			cvss40, err := gocvss40.ParseVector(strings.TrimSuffix(metricV40.CvssData.VectorString, "/"))
 			if err != nil {
-				log.Printf("failed to parse CVSSv4.0 vector. vector: %s, err: %s", metricV40.CvssData.VectorString, err)
+				log.WithPrefix("nvd").Warn("Failed to parse CVSSv4.0 vector",
+					log.String("vector", metricV40.CvssData.VectorString),
+					log.Err(err))
 				return 0, "", types.SeverityUnknown
 			}
 			severity, _ = types.NewSeverity(metricV40.CvssData.BaseSeverity)

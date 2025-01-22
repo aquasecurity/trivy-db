@@ -3,7 +3,6 @@ package glad
 import (
 	"encoding/json"
 	"io"
-	"log"
 	"path/filepath"
 	"strings"
 
@@ -13,6 +12,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
@@ -49,12 +49,14 @@ var (
 type packageType string
 
 type VulnSrc struct {
-	dbc db.Operation
+	dbc    db.Operation
+	logger *log.Logger
 }
 
 func NewVulnSrc() VulnSrc {
 	return VulnSrc{
-		dbc: db.Config{},
+		dbc:    db.Config{},
+		logger: log.WithPrefix("glad"),
 	}
 }
 
@@ -64,7 +66,8 @@ func (vs VulnSrc) Name() types.SourceID {
 
 func (vs VulnSrc) Update(dir string) error {
 	for t := range ecosystems {
-		log.Printf("    Updating GitLab Advisory Database %s...", cases.Title(language.English).String(string(t)))
+		vs.logger.Info("Updating GitLab Advisory Database",
+			log.String("type", cases.Title(language.English).String(string(t))))
 		rootDir := filepath.Join(dir, "vuln-list", gladDir, string(t))
 		if err := vs.update(t, rootDir); err != nil {
 			return xerrors.Errorf("update error: %w", err)
@@ -82,7 +85,7 @@ func (vs VulnSrc) update(pkgType packageType, rootDir string) error {
 
 		var glad Advisory
 		if err := json.NewDecoder(r).Decode(&glad); err != nil {
-			return xerrors.Errorf("failed to decode GLAD: %w", err)
+			return xerrors.Errorf("failed to decode GitLab Advisory Database: %w", err)
 		}
 
 		glads = append(glads, glad)

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/aquasecurity/go-version/pkg/version"
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -44,14 +44,16 @@ var (
 )
 
 type VulnSrc struct {
-	dist Distribution
-	dbc  db.Operation
+	dist   Distribution
+	dbc    db.Operation
+	logger *log.Logger
 }
 
 func NewVulnSrc(dist Distribution) VulnSrc {
 	return VulnSrc{
-		dist: dist,
-		dbc:  db.Config{},
+		dist:   dist,
+		dbc:    db.Config{},
+		logger: log.WithPrefix("suse-cvrf"),
 	}
 }
 
@@ -66,8 +68,7 @@ func (vs VulnSrc) Name() types.SourceID {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	log.Println("Saving SUSE CVRF")
-
+	vs.logger.Info("Saving SUSE CVRF")
 	rootDir := filepath.Join(dir, "vuln-list", suseDir)
 	switch vs.dist {
 	case SUSEEnterpriseLinux, SUSEEnterpriseLinuxMicro:
@@ -110,7 +111,7 @@ func (vs VulnSrc) save(cvrfs []SuseCvrf) error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 	for _, cvrf := range cvrfs {
-		affectedPkgs := getAffectedPackages(cvrf.ProductTree.Relationships)
+		affectedPkgs := vs.getAffectedPackages(cvrf.ProductTree.Relationships)
 		if len(affectedPkgs) == 0 {
 			continue
 		}
@@ -164,17 +165,17 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 	return nil
 }
 
-func getAffectedPackages(relationships []Relationship) []AffectedPackage {
+func (vs VulnSrc) getAffectedPackages(relationships []Relationship) []AffectedPackage {
 	var pkgs []AffectedPackage
 	for _, relationship := range relationships {
-		osVer := getOSVersion(relationship.RelatesToProductReference)
+		osVer := vs.getOSVersion(relationship.RelatesToProductReference)
 		if osVer == "" {
 			continue
 		}
 
 		pkg := getPackage(relationship.ProductReference)
 		if pkg == nil {
-			log.Printf("invalid package name: %s", relationship.ProductReference)
+			vs.logger.Warn("Invalid package name", log.String("reference", relationship.ProductReference))
 			continue
 		}
 
@@ -187,7 +188,7 @@ func getAffectedPackages(relationships []Relationship) []AffectedPackage {
 	return pkgs
 }
 
-func getOSVersion(platformName string) string {
+func (vs VulnSrc) getOSVersion(platformName string) string {
 	if strings.Contains(platformName, "SUSE Manager") {
 		// SUSE Linux Enterprise Module for SUSE Manager Server 4.0
 		return ""
@@ -200,11 +201,13 @@ func getOSVersion(platformName string) string {
 		// openSUSE Leap 15.0
 		ss := strings.Split(platformName, " ")
 		if len(ss) < 3 {
-			log.Printf("invalid version: %s", platformName)
+			vs.logger.Warn("Invalid version", log.String("platform", platformName))
 			return ""
 		}
 		if _, err := version.Parse(ss[2]); err != nil {
-			log.Printf("invalid version: %s, err: %s", platformName, err)
+			vs.logger.Warn("Invalid version",
+				log.String("platform", platformName),
+				log.Err(err))
 			return ""
 		}
 		return fmt.Sprintf(platformOpenSUSELeapFormat, ss[2])
@@ -213,11 +216,13 @@ func getOSVersion(platformName string) string {
 		// SUSE Linux Enterprise Micro 5.3
 		ss := strings.Split(platformName, " ")
 		if len(ss) < 5 {
-			log.Printf("invalid version: %s", platformName)
+			vs.logger.Warn("Invalid version", log.String("platform", platformName))
 			return ""
 		}
 		if _, err := version.Parse(ss[4]); err != nil {
-			log.Printf("invalid version: %s, err: %s", platformName, err)
+			vs.logger.Warn("Invalid version",
+				log.String("platform", platformName),
+				log.Err(err))
 			return ""
 		}
 		return fmt.Sprintf(platformSUSELinuxEnterpriseMicroFormat, ss[4])
@@ -229,25 +234,25 @@ func getOSVersion(platformName string) string {
 		}
 
 		ss := strings.Fields(strings.ReplaceAll(platformName, "-", " "))
-		vs := make([]string, 0, 2)
+		versions := make([]string, 0, 2)
 		for i := len(ss) - 1; i > 0; i-- {
 			v, err := strconv.Atoi(strings.TrimPrefix(ss[i], "SP"))
 			if err != nil {
 				continue
 			}
-			vs = append(vs, fmt.Sprintf("%d", v))
-			if len(vs) == 2 {
+			versions = append(versions, fmt.Sprintf("%d", v))
+			if len(versions) == 2 {
 				break
 			}
 		}
-		switch len(vs) {
+		switch len(versions) {
 		case 0:
-			log.Printf("failed to detect version: %s", platformName)
+			vs.logger.Warn("Failed to detect version", log.String("platform", platformName))
 			return ""
 		case 1:
-			return fmt.Sprintf(platformSUSELinuxFormat, vs[0])
+			return fmt.Sprintf(platformSUSELinuxFormat, versions[0])
 		case 2:
-			return fmt.Sprintf(platformSUSELinuxFormat, fmt.Sprintf("%s.%s", vs[1], vs[0]))
+			return fmt.Sprintf(platformSUSELinuxFormat, fmt.Sprintf("%s.%s", versions[1], versions[0]))
 		}
 	}
 
@@ -315,7 +320,6 @@ func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) 
 	}
 	return advisories, nil
 }
-
 func severityFromThreat(sev string) types.Severity {
 	switch sev {
 	case "low":

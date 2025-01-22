@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"path/filepath"
 	"slices"
 
@@ -12,6 +11,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -73,14 +73,16 @@ func WithCustomPut(put db.CustomPut) Option {
 }
 
 type VulnSrc struct {
-	put db.CustomPut
-	dbc db.Operation
+	put    db.CustomPut
+	dbc    db.Operation
+	logger *log.Logger
 }
 
 func NewVulnSrc(opts ...Option) VulnSrc {
 	src := VulnSrc{
-		put: defaultPut,
-		dbc: db.Config{},
+		put:    defaultPut,
+		dbc:    db.Config{},
+		logger: log.WithPrefix("ubuntu"),
 	}
 
 	for _, o := range opts {
@@ -117,7 +119,7 @@ func (vs VulnSrc) Update(dir string) error {
 }
 
 func (vs VulnSrc) save(cves []UbuntuCVE) error {
-	log.Println("Saving Ubuntu DB")
+	vs.logger.Info("Saving DB")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		err := vs.commit(tx, cves)
 		if err != nil {

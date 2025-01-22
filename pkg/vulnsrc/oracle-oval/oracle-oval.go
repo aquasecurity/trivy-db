@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"path/filepath"
 	"slices"
 	"sort"
@@ -17,6 +16,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -49,7 +49,8 @@ type DB interface {
 }
 
 type VulnSrc struct {
-	DB // Those who want to customize Trivy DB can override put/get methods.
+	DB     // Those who want to customize Trivy DB can override put/get methods.
+	logger *log.Logger
 }
 
 type Oracle struct {
@@ -58,7 +59,8 @@ type Oracle struct {
 
 func NewVulnSrc() *VulnSrc {
 	return &VulnSrc{
-		DB: &Oracle{Operation: db.Config{}},
+		DB:     &Oracle{Operation: db.Config{}},
+		logger: log.WithPrefix("oracle-oval"),
 	}
 }
 
@@ -99,7 +101,7 @@ func (vs *VulnSrc) parse(rootDir string) ([]OracleOVAL, error) {
 }
 
 func (vs *VulnSrc) put(ovals []OracleOVAL) error {
-	log.Println("Saving Oracle Linux OVAL")
+	vs.logger.Info("Saving Oracle Linux OVAL")
 
 	err := vs.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, ovals)
@@ -109,7 +111,6 @@ func (vs *VulnSrc) put(ovals []OracleOVAL) error {
 	}
 
 	return nil
-
 }
 
 func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
