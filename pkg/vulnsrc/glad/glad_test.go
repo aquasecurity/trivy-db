@@ -49,7 +49,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad path",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "failed to decode GLAD",
+			wantErr: "failed to decode GitLab Advisory Database",
 		},
 	}
 	for _, tt := range tests {

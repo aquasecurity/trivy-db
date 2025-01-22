@@ -649,7 +649,7 @@ func TestGetOSVersion(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.inputPlatformName, func(t *testing.T) {
-			vs := VulnSrc{} // Create VulnSrc instance
+			vs := NewVulnSrc(OpenSUSE)
 			actual := vs.getOSVersion(tc.inputPlatformName)
 			assert.Equal(t, tc.expectedPlatformName, actual, fmt.Sprintf("input data: %s", tc.inputPlatformName))
 		})
