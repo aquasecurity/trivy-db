@@ -146,7 +146,8 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			if err := vs.PutDataSource(tx, platformName, source); err != nil {
 				return xerrors.Errorf("failed to put data source: %w", err)
 			}
-
+			// The ELSA IDs are included in the input for Aqua storage, but OSS does not require them.
+			// Therefore, the VendorIDs will be removed before saving to the database.
 			advs := types.Advisories{
 				Entries: []types.Advisory{
 					{
@@ -232,21 +233,39 @@ func mergeAdvisoriesEntries(advisories types.Advisories) types.Advisories {
 	latestVersions := selectLatestVersions(advisories)
 
 	// Step 2: Aggregate architectures by their chosen version
-	versionToArches := make(map[string]types.Advisory)
+	type versionKey struct {
+		FixedVersion string
+		VendorID     string
+	}
+	versionToAdvisories := make(map[versionKey]types.Advisory)
 	for k, v := range latestVersions {
-		adv := versionToArches[v.FixedVersion]
-		adv.VendorIDs = v.VendorIDs
-		adv.Arches = append(adv.Arches, k.Arch)
-		versionToArches[v.FixedVersion] = adv // Save the modified value back to the map
+		key := versionKey{
+			FixedVersion: v.FixedVersion,
+			VendorID:     strings.Join(v.VendorIDs, ","), // Combine VendorIDs as key
+		}
+
+		adv, exists := versionToAdvisories[key]
+		if !exists {
+			adv = types.Advisory{
+				FixedVersion: v.FixedVersion,
+				Arches:       []string{},
+				VendorIDs:    v.VendorIDs,
+			}
+		}
+
+		// Append unique architectures
+		adv.Arches = appendUnique(adv.Arches, k.Arch)
+
+		versionToAdvisories[key] = adv
 	}
 
 	// Step 3: Build final entries, sorted by version
-	entries := lo.MapToSlice(versionToArches, func(ver string, arches types.Advisory) types.Advisory {
-		sort.Strings(arches.Arches) // Ensure architectures are sorted for consistency
+	entries := lo.MapToSlice(versionToAdvisories, func(_ versionKey, adv types.Advisory) types.Advisory {
+		sort.Strings(adv.Arches) // Ensure architectures are sorted for consistency
 		return types.Advisory{
-			FixedVersion: ver,
-			Arches:       arches.Arches,
-			VendorIDs:    arches.VendorIDs,
+			FixedVersion: adv.FixedVersion,
+			Arches:       adv.Arches,
+			VendorIDs:    adv.VendorIDs,
 		}
 	})
 	sort.Slice(entries, func(i, j int) bool {
@@ -349,6 +368,9 @@ func (o *Oracle) Put(tx *bolt.Tx, input PutInput) error {
 	}
 
 	for pkg, advisory := range input.Advisories {
+		for i := range advisory.Entries {
+			advisory.Entries[i].VendorIDs = nil // Exclude VendorIDs from being saved
+		}
 		platformName := pkg.PlatformName()
 		if err := o.PutAdvisoryDetail(tx, input.VulnID, pkg.Name, []string{platformName}, advisory); err != nil {
 			return xerrors.Errorf("failed to save Oracle Linux advisory: %w", err)
@@ -454,4 +476,19 @@ func severityFromThreat(sev string) types.Severity {
 		return types.SeverityCritical
 	}
 	return types.SeverityUnknown
+}
+
+// appendUnique appends unique elements from src to dest.
+func appendUnique(dest []string, src ...string) []string {
+	existing := make(map[string]bool)
+	for _, d := range dest {
+		existing[d] = true
+	}
+	for _, s := range src {
+		if !existing[s] {
+			dest = append(dest, s)
+			existing[s] = true
+		}
+	}
+	return dest
 }
