@@ -393,7 +393,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			release:  "1.0",
 			pkgName:  "clamav",
 			fixtures: []string{"testdata/fixtures/broken.yaml"},
-			wantErr:  "failed to unmarshal advisory JSON",
+			wantErr:  "json unmarshal error",
 		},
 	}
 	for _, tt := range tests {

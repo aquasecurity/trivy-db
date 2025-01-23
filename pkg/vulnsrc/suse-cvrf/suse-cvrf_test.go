@@ -253,7 +253,7 @@ func TestVulnSrc_Update(t *testing.T) {
 			name:    "sad path (failed to decode)",
 			dir:     filepath.Join("testdata", "sad"),
 			dist:    OpenSUSE,
-			wantErr: "failed to decode SUSE CVRF JSON",
+			wantErr: "json decode error",
 		},
 	}
 	for _, tt := range tests {
@@ -305,7 +305,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			version:  "13.1",
 			pkgName:  "bind",
 			dist:     OpenSUSE,
-			wantErr:  "failed to unmarshal advisory JSON",
+			wantErr:  "json unmarshal error",
 		},
 	}
 	for _, tt := range tests {

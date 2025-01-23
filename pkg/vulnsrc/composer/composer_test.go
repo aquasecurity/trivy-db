@@ -58,7 +58,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad path (failed to decode)",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "failed to unmarshal YAML",
+			wantErr: "yaml unmarshal error",
 		},
 	}
 	for _, tt := range tests {

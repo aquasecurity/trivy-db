@@ -788,7 +788,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "broken JSON",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "failed to decode",
+			wantErr: "failed to parse OVAL stream",
 		},
 	}
 

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"path/filepath"
 
-	"golang.org/x/xerrors"
+	"github.com/samber/oops"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
@@ -46,7 +46,7 @@ type transformer struct{}
 func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.Entry) ([]osv.Advisory, error) {
 	var specific DatabaseSpecific
 	if err := json.Unmarshal(entry.DatabaseSpecific, &specific); err != nil {
-		return nil, xerrors.Errorf("JSON decode error: %w", err)
+		return nil, oops.With("vuln_id", entry.ID).With("aliases", entry.Aliases).Wrapf(err, "json decode error")
 	}
 
 	var filtered []osv.Advisory

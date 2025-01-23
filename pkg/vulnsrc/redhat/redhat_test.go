@@ -220,7 +220,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad8: failed to decode",
 			dir:     filepath.Join("testdata", "sad8"),
-			wantErr: "failed to decode RedHat JSON",
+			wantErr: "json decode error",
 		},
 		{
 			name:    "sad9: dir doesn't exist",

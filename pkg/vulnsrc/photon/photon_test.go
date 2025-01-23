@@ -54,7 +54,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad path (failed to decode)",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "failed to decode Photon JSON",
+			wantErr: "json decode error",
 		},
 	}
 	for _, tt := range tests {
@@ -102,7 +102,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			fixtures: []string{"testdata/fixtures/sad.yaml"},
 			release:  "1.0",
 			pkgName:  "ansible",
-			wantErr:  "failed to unmarshal advisory JSON",
+			wantErr:  "json unmarshal error",
 		},
 	}
 	for _, tt := range tests {

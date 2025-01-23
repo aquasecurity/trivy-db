@@ -10,8 +10,8 @@ import (
 
 	gocvss40 "github.com/pandatix/go-cvss/40"
 	"github.com/samber/lo"
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/log"
@@ -53,27 +53,29 @@ func (vs *VulnSrc) Name() types.SourceID {
 
 func (vs *VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, vulnListDir, apiDir)
+	eb := oops.In("nvd").With("root_dir", rootDir)
 
 	var cves []Cve
 	buffer := &bytes.Buffer{}
-	err := utils.FileWalk(rootDir, func(r io.Reader, _ string) error {
+	err := utils.FileWalk(rootDir, func(r io.Reader, filePath string) error {
+		eb = eb.With("file_path", filePath)
 		cve := Cve{}
 		if _, err := buffer.ReadFrom(r); err != nil {
-			return xerrors.Errorf("failed to read file: %w", err)
+			return eb.Wrapf(err, "read file error")
 		}
 		if err := json.Unmarshal(buffer.Bytes(), &cve); err != nil {
-			return xerrors.Errorf("failed to decode NVD JSON: %w", err)
+			return eb.Wrapf(err, "json unmarshal error")
 		}
 		buffer.Reset()
 		cves = append(cves, cve)
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in NVD walk: %w", err)
+		return eb.Wrapf(err, "walk error")
 	}
 
 	if err = vs.save(cves); err != nil {
-		return xerrors.Errorf("error in NVD save: %w", err)
+		return eb.Wrapf(err, "save error")
 	}
 
 	return nil
@@ -94,7 +96,7 @@ func (vs *VulnSrc) save(cves []Cve) error {
 		return vs.commit(tx, cves)
 	})
 	if err != nil {
-		return xerrors.Errorf("error in batch update: %w", err)
+		return oops.Wrapf(err, "error in batch update")
 	}
 	return nil
 }

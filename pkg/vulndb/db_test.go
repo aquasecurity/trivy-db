@@ -1,6 +1,7 @@
 package vulndb_test
 
 import (
+	"errors"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/xerrors"
 	"k8s.io/utils/clock"
 	fake "k8s.io/utils/clock/testing"
 
@@ -27,7 +27,7 @@ func (f fakeVulnSrc) Name() types.SourceID { return "fake" }
 
 func (f fakeVulnSrc) Update(dir string) error {
 	if strings.Contains(dir, "bad") {
-		return xerrors.New("something bad")
+		return errors.New("something bad")
 	}
 	return nil
 }
@@ -71,7 +71,7 @@ func TestTrivyDB_Insert(t *testing.T) {
 			args: args{
 				targets: []string{"unknown"},
 			},
-			wantErr: "unknown is not supported",
+			wantErr: "target not supported",
 		},
 		{
 			name: "sad path: update error",
@@ -82,7 +82,7 @@ func TestTrivyDB_Insert(t *testing.T) {
 			args: args{
 				targets: []string{"fake"},
 			},
-			wantErr: "fake update error",
+			wantErr: "update error",
 		},
 	}
 
@@ -100,8 +100,7 @@ func TestTrivyDB_Insert(t *testing.T) {
 			c := vulndb.New(cacheDir, outputDir, 12*time.Hour, vulndb.WithClock(tt.fields.clock), vulndb.WithVulnSrcs(vulnsrcs))
 			err := c.Insert(tt.args.targets)
 			if tt.wantErr != "" {
-				require.NotNil(t, err)
-				assert.Contains(t, err.Error(), tt.wantErr)
+				assert.ErrorContains(t, err, tt.wantErr)
 				return
 			}
 			require.NoError(t, err)
@@ -172,7 +171,7 @@ func TestTrivyDB_Build(t *testing.T) {
 				"testdata/fixtures/happy/vulnerability-detail.yaml",
 				"testdata/fixtures/sad/advisory-detail.yaml",
 			},
-			wantErr: "failed to unmarshall the advisory detail",
+			wantErr: "json unmarshal error",
 		},
 		{
 			name: "missing advisory detail",
@@ -193,8 +192,7 @@ func TestTrivyDB_Build(t *testing.T) {
 			full := vulndb.New(cacheDir, dbDir, 12*time.Hour)
 			err := full.Build(nil)
 			if tt.wantErr != "" {
-				require.NotNil(t, err)
-				assert.Contains(t, err.Error(), tt.wantErr)
+				assert.ErrorContains(t, err, tt.wantErr)
 				return
 			}
 			require.NoError(t, err)
