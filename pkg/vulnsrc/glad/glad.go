@@ -71,7 +71,7 @@ func (vs VulnSrc) Update(dir string) error {
 			log.String("type", cases.Title(language.English).String(string(t))))
 
 		rootDir := filepath.Join(dir, "vuln-list", gladDir, string(t))
-		eb = eb.With("root_dir", rootDir)
+		eb := eb.With("root_dir", rootDir)
 
 		if err := vs.update(t, rootDir); err != nil {
 			return eb.Wrapf(err, "update error")
@@ -138,7 +138,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, pkgType packageType, glads []Advisory) err
 			return eb.Errorf("failed to get ecosystem: %s", pkgType)
 		}
 		bucketName := bucket.Name(ecosystem, source.Name)
-		eb = eb.With("package_name", pkgName).With("ecosystem", ecosystem).With("bucket", bucketName)
+		eb = eb.With("package_name", pkgName).With("ecosystem", ecosystem).With("bucket_name", bucketName)
 
 		if err := vs.dbc.PutDataSource(tx, bucketName, source); err != nil {
 			return eb.Wrapf(err, "failed to put data source")

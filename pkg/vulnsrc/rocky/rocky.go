@@ -82,7 +82,7 @@ func (vs *VulnSrc) Update(dir string) error {
 
 	errata, err := vs.parse(rootDir)
 	if err != nil {
-		return eb.Wrap(err)
+		return eb.Wrapf(err, "parse error")
 	}
 	if err = vs.put(errata); err != nil {
 		return eb.Wrapf(err, "save error")
@@ -244,7 +244,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 }
 
 func (r *Rocky) Put(tx *bolt.Tx, input PutInput) error {
-	eb := oops.With("platform", input.PlatformName).With("cve_id", input.CveID)
+	eb := oops.With("platform", input.PlatformName).With("vuln_id", input.CveID)
 	if err := r.PutVulnerabilityDetail(tx, input.CveID, source.ID, input.Vuln); err != nil {
 		return eb.Wrapf(err, "failed to save vulnerability detail")
 	}
@@ -267,7 +267,7 @@ func (r *Rocky) Put(tx *bolt.Tx, input PutInput) error {
 }
 
 func (r *Rocky) Get(release, pkgName, arch string) ([]types.Advisory, error) {
-	eb := oops.In("rocky").With("release", release).With("pkg_name", pkgName).With("arch", arch)
+	eb := oops.In("rocky").With("release", release).With("package_name", pkgName).With("arch", arch)
 	bucket := fmt.Sprintf(platformFormat, release)
 	rawAdvisories, err := r.ForEachAdvisory([]string{bucket}, pkgName)
 	if err != nil {

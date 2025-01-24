@@ -23,7 +23,7 @@ func ParseDefinitions(dir string) ([]Definition, error) {
 	err := utils.FileWalk(dir, func(r io.Reader, path string) error {
 		var def Definition
 		if err := json.NewDecoder(r).Decode(&def); err != nil {
-			return eb.With("path", path).Wrapf(err, "failed to decode")
+			return eb.With("file_path", path).Wrapf(err, "failed to decode")
 		}
 		defs = append(defs, def)
 		return nil

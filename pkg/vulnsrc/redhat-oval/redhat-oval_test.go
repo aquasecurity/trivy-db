@@ -783,7 +783,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "broken repo-to-cpe",
 			dir:     filepath.Join("testdata", "broken-repo-to-cpe"),
-			wantErr: "JSON parse error",
+			wantErr: "json parse error",
 		},
 		{
 			name:    "broken JSON",

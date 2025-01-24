@@ -12,17 +12,17 @@ const (
 func (dbc Config) PutVulnerabilityID(tx *bolt.Tx, vulnID string) error {
 	bucket, err := tx.CreateBucketIfNotExists([]byte(vulnerabilityIDBucket))
 	if err != nil {
-		return oops.With("bucket", vulnerabilityIDBucket).With("vuln_id", vulnID).Wrapf(err, "failed to create bucket")
+		return oops.With("bucket_name", vulnerabilityIDBucket).With("vuln_id", vulnID).Wrapf(err, "failed to create bucket")
 	}
 	return bucket.Put([]byte(vulnID), []byte("{}"))
 }
 
 func (dbc Config) ForEachVulnerabilityID(f func(tx *bolt.Tx, vulnID string) error) error {
-	eb := oops.With("bucket", vulnerabilityIDBucket)
+	eb := oops.With("bucket_name", vulnerabilityIDBucket)
 	err := db.Batch(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(vulnerabilityIDBucket))
 		if bucket == nil {
-			return eb.Errorf("no such bucket: %s", vulnerabilityIDBucket)
+			return eb.Errorf("no such bucket")
 		}
 		err := bucket.ForEach(func(vulnID, _ []byte) error {
 			if err := f(tx, string(vulnID)); err != nil {

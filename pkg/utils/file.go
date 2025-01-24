@@ -13,7 +13,7 @@ import (
 )
 
 func FileWalk(root string, walkFn func(r io.Reader, path string) error) error {
-	eb := oops.With("root", root)
+	eb := oops.With("root_dir", root)
 
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		eb := eb.With("path", path)

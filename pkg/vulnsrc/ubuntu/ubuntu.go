@@ -144,7 +144,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []UbuntuCVE) error {
 }
 
 func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
-	eb := oops.In("ubuntu").With("release", release).With("pkg_name", pkgName)
+	eb := oops.In("ubuntu").With("release", release).With("package_name", pkgName)
 	bucket := fmt.Sprintf(platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
@@ -159,10 +159,10 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 		return oops.Errorf("unknown type")
 	}
 
-	eb := oops.With("cve_id", cve.Candidate)
+	eb := oops.With("vuln_id", cve.Candidate)
 	for packageName, patch := range cve.Patches {
 		pkgName := string(packageName)
-		eb := eb.With("pkg_name", pkgName)
+		eb := eb.With("package_name", pkgName)
 		for release, status := range patch {
 			if !slices.Contains(targetStatuses, status.Status) {
 				continue

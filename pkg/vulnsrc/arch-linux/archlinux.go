@@ -92,7 +92,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, avgs []ArchVulnGroup) error {
 			}
 
 			for _, pkg := range avg.Packages {
-				eb := oops.With("cve_id", cveId).With("package_name", pkg)
+				eb := oops.With("vuln_id", cveId).With("package_name", pkg)
 				if err := vs.dbc.PutAdvisoryDetail(tx, cveId, pkg, []string{platformName}, advisory); err != nil {
 					return eb.Wrapf(err, "failed to save advisory")
 				}
@@ -116,7 +116,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, avgs []ArchVulnGroup) error {
 }
 
 func (vs VulnSrc) Get(pkgName string) ([]types.Advisory, error) {
-	eb := oops.In("arch-linux").With("pkg_name", pkgName)
+	eb := oops.In("arch-linux").With("package_name", pkgName)
 	advisories, err := vs.dbc.GetAdvisories(platformName, pkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get Arch Linux advisories")

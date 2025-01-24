@@ -85,13 +85,13 @@ func (vs VulnSrc) update(repoPath string) error {
 
 func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		eb := oops.With("file_path", path)
 		if err != nil {
-			return oops.Wrapf(err, "walk error")
+			return eb.Wrapf(err, "walk error")
 		}
 		if info.IsDir() || !strings.HasPrefix(info.Name(), "CVE-") {
 			return nil
 		}
-		eb := oops.With("file_path", path)
 
 		buf, err := os.ReadFile(path)
 		if err != nil {
@@ -123,7 +123,7 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		pkgName := strings.TrimPrefix(advisory.Reference, "composer://")
 		pkgName = vulnerability.NormalizePkgName(vulnerability.Composer, pkgName)
 
-		eb = eb.With("vuln_id", vulnID).With("pkg_name", pkgName)
+		eb = eb.With("vuln_id", vulnID).With("package_name", pkgName)
 
 		err = vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bucketName}, a)
 		if err != nil {

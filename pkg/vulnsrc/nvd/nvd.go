@@ -58,10 +58,10 @@ func (vs *VulnSrc) Update(dir string) error {
 	var cves []Cve
 	buffer := &bytes.Buffer{}
 	err := utils.FileWalk(rootDir, func(r io.Reader, filePath string) error {
-		eb = eb.With("file_path", filePath)
+		eb := eb.With("file_path", filePath)
 		cve := Cve{}
 		if _, err := buffer.ReadFrom(r); err != nil {
-			return eb.Wrapf(err, "read file error")
+			return eb.Wrapf(err, "file read error")
 		}
 		if err := json.Unmarshal(buffer.Bytes(), &cve); err != nil {
 			return eb.Wrapf(err, "json unmarshal error")

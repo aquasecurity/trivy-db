@@ -70,7 +70,7 @@ func (vs *VulnSrc) Name() types.SourceID {
 
 func (vs *VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", oracleDir)
-	eb := oops.In("oracle-oval").With("root_dir", rootDir)
+	eb := oops.In("oracle").Tags("oval").With("root_dir", rootDir)
 
 	ovals, err := vs.parse(rootDir)
 	if err != nil {
@@ -328,7 +328,7 @@ func (o *Oracle) Put(tx *bolt.Tx, input PutInput) error {
 
 	for pkg, advisory := range input.Advisories {
 		platformName := pkg.PlatformName()
-		eb = eb.With("pkg_name", pkg.Name).With("platform", platformName)
+		eb := eb.With("package_name", pkg.Name).With("platform", platformName)
 
 		if err := o.PutAdvisoryDetail(tx, input.VulnID, pkg.Name, []string{platformName}, advisory); err != nil {
 			return eb.Wrapf(err, "failed to save advisory")
@@ -338,7 +338,7 @@ func (o *Oracle) Put(tx *bolt.Tx, input PutInput) error {
 }
 
 func (o *Oracle) Get(release, pkgName, arch string) ([]types.Advisory, error) {
-	eb := oops.In("oracle-oval").With("release", release).With("pkg_name", pkgName).With("arch", arch)
+	eb := oops.In("oracle").Tags("oval").With("release", release).With("package_name", pkgName).With("arch", arch)
 	bucket := fmt.Sprintf(platformFormat, release)
 	rawAdvisories, err := o.ForEachAdvisory([]string{bucket}, pkgName)
 	if err != nil {

@@ -51,7 +51,7 @@ func (dbc Config) RedHatNVRToCPEs(repository string) ([]int, error) {
 }
 
 func (dbc Config) getCPEs(bucket, key string) ([]int, error) {
-	eb := oops.With("bucket", bucket).With("key", key)
+	eb := oops.With("bucket_name", bucket).With("key", key)
 	value, err := dbc.get([]string{redhatCPERootBucket, bucket}, key)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get CPEs")

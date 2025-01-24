@@ -90,7 +90,7 @@ func (vs VulnSrc) Name() types.SourceID {
 
 func (vs VulnSrc) Update(dir string) error {
 	repoPath := filepath.Join(dir, nodeDir)
-	eb := oops.In("node").With("root_dir", dir).With("repo_path", repoPath)
+	eb := oops.In("node").With("root_dir", dir)
 
 	if err := vs.update(repoPath); err != nil {
 		return eb.Wrapf(err, "failed to update vulnerabilities")

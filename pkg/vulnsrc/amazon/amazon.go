@@ -139,7 +139,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 					advisory := types.Advisory{
 						FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 					}
-					eb = eb.With("cve_id", cveID).With("pkg_name", pkg.Name).With("fixed_version", advisory.FixedVersion)
+					eb := eb.With("vuln_id", cveID).With("package_name", pkg.Name).With("fixed_version", advisory.FixedVersion)
 
 					if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkg.Name, []string{platformName}, advisory); err != nil {
 						return eb.Wrapf(err, "failed to save advisory")
@@ -173,7 +173,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 
 // Get returns a security advisory
 func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) {
-	eb := oops.In("amazon").With("version", version).With("pkg_name", pkgName)
+	eb := oops.In("amazon").With("version", version).With("package_name", pkgName)
 	bucket := fmt.Sprintf(platformFormat, version)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {

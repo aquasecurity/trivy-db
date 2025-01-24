@@ -188,7 +188,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []Erratum) er
 				Erratum:      erratum,
 			})
 			if err != nil {
-				return oops.With("cve_id", cveID).With("platform", platformName).Wrapf(err, "db put error")
+				return oops.With("vuln_id", cveID).With("platform", platformName).Wrapf(err, "db put error")
 			}
 		}
 	}
@@ -196,7 +196,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []Erratum) er
 }
 
 func (a *Alma) Put(tx *bolt.Tx, input PutInput) error {
-	eb := oops.With("cve_id", input.CveID).With("platform", input.PlatformName)
+	eb := oops.With("vuln_id", input.CveID).With("platform", input.PlatformName)
 	if err := a.PutVulnerabilityDetail(tx, input.CveID, source.ID, input.Vuln); err != nil {
 		return eb.Wrapf(err, "failed to save vulnerability detail")
 	}
@@ -218,7 +218,7 @@ func (a *Alma) Get(release, pkgName string) ([]types.Advisory, error) {
 	bucket := fmt.Sprintf(platformFormat, release)
 	advisories, err := a.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, oops.With("release", release).With("pkg_name", pkgName).Wrapf(err, "failed to get advisories")
+		return nil, oops.With("release", release).With("package_name", pkgName).Wrapf(err, "failed to get advisories")
 	}
 	return advisories, nil
 }

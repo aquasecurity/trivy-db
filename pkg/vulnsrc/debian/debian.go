@@ -170,7 +170,7 @@ func (vs VulnSrc) parse(dir string) error {
 func (vs VulnSrc) parseBug(dir string, fn func(bug) error) error {
 	eb := oops.With("dir", dir)
 	err := utils.FileWalk(dir, func(r io.Reader, path string) error {
-		eb = eb.With("file_path", path)
+		eb := eb.With("file_path", path)
 		var bg bug
 		if err := json.NewDecoder(r).Decode(&bg); err != nil {
 			return eb.Wrapf(err, "json decode error")
@@ -314,7 +314,7 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 					pkgName:  ann.Package,
 					vulnID:   vulnID,
 				}
-				eb := oops.With("vuln_id", vulnID).With("pkg_name", ann.Package).With("code_name", ann.Release)
+				eb := oops.With("vuln_id", vulnID).With("package_name", ann.Package).With("code_name", ann.Release)
 
 				// Skip not-affected, removed or undetermined advisories
 				if slices.Contains(skipStatuses, ann.Kind) {
@@ -385,7 +385,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 				pkgName:  pkgName,
 				vulnID:   cveID,
 			}
-			eb := oops.With("sid", sidVer).With("pkg_name", pkgName).With("cve_id", cveID).With("code_name", code)
+			eb := oops.With("sid", sidVer).With("package_name", pkgName).With("vuln_id", cveID).With("code_name", code)
 
 			// Skip if the advisory is stated as "not-affected" for the specific distribution.
 			if _, ok := vs.notAffected[bkt]; ok {
@@ -462,7 +462,7 @@ func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt bucket, advisory Advisory) error 
 	advisory.Platform = fmt.Sprintf(platformFormat, majorVersion)
 	advisory.Title = vs.details[bkt.vulnID].Description // The Debian description is short, so we'll use it as a title.
 
-	eb := oops.With("vuln_id", advisory.VulnerabilityID).With("pkg_name", advisory.PkgName).With("platform", advisory.Platform)
+	eb := oops.With("vuln_id", advisory.VulnerabilityID).With("package_name", advisory.PkgName).With("platform", advisory.Platform)
 	if err := vs.put(vs.dbc, tx, advisory); err != nil {
 		return eb.Wrapf(err, "put error")
 	}
@@ -484,7 +484,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 		FixedVersion: adv.FixedVersion,
 	}
 
-	eb := oops.With("vuln_id", adv.VulnerabilityID).With("pkg_name", adv.PkgName).With("platform", adv.Platform).
+	eb := oops.With("vuln_id", adv.VulnerabilityID).With("package_name", adv.PkgName).With("platform", adv.Platform).
 		With("fixed_version", adv.FixedVersion).With("vendor_ids", adv.VendorIDs)
 
 	if err := dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.PkgName, []string{adv.Platform}, &detail); err != nil {
@@ -511,7 +511,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 }
 
 func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
-	eb := oops.In("debian").With("release", release).With("pkg_name", pkgName)
+	eb := oops.In("debian").With("release", release).With("package_name", pkgName)
 	bkt := fmt.Sprintf(platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bkt, pkgName)
 	if err != nil {
@@ -579,7 +579,7 @@ func (vs VulnSrc) parseSources(dir string) error {
 
 		vs.logger.Info("Parsing sources...", log.String("code", code))
 		err := utils.FileWalk(codePath, func(r io.Reader, path string) error {
-			eb = eb.With("file_path", path)
+			eb := eb.With("file_path", path)
 
 			// To parse Sources.json
 			var pkg struct {

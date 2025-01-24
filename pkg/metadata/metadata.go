@@ -72,10 +72,8 @@ func (c Client) Update(meta Metadata) error {
 
 // Delete deletes the file of database metadata
 func (c Client) Delete() error {
-	eb := oops.With("file_path", c.filePath)
-
 	if err := os.Remove(c.filePath); err != nil {
-		return eb.Wrapf(err, "file remove error")
+		return oops.With("file_path", c.filePath).Wrapf(err, "file remove error")
 	}
 	return nil
 }

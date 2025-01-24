@@ -50,7 +50,7 @@ func (vs VulnSrc) Update(dir string) error {
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		var advisory advisory
 		if err := json.NewDecoder(r).Decode(&advisory); err != nil {
-			return eb.With("path", path).Wrapf(err, "json decode error")
+			return eb.With("file_path", path).Wrapf(err, "json decode error")
 		}
 		advisories = append(advisories, advisory)
 		return nil
@@ -101,7 +101,7 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 				if !strings.HasPrefix(cveID, "CVE-") {
 					continue
 				}
-				eb := eb.With("cve_id", cveID)
+				eb := eb.With("vuln_id", cveID)
 				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkgName, []string{platform}, advisory); err != nil {
 					return eb.Wrapf(err, "failed to save advisory detail")
 				}

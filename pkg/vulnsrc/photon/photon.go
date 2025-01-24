@@ -84,7 +84,7 @@ func (vs VulnSrc) save(cves []PhotonCVE) error {
 func (vs VulnSrc) commit(tx *bolt.Tx, cves []PhotonCVE) error {
 	for _, cve := range cves {
 		platformName := fmt.Sprintf(platformFormat, cve.OSVersion)
-		eb := oops.With("platform", platformName).With("cve_id", cve.CveID).With("package_name", cve.Pkg)
+		eb := oops.With("platform", platformName).With("vuln_id", cve.CveID).With("package_name", cve.Pkg)
 
 		if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
 			return eb.Wrapf(err, "failed to put data source")
@@ -114,7 +114,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []PhotonCVE) error {
 }
 
 func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
-	eb := oops.In("photon").With("release", release).With("pkg_name", pkgName)
+	eb := oops.In("photon").With("release", release).With("package_name", pkgName)
 	bucket := fmt.Sprintf(platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {

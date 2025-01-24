@@ -105,12 +105,12 @@ func newTransformer(root string) (*transformer, error) {
 func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.Entry) ([]osv.Advisory, error) {
 	var specific DatabaseSpecific
 	if err := json.Unmarshal(entry.DatabaseSpecific, &specific); err != nil {
-		return nil, oops.Wrapf(err, "JSON decode error")
+		return nil, oops.Wrapf(err, "json unmarshal error")
 	}
 
 	severity := convertSeverity(specific.Severity)
 	for i, adv := range advisories {
-		eb := oops.With("ecosystem", adv.Ecosystem).With("pkg_name", adv.PkgName).With("vuln_id", adv.VulnerabilityID).With("aliases", adv.Aliases)
+		eb := oops.With("ecosystem", adv.Ecosystem).With("package_name", adv.PkgName).With("vuln_id", adv.VulnerabilityID).With("aliases", adv.Aliases)
 		// Parse database_specific
 		if err := parseDatabaseSpecific(adv); err != nil {
 			return nil, eb.Wrapf(err, "failed to parse database specific")
@@ -151,7 +151,7 @@ func parseDatabaseSpecific(advisory osv.Advisory) error {
 
 	var affectedSpecific DatabaseSpecific
 	if err := json.Unmarshal(advisory.DatabaseSpecific, &affectedSpecific); err != nil {
-		return oops.Wrapf(err, "JSON decode error")
+		return oops.Wrapf(err, "json unmarshal error")
 	}
 
 	for i, vulnVersion := range advisory.VulnerableVersions {

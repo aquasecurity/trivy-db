@@ -67,12 +67,12 @@ func get(t *testing.T, dbPath string, keys []string, msgAndArgs ...interface{}) 
 	var b []byte
 	err := db.View(func(tx *bolt.Tx) error {
 		bkts, key := keys[:len(keys)-1], keys[len(keys)-1]
-		eb := oops.With("buckets", bkts).With("key", key)
+		eb := oops.With("bucket_names", bkts).With("key", key)
 
 		var bucket bucketer = tx
 		for _, k := range bkts {
 			if reflect.ValueOf(bucket).IsNil() {
-				return eb.With("bucket", k).Wrapf(ErrNoBucket, "bucket error")
+				return eb.With("bucket_name", k).Wrapf(ErrNoBucket, "bucket error")
 			}
 			bucket = bucket.Bucket([]byte(k))
 		}
@@ -105,11 +105,11 @@ func open(t *testing.T, dbPath string) *bolt.DB {
 }
 
 func nestedBuckets(start bucketer, buckets []string) (*bolt.Bucket, error) {
-	eb := oops.With("buckets", buckets)
+	eb := oops.With("bucket_names", buckets)
 	bucket := start
 	for _, k := range buckets {
 		if reflect.ValueOf(bucket).IsNil() {
-			return nil, eb.With("bucket", k).Wrapf(ErrNoBucket, "bucket error")
+			return nil, eb.With("bucket_name", k).Wrapf(ErrNoBucket, "bucket error")
 		}
 		bucket = bucket.Bucket([]byte(k))
 	}

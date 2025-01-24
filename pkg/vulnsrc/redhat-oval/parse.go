@@ -16,7 +16,7 @@ type rpmInfoTest struct {
 }
 
 func unmarshalJSONFile(v interface{}, fileName string) error {
-	eb := oops.With("file_name", fileName)
+	eb := oops.With("file_path", fileName)
 
 	f, err := os.Open(fileName)
 	if err != nil {
@@ -31,12 +31,9 @@ func unmarshalJSONFile(v interface{}, fileName string) error {
 }
 
 func parseObjects(dir string) (map[string]string, error) {
-	filePath := filepath.Join(dir, "objects", "objects.json")
-	eb := oops.With("file_path", filePath)
-
 	var objects ovalObjects
-	if err := unmarshalJSONFile(&objects, filePath); err != nil {
-		return nil, eb.Wrapf(err, "failed to unmarshal objects")
+	if err := unmarshalJSONFile(&objects, filepath.Join(dir, "objects", "objects.json")); err != nil {
+		return nil, oops.Wrapf(err, "failed to unmarshal objects")
 	}
 	objs := map[string]string{}
 	for _, obj := range objects.RpminfoObjects {
@@ -46,12 +43,9 @@ func parseObjects(dir string) (map[string]string, error) {
 }
 
 func parseStates(dir string) (map[string]rpminfoState, error) {
-	filePath := filepath.Join(dir, "states", "states.json")
-	eb := oops.With("file_path", filePath)
-
 	var ss ovalStates
-	if err := unmarshalJSONFile(&ss, filePath); err != nil {
-		return nil, eb.Wrapf(err, "failed to unmarshal states")
+	if err := unmarshalJSONFile(&ss, filepath.Join(dir, "states", "states.json")); err != nil {
+		return nil, oops.Wrapf(err, "failed to unmarshal states")
 	}
 
 	states := map[string]rpminfoState{}

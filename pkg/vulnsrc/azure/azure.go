@@ -280,7 +280,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, entries []Entry) erro
 			continue
 		}
 
-		eb := oops.With("cve_id", cveID).With("package_name", entry.PkgName).With("platform", platformName)
+		eb := oops.With("vuln_id", cveID).With("package_name", entry.PkgName).With("platform", platformName)
 		if err := vs.dbc.PutAdvisoryDetail(tx, cveID, entry.PkgName, []string{platformName}, advisory); err != nil {
 			return eb.Wrapf(err, "failed to save advisory detail")
 		}
@@ -297,7 +297,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, entries []Entry) erro
 		}
 
 		if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
-			return oops.Wrapf(err, "failed to save the vulnerability ID")
+			return eb.Wrapf(err, "failed to save the vulnerability ID")
 		}
 	}
 	return nil

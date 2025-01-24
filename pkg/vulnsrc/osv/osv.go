@@ -152,7 +152,7 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 			continue
 		}
 		bktName := bucket.Name(adv.Ecosystem, dataSource.Name)
-		eb := oops.In(string(o.sourceID)).With("bkt_name", bktName)
+		eb := oops.With("bucket_name", bktName)
 
 		if err = o.dbc.PutDataSource(tx, bktName, dataSource); err != nil {
 			return eb.Wrapf(err, "failed to put data source")
@@ -164,7 +164,7 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 			VulnerableVersions: adv.VulnerableVersions,
 			PatchedVersions:    adv.PatchedVersions,
 		}
-		eb = eb.With("vuln_id", adv.VulnerabilityID).With("pkg_name", adv.PkgName).With("vendor_ids", adv.Aliases)
+		eb = eb.With("vuln_id", adv.VulnerabilityID).With("package_name", adv.PkgName).With("aliases", adv.Aliases)
 		if err = o.dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.PkgName, []string{bktName}, advisory); err != nil {
 			return eb.Wrapf(err, "failed to save advisory")
 		}
@@ -225,7 +225,7 @@ func parseAffected(entry Entry, vulnIDs, aliases, references []string) ([]Adviso
 			continue
 		}
 		pkgName := vulnerability.NormalizePkgName(ecosystem, affected.Package.Name)
-		eb = eb.With("ecosystem", ecosystem).With("pkg_name", pkgName)
+		eb := eb.With("ecosystem", ecosystem).With("package_name", pkgName)
 
 		vulnerableVersions, patchedVersions, err := parseAffectedVersions(affected)
 		if err != nil {

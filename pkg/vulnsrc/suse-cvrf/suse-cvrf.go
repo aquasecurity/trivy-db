@@ -47,7 +47,6 @@ type VulnSrc struct {
 	dist   Distribution
 	dbc    db.Operation
 	logger *log.Logger
-	eb     oops.OopsErrorBuilder
 }
 
 func NewVulnSrc(dist Distribution) VulnSrc {
@@ -55,7 +54,6 @@ func NewVulnSrc(dist Distribution) VulnSrc {
 		dist:   dist,
 		dbc:    db.Config{},
 		logger: log.WithPrefix("suse-cvrf"),
-		eb:     oops.In("suse-cvrf"),
 	}
 }
 
@@ -72,7 +70,7 @@ func (vs VulnSrc) Name() types.SourceID {
 func (vs VulnSrc) Update(dir string) error {
 	vs.logger.Info("Saving SUSE CVRF")
 	rootDir := filepath.Join(dir, "vuln-list", suseDir)
-	eb := vs.eb.With("root_dir", rootDir)
+	eb := oops.In("suse").Tags("cvrf").With("root_dir", rootDir)
 
 	switch vs.dist {
 	case SUSEEnterpriseLinux, SUSEEnterpriseLinuxMicro:
@@ -80,12 +78,12 @@ func (vs VulnSrc) Update(dir string) error {
 	case OpenSUSE, OpenSUSETumbleweed:
 		rootDir = filepath.Join(rootDir, "opensuse")
 	default:
-		return oops.Errorf("unknown distribution")
+		return eb.Errorf("unknown distribution")
 	}
 
 	var cvrfs []SuseCvrf
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-		eb = eb.With("file_path", path)
+		eb := eb.With("file_path", path)
 		var cvrf SuseCvrf
 		if err := json.NewDecoder(r).Decode(&cvrf); err != nil {
 			return eb.Wrapf(err, "json decode error")
@@ -125,7 +123,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 			advisory := types.Advisory{
 				FixedVersion: affectedPkg.Package.FixedVersion,
 			}
-			eb := oops.With("os_ver", affectedPkg.OSVer).With("pkg_name", affectedPkg.Package.Name).With("fixed_version", affectedPkg.Package.FixedVersion)
+			eb := oops.With("os_ver", affectedPkg.OSVer).With("package_name", affectedPkg.Package.Name).With("fixed_version", affectedPkg.Package.FixedVersion)
 
 			if err := vs.dbc.PutDataSource(tx, affectedPkg.OSVer, source); err != nil {
 				return eb.Wrapf(err, "failed to put data source")
@@ -306,7 +304,7 @@ func splitPkgName(pkgName string) (string, string) {
 }
 
 func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) {
-	eb := vs.eb.With("version", version).With("pkg_name", pkgName)
+	eb := oops.In("suse").Tags("cvrf").With("version", version).With("package_name", pkgName)
 	var bucket string
 	switch vs.dist {
 	case SUSEEnterpriseLinuxMicro:
