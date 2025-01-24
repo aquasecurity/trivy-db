@@ -16,7 +16,7 @@ func main() {
 	app := ac.NewApp(version)
 	err := app.Run(os.Args)
 	if err != nil {
-		log.Error("Failed to run app", log.Err(err))
+		log.Errorf("%+v", err)
 		os.Exit(1)
 	}
 }
