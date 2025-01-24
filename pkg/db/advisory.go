@@ -34,7 +34,7 @@ func (dbc Config) GetAdvisories(source, pkgName string) ([]types.Advisory, error
 	for vulnID, v := range advisories {
 		var advisory types.Advisory
 		if err = json.Unmarshal(v.Content, &advisory); err != nil {
-			return nil, oops.With("vuln_id", vulnID).Wrapf(err, "json unmarshal error")
+			return nil, eb.With("vuln_id", vulnID).Wrapf(err, "json unmarshal error")
 		}
 
 		advisory.VulnerabilityID = vulnID
