@@ -135,13 +135,13 @@ func (dbc Config) put(tx *bolt.Tx, bktNames []string, key string, value interfac
 	eb := oops.With("bucket_names", bktNames)
 	bkt, err := tx.CreateBucketIfNotExists([]byte(bktNames[0]))
 	if err != nil {
-		return eb.Wrapf(err, "failed to create bucket")
+		return eb.With("bucket_name", bktNames[0]).Wrapf(err, "failed to create bucket")
 	}
 
 	for _, bktName := range bktNames[1:] {
 		bkt, err = bkt.CreateBucketIfNotExists([]byte(bktName))
 		if err != nil {
-			return eb.Wrapf(err, "failed to create bucket")
+			return eb.With("bucket_name", bktName).Wrapf(err, "failed to create bucket")
 		}
 	}
 	v, err := json.Marshal(value)
