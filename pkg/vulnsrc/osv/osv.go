@@ -91,7 +91,7 @@ func (o OSV) Update(root string) error {
 		}
 		var entry Entry
 		if err := json.NewDecoder(r).Decode(&entry); err != nil {
-			return oops.With("path", path).Wrapf(err, "JSON decode error")
+			return oops.With("file_path", path).Wrapf(err, "json decode error")
 		}
 		entries = append(entries, entry)
 		return nil
