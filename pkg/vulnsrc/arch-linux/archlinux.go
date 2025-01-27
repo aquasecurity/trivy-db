@@ -90,26 +90,25 @@ func (vs VulnSrc) commit(tx *bolt.Tx, avgs []ArchVulnGroup) error {
 				FixedVersion:    avg.Fixed,
 				AffectedVersion: avg.Affected,
 			}
+			eb := oops.With("vuln_id", cveId)
 
 			for _, pkg := range avg.Packages {
-				eb := oops.With("vuln_id", cveId).With("package_name", pkg)
+				eb := eb.With("package_name", pkg).With("platform", platformName)
 				if err := vs.dbc.PutAdvisoryDetail(tx, cveId, pkg, []string{platformName}, advisory); err != nil {
 					return eb.With("platform", platformName).Wrapf(err, "failed to save advisory")
 				}
 
-				vuln := types.VulnerabilityDetail{
-					Severity: convertSeverity(avg.Severity),
-				}
-				if err := vs.dbc.PutVulnerabilityDetail(tx, cveId, source.ID, vuln); err != nil {
-					return eb.Wrapf(err, "failed to save vulnerability")
-				}
-
-				// for optimization
-				if err := vs.dbc.PutVulnerabilityID(tx, cveId); err != nil {
-					return eb.Wrapf(err, "failed to save the vulnerability ID")
-				}
 			}
-
+			vuln := types.VulnerabilityDetail{
+				Severity: convertSeverity(avg.Severity),
+			}
+			if err := vs.dbc.PutVulnerabilityDetail(tx, cveId, source.ID, vuln); err != nil {
+				return eb.Wrapf(err, "failed to save vulnerability")
+			}
+			// for optimization
+			if err := vs.dbc.PutVulnerabilityID(tx, cveId); err != nil {
+				return eb.Wrapf(err, "failed to save the vulnerability ID")
+			}
 		}
 	}
 	return nil
