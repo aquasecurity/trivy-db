@@ -225,7 +225,6 @@ func followTestRefs(test oval.RpmInfoTest, objects map[string]string, states map
 		return resolvedTest{}, eb.Errorf("invalid tests data, can't find ovalstate ref")
 	}
 
-	eb = eb.With("data_type", state.Evr.Datatype)
 	if state.Evr.Datatype != "evr_string" {
 		return resolvedTest{}, eb.With("data_type", state.Evr.Datatype).Wrapf(ErrNotSupported, "state data type")
 	}
