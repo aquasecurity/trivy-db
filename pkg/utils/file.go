@@ -18,7 +18,7 @@ func FileWalk(root string, walkFn func(r io.Reader, path string) error) error {
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		eb := eb.With("path", path)
 		if err != nil {
-			return eb.Wrapf(err, "file info error")
+			return eb.Wrapf(err, "walk dir error")
 		} else if d.IsDir() {
 			return nil
 		}
