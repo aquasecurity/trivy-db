@@ -147,14 +147,13 @@ func (vs VulnSrc) putVulnerabilityDetail(tx *bolt.Tx, cve RedhatCVE) error {
 		Title:        strings.TrimSpace(title),
 		Description:  strings.TrimSpace(strings.Join(cve.Details, "")),
 	}
-	eb := oops.With("vuln_id", cve.Name)
 	if err := vs.dbc.PutVulnerabilityDetail(tx, cve.Name, vulnerability.RedHat, vuln); err != nil {
-		return eb.Wrapf(err, "failed to save vulnerability detail")
+		return oops.Wrapf(err, "failed to save vulnerability detail")
 	}
 
 	// for optimization
 	if err := vs.dbc.PutVulnerabilityID(tx, cve.Name); err != nil {
-		return eb.Wrapf(err, "failed to save the vulnerability ID")
+		return oops.Wrapf(err, "failed to save the vulnerability ID")
 	}
 	return nil
 }

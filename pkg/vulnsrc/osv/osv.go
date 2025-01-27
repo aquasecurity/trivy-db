@@ -152,10 +152,8 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 			continue
 		}
 		bktName := bucket.Name(adv.Ecosystem, dataSource.Name)
-		eb := oops.With("bucket_name", bktName)
-
 		if err = o.dbc.PutDataSource(tx, bktName, dataSource); err != nil {
-			return eb.Wrapf(err, "failed to put data source")
+			return oops.Wrapf(err, "failed to put data source")
 		}
 
 		// Store advisories
@@ -164,9 +162,8 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 			VulnerableVersions: adv.VulnerableVersions,
 			PatchedVersions:    adv.PatchedVersions,
 		}
-		eb = eb.With("vuln_id", adv.VulnerabilityID).With("package_name", adv.PkgName).With("aliases", adv.Aliases)
 		if err = o.dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.PkgName, []string{bktName}, advisory); err != nil {
-			return eb.Wrapf(err, "failed to save advisory")
+			return oops.Wrapf(err, "failed to save advisory")
 		}
 
 		// Store vulnerability details
@@ -180,11 +177,11 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 		}
 
 		if err = o.dbc.PutVulnerabilityDetail(tx, adv.VulnerabilityID, o.sourceID, vuln); err != nil {
-			return eb.Wrapf(err, "failed to put vulnerability detail")
+			return oops.Wrapf(err, "failed to put vulnerability detail")
 		}
 
 		if err = o.dbc.PutVulnerabilityID(tx, adv.VulnerabilityID); err != nil {
-			return eb.Wrapf(err, "failed to put vulnerability id")
+			return oops.Wrapf(err, "failed to put vulnerability id")
 		}
 	}
 	return nil

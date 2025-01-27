@@ -88,8 +88,7 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		eb := oops.With("file_path", path)
 		if err != nil {
 			return eb.Wrapf(err, "walk error")
-		}
-		if info.IsDir() || !strings.HasPrefix(info.Name(), "CVE-") {
+		} else if info.IsDir() || !strings.HasPrefix(info.Name(), "CVE-") {
 			return nil
 		}
 
@@ -99,8 +98,7 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		}
 
 		advisory := RawAdvisory{}
-		err = yaml.Unmarshal(buf, &advisory)
-		if err != nil {
+		if err := yaml.Unmarshal(buf, &advisory); err != nil {
 			return eb.Wrapf(err, "yaml unmarshal error")
 		}
 
@@ -123,10 +121,7 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		pkgName := strings.TrimPrefix(advisory.Reference, "composer://")
 		pkgName = vulnerability.NormalizePkgName(vulnerability.Composer, pkgName)
 
-		eb = eb.With("vuln_id", vulnID).With("package_name", pkgName)
-
-		err = vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bucketName}, a)
-		if err != nil {
+		if err = vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bucketName}, a); err != nil {
 			return eb.Wrapf(err, "failed to save advisory")
 		}
 

@@ -157,12 +157,9 @@ func (vs VulnSrc) commit(tx *bolt.Tx, f *os.File) error {
 
 	adv := convertToGenericAdvisory(advisory)
 	for _, vulnID := range vulnerabilityIDs {
-		eb := oops.With("vuln_id", vulnID).With("package_name", advisory.ModuleName)
-
 		// for detecting vulnerabilities
-		err = vs.dbc.PutAdvisoryDetail(tx, vulnID, advisory.ModuleName, []string{bucketName}, adv)
-		if err != nil {
-			return eb.Wrapf(err, "failed to save advisory")
+		if err = vs.dbc.PutAdvisoryDetail(tx, vulnID, advisory.ModuleName, []string{bucketName}, adv); err != nil {
+			return oops.Wrapf(err, "failed to save advisory")
 		}
 
 		// If an advisory is 0 override with -1
@@ -180,12 +177,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, f *os.File) error {
 			Description: advisory.Overview,
 		}
 		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, source.ID, vuln); err != nil {
-			return eb.Wrapf(err, "failed to save vulnerability detail")
+			return oops.Wrapf(err, "failed to save vulnerability detail")
 		}
 
 		// for optimization
 		if err = vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
-			return eb.Wrapf(err, "failed to save vulnerability ID")
+			return oops.Wrapf(err, "failed to save vulnerability ID")
 		}
 	}
 

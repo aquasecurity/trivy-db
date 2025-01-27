@@ -328,10 +328,8 @@ func (o *Oracle) Put(tx *bolt.Tx, input PutInput) error {
 
 	for pkg, advisory := range input.Advisories {
 		platformName := pkg.PlatformName()
-		eb := eb.With("package_name", pkg.Name).With("platform", platformName)
-
 		if err := o.PutAdvisoryDetail(tx, input.VulnID, pkg.Name, []string{platformName}, advisory); err != nil {
-			return eb.Wrapf(err, "failed to save advisory")
+			return eb.With("package_name", pkg.Name).With("bucket_name", platformName).Wrapf(err, "failed to save advisory")
 		}
 	}
 	return nil

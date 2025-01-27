@@ -250,7 +250,6 @@ func (vs VulnSrc) save(majorVer string, entries []Entry) error {
 
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		platformName := fmt.Sprintf(vs.platformFormat, majorVer)
-		eb := eb.With("platform", platformName)
 		if err := vs.dbc.PutDataSource(tx, platformName, vs.source); err != nil {
 			return eb.Wrapf(err, "failed to put data source")
 		}
@@ -279,9 +278,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, entries []Entry) erro
 			continue
 		}
 
-		eb := oops.With("vuln_id", cveID).With("package_name", entry.PkgName).With("platform", platformName)
 		if err := vs.dbc.PutAdvisoryDetail(tx, cveID, entry.PkgName, []string{platformName}, advisory); err != nil {
-			return eb.Wrapf(err, "failed to save advisory detail")
+			return oops.Wrapf(err, "failed to save advisory detail")
 		}
 
 		severity, _ := types.NewSeverity(strings.ToUpper(entry.Metadata.Severity))
@@ -292,11 +290,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, entries []Entry) erro
 			References:  []string{entry.Metadata.Reference.RefURL},
 		}
 		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vs.source.ID, vuln); err != nil {
-			return eb.Wrapf(err, "failed to save vulnerability detail")
+			return oops.Wrapf(err, "failed to save vulnerability detail")
 		}
 
 		if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
-			return eb.Wrapf(err, "failed to save the vulnerability ID")
+			return oops.Wrapf(err, "failed to save the vulnerability ID")
 		}
 	}
 	return nil

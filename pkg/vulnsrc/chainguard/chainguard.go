@@ -97,15 +97,14 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 			if !strings.HasPrefix(vulnID, "CVE-") {
 				continue
 			}
-			eb := oops.With("platform", platform).With("package_name", pkgName).With("vuln_id", vulnID)
 
 			if err := vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{platform}, advisory); err != nil {
-				return eb.Wrapf(err, "failed to save advisory")
+				return oops.Wrapf(err, "failed to save advisory")
 			}
 
 			// for optimization
 			if err := vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
-				return eb.Wrapf(err, "failed to save the vulnerability ID")
+				return oops.Wrapf(err, "failed to save the vulnerability ID")
 			}
 		}
 	}
@@ -114,7 +113,7 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 }
 
 func (vs VulnSrc) Get(_, pkgName string) ([]types.Advisory, error) {
-	eb := oops.In("chainguard").With("package_name", pkgName)
+	eb := oops.In("chainguard")
 	bucket := distroName
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {

@@ -209,13 +209,12 @@ func (vs VulnSrc) save(repoToCpe, nvrToCpe map[string][]string, advisories map[b
 				advisory.Entries[i].AffectedCPEIndices = cpeList.Indices(advisory.Entries[i].AffectedCPEList)
 			}
 
-			eb := oops.With("vuln_id", bkt.vulnID).With("package_name", bkt.pkgName)
 			if err := vs.dbc.PutAdvisoryDetail(tx, bkt.vulnID, bkt.pkgName, []string{rootBucket}, advisory); err != nil {
-				return eb.Wrapf(err, "failed to save Red Hat OVAL advisory")
+				return oops.Wrapf(err, "failed to save Red Hat OVAL advisory")
 			}
 
 			if err := vs.dbc.PutVulnerabilityID(tx, bkt.vulnID); err != nil {
-				return eb.Wrapf(err, "failed to put vulnerability ID")
+				return oops.Wrapf(err, "failed to put vulnerability ID")
 			}
 		}
 
@@ -273,8 +272,6 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 
 	var advisories []types.Advisory
 	for vulnID, v := range rawAdvisories {
-		eb := eb.With("vuln_id", vulnID)
-
 		var adv Advisory
 		if err = json.Unmarshal(v.Content, &adv); err != nil {
 			return nil, eb.Wrapf(err, "failed to unmarshal advisory JSON")

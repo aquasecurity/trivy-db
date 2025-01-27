@@ -138,7 +138,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, pkgType packageType, glads []Advisory) err
 			return eb.Errorf("failed to get ecosystem: %s", pkgType)
 		}
 		bucketName := bucket.Name(ecosystem, source.Name)
-		eb = eb.With("package_name", pkgName).With("ecosystem", ecosystem).With("bucket_name", bucketName)
+		eb = eb.With("ecosystem", ecosystem)
 
 		if err := vs.dbc.PutDataSource(tx, bucketName, source); err != nil {
 			return eb.Wrapf(err, "failed to put data source")

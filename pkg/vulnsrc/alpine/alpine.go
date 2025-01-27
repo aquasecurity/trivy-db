@@ -90,7 +90,6 @@ func (vs VulnSrc) save(advisories []advisory) error {
 }
 
 func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes map[string][]string) error {
-	eb := oops.With("platform", platform).With("package_name", pkgName)
 	for fixedVersion, vulnIDs := range secfixes {
 		advisory := types.Advisory{
 			FixedVersion: fixedVersion,
@@ -104,14 +103,13 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 				if !strings.HasPrefix(cveID, "CVE-") {
 					continue
 				}
-				eb := eb.With("vuln_id", cveID)
 				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkgName, []string{platform}, advisory); err != nil {
-					return eb.Wrapf(err, "failed to save advisory")
+					return oops.Wrapf(err, "failed to save advisory")
 				}
 
 				// for optimization
 				if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
-					return eb.Wrapf(err, "failed to save the vulnerability ID")
+					return oops.Wrapf(err, "failed to save the vulnerability ID")
 				}
 			}
 		}
@@ -120,7 +118,7 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 }
 
 func (vs VulnSrc) Get(release, pkgName string) ([]types.Advisory, error) {
-	eb := oops.In("alpine").With("release", release).With("package_name", pkgName)
+	eb := oops.In("alpine").With("release", release)
 	bucket := fmt.Sprintf(platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {

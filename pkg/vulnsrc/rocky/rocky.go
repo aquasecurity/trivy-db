@@ -138,7 +138,7 @@ func (vs *VulnSrc) put(errataVer map[string][]RLSA) error {
 	err := vs.BatchUpdate(func(tx *bolt.Tx) error {
 		for majorVer, errata := range errataVer {
 			platformName := fmt.Sprintf(platformFormat, majorVer)
-			eb := oops.With("platform", platformName).With("major_version", majorVer)
+			eb := oops.With("major_version", majorVer)
 			if err := vs.PutDataSource(tx, platformName, source); err != nil {
 				return eb.Wrapf(err, "failed to put data source")
 			}
@@ -244,14 +244,13 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 }
 
 func (r *Rocky) Put(tx *bolt.Tx, input PutInput) error {
-	eb := oops.With("platform", input.PlatformName).With("vuln_id", input.CveID)
 	if err := r.PutVulnerabilityDetail(tx, input.CveID, source.ID, input.Vuln); err != nil {
-		return eb.Wrapf(err, "failed to save vulnerability detail")
+		return oops.Wrapf(err, "failed to save vulnerability detail")
 	}
 
 	// for optimization
 	if err := r.PutVulnerabilityID(tx, input.CveID); err != nil {
-		return eb.Wrapf(err, "failed to save vulnerability ID")
+		return oops.Wrapf(err, "failed to save vulnerability ID")
 	}
 
 	for pkgName, advisory := range input.Advisories {
@@ -260,7 +259,7 @@ func (r *Rocky) Put(tx *bolt.Tx, input PutInput) error {
 			sort.Strings(entry.VendorIDs)
 		}
 		if err := r.PutAdvisoryDetail(tx, input.CveID, pkgName, []string{input.PlatformName}, advisory); err != nil {
-			return eb.With("pkg_name", pkgName).Wrapf(err, "failed to save advisory")
+			return oops.Wrapf(err, "failed to save advisory")
 		}
 	}
 	return nil

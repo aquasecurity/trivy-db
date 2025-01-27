@@ -49,8 +49,6 @@ func (vs VulnSrc) Update(dir string) error {
 
 	var cves []PhotonCVE
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-		eb := eb.With("file_path", path)
-
 		var cve PhotonCVE
 		if err := json.NewDecoder(r).Decode(&cve); err != nil {
 			return eb.With("file_path", path).Wrapf(err, "json decode error")
@@ -84,17 +82,15 @@ func (vs VulnSrc) save(cves []PhotonCVE) error {
 func (vs VulnSrc) commit(tx *bolt.Tx, cves []PhotonCVE) error {
 	for _, cve := range cves {
 		platformName := fmt.Sprintf(platformFormat, cve.OSVersion)
-		eb := oops.With("platform", platformName).With("vuln_id", cve.CveID).With("package_name", cve.Pkg)
-
 		if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
-			return eb.Wrapf(err, "failed to put data source")
+			return oops.Wrapf(err, "failed to put data source")
 		}
 
 		advisory := types.Advisory{
 			FixedVersion: cve.ResVer,
 		}
 		if err := vs.dbc.PutAdvisoryDetail(tx, cve.CveID, cve.Pkg, []string{platformName}, advisory); err != nil {
-			return eb.Wrapf(err, "failed to save advisory")
+			return oops.Wrapf(err, "failed to save advisory")
 		}
 
 		vuln := types.VulnerabilityDetail{
@@ -102,19 +98,19 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []PhotonCVE) error {
 			CvssScoreV3: cve.CveScore,
 		}
 		if err := vs.dbc.PutVulnerabilityDetail(tx, cve.CveID, source.ID, vuln); err != nil {
-			return eb.Wrapf(err, "failed to save vulnerability detail")
+			return oops.Wrapf(err, "failed to save vulnerability detail")
 		}
 
 		// for optimization
 		if err := vs.dbc.PutVulnerabilityID(tx, cve.CveID); err != nil {
-			return eb.Wrapf(err, "failed to save vulnerability ID")
+			return oops.Wrapf(err, "failed to save vulnerability ID")
 		}
 	}
 	return nil
 }
 
 func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
-	eb := oops.In("photon").With("release", release).With("package_name", pkgName)
+	eb := oops.In("photon").With("release", release)
 	bucket := fmt.Sprintf(platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {

@@ -196,19 +196,18 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []Erratum) er
 }
 
 func (a *Alma) Put(tx *bolt.Tx, input PutInput) error {
-	eb := oops.With("vuln_id", input.CveID).With("platform", input.PlatformName)
 	if err := a.PutVulnerabilityDetail(tx, input.CveID, source.ID, input.Vuln); err != nil {
-		return eb.Wrapf(err, "failed to save vulnerability detail")
+		return oops.Wrapf(err, "failed to save vulnerability detail")
 	}
 
 	// for optimization
 	if err := a.PutVulnerabilityID(tx, input.CveID); err != nil {
-		return eb.Wrapf(err, "failed to save vulnerability ID")
+		return oops.Wrapf(err, "failed to save vulnerability ID")
 	}
 
 	for pkgName, advisory := range input.Advisories {
 		if err := a.PutAdvisoryDetail(tx, input.CveID, pkgName, []string{input.PlatformName}, advisory); err != nil {
-			return eb.Wrapf(err, "failed to save advisory")
+			return oops.Wrapf(err, "failed to save advisory")
 		}
 	}
 	return nil

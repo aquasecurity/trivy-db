@@ -484,27 +484,24 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 		FixedVersion: adv.FixedVersion,
 	}
 
-	eb := oops.With("vuln_id", adv.VulnerabilityID).With("package_name", adv.PkgName).With("platform", adv.Platform).
-		With("fixed_version", adv.FixedVersion).With("vendor_ids", adv.VendorIDs)
-
 	if err := dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.PkgName, []string{adv.Platform}, &detail); err != nil {
-		return eb.Wrapf(err, "failed to save advisory")
+		return oops.Wrapf(err, "failed to save advisory")
 	}
 
 	vuln := types.VulnerabilityDetail{
 		Title: adv.Title,
 	}
 	if err := dbc.PutVulnerabilityDetail(tx, adv.VulnerabilityID, source.ID, vuln); err != nil {
-		return eb.Wrapf(err, "failed to save vulnerability detail")
+		return oops.Wrapf(err, "failed to save vulnerability detail")
 	}
 
 	// for optimization
 	if err := dbc.PutVulnerabilityID(tx, adv.VulnerabilityID); err != nil {
-		return eb.Wrapf(err, "failed to save vulnerability ID")
+		return oops.Wrapf(err, "failed to save vulnerability ID")
 	}
 
 	if err := dbc.PutDataSource(tx, adv.Platform, source); err != nil {
-		return eb.Wrapf(err, "failed to put data source")
+		return oops.Wrapf(err, "failed to put data source")
 	}
 
 	return nil

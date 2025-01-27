@@ -21,7 +21,7 @@ func (dbc Config) ForEachAdvisory(sources []string, pkgName string) (map[string]
 }
 
 func (dbc Config) GetAdvisories(source, pkgName string) ([]types.Advisory, error) {
-	eb := oops.With("source", source).With("pkg_name", pkgName)
+	eb := oops.With("source", source).With("package_name", pkgName)
 	advisories, err := dbc.ForEachAdvisory([]string{source}, pkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "advisory foreach error")

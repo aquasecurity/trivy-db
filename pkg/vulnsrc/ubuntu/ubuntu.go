@@ -159,10 +159,8 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 		return oops.Errorf("unknown type")
 	}
 
-	eb := oops.With("vuln_id", cve.Candidate)
 	for packageName, patch := range cve.Patches {
 		pkgName := string(packageName)
-		eb := eb.With("package_name", pkgName)
 		for release, status := range patch {
 			if !slices.Contains(targetStatuses, status.Status) {
 				continue
@@ -172,9 +170,8 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 				continue
 			}
 			platformName := fmt.Sprintf(platformFormat, osVersion)
-			eb := eb.With("platform", platformName)
 			if err := dbc.PutDataSource(tx, platformName, source); err != nil {
-				return eb.Wrapf(err, "failed to put data source")
+				return oops.Wrapf(err, "failed to put data source")
 			}
 
 			adv := types.Advisory{}
@@ -182,7 +179,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 				adv.FixedVersion = status.Note
 			}
 			if err := dbc.PutAdvisoryDetail(tx, cve.Candidate, pkgName, []string{platformName}, adv); err != nil {
-				return eb.Wrapf(err, "failed to save advisory")
+				return oops.Wrapf(err, "failed to save advisory")
 			}
 
 			vuln := types.VulnerabilityDetail{
@@ -191,12 +188,12 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 				Description: cve.Description,
 			}
 			if err := dbc.PutVulnerabilityDetail(tx, cve.Candidate, source.ID, vuln); err != nil {
-				return eb.Wrapf(err, "failed to save vulnerability")
+				return oops.Wrapf(err, "failed to save vulnerability")
 			}
 
 			// for optimization
 			if err := dbc.PutVulnerabilityID(tx, cve.Candidate); err != nil {
-				return eb.Wrapf(err, "failed to save the vulnerability ID")
+				return oops.Wrapf(err, "failed to save the vulnerability ID")
 			}
 		}
 	}

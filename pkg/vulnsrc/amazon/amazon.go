@@ -128,10 +128,9 @@ func (vs VulnSrc) save() error {
 func (vs VulnSrc) commit(tx *bolt.Tx) error {
 	for majorVersion, alasList := range vs.advisories {
 		platformName := fmt.Sprintf(platformFormat, majorVersion)
-		eb := oops.With("platform", platformName)
 
 		if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
-			return eb.Wrapf(err, "failed to put data source")
+			return oops.Wrapf(err, "failed to put data source")
 		}
 		for _, alas := range alasList {
 			for _, cveID := range alas.CveIDs {
@@ -139,9 +138,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 					advisory := types.Advisory{
 						FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 					}
-					eb := eb.With("vuln_id", cveID).With("package_name", pkg.Name).With("platform", platformName)
 					if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkg.Name, []string{platformName}, advisory); err != nil {
-						return eb.Wrapf(err, "failed to save advisory")
+						return oops.Wrapf(err, "failed to save advisory")
 					}
 
 				}
@@ -157,12 +155,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 					Title:       "",
 				}
 				if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, source.ID, vuln); err != nil {
-					return eb.Wrapf(err, "failed to save vulnerability detail")
+					return oops.Wrapf(err, "failed to save vulnerability detail")
 				}
 
 				// for optimization
 				if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
-					return eb.Wrapf(err, "failed to save vulnerability ID")
+					return oops.Wrapf(err, "failed to save vulnerability ID")
 				}
 			}
 		}
@@ -172,7 +170,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 
 // Get returns a security advisory
 func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) {
-	eb := oops.In("amazon").With("version", version).With("package_name", pkgName)
+	eb := oops.In("amazon").With("version", version)
 	bucket := fmt.Sprintf(platformFormat, version)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {

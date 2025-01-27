@@ -146,9 +146,8 @@ func (vs VulnSrc) walkFunc(err error, info os.FileInfo, path string, tx *bolt.Tx
 		UnaffectedVersions: advisory.UnaffectedVersions,
 	}
 
-	err = vs.dbc.PutAdvisoryDetail(tx, vulnerabilityID, advisory.Gem, []string{bucketName}, a)
-	if err != nil {
-		return eb.Wrapf(err, "failed to save advisory")
+	if err = vs.dbc.PutAdvisoryDetail(tx, vulnerabilityID, advisory.Gem, []string{bucketName}, a); err != nil {
+		return eb.With("package_name", advisory.Gem).With("bucket_name", bucketName).Wrapf(err, "failed to save advisory")
 	}
 
 	// for displaying vulnerability detail

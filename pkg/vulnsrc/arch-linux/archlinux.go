@@ -51,7 +51,7 @@ func (vs VulnSrc) Update(dir string) error {
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		var avg ArchVulnGroup
 		if err := json.NewDecoder(r).Decode(&avg); err != nil {
-			return eb.Wrapf(err, "json decode error")
+			return eb.With("file_path", path).Wrapf(err, "json decode error")
 		}
 		avgs = append(avgs, avg)
 		return nil
@@ -90,11 +90,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, avgs []ArchVulnGroup) error {
 				FixedVersion:    avg.Fixed,
 				AffectedVersion: avg.Affected,
 			}
-			eb := oops.With("vuln_id", cveId)
 
 			for _, pkg := range avg.Packages {
 				if err := vs.dbc.PutAdvisoryDetail(tx, cveId, pkg, []string{platformName}, advisory); err != nil {
-					return eb.With("package_name", pkg).With("platform", platformName).Wrapf(err, "failed to save advisory")
+					return oops.Wrapf(err, "failed to save advisory")
 				}
 
 			}
@@ -102,11 +101,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, avgs []ArchVulnGroup) error {
 				Severity: convertSeverity(avg.Severity),
 			}
 			if err := vs.dbc.PutVulnerabilityDetail(tx, cveId, source.ID, vuln); err != nil {
-				return eb.Wrapf(err, "failed to save vulnerability")
+				return oops.Wrapf(err, "failed to save vulnerability")
 			}
 			// for optimization
 			if err := vs.dbc.PutVulnerabilityID(tx, cveId); err != nil {
-				return eb.Wrapf(err, "failed to save the vulnerability ID")
+				return oops.Wrapf(err, "failed to save the vulnerability ID")
 			}
 		}
 	}
@@ -114,7 +113,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, avgs []ArchVulnGroup) error {
 }
 
 func (vs VulnSrc) Get(pkgName string) ([]types.Advisory, error) {
-	eb := oops.In("arch-linux").With("package_name", pkgName)
+	eb := oops.In("arch-linux")
 	advisories, err := vs.dbc.GetAdvisories(platformName, pkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get Arch Linux advisories")

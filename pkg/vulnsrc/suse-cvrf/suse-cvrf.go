@@ -83,7 +83,6 @@ func (vs VulnSrc) Update(dir string) error {
 
 	var cvrfs []SuseCvrf
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-		eb := eb.With("file_path", path)
 		var cvrf SuseCvrf
 		if err := json.NewDecoder(r).Decode(&cvrf); err != nil {
 			return eb.With("file_path", path).Wrapf(err, "json decode error")
@@ -123,15 +122,14 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 			advisory := types.Advisory{
 				FixedVersion: affectedPkg.Package.FixedVersion,
 			}
-			eb := oops.With("os_ver", affectedPkg.OSVer).With("package_name", affectedPkg.Package.Name).With("fixed_version", affectedPkg.Package.FixedVersion)
 
 			if err := vs.dbc.PutDataSource(tx, affectedPkg.OSVer, source); err != nil {
-				return eb.Wrapf(err, "failed to put data source")
+				return oops.Wrapf(err, "failed to put data source")
 			}
 
 			if err := vs.dbc.PutAdvisoryDetail(tx, cvrf.Tracking.ID, affectedPkg.Package.Name,
 				[]string{affectedPkg.OSVer}, advisory); err != nil {
-				return eb.Wrapf(err, "unable to save CVRF")
+				return oops.Wrapf(err, "unable to save CVRF")
 			}
 		}
 

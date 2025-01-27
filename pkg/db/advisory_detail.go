@@ -14,7 +14,8 @@ const (
 func (dbc Config) PutAdvisoryDetail(tx *bolt.Tx, vulnID, pkgName string, nestedBktNames []string, advisory interface{}) error {
 	bktNames := append([]string{advisoryDetailBucket, vulnID}, nestedBktNames...)
 	if err := dbc.put(tx, bktNames, pkgName, advisory); err != nil {
-		return oops.With("vuln_id", vulnID).With("package_name", pkgName).Wrapf(err, "failed to put advisory detail")
+		return oops.With("vuln_id", vulnID).With("package_name", pkgName).
+			With("bucket_names", bktNames).Wrapf(err, "failed to put advisory detail")
 	}
 	return nil
 }
