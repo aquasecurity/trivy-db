@@ -119,7 +119,7 @@ func (vs VulnSrc) update(repoPath string) error {
 
 func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		eb := oops.With("path", path)
+		eb := oops.With("file_path", path)
 		if err != nil {
 			return eb.Wrapf(err, "failed to walk")
 		}
