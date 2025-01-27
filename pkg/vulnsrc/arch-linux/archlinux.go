@@ -94,7 +94,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, avgs []ArchVulnGroup) error {
 			for _, pkg := range avg.Packages {
 				eb := oops.With("vuln_id", cveId).With("package_name", pkg)
 				if err := vs.dbc.PutAdvisoryDetail(tx, cveId, pkg, []string{platformName}, advisory); err != nil {
-					return eb.Wrapf(err, "failed to save advisory")
+					return eb.With("platform", platformName).Wrapf(err, "failed to save advisory")
 				}
 
 				vuln := types.VulnerabilityDetail{
