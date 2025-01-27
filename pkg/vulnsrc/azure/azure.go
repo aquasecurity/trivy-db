@@ -227,7 +227,7 @@ func followTestRefs(test oval.RpmInfoTest, objects map[string]string, states map
 
 	eb = eb.With("data_type", state.Evr.Datatype)
 	if state.Evr.Datatype != "evr_string" {
-		return resolvedTest{}, eb.Wrapf(ErrNotSupported, "state data type")
+		return resolvedTest{}, eb.With("data_type", state.Evr.Datatype).Wrapf(ErrNotSupported, "state data type")
 	}
 
 	// We don't currently support `greater than` operator
