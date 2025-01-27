@@ -86,7 +86,7 @@ func (vs VulnSrc) Update(dir string) error {
 		eb := eb.With("file_path", path)
 		var cvrf SuseCvrf
 		if err := json.NewDecoder(r).Decode(&cvrf); err != nil {
-			return eb.Wrapf(err, "json decode error")
+			return eb.With("file_path", path).Wrapf(err, "json decode error")
 		}
 		cvrfs = append(cvrfs, cvrf)
 		return nil
