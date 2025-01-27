@@ -111,7 +111,7 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 
 				// for optimization
 				if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
-					return eb.With("vuln_id", cveID).Wrapf(err, "failed to save the vulnerability ID")
+					return eb.Wrapf(err, "failed to save the vulnerability ID")
 				}
 			}
 		}
