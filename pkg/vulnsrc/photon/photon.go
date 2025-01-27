@@ -53,7 +53,7 @@ func (vs VulnSrc) Update(dir string) error {
 
 		var cve PhotonCVE
 		if err := json.NewDecoder(r).Decode(&cve); err != nil {
-			return eb.Wrapf(err, "json decode error")
+			return eb.With("file_path", path).Wrapf(err, "json decode error")
 		}
 		cves = append(cves, cve)
 
