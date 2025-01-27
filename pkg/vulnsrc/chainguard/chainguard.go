@@ -62,7 +62,7 @@ func (vs VulnSrc) Update(dir string) error {
 	}
 
 	if err = vs.save(advisories); err != nil {
-		return eb.Wrapf(err, "save error")
+		return eb.Wrapf(err, "save advisories error")
 	}
 
 	return nil
