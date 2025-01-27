@@ -93,7 +93,6 @@ func (vs VulnSrc) Update(dir string) error {
 }
 
 func (vs *VulnSrc) walkFunc(r io.Reader, path string) error {
-	eb := oops.With("file_path", path)
 	paths := strings.Split(path, string(filepath.Separator))
 	if len(paths) < 2 {
 		return nil
@@ -103,7 +102,6 @@ func (vs *VulnSrc) walkFunc(r io.Reader, path string) error {
 		vs.logger.Warn("Unsupported Amazon version", "version", version)
 		return nil
 	}
-	eb = eb.With("version", version)
 
 	var alas ALAS
 	if err := json.NewDecoder(r).Decode(&alas); err != nil {
