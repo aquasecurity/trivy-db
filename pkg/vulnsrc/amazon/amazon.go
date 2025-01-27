@@ -107,7 +107,7 @@ func (vs *VulnSrc) walkFunc(r io.Reader, path string) error {
 
 	var alas ALAS
 	if err := json.NewDecoder(r).Decode(&alas); err != nil {
-		return eb.Wrapf(err, "json decode error")
+		return oops.With("file_path", path).With("version", version).Wrapf(err, "json decode error")
 	}
 
 	vs.advisories[version] = append(vs.advisories[version], alas)
