@@ -25,7 +25,7 @@ func unmarshalJSONFile(v interface{}, fileName string) error {
 	defer f.Close()
 
 	if err = json.NewDecoder(f).Decode(v); err != nil {
-		return eb.Wrapf(err, "decode error")
+		return eb.Wrapf(err, "json decode error")
 	}
 	return nil
 }
