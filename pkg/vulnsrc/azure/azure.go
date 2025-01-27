@@ -236,7 +236,7 @@ func followTestRefs(test oval.RpmInfoTest, objects map[string]string, states map
 	}
 
 	if state.Evr.Operation != string(lte) && state.Evr.Operation != string(lt) {
-		return resolvedTest{}, eb.Wrapf(ErrNotSupported, "state operation")
+		return resolvedTest{}, eb.With("operation", state.Evr.Operation).Wrapf(ErrNotSupported, "state operation")
 	}
 
 	return resolvedTest{
