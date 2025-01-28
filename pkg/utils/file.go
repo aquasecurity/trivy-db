@@ -7,22 +7,25 @@ import (
 	"os"
 	"path/filepath"
 
-	"golang.org/x/xerrors"
+	"github.com/samber/oops"
 
 	"github.com/aquasecurity/trivy-db/pkg/log"
 )
 
 func FileWalk(root string, walkFn func(r io.Reader, path string) error) error {
+	eb := oops.With("root_dir", root)
+
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		eb := eb.With("path", path)
 		if err != nil {
-			return err
+			return eb.Wrapf(err, "walk dir error")
 		} else if d.IsDir() {
 			return nil
 		}
 
 		info, err := d.Info()
 		if err != nil {
-			return xerrors.Errorf("file info error: %w", err)
+			return eb.Wrapf(err, "file info error")
 		}
 
 		if info.Size() == 0 {
@@ -32,17 +35,17 @@ func FileWalk(root string, walkFn func(r io.Reader, path string) error) error {
 
 		f, err := os.Open(path)
 		if err != nil {
-			return xerrors.Errorf("failed to open file: %w", err)
+			return eb.Wrapf(err, "file open error")
 		}
 		defer f.Close()
 
 		if err = walkFn(f, path); err != nil {
-			return err
+			return eb.Wrapf(err, "walk error")
 		}
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("file walk error: %w", err)
+		return eb.Wrapf(err, "file walk error")
 	}
 	return nil
 }
@@ -59,14 +62,16 @@ func Exists(path string) (bool, error) {
 }
 
 func UnmarshalJSONFile(v interface{}, fileName string) error {
+	eb := oops.With("file_name", fileName)
+
 	f, err := os.Open(fileName)
 	if err != nil {
-		return xerrors.Errorf("unable to open a file (%s): %w", fileName, err)
+		return eb.Wrapf(err, "file open error")
 	}
 	defer f.Close()
 
 	if err = json.NewDecoder(f).Decode(v); err != nil {
-		return xerrors.Errorf("failed to decode file (%s): %w", fileName, err)
+		return eb.Wrapf(err, "json decode error")
 	}
 	return nil
 }

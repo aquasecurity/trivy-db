@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
@@ -90,34 +90,38 @@ func (vs VulnSrc) Name() types.SourceID {
 
 func (vs VulnSrc) Update(dir string) error {
 	repoPath := filepath.Join(dir, nodeDir)
+	eb := oops.In("node").With("root_dir", dir)
+
 	if err := vs.update(repoPath); err != nil {
-		return xerrors.Errorf("failed to update node vulnerabilities: %w", err)
+		return eb.Wrapf(err, "failed to update vulnerabilities")
 	}
 	return nil
 }
 
 func (vs VulnSrc) update(repoPath string) error {
 	root := filepath.Join(repoPath, "vuln")
+	eb := oops.With("repo_path", repoPath)
 
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		if err := vs.dbc.PutDataSource(tx, bucketName, source); err != nil {
-			return xerrors.Errorf("failed to put data source: %w", err)
+			return eb.Wrapf(err, "failed to put data source")
 		}
 		if err := vs.walk(tx, root); err != nil {
-			return xerrors.Errorf("failed to walk node advisories: %w", err)
+			return eb.Wrapf(err, "failed to walk advisories")
 		}
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("batch update failed: %w", err)
+		return eb.Wrapf(err, "batch update failed")
 	}
 	return nil
 }
 
 func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		eb := oops.With("file_path", path)
 		if err != nil {
-			return err
+			return eb.Wrapf(err, "failed to walk")
 		}
 		if info.IsDir() || !strings.HasSuffix(info.Name(), ".json") {
 			return nil
@@ -125,7 +129,7 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 
 		f, err := os.Open(path)
 		if err != nil {
-			return err
+			return eb.Wrapf(err, "file open error")
 		}
 		defer f.Close()
 
@@ -137,7 +141,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, f *os.File) error {
 	advisory := RawAdvisory{}
 	var err error
 	if err = json.NewDecoder(f).Decode(&advisory); err != nil {
-		return err
+		return oops.Wrapf(err, "json decode error")
 	}
 
 	// Node.js itself
@@ -154,9 +158,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, f *os.File) error {
 	adv := convertToGenericAdvisory(advisory)
 	for _, vulnID := range vulnerabilityIDs {
 		// for detecting vulnerabilities
-		err = vs.dbc.PutAdvisoryDetail(tx, vulnID, advisory.ModuleName, []string{bucketName}, adv)
-		if err != nil {
-			return xerrors.Errorf("failed to save node advisory: %w", err)
+		if err = vs.dbc.PutAdvisoryDetail(tx, vulnID, advisory.ModuleName, []string{bucketName}, adv); err != nil {
+			return oops.Wrapf(err, "failed to save advisory")
 		}
 
 		// If an advisory is 0 override with -1
@@ -174,12 +177,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, f *os.File) error {
 			Description: advisory.Overview,
 		}
 		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, source.ID, vuln); err != nil {
-			return xerrors.Errorf("failed to save node vulnerability detail: %w", err)
+			return oops.Wrapf(err, "failed to save vulnerability detail")
 		}
 
 		// for optimization
 		if err = vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
-			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+			return oops.Wrapf(err, "failed to save vulnerability ID")
 		}
 	}
 

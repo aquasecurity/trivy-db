@@ -82,7 +82,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad path (failed to decode)",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "failed to decode NVD JSON",
+			wantErr: "json unmarshal error",
 		},
 	}
 

@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	version "github.com/knqyf263/go-rpm-version"
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/log"
@@ -69,12 +69,14 @@ func (vs *VulnSrc) Name() types.SourceID {
 
 func (vs *VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", almaDir)
+	eb := oops.In("alma").With("root_dir", rootDir)
+
 	errata, err := vs.parse(rootDir)
 	if err != nil {
-		return err
+		return eb.Wrap(err)
 	}
 	if err = vs.put(errata); err != nil {
-		return xerrors.Errorf("error in Alma save: %w", err)
+		return eb.Wrapf(err, "put error")
 	}
 
 	return nil
@@ -84,9 +86,11 @@ func (vs *VulnSrc) Update(dir string) error {
 func (vs *VulnSrc) parse(rootDir string) (map[string][]Erratum, error) {
 	errata := map[string][]Erratum{}
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
+		eb := oops.With("file_path", path)
+
 		var erratum Erratum
 		if err := json.NewDecoder(r).Decode(&erratum); err != nil {
-			return xerrors.Errorf("failed to decode Alma erratum: %w", err)
+			return eb.Wrapf(err, "json decode error")
 		}
 
 		dirs := strings.Split(path, string(filepath.Separator))
@@ -100,7 +104,7 @@ func (vs *VulnSrc) parse(rootDir string) (map[string][]Erratum, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("error in Alma walk: %w", err)
+		return nil, oops.Wrapf(err, "walk error")
 	}
 
 	return errata, nil
@@ -110,18 +114,19 @@ func (vs *VulnSrc) put(errataVer map[string][]Erratum) error {
 	err := vs.BatchUpdate(func(tx *bolt.Tx) error {
 		for majorVer, errata := range errataVer {
 			platformName := fmt.Sprintf(platformFormat, majorVer)
+			eb := oops.With("platform", platformName).With("major_version", majorVer)
 			if err := vs.PutDataSource(tx, platformName, source); err != nil {
-				return xerrors.Errorf("failed to put data source: %w", err)
+				return eb.Wrapf(err, "failed to put data source")
 			}
 
 			if err := vs.commit(tx, platformName, errata); err != nil {
-				return xerrors.Errorf("Alma %s commit error: %w", majorVer, err)
+				return eb.Wrapf(err, "commit error")
 			}
 		}
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in db batch update: %w", err)
+		return oops.Wrapf(err, "db batch update error")
 	}
 	return nil
 }
@@ -183,7 +188,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []Erratum) er
 				Erratum:      erratum,
 			})
 			if err != nil {
-				return xerrors.Errorf("db put error: %w", err)
+				return oops.With("vuln_id", cveID).With("platform", platformName).Wrapf(err, "db put error")
 			}
 		}
 	}
@@ -192,17 +197,17 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []Erratum) er
 
 func (a *Alma) Put(tx *bolt.Tx, input PutInput) error {
 	if err := a.PutVulnerabilityDetail(tx, input.CveID, source.ID, input.Vuln); err != nil {
-		return xerrors.Errorf("failed to save Alma vulnerability: %w", err)
+		return oops.Wrapf(err, "failed to save vulnerability detail")
 	}
 
 	// for optimization
 	if err := a.PutVulnerabilityID(tx, input.CveID); err != nil {
-		return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+		return oops.Wrapf(err, "failed to save vulnerability ID")
 	}
 
 	for pkgName, advisory := range input.Advisories {
 		if err := a.PutAdvisoryDetail(tx, input.CveID, pkgName, []string{input.PlatformName}, advisory); err != nil {
-			return xerrors.Errorf("failed to save Alma advisory: %w", err)
+			return oops.Wrapf(err, "failed to save advisory")
 		}
 	}
 	return nil
@@ -212,7 +217,7 @@ func (a *Alma) Get(release, pkgName string) ([]types.Advisory, error) {
 	bucket := fmt.Sprintf(platformFormat, release)
 	advisories, err := a.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get Alma advisories: %w", err)
+		return nil, oops.With("release", release).With("package_name", pkgName).Wrapf(err, "failed to get advisories")
 	}
 	return advisories, nil
 }

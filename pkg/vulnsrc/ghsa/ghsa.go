@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/samber/oops"
 	"golang.org/x/tools/go/packages"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
@@ -68,6 +68,7 @@ func (GHSA) Name() types.SourceID {
 }
 
 func (GHSA) Update(root string) error {
+	eb := oops.In("ghsa").With("root_dir", root)
 	dataSources := map[types.Ecosystem]types.DataSource{}
 	for ecosystem, ghsaEcosystem := range ecosystems {
 		src := types.DataSource{
@@ -80,7 +81,7 @@ func (GHSA) Update(root string) error {
 
 	t, err := newTransformer(root)
 	if err != nil {
-		return xerrors.Errorf("transformer error: %w", err)
+		return eb.Wrapf(err, "transformer error")
 	}
 
 	return osv.New(ghsaDir, sourceID, dataSources, t).Update(root)
@@ -94,7 +95,7 @@ type transformer struct {
 func newTransformer(root string) (*transformer, error) {
 	cocoaPodsSpecs, err := walkCocoaPodsSpecs(root)
 	if err != nil {
-		return nil, xerrors.Errorf("CocoaPods spec error: %w", err)
+		return nil, oops.Wrapf(err, "CocoaPods spec error")
 	}
 	return &transformer{
 		cocoaPodsSpecs: cocoaPodsSpecs,
@@ -104,14 +105,15 @@ func newTransformer(root string) (*transformer, error) {
 func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.Entry) ([]osv.Advisory, error) {
 	var specific DatabaseSpecific
 	if err := json.Unmarshal(entry.DatabaseSpecific, &specific); err != nil {
-		return nil, xerrors.Errorf("JSON decode error: %w", err)
+		return nil, oops.Wrapf(err, "json unmarshal error")
 	}
 
 	severity := convertSeverity(specific.Severity)
 	for i, adv := range advisories {
+		eb := oops.With("ecosystem", adv.Ecosystem).With("package_name", adv.PkgName).With("vuln_id", adv.VulnerabilityID).With("aliases", adv.Aliases)
 		// Parse database_specific
 		if err := parseDatabaseSpecific(adv); err != nil {
-			return nil, xerrors.Errorf("failed to parse database specific: %w", err)
+			return nil, eb.Wrapf(err, "failed to parse database specific")
 		}
 
 		// Fill severity from GHSA
@@ -149,7 +151,7 @@ func parseDatabaseSpecific(advisory osv.Advisory) error {
 
 	var affectedSpecific DatabaseSpecific
 	if err := json.Unmarshal(advisory.DatabaseSpecific, &affectedSpecific); err != nil {
-		return xerrors.Errorf("JSON decode error: %w", err)
+		return oops.Wrapf(err, "json unmarshal error")
 	}
 
 	for i, vulnVersion := range advisory.VulnerableVersions {

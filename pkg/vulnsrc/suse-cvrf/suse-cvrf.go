@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/go-version/pkg/version"
 	"github.com/aquasecurity/trivy-db/pkg/db"
@@ -70,30 +70,32 @@ func (vs VulnSrc) Name() types.SourceID {
 func (vs VulnSrc) Update(dir string) error {
 	vs.logger.Info("Saving SUSE CVRF")
 	rootDir := filepath.Join(dir, "vuln-list", suseDir)
+	eb := oops.In("suse").Tags("cvrf").With("root_dir", rootDir)
+
 	switch vs.dist {
 	case SUSEEnterpriseLinux, SUSEEnterpriseLinuxMicro:
 		rootDir = filepath.Join(rootDir, "suse")
 	case OpenSUSE, OpenSUSETumbleweed:
 		rootDir = filepath.Join(rootDir, "opensuse")
 	default:
-		return xerrors.New("unknown distribution")
+		return eb.Errorf("unknown distribution")
 	}
 
 	var cvrfs []SuseCvrf
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		var cvrf SuseCvrf
 		if err := json.NewDecoder(r).Decode(&cvrf); err != nil {
-			return xerrors.Errorf("failed to decode SUSE CVRF JSON: %w %+v", err, cvrf)
+			return eb.With("file_path", path).Wrapf(err, "json decode error")
 		}
 		cvrfs = append(cvrfs, cvrf)
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in SUSE CVRF walk: %w", err)
+		return eb.Wrapf(err, "walk error")
 	}
 
 	if err = vs.save(cvrfs); err != nil {
-		return xerrors.Errorf("error in SUSE CVRF save: %w", err)
+		return eb.Wrapf(err, "save error")
 	}
 
 	return nil
@@ -104,7 +106,7 @@ func (vs VulnSrc) save(cvrfs []SuseCvrf) error {
 		return vs.commit(tx, cvrfs)
 	})
 	if err != nil {
-		return xerrors.Errorf("error in batch update: %w", err)
+		return oops.Wrapf(err, "batch update error")
 	}
 	return nil
 }
@@ -122,12 +124,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 			}
 
 			if err := vs.dbc.PutDataSource(tx, affectedPkg.OSVer, source); err != nil {
-				return xerrors.Errorf("failed to put data source: %w", err)
+				return oops.Wrapf(err, "failed to put data source")
 			}
 
 			if err := vs.dbc.PutAdvisoryDetail(tx, cvrf.Tracking.ID, affectedPkg.Package.Name,
 				[]string{affectedPkg.OSVer}, advisory); err != nil {
-				return xerrors.Errorf("unable to save %s CVRF: %w", affectedPkg.OSVer, err)
+				return oops.Wrapf(err, "unable to save CVRF")
 			}
 		}
 
@@ -154,12 +156,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 		}
 
 		if err := vs.dbc.PutVulnerabilityDetail(tx, cvrf.Tracking.ID, source.ID, vuln); err != nil {
-			return xerrors.Errorf("failed to save SUSE CVRF vulnerability: %w", err)
+			return oops.With("tracking_id", cvrf.Tracking.ID).Wrapf(err, "failed to save SUSE CVRF vulnerability")
 		}
 
 		// for optimization
 		if err := vs.dbc.PutVulnerabilityID(tx, cvrf.Tracking.ID); err != nil {
-			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+			return oops.With("tracking_id", cvrf.Tracking.ID).Wrapf(err, "failed to save the vulnerability ID")
 		}
 	}
 	return nil
@@ -300,6 +302,7 @@ func splitPkgName(pkgName string) (string, string) {
 }
 
 func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) {
+	eb := oops.In("suse").Tags("cvrf").With("version", version).With("package_name", pkgName)
 	var bucket string
 	switch vs.dist {
 	case SUSEEnterpriseLinuxMicro:
@@ -311,12 +314,12 @@ func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) 
 	case OpenSUSETumbleweed:
 		bucket = platformOpenSUSETumbleweedFormat
 	default:
-		return nil, xerrors.New("unknown distribution")
+		return nil, eb.Errorf("unknown distribution")
 	}
 
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get SUSE advisories: %w", err)
+		return nil, eb.Wrapf(err, "failed to get advisories")
 	}
 	return advisories, nil
 }

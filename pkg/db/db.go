@@ -8,8 +8,8 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
@@ -72,10 +72,12 @@ func Init(dbDir string, opts ...Option) (err error) {
 		opt(dbOptions)
 	}
 
+	eb := oops.With("db_dir", dbDir)
 	if err = os.MkdirAll(dbDir, 0700); err != nil {
-		return xerrors.Errorf("failed to mkdir: %w", err)
+		return eb.Wrapf(err, "failed to mkdir")
 	}
 	dbPath := Path(dbDir)
+	eb = eb.With("db_path", dbPath)
 
 	// bbolt sometimes occurs the fatal error of "unexpected fault address".
 	// In that case, the local DB should be broken and needs to be removed.
@@ -92,7 +94,7 @@ func Init(dbDir string, opts ...Option) (err error) {
 
 	db, err = bolt.Open(dbPath, 0644, dbOptions.boltOptions)
 	if err != nil {
-		return xerrors.Errorf("failed to open db: %w", err)
+		return eb.Wrapf(err, "failed to open db")
 	}
 	return nil
 }
@@ -108,7 +110,7 @@ func Close() error {
 		return nil
 	}
 	if err := db.Close(); err != nil {
-		return xerrors.Errorf("failed to close DB: %w", err)
+		return oops.Wrapf(err, "failed to close DB")
 	}
 	return nil
 }
@@ -120,39 +122,41 @@ func (dbc Config) Connection() *bolt.DB {
 func (dbc Config) BatchUpdate(fn func(tx *bolt.Tx) error) error {
 	err := db.Batch(fn)
 	if err != nil {
-		return xerrors.Errorf("error in batch update: %w", err)
+		return oops.Wrapf(err, "batch update error")
 	}
 	return nil
 }
 
 func (dbc Config) put(tx *bolt.Tx, bktNames []string, key string, value interface{}) error {
 	if len(bktNames) == 0 {
-		return xerrors.Errorf("empty bucket name")
+		return oops.Errorf("empty bucket name")
 	}
 
+	eb := oops.With("bucket_names", bktNames)
 	bkt, err := tx.CreateBucketIfNotExists([]byte(bktNames[0]))
 	if err != nil {
-		return xerrors.Errorf("failed to create '%s' bucket: %w", bktNames[0], err)
+		return eb.With("bucket_name", bktNames[0]).Wrapf(err, "failed to create bucket")
 	}
 
 	for _, bktName := range bktNames[1:] {
 		bkt, err = bkt.CreateBucketIfNotExists([]byte(bktName))
 		if err != nil {
-			return xerrors.Errorf("failed to create a bucket: %w", err)
+			return eb.With("bucket_name", bktName).Wrapf(err, "failed to create bucket")
 		}
 	}
 	v, err := json.Marshal(value)
 	if err != nil {
-		return xerrors.Errorf("failed to unmarshal JSON: %w", err)
+		return eb.Wrapf(err, "json marshal error")
 	}
 
 	return bkt.Put([]byte(key), v)
 }
 
 func (dbc Config) get(bktNames []string, key string) (value []byte, err error) {
+	eb := oops.With("bucket_names", bktNames)
 	err = db.View(func(tx *bolt.Tx) error {
 		if len(bktNames) == 0 {
-			return xerrors.Errorf("empty bucket name")
+			return eb.Errorf("empty bucket name")
 		}
 
 		bkt := tx.Bucket([]byte(bktNames[0]))
@@ -174,7 +178,7 @@ func (dbc Config) get(bktNames []string, key string) (value []byte, err error) {
 		return nil
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get data from db: %w", err)
+		return nil, eb.Wrapf(err, "failed to get data from db")
 	}
 	return value, nil
 }
@@ -185,8 +189,9 @@ type Value struct {
 }
 
 func (dbc Config) forEach(bktNames []string) (map[string]Value, error) {
+	eb := oops.With("bucket_names", bktNames)
 	if len(bktNames) < 2 {
-		return nil, xerrors.Errorf("bucket must be nested: %v", bktNames)
+		return nil, eb.Errorf("bucket must be nested")
 	}
 	rootBucket, nestedBuckets := bktNames[0], bktNames[1:]
 
@@ -243,13 +248,13 @@ func (dbc Config) forEach(bktNames []string) (map[string]Value, error) {
 				return nil
 			})
 			if err != nil {
-				return xerrors.Errorf("db foreach error: %w", err)
+				return eb.Wrapf(err, "db foreach error")
 			}
 		}
 		return nil
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get all key/value in the specified bucket: %w", err)
+		return nil, eb.Wrapf(err, "failed to get all key/value in the specified bucket")
 	}
 	return values, nil
 }
@@ -257,7 +262,7 @@ func (dbc Config) forEach(bktNames []string) (map[string]Value, error) {
 func (dbc Config) deleteBucket(bucketName string) error {
 	return db.Update(func(tx *bolt.Tx) error {
 		if err := tx.DeleteBucket([]byte(bucketName)); err != nil {
-			return xerrors.Errorf("failed to delete bucket: %w", err)
+			return oops.With("bucket_name", bucketName).Wrapf(err, "failed to delete bucket")
 		}
 		return nil
 	})

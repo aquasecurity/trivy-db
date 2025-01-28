@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"os"
 )
 
 // Logger is an alias for slog.Logger
@@ -34,6 +33,10 @@ func Error(msg string, args ...any) {
 	defaultLogger.Error(msg, args...)
 }
 
+func Errorf(format string, args ...any) {
+	defaultLogger.Error(fmt.Sprintf(format, args...))
+}
+
 func Debug(msg string, args ...any) {
 	defaultLogger.Debug(msg, args...)
 }
@@ -57,13 +60,10 @@ type PrefixHandler struct {
 }
 
 func init() {
-	opts := &slog.HandlerOptions{
-		Level: slog.LevelDebug,
-	}
-	baseHandler := slog.NewTextHandler(os.Stdout, opts)
+	slog.SetLogLoggerLevel(slog.LevelDebug)
 	prefixHandler := &PrefixHandler{
 		prefix:  "",
-		handler: baseHandler,
+		handler: slog.Default().Handler(),
 	}
 	defaultLogger = slog.New(prefixHandler)
 }

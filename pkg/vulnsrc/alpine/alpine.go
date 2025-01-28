@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
@@ -46,21 +46,23 @@ func (vs VulnSrc) Name() types.SourceID {
 
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", alpineDir)
+	eb := oops.In("alpine").With("root_dir", rootDir)
+
 	var advisories []advisory
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		var advisory advisory
 		if err := json.NewDecoder(r).Decode(&advisory); err != nil {
-			return xerrors.Errorf("failed to decode Alpine advisory: %w", err)
+			return eb.With("file_path", path).Wrapf(err, "failed to decode Alpine advisory")
 		}
 		advisories = append(advisories, advisory)
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in Alpine walk: %w", err)
+		return eb.Wrapf(err, "walk error")
 	}
 
 	if err = vs.save(advisories); err != nil {
-		return xerrors.Errorf("error in Alpine save: %w", err)
+		return eb.Wrapf(err, "save error")
 	}
 
 	return nil
@@ -71,17 +73,18 @@ func (vs VulnSrc) save(advisories []advisory) error {
 		for _, adv := range advisories {
 			version := strings.TrimPrefix(adv.Distroversion, "v")
 			platformName := fmt.Sprintf(platformFormat, version)
+			eb := oops.With("version", version).With("platform", platformName)
 			if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
-				return xerrors.Errorf("failed to put data source: %w", err)
+				return eb.Wrapf(err, "failed to put data source")
 			}
 			if err := vs.saveSecFixes(tx, platformName, adv.PkgName, adv.Secfixes); err != nil {
-				return err
+				return eb.Wrapf(err, "failed to save sec fixes")
 			}
 		}
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in db batch update: %w", err)
+		return oops.Wrapf(err, "db batch update error")
 	}
 	return nil
 }
@@ -101,12 +104,12 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 					continue
 				}
 				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkgName, []string{platform}, advisory); err != nil {
-					return xerrors.Errorf("failed to save Alpine advisory: %w", err)
+					return oops.Wrapf(err, "failed to save advisory")
 				}
 
 				// for optimization
 				if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
-					return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+					return oops.Wrapf(err, "failed to save the vulnerability ID")
 				}
 			}
 		}
@@ -115,10 +118,11 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 }
 
 func (vs VulnSrc) Get(release, pkgName string) ([]types.Advisory, error) {
+	eb := oops.In("alpine").With("release", release)
 	bucket := fmt.Sprintf(platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get Alpine advisories: %w", err)
+		return nil, eb.Wrapf(err, "failed to get Alpine advisories")
 	}
 	return advisories, nil
 }

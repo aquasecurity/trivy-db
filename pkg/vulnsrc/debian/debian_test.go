@@ -200,12 +200,12 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad broken distributions",
 			dir:     filepath.Join("testdata", "broken-distributions"),
-			wantErr: "failed to decode Debian distribution JSON",
+			wantErr: "distributions error",
 		},
 		{
 			name:    "sad broken packages",
 			dir:     filepath.Join("testdata", "broken-packages"),
-			wantErr: "failed to decode testdata/broken-packages/",
+			wantErr: "source parse error",
 		},
 		{
 			name:    "sad broken CVE",
@@ -263,7 +263,7 @@ func TestVulnSrc_Get(t *testing.T) {
 				release: "10",
 				pkgName: "alpine",
 			},
-			wantErr: "failed to get Debian advisories",
+			wantErr: "failed to get advisories",
 		},
 	}
 	for _, tt := range tests {

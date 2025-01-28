@@ -95,7 +95,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad path",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "failed to decode Amazon JSON",
+			wantErr: "json decode error",
 		},
 		{
 			name:    "no such directory",
@@ -142,7 +142,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			version:  "1",
 			pkgName:  "curl",
 			fixtures: []string{"testdata/fixtures/sad.yaml"},
-			wantErr:  "failed to unmarshal advisory JSON",
+			wantErr:  "json unmarshal error",
 		},
 	}
 
