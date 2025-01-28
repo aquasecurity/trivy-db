@@ -11,7 +11,7 @@ import (
 
 func (dbc Config) PutAdvisory(tx *bolt.Tx, bktNames []string, key string, advisory interface{}) error {
 	if err := dbc.put(tx, bktNames, key, advisory); err != nil {
-		return oops.With("bucket_names", bktNames).With("key", key).Wrapf(err, "failed to put advisory")
+		return oops.With("key", key).Wrapf(err, "failed to put advisory")
 	}
 	return nil
 }
