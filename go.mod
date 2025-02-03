@@ -14,7 +14,7 @@ require (
 	github.com/knqyf263/go-rpm-version v0.0.0-20170716094938-74609b86c936
 	github.com/masahiro331/go-mvn-version v0.0.0-20210429150710-d3157d602a08
 	github.com/pandatix/go-cvss v0.6.2
-	github.com/samber/lo v1.47.0
+	github.com/samber/lo v1.49.1
 	github.com/samber/oops v1.15.0
 	github.com/stretchr/testify v1.10.0
 	github.com/urfave/cli v1.22.16
