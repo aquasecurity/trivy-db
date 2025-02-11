@@ -149,14 +149,17 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			if err := vs.PutDataSource(tx, platformName, source); err != nil {
 				return oops.With("platform", platformName).Wrapf(err, "failed to put data source")
 			}
-			// The ELSA IDs are included in the input for Aqua storage, but OSS does not require them.
-			// Therefore, the VendorIDs will be removed before saving to the database.
+
 			advs := types.Advisories{
 				Entries: []types.Advisory{
 					{
 						FixedVersion: affectedPkg.FixedVersion,
-						Arches:       []string{affectedPkg.Arch},
-						VendorIDs:    []string{elsaID},
+						Arches: []string{
+							affectedPkg.Arch,
+						},
+						VendorIDs: []string{
+							elsaID,
+						},
 					},
 				},
 			}
@@ -219,58 +222,40 @@ type archFlavor struct {
 	Flavor PkgFlavor
 }
 
-// mergeAdvisoriesEntries merges advisories by selecting the latest version for each combination of architecture and flavor.
-// The "latest" version is determined as the highest (greatest) version number for each (arch, flavor) pair.
+type versionVendorID struct {
+	Version  string
+	VendorID string
+}
+
+// mergeAdvisoriesEntries merges advisories by picking the latest version for each arch+flavor.
+// There may be multiple advisories that fix the same vulnerability, possibly providing multiple fixed versions.
+// In this case, we need to determine the "latest" version, which is now defined as the highest (greatest) version number.
 //
-// The process is as follows:
-// 1. Select the latest version for each (arch, flavor) combination.
-// 2. Aggregate architectures for each selected version into a single entry, grouping them by their version.
-// 3. Build the final list of advisories, sorted by version in ascending order.
-//
-// Additionally, for backward compatibility, we determine a single primary fixed version.
-// This is derived from the highest normal flavor version on the x86_64 architecture if available.
+// Additionally, we choose a single fixed version for backward compatibility, which is derived from
+// the highest normal flavor version on the x86_64 architecture if available.
 func mergeAdvisoriesEntries(advisories types.Advisories) types.Advisories {
 	// Step 1: Select the latest version per (arch, flavor)
 	latestVersions := selectLatestVersions(advisories)
 
-	// Step 2: Aggregate architectures by their chosen version
-	type versionKey struct {
-		FixedVersion string
-		VendorID     string
-	}
-	versionToAdvisories := make(map[versionKey]types.Advisory)
+	// Step 2: Aggregate arches by their chosen version
+	versionToArches := make(map[versionVendorID][]string)
 	for k, v := range latestVersions {
-		key := versionKey{
-			FixedVersion: v.FixedVersion,
-			VendorID:     strings.Join(v.VendorIDs, ","), // Combine VendorIDs as key
-		}
-
-		adv, exists := versionToAdvisories[key]
-		if !exists {
-			adv = types.Advisory{
-				FixedVersion: v.FixedVersion,
-				Arches:       []string{},
-				VendorIDs:    v.VendorIDs,
-			}
-		}
-
-		// Append unique architectures
-		adv.Arches = appendUnique(adv.Arches, k.Arch)
-
-		versionToAdvisories[key] = adv
+		versionToArches[v] = append(versionToArches[v], k.Arch)
 	}
 
 	// Step 3: Build final entries, sorted by version
-	entries := lo.MapToSlice(versionToAdvisories, func(_ versionKey, adv types.Advisory) types.Advisory {
-		sort.Strings(adv.Arches) // Ensure architectures are sorted for consistency
+	entries := lo.MapToSlice(versionToArches, func(ver versionVendorID, arches []string) types.Advisory {
+		sort.Strings(arches)
 		return types.Advisory{
-			FixedVersion: adv.FixedVersion,
-			Arches:       adv.Arches,
-			VendorIDs:    adv.VendorIDs,
+			FixedVersion: ver.Version,
+			Arches:       arches,
+			VendorIDs: []string{
+				ver.VendorID,
+			},
 		}
 	})
 	sort.Slice(entries, func(i, j int) bool {
-		return entries[i].FixedVersion < entries[j].FixedVersion // Sort lexicographically
+		return entries[i].FixedVersion < entries[j].FixedVersion // Sorting lexicographically
 	})
 
 	return types.Advisories{
@@ -279,16 +264,15 @@ func mergeAdvisoriesEntries(advisories types.Advisories) types.Advisories {
 	}
 }
 
-// selectLatestVersions identifies and selects the highest (latest) version for each unique combination of architecture and flavor.
-// Each advisory entry contains a fixed version, a set of architectures, and associated vendor IDs.
-// This function ensures only the highest version for a given (arch, flavor) pair is retained.
-func selectLatestVersions(advisories types.Advisories) map[archFlavor]types.Advisory {
-	latestVersions := make(map[archFlavor]types.Advisory) // key: archFlavor -> highest fixedVersion
+// selectLatestVersions selects the latest (highest) version per (arch, flavor)
+func selectLatestVersions(advisories types.Advisories) map[archFlavor]versionVendorID {
+	latestVersions := make(map[archFlavor]versionVendorID) // key: archFlavor -> highest fixedVersion
 	for _, entry := range advisories.Entries {
 		if len(entry.Arches) == 0 || entry.FixedVersion == "" {
 			continue
 		}
-		arch := entry.Arches[0] // Before merging `arches`, it always contains only 1 arch
+		arch := entry.Arches[0]        // Before merging `arches`, it always contains only 1 arch
+		vendorID := entry.VendorIDs[0] // Before merging `VendorIDs`, it always contains only 1 elsaID
 		flavor := PackageFlavor(entry.FixedVersion)
 		key := archFlavor{
 			Arch:   arch,
@@ -296,39 +280,32 @@ func selectLatestVersions(advisories types.Advisories) map[archFlavor]types.Advi
 		}
 
 		currentVer := version.NewVersion(entry.FixedVersion)
-		if existing, ok := latestVersions[key]; !ok || currentVer.GreaterThan(version.NewVersion(existing.FixedVersion)) {
+		if existing, ok := latestVersions[key]; !ok || currentVer.GreaterThan(version.NewVersion(existing.Version)) {
 			// Keep the higher (latest) version
-			latestVersions[key] = types.Advisory{
-				FixedVersion: entry.FixedVersion,
-				VendorIDs:    entry.VendorIDs,
-				Arches:       entry.Arches,
+			latestVersions[key] = versionVendorID{
+				Version:  entry.FixedVersion,
+				VendorID: vendorID,
 			}
 		}
 	}
 	return latestVersions
 }
 
-// determinePrimaryFixedVersion determines the primary fixed version for backward compatibility.
-// The primary version is selected as follows:
-// 1. If there is a normal flavor version available for the "x86_64" architecture, the highest version among these is chosen.
-// 2. If no normal flavor version exists, the function falls back to the maximum version across all advisories in lexical order.
-//
-// This ensures backward compatibility by preferring the most relevant and common version for typical use cases.
-func determinePrimaryFixedVersion(latestVersions map[archFlavor]types.Advisory) string {
-	// Check for the highest version of the normal flavor on the "x86_64" architecture
+// determinePrimaryFixedVersion determines primary fixed version for backward compatibility
+// It is chosen as the highest normal flavor version on x86_64 if any exist.
+// If no normal flavor version exists, the maximum version in lexical order is chosen.
+func determinePrimaryFixedVersion(latestVersions map[archFlavor]versionVendorID) string {
 	primaryFixedVersion := latestVersions[archFlavor{
 		Arch:   "x86_64",
 		Flavor: NormalPackageFlavor,
 	}]
-
-	// If no normal flavor version exists, choose the maximum version lexicographically
-	if primaryFixedVersion.FixedVersion == "" {
-		primaryFixedVersion = lo.MaxBy(lo.Values(latestVersions), func(a, b types.Advisory) bool {
-			return a.FixedVersion > b.FixedVersion
+	if primaryFixedVersion.Version == "" {
+		vers := lo.MapToSlice(latestVersions, func(_ archFlavor, v versionVendorID) string {
+			return v.Version
 		})
+		primaryFixedVersion.Version = lo.Max(vers) // Chose the maximum value in lexical order for idempotency
 	}
-
-	return primaryFixedVersion.FixedVersion
+	return primaryFixedVersion.Version
 }
 
 type PkgFlavor string
@@ -370,15 +347,39 @@ func (o *Oracle) Put(tx *bolt.Tx, input PutInput) error {
 	}
 
 	for pkg, advisory := range input.Advisories {
-		for i := range advisory.Entries {
-			advisory.Entries[i].VendorIDs = nil // Exclude VendorIDs from being saved
-		}
+		advisory = removeVendorIDs(advisory)
 		platformName := pkg.PlatformName()
 		if err := o.PutAdvisoryDetail(tx, input.VulnID, pkg.Name, []string{platformName}, advisory); err != nil {
 			return eb.With("package_name", pkg.Name).With("bucket_name", platformName).Wrapf(err, "failed to save advisory")
 		}
 	}
 	return nil
+}
+
+// removeVendorIDs removes VendorID from recommendations + merges arches for recommendations (by fixedVersion).
+// This is needed to save space in OSS trivy-db.
+// But Aqua storage requires this information.
+func removeVendorIDs(advs types.Advisories) types.Advisories {
+	versionToArches := make(map[string][]string) // fixed version -> arches
+	for _, entry := range advs.Entries {
+		entry.VendorIDs = nil
+		versionToArches[entry.FixedVersion] = append(versionToArches[entry.FixedVersion], entry.Arches...)
+	}
+
+	// Step 3: Build final entries, sorted by version
+	entries := lo.MapToSlice(versionToArches, func(ver string, arches []string) types.Advisory {
+		sort.Strings(arches)
+		return types.Advisory{
+			FixedVersion: ver,
+			Arches:       arches,
+		}
+	})
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].FixedVersion < entries[j].FixedVersion // Sorting lexicographically
+	})
+
+	advs.Entries = entries
+	return advs
 }
 
 func (o *Oracle) Get(release, pkgName, arch string) ([]types.Advisory, error) {
@@ -479,19 +480,4 @@ func severityFromThreat(sev string) types.Severity {
 		return types.SeverityCritical
 	}
 	return types.SeverityUnknown
-}
-
-// appendUnique appends unique elements from src to dest.
-func appendUnique(dest []string, src ...string) []string {
-	existing := make(map[string]bool)
-	for _, d := range dest {
-		existing[d] = true
-	}
-	for _, s := range src {
-		if !existing[s] {
-			dest = append(dest, s)
-			existing[s] = true
-		}
-	}
-	return dest
 }

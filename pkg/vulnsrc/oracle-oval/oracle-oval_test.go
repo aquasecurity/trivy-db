@@ -568,13 +568,8 @@ func TestVulnSrc_Update(t *testing.T) {
 							{
 								FixedVersion: "2:2.28-151.0.1.ksplice1.el8",
 								Arches: []string{
-									"x86_64",
-								},
-							},
-							{
-								FixedVersion: "2:2.28-151.0.1.ksplice1.el8",
-								Arches: []string{
 									"i386",
+									"x86_64",
 								},
 							},
 						},
