@@ -4,18 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
 
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/exp/slices"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/utils/ints"
@@ -42,55 +42,63 @@ var (
 )
 
 type VulnSrc struct {
-	dbc db.Operation
+	dbc    db.Operation
+	logger *log.Logger
 }
 
 func NewVulnSrc() VulnSrc {
 	return VulnSrc{
-		dbc: db.Config{},
+		dbc:    db.Config{},
+		logger: log.WithPrefix("redhat-oval"),
 	}
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return vulnerability.RedHatOVAL
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
+	eb := oops.In("redhat").Tags("oval")
 	uniqCPEs := CPEMap{}
 
 	repoToCPE, err := vs.parseRepositoryCpeMapping(dir, uniqCPEs)
 	if err != nil {
-		return xerrors.Errorf("unable to store the mapping between repositories and CPE names: %w", err)
+		return eb.Wrapf(err, "unable to store the mapping between repositories and CPE names")
 	}
 
 	nvrToCPE, err := vs.parseNvrCpeMapping(dir, uniqCPEs)
 	if err != nil {
-		return xerrors.Errorf("unable to store the mapping between NVR and CPE names: %w", err)
+		return eb.Wrapf(err, "unable to store the mapping between NVR and CPE names")
 	}
 
 	// List version directories
 	rootDir := filepath.Join(dir, vulnListDir, ovalDir)
+	eb = eb.With("root_dir", rootDir)
+
 	versions, err := os.ReadDir(rootDir)
 	if err != nil {
-		return xerrors.Errorf("unable to list directory entries (%s): %w", rootDir, err)
+		return eb.Wrapf(err, "unable to list directory entries")
 	}
 
 	advisories := map[bucket]Advisory{}
 	for _, ver := range versions {
 		versionDir := filepath.Join(rootDir, ver.Name())
+		eb := eb.With("version_dir", versionDir)
+
 		streams, err := os.ReadDir(versionDir)
 		if err != nil {
-			return xerrors.Errorf("unable to get a list of directory entries (%s): %w", versionDir, err)
+			return eb.Wrapf(err, "unable to get a list of directory entries")
 		}
 
 		for _, f := range streams {
 			if !f.IsDir() {
 				continue
 			}
+			eb := eb.With("stream_dir", f.Name())
 
-			definitions, err := parseOVALStream(filepath.Join(versionDir, f.Name()), uniqCPEs)
+			definitions, err := vs.parseOVALStream(filepath.Join(versionDir, f.Name()), uniqCPEs)
 			if err != nil {
-				return xerrors.Errorf("failed to parse OVAL stream: %w", err)
+				return eb.Wrapf(err, "failed to parse OVAL stream")
 			}
 
 			advisories = vs.mergeAdvisories(advisories, definitions)
@@ -98,7 +106,7 @@ func (vs VulnSrc) Update(dir string) error {
 	}
 
 	if err = vs.save(repoToCPE, nvrToCPE, advisories, uniqCPEs); err != nil {
-		return xerrors.Errorf("save error: %w", err)
+		return eb.Wrapf(err, "save error")
 	}
 
 	return nil
@@ -106,15 +114,17 @@ func (vs VulnSrc) Update(dir string) error {
 
 func (vs VulnSrc) parseRepositoryCpeMapping(dir string, uniqCPEs CPEMap) (map[string][]string, error) {
 	filePath := filepath.Join(dir, vulnListDir, cpeDir, "repository-to-cpe.json")
+	eb := oops.With("file_path", filePath)
+
 	f, err := os.Open(filePath)
 	if err != nil {
-		return nil, xerrors.Errorf("file open error: %w", err)
+		return nil, eb.Wrapf(err, "file open error")
 	}
 	defer f.Close()
 
 	var repoToCPE map[string][]string
 	if err = json.NewDecoder(f).Decode(&repoToCPE); err != nil {
-		return nil, xerrors.Errorf("JSON parse error: %w", err)
+		return nil, eb.Wrapf(err, "json parse error")
 	}
 
 	for _, cpes := range repoToCPE {
@@ -126,15 +136,17 @@ func (vs VulnSrc) parseRepositoryCpeMapping(dir string, uniqCPEs CPEMap) (map[st
 
 func (vs VulnSrc) parseNvrCpeMapping(dir string, uniqCPEs CPEMap) (map[string][]string, error) {
 	filePath := filepath.Join(dir, vulnListDir, cpeDir, "nvr-to-cpe.json")
+	eb := oops.With("file_path", filePath)
+
 	f, err := os.Open(filePath)
 	if err != nil {
-		return nil, xerrors.Errorf("file open error: %w", err)
+		return nil, eb.Wrapf(err, "file open error")
 	}
 	defer f.Close()
 
 	nvrToCpe := map[string][]string{}
 	if err = json.NewDecoder(f).Decode(&nvrToCpe); err != nil {
-		return nil, xerrors.Errorf("JSON parse error: %w", err)
+		return nil, eb.Wrapf(err, "json parse error")
 	}
 
 	for _, cpes := range nvrToCpe {
@@ -173,20 +185,20 @@ func (vs VulnSrc) save(repoToCpe, nvrToCpe map[string][]string, advisories map[b
 	cpeList := uniqCPEs.List()
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		if err := vs.dbc.PutDataSource(tx, rootBucket, source); err != nil {
-			return xerrors.Errorf("failed to put data source: %w", err)
+			return oops.Wrapf(err, "failed to put data source")
 		}
 
 		// Store the mapping between repository and CPE names
 		for repo, cpes := range repoToCpe {
 			if err := vs.dbc.PutRedHatRepositories(tx, repo, cpeList.Indices(cpes)); err != nil {
-				return xerrors.Errorf("repository put error: %w", err)
+				return oops.Wrapf(err, "repository put error")
 			}
 		}
 
 		// Store the mapping between NVR and CPE names
 		for nvr, cpes := range nvrToCpe {
 			if err := vs.dbc.PutRedHatNVRs(tx, nvr, cpeList.Indices(cpes)); err != nil {
-				return xerrors.Errorf("NVR put error: %w", err)
+				return oops.Wrapf(err, "NVR put error")
 			}
 		}
 
@@ -198,25 +210,25 @@ func (vs VulnSrc) save(repoToCpe, nvrToCpe map[string][]string, advisories map[b
 			}
 
 			if err := vs.dbc.PutAdvisoryDetail(tx, bkt.vulnID, bkt.pkgName, []string{rootBucket}, advisory); err != nil {
-				return xerrors.Errorf("failed to save Red Hat OVAL advisory: %w", err)
+				return oops.Wrapf(err, "failed to save Red Hat OVAL advisory")
 			}
 
 			if err := vs.dbc.PutVulnerabilityID(tx, bkt.vulnID); err != nil {
-				return xerrors.Errorf("failed to put severity: %w", err)
+				return oops.Wrapf(err, "failed to put vulnerability ID")
 			}
 		}
 
 		// Store CPE indices for debug information
 		for i, cpe := range cpeList {
 			if err := vs.dbc.PutRedHatCPEs(tx, i, cpe); err != nil {
-				return xerrors.Errorf("CPE put error: %w", err)
+				return oops.Wrapf(err, "cpe put error")
 			}
 		}
 
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("batch update error: %w", err)
+		return oops.Wrapf(err, "batch update error")
 	}
 	return nil
 }
@@ -226,7 +238,7 @@ func (vs VulnSrc) cpeIndices(repositories, nvrs []string) ([]int, error) {
 	for _, repo := range repositories {
 		results, err := vs.dbc.RedHatRepoToCPEs(repo)
 		if err != nil {
-			return nil, xerrors.Errorf("unable to convert repositories to CPEs: %w", err)
+			return nil, oops.With("repo", repo).Wrapf(err, "unable to convert repositories to CPEs")
 		}
 		cpeIndices = append(cpeIndices, results...)
 	}
@@ -234,7 +246,7 @@ func (vs VulnSrc) cpeIndices(repositories, nvrs []string) ([]int, error) {
 	for _, nvr := range nvrs {
 		results, err := vs.dbc.RedHatNVRToCPEs(nvr)
 		if err != nil {
-			return nil, xerrors.Errorf("unable to convert repositories to CPEs: %w", err)
+			return nil, oops.With("nvr", nvr).Wrapf(err, "unable to convert repositories to CPEs")
 		}
 		cpeIndices = append(cpeIndices, results...)
 	}
@@ -243,25 +255,26 @@ func (vs VulnSrc) cpeIndices(repositories, nvrs []string) ([]int, error) {
 }
 
 func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advisory, error) {
+	eb := oops.In("redhat").Tags("oval").With("package_name", pkgName).With("repositories", repositories).With("nvrs", nvrs)
 	cpeIndices, err := vs.cpeIndices(repositories, nvrs)
 	if err != nil {
-		return nil, xerrors.Errorf("CPE convert error: %w", err)
+		return nil, eb.Wrapf(err, "cpe convert error")
 	}
 
 	if len(cpeIndices) == 0 {
-		return nil, xerrors.Errorf("unable to find CPE indices. See https://github.com/aquasecurity/trivy-db/issues/435 for details")
+		return nil, eb.Errorf("unable to find CPE indices. See https://github.com/aquasecurity/trivy-db/issues/435 for details")
 	}
 
 	rawAdvisories, err := vs.dbc.ForEachAdvisory([]string{rootBucket}, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("unable to iterate advisories: %w", err)
+		return nil, eb.Wrapf(err, "unable to iterate advisories")
 	}
 
 	var advisories []types.Advisory
 	for vulnID, v := range rawAdvisories {
 		var adv Advisory
 		if err = json.Unmarshal(v.Content, &adv); err != nil {
-			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
+			return nil, eb.Wrapf(err, "failed to unmarshal advisory JSON")
 		}
 
 		for _, entry := range adv.Entries {
@@ -293,13 +306,13 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 	return advisories, nil
 }
 
-func parseOVALStream(dir string, uniqCPEs CPEMap) (map[bucket]Definition, error) {
-	log.Printf("    Parsing %s", dir)
+func (vs VulnSrc) parseOVALStream(dir string, uniqCPEs CPEMap) (map[bucket]Definition, error) {
+	vs.logger.Info("Parsing OVAL stream", log.DirPath(dir))
 
 	// Parse tests
 	tests, err := parseTests(dir)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to parse ovalTests: %w", err)
+		return nil, oops.Wrapf(err, "failed to parse ovalTests")
 	}
 
 	var advisories []redhatOVAL
@@ -308,17 +321,18 @@ func parseOVALStream(dir string, uniqCPEs CPEMap) (map[bucket]Definition, error)
 		return nil, nil
 	}
 
+	eb := oops.With("definitions_dir", definitionsDir)
 	err = utils.FileWalk(definitionsDir, func(r io.Reader, path string) error {
 		var definition redhatOVAL
 		if err := json.NewDecoder(r).Decode(&definition); err != nil {
-			return xerrors.Errorf("failed to decode %s: %w", path, err)
+			return eb.With("file_path", path).Wrapf(err, "json decode error")
 		}
 		advisories = append(advisories, definition)
 		return nil
 	})
 
 	if err != nil {
-		return nil, xerrors.Errorf("Red Hat OVAL walk error: %w", err)
+		return nil, eb.Wrapf(err, "oval walk error")
 	}
 
 	return parseDefinitions(advisories, tests, uniqCPEs), nil

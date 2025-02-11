@@ -15,9 +15,9 @@ jobs:
           go-version-file: go.mod
 
       - name: Lint
-        uses: golangci/golangci-lint-action@v6.0.1
+        uses: golangci/golangci-lint-action@v6.2.0
         with:
-          version: v1.54
+          version: v1.63
           args: --verbose
 
       - name: Test

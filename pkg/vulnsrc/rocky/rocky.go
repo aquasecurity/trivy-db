@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/samber/lo"
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/exp/slices"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -58,6 +58,7 @@ type DB interface {
 
 type VulnSrc struct {
 	DB
+	logger *log.Logger
 }
 
 type Rocky struct {
@@ -66,7 +67,8 @@ type Rocky struct {
 
 func NewVulnSrc() *VulnSrc {
 	return &VulnSrc{
-		DB: &Rocky{Operation: db.Config{}},
+		DB:     &Rocky{Operation: db.Config{}},
+		logger: log.WithPrefix("rocky"),
 	}
 }
 
@@ -76,12 +78,14 @@ func (vs *VulnSrc) Name() types.SourceID {
 
 func (vs *VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", rockyDir)
+	eb := oops.In("rocky").With("root_dir", rootDir)
+
 	errata, err := vs.parse(rootDir)
 	if err != nil {
-		return err
+		return eb.Wrapf(err, "parse error")
 	}
 	if err = vs.put(errata); err != nil {
-		return xerrors.Errorf("error in Rocky save: %w", err)
+		return eb.Wrapf(err, "save error")
 	}
 
 	return nil
@@ -92,14 +96,16 @@ func (vs *VulnSrc) Update(dir string) error {
 func (vs *VulnSrc) parse(rootDir string) (map[string][]RLSA, error) {
 	errata := map[string][]RLSA{}
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
+		eb := oops.With("file_path", path)
+
 		var erratum RLSA
 		if err := json.NewDecoder(r).Decode(&erratum); err != nil {
-			return xerrors.Errorf("failed to decode Rocky erratum: %w", err)
+			return eb.Wrapf(err, "json decode error")
 		}
 
 		dirs := strings.Split(strings.TrimPrefix(path, rootDir), string(filepath.Separator))[1:]
 		if len(dirs) != 5 {
-			log.Printf("Invalid path: %s", path)
+			vs.logger.Warn("Invalid path", log.FilePath(path))
 			return nil
 		}
 
@@ -110,12 +116,12 @@ func (vs *VulnSrc) parse(rootDir string) (map[string][]RLSA, error) {
 		}
 		repo, arch := dirs[1], dirs[2]
 		if !slices.Contains(targetRepos, repo) {
-			log.Printf("Unsupported Rocky repo: %s", repo)
+			vs.logger.Warn("Unsupported Rocky repo", log.String("repo", repo))
 			return nil
 		}
 
 		if !slices.Contains(targetArches, arch) {
-			log.Printf("Unsupported Rocky arch: %s", arch)
+			vs.logger.Warn("Unsupported Rocky arch", log.String("arch", arch))
 			return nil
 		}
 
@@ -123,7 +129,7 @@ func (vs *VulnSrc) parse(rootDir string) (map[string][]RLSA, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("error in Rocky walk: %w", err)
+		return nil, oops.Wrapf(err, "walk error")
 	}
 	return errata, nil
 }
@@ -132,17 +138,18 @@ func (vs *VulnSrc) put(errataVer map[string][]RLSA) error {
 	err := vs.BatchUpdate(func(tx *bolt.Tx) error {
 		for majorVer, errata := range errataVer {
 			platformName := fmt.Sprintf(platformFormat, majorVer)
+			eb := oops.With("major_version", majorVer)
 			if err := vs.PutDataSource(tx, platformName, source); err != nil {
-				return xerrors.Errorf("failed to put data source: %w", err)
+				return eb.Wrapf(err, "failed to put data source")
 			}
 			if err := vs.commit(tx, platformName, errata); err != nil {
-				return xerrors.Errorf("error in save Rocky %s: %w", majorVer, err)
+				return eb.Wrapf(err, "save error")
 			}
 		}
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in db batch update: %w", err)
+		return oops.Wrapf(err, "batch update error")
 	}
 	return nil
 }
@@ -230,7 +237,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 	for _, input := range savedInputs {
 		err := vs.Put(tx, input)
 		if err != nil {
-			return xerrors.Errorf("db put error: %w", err)
+			return oops.Wrapf(err, "db put error")
 		}
 	}
 	return nil
@@ -238,12 +245,12 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 
 func (r *Rocky) Put(tx *bolt.Tx, input PutInput) error {
 	if err := r.PutVulnerabilityDetail(tx, input.CveID, source.ID, input.Vuln); err != nil {
-		return xerrors.Errorf("failed to save Rocky vulnerability: %w", err)
+		return oops.Wrapf(err, "failed to save vulnerability detail")
 	}
 
 	// for optimization
 	if err := r.PutVulnerabilityID(tx, input.CveID); err != nil {
-		return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+		return oops.Wrapf(err, "failed to save vulnerability ID")
 	}
 
 	for pkgName, advisory := range input.Advisories {
@@ -252,23 +259,25 @@ func (r *Rocky) Put(tx *bolt.Tx, input PutInput) error {
 			sort.Strings(entry.VendorIDs)
 		}
 		if err := r.PutAdvisoryDetail(tx, input.CveID, pkgName, []string{input.PlatformName}, advisory); err != nil {
-			return xerrors.Errorf("failed to save Rocky advisory: %w", err)
+			return oops.Wrapf(err, "failed to save advisory")
 		}
 	}
 	return nil
 }
 
 func (r *Rocky) Get(release, pkgName, arch string) ([]types.Advisory, error) {
+	eb := oops.In("rocky").With("release", release).With("package_name", pkgName).With("arch", arch)
 	bucket := fmt.Sprintf(platformFormat, release)
 	rawAdvisories, err := r.ForEachAdvisory([]string{bucket}, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("unable to iterate advisories: %w", err)
+		return nil, eb.Wrapf(err, "unable to iterate advisories")
 	}
+
 	var advisories []types.Advisory
 	for vulnID, v := range rawAdvisories {
 		var adv types.Advisories
 		if err = json.Unmarshal(v.Content, &adv); err != nil {
-			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
+			return nil, eb.With("vuln_id", vulnID).Wrapf(err, "json unmarshal error")
 		}
 
 		// For backward compatibility

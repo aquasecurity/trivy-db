@@ -4,17 +4,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"log"
 	"path/filepath"
 	"strings"
 	"time"
 
 	gocvss40 "github.com/pandatix/go-cvss/40"
 	"github.com/samber/lo"
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -33,6 +33,7 @@ type DB interface {
 
 type VulnSrc struct {
 	DB
+	logger *log.Logger
 }
 
 type NVD struct {
@@ -41,7 +42,8 @@ type NVD struct {
 
 func NewVulnSrc() *VulnSrc {
 	return &VulnSrc{
-		DB: &NVD{Operation: db.Config{}},
+		DB:     &NVD{Operation: db.Config{}},
+		logger: log.WithPrefix("nvd"),
 	}
 }
 
@@ -51,27 +53,29 @@ func (vs *VulnSrc) Name() types.SourceID {
 
 func (vs *VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, vulnListDir, apiDir)
+	eb := oops.In("nvd").With("root_dir", rootDir)
 
 	var cves []Cve
 	buffer := &bytes.Buffer{}
-	err := utils.FileWalk(rootDir, func(r io.Reader, _ string) error {
+	err := utils.FileWalk(rootDir, func(r io.Reader, filePath string) error {
+		eb := eb.With("file_path", filePath)
 		cve := Cve{}
 		if _, err := buffer.ReadFrom(r); err != nil {
-			return xerrors.Errorf("failed to read file: %w", err)
+			return eb.Wrapf(err, "file read error")
 		}
 		if err := json.Unmarshal(buffer.Bytes(), &cve); err != nil {
-			return xerrors.Errorf("failed to decode NVD JSON: %w", err)
+			return eb.Wrapf(err, "json unmarshal error")
 		}
 		buffer.Reset()
 		cves = append(cves, cve)
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in NVD walk: %w", err)
+		return eb.Wrapf(err, "walk error")
 	}
 
 	if err = vs.save(cves); err != nil {
-		return xerrors.Errorf("error in NVD save: %w", err)
+		return eb.Wrapf(err, "save error")
 	}
 
 	return nil
@@ -87,12 +91,12 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, cves []Cve) error {
 }
 
 func (vs *VulnSrc) save(cves []Cve) error {
-	log.Println("NVD batch update")
+	vs.logger.Info("NVD batch update")
 	err := vs.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, cves)
 	})
 	if err != nil {
-		return xerrors.Errorf("error in batch update: %w", err)
+		return oops.Wrapf(err, "error in batch update")
 	}
 	return nil
 }
@@ -134,7 +138,9 @@ func getCvssV40(metricsV40 []CvssMetricV40) (score float64, vector string, sever
 			score = metricV40.CvssData.BaseScore
 			cvss40, err := gocvss40.ParseVector(strings.TrimSuffix(metricV40.CvssData.VectorString, "/"))
 			if err != nil {
-				log.Printf("failed to parse CVSSv4.0 vector. vector: %s, err: %s", metricV40.CvssData.VectorString, err)
+				log.WithPrefix("nvd").Warn("Failed to parse CVSSv4.0 vector",
+					log.String("vector", metricV40.CvssData.VectorString),
+					log.Err(err))
 				return 0, "", types.SeverityUnknown
 			}
 			severity, _ = types.NewSeverity(metricV40.CvssData.BaseSeverity)

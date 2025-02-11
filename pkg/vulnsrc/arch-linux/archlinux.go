@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
@@ -44,23 +44,24 @@ func (vs VulnSrc) Name() types.SourceID {
 
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", archLinuxDir)
+	eb := oops.In("arch-linux").With("root_dir", rootDir)
 
 	var avgs []ArchVulnGroup
 
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		var avg ArchVulnGroup
 		if err := json.NewDecoder(r).Decode(&avg); err != nil {
-			return xerrors.Errorf("failed to decode arch linux json (%s): %w", path, err)
+			return eb.With("file_path", path).Wrapf(err, "json decode error")
 		}
 		avgs = append(avgs, avg)
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in arch linux walk: %w", err)
+		return eb.Wrapf(err, "walk error")
 	}
 
 	if err = vs.save(avgs); err != nil {
-		return xerrors.Errorf("error in arch linux save: %w", err)
+		return eb.Wrapf(err, "save error")
 	}
 
 	return nil
@@ -69,15 +70,15 @@ func (vs VulnSrc) Update(dir string) error {
 func (vs VulnSrc) save(avgs []ArchVulnGroup) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
-			return xerrors.Errorf("failed to put data source: %w", err)
+			return oops.Wrapf(err, "failed to put data source")
 		}
 		if err := vs.commit(tx, avgs); err != nil {
-			return xerrors.Errorf("commit error: %w", err)
+			return oops.Wrapf(err, "commit error")
 		}
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in batch update: %w", err)
+		return oops.Wrapf(err, "batch update failed")
 	}
 	return nil
 }
@@ -92,31 +93,30 @@ func (vs VulnSrc) commit(tx *bolt.Tx, avgs []ArchVulnGroup) error {
 
 			for _, pkg := range avg.Packages {
 				if err := vs.dbc.PutAdvisoryDetail(tx, cveId, pkg, []string{platformName}, advisory); err != nil {
-					return xerrors.Errorf("failed to save arch linux advisory: %w", err)
+					return oops.Wrapf(err, "failed to save advisory")
 				}
 
-				vuln := types.VulnerabilityDetail{
-					Severity: convertSeverity(avg.Severity),
-				}
-				if err := vs.dbc.PutVulnerabilityDetail(tx, cveId, source.ID, vuln); err != nil {
-					return xerrors.Errorf("failed to save arch linux vulnerability: %w", err)
-				}
-
-				// for optimization
-				if err := vs.dbc.PutVulnerabilityID(tx, cveId); err != nil {
-					return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
-				}
 			}
-
+			vuln := types.VulnerabilityDetail{
+				Severity: convertSeverity(avg.Severity),
+			}
+			if err := vs.dbc.PutVulnerabilityDetail(tx, cveId, source.ID, vuln); err != nil {
+				return oops.Wrapf(err, "failed to save vulnerability")
+			}
+			// for optimization
+			if err := vs.dbc.PutVulnerabilityID(tx, cveId); err != nil {
+				return oops.Wrapf(err, "failed to save the vulnerability ID")
+			}
 		}
 	}
 	return nil
 }
 
 func (vs VulnSrc) Get(pkgName string) ([]types.Advisory, error) {
+	eb := oops.In("arch-linux")
 	advisories, err := vs.dbc.GetAdvisories(platformName, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get Arch Linux advisories: %w", err)
+		return nil, eb.Wrapf(err, "failed to get Arch Linux advisories")
 	}
 	return advisories, nil
 }

@@ -4,16 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"path/filepath"
 	"strconv"
 	"strings"
 
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/go-version/pkg/version"
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -44,14 +44,16 @@ var (
 )
 
 type VulnSrc struct {
-	dist Distribution
-	dbc  db.Operation
+	dist   Distribution
+	dbc    db.Operation
+	logger *log.Logger
 }
 
 func NewVulnSrc(dist Distribution) VulnSrc {
 	return VulnSrc{
-		dist: dist,
-		dbc:  db.Config{},
+		dist:   dist,
+		dbc:    db.Config{},
+		logger: log.WithPrefix("suse-cvrf"),
 	}
 }
 
@@ -66,33 +68,34 @@ func (vs VulnSrc) Name() types.SourceID {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	log.Println("Saving SUSE CVRF")
-
+	vs.logger.Info("Saving SUSE CVRF")
 	rootDir := filepath.Join(dir, "vuln-list", suseDir)
+	eb := oops.In("suse").Tags("cvrf").With("root_dir", rootDir)
+
 	switch vs.dist {
 	case SUSEEnterpriseLinux, SUSEEnterpriseLinuxMicro:
 		rootDir = filepath.Join(rootDir, "suse")
 	case OpenSUSE, OpenSUSETumbleweed:
 		rootDir = filepath.Join(rootDir, "opensuse")
 	default:
-		return xerrors.New("unknown distribution")
+		return eb.Errorf("unknown distribution")
 	}
 
 	var cvrfs []SuseCvrf
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		var cvrf SuseCvrf
 		if err := json.NewDecoder(r).Decode(&cvrf); err != nil {
-			return xerrors.Errorf("failed to decode SUSE CVRF JSON: %w %+v", err, cvrf)
+			return eb.With("file_path", path).Wrapf(err, "json decode error")
 		}
 		cvrfs = append(cvrfs, cvrf)
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in SUSE CVRF walk: %w", err)
+		return eb.Wrapf(err, "walk error")
 	}
 
 	if err = vs.save(cvrfs); err != nil {
-		return xerrors.Errorf("error in SUSE CVRF save: %w", err)
+		return eb.Wrapf(err, "save error")
 	}
 
 	return nil
@@ -103,14 +106,14 @@ func (vs VulnSrc) save(cvrfs []SuseCvrf) error {
 		return vs.commit(tx, cvrfs)
 	})
 	if err != nil {
-		return xerrors.Errorf("error in batch update: %w", err)
+		return oops.Wrapf(err, "batch update error")
 	}
 	return nil
 }
 
 func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 	for _, cvrf := range cvrfs {
-		affectedPkgs := getAffectedPackages(cvrf.ProductTree.Relationships)
+		affectedPkgs := vs.getAffectedPackages(cvrf.ProductTree.Relationships)
 		if len(affectedPkgs) == 0 {
 			continue
 		}
@@ -121,12 +124,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 			}
 
 			if err := vs.dbc.PutDataSource(tx, affectedPkg.OSVer, source); err != nil {
-				return xerrors.Errorf("failed to put data source: %w", err)
+				return oops.Wrapf(err, "failed to put data source")
 			}
 
 			if err := vs.dbc.PutAdvisoryDetail(tx, cvrf.Tracking.ID, affectedPkg.Package.Name,
 				[]string{affectedPkg.OSVer}, advisory); err != nil {
-				return xerrors.Errorf("unable to save %s CVRF: %w", affectedPkg.OSVer, err)
+				return oops.Wrapf(err, "unable to save CVRF")
 			}
 		}
 
@@ -153,28 +156,28 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 		}
 
 		if err := vs.dbc.PutVulnerabilityDetail(tx, cvrf.Tracking.ID, source.ID, vuln); err != nil {
-			return xerrors.Errorf("failed to save SUSE CVRF vulnerability: %w", err)
+			return oops.With("tracking_id", cvrf.Tracking.ID).Wrapf(err, "failed to save SUSE CVRF vulnerability")
 		}
 
 		// for optimization
 		if err := vs.dbc.PutVulnerabilityID(tx, cvrf.Tracking.ID); err != nil {
-			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+			return oops.With("tracking_id", cvrf.Tracking.ID).Wrapf(err, "failed to save the vulnerability ID")
 		}
 	}
 	return nil
 }
 
-func getAffectedPackages(relationships []Relationship) []AffectedPackage {
+func (vs VulnSrc) getAffectedPackages(relationships []Relationship) []AffectedPackage {
 	var pkgs []AffectedPackage
 	for _, relationship := range relationships {
-		osVer := getOSVersion(relationship.RelatesToProductReference)
+		osVer := vs.getOSVersion(relationship.RelatesToProductReference)
 		if osVer == "" {
 			continue
 		}
 
 		pkg := getPackage(relationship.ProductReference)
 		if pkg == nil {
-			log.Printf("invalid package name: %s", relationship.ProductReference)
+			vs.logger.Warn("Invalid package name", log.String("reference", relationship.ProductReference))
 			continue
 		}
 
@@ -187,7 +190,7 @@ func getAffectedPackages(relationships []Relationship) []AffectedPackage {
 	return pkgs
 }
 
-func getOSVersion(platformName string) string {
+func (vs VulnSrc) getOSVersion(platformName string) string {
 	if strings.Contains(platformName, "SUSE Manager") {
 		// SUSE Linux Enterprise Module for SUSE Manager Server 4.0
 		return ""
@@ -200,11 +203,13 @@ func getOSVersion(platformName string) string {
 		// openSUSE Leap 15.0
 		ss := strings.Split(platformName, " ")
 		if len(ss) < 3 {
-			log.Printf("invalid version: %s", platformName)
+			vs.logger.Warn("Invalid version", log.String("platform", platformName))
 			return ""
 		}
 		if _, err := version.Parse(ss[2]); err != nil {
-			log.Printf("invalid version: %s, err: %s", platformName, err)
+			vs.logger.Warn("Invalid version",
+				log.String("platform", platformName),
+				log.Err(err))
 			return ""
 		}
 		return fmt.Sprintf(platformOpenSUSELeapFormat, ss[2])
@@ -213,11 +218,13 @@ func getOSVersion(platformName string) string {
 		// SUSE Linux Enterprise Micro 5.3
 		ss := strings.Split(platformName, " ")
 		if len(ss) < 5 {
-			log.Printf("invalid version: %s", platformName)
+			vs.logger.Warn("Invalid version", log.String("platform", platformName))
 			return ""
 		}
 		if _, err := version.Parse(ss[4]); err != nil {
-			log.Printf("invalid version: %s, err: %s", platformName, err)
+			vs.logger.Warn("Invalid version",
+				log.String("platform", platformName),
+				log.Err(err))
 			return ""
 		}
 		return fmt.Sprintf(platformSUSELinuxEnterpriseMicroFormat, ss[4])
@@ -229,25 +236,25 @@ func getOSVersion(platformName string) string {
 		}
 
 		ss := strings.Fields(strings.ReplaceAll(platformName, "-", " "))
-		vs := make([]string, 0, 2)
+		versions := make([]string, 0, 2)
 		for i := len(ss) - 1; i > 0; i-- {
 			v, err := strconv.Atoi(strings.TrimPrefix(ss[i], "SP"))
 			if err != nil {
 				continue
 			}
-			vs = append(vs, fmt.Sprintf("%d", v))
-			if len(vs) == 2 {
+			versions = append(versions, fmt.Sprintf("%d", v))
+			if len(versions) == 2 {
 				break
 			}
 		}
-		switch len(vs) {
+		switch len(versions) {
 		case 0:
-			log.Printf("failed to detect version: %s", platformName)
+			vs.logger.Warn("Failed to detect version", log.String("platform", platformName))
 			return ""
 		case 1:
-			return fmt.Sprintf(platformSUSELinuxFormat, vs[0])
+			return fmt.Sprintf(platformSUSELinuxFormat, versions[0])
 		case 2:
-			return fmt.Sprintf(platformSUSELinuxFormat, fmt.Sprintf("%s.%s", vs[1], vs[0]))
+			return fmt.Sprintf(platformSUSELinuxFormat, fmt.Sprintf("%s.%s", versions[1], versions[0]))
 		}
 	}
 
@@ -295,6 +302,7 @@ func splitPkgName(pkgName string) (string, string) {
 }
 
 func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) {
+	eb := oops.In("suse").Tags("cvrf").With("version", version).With("package_name", pkgName)
 	var bucket string
 	switch vs.dist {
 	case SUSEEnterpriseLinuxMicro:
@@ -306,16 +314,15 @@ func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) 
 	case OpenSUSETumbleweed:
 		bucket = platformOpenSUSETumbleweedFormat
 	default:
-		return nil, xerrors.New("unknown distribution")
+		return nil, eb.Errorf("unknown distribution")
 	}
 
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get SUSE advisories: %w", err)
+		return nil, eb.Wrapf(err, "failed to get advisories")
 	}
 	return advisories, nil
 }
-
 func severityFromThreat(sev string) types.Severity {
 	switch sev {
 	case "low":

@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 	"gopkg.in/yaml.v2"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
@@ -60,8 +60,9 @@ func (vs VulnSrc) Name() types.SourceID {
 
 func (vs VulnSrc) Update(dir string) (err error) {
 	repoPath := filepath.Join(dir, composerDir)
+	eb := oops.In("composer").With("repo_path", repoPath)
 	if err := vs.update(repoPath); err != nil {
-		return xerrors.Errorf("failed to update compose vulnerabilities: %w", err)
+		return eb.Wrapf(err, "update error")
 	}
 	return nil
 }
@@ -69,36 +70,36 @@ func (vs VulnSrc) Update(dir string) (err error) {
 func (vs VulnSrc) update(repoPath string) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		if err := vs.dbc.PutDataSource(tx, bucketName, source); err != nil {
-			return xerrors.Errorf("failed to put data source: %w", err)
+			return oops.Wrapf(err, "failed to put data source")
 		}
 		if err := vs.walk(tx, repoPath); err != nil {
-			return xerrors.Errorf("failed to walk compose advisories: %w", err)
+			return oops.Wrapf(err, "walk error")
 		}
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("batch update failed: %w", err)
+		return oops.Wrapf(err, "batch update failed")
 	}
 	return nil
 }
 
 func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		eb := oops.With("file_path", path)
 		if err != nil {
-			return err
-		}
-		if info.IsDir() || !strings.HasPrefix(info.Name(), "CVE-") {
+			return eb.Wrapf(err, "walk error")
+		} else if info.IsDir() || !strings.HasPrefix(info.Name(), "CVE-") {
 			return nil
 		}
+
 		buf, err := os.ReadFile(path)
 		if err != nil {
-			return xerrors.Errorf("failed to read a file: %w", err)
+			return eb.Wrapf(err, "file read error")
 		}
 
 		advisory := RawAdvisory{}
-		err = yaml.Unmarshal(buf, &advisory)
-		if err != nil {
-			return xerrors.Errorf("failed to unmarshal YAML: %w", err)
+		if err := yaml.Unmarshal(buf, &advisory); err != nil {
+			return eb.Wrapf(err, "yaml unmarshal error")
 		}
 
 		// for detecting vulnerabilities
@@ -120,9 +121,8 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		pkgName := strings.TrimPrefix(advisory.Reference, "composer://")
 		pkgName = vulnerability.NormalizePkgName(vulnerability.Composer, pkgName)
 
-		err = vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bucketName}, a)
-		if err != nil {
-			return xerrors.Errorf("failed to save php advisory: %w", err)
+		if err = vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bucketName}, a); err != nil {
+			return eb.Wrapf(err, "failed to save advisory")
 		}
 
 		// for displaying vulnerability detail
@@ -132,12 +132,12 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 			Title:      advisory.Title,
 		}
 		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, source.ID, vuln); err != nil {
-			return xerrors.Errorf("failed to save php vulnerability detail: %w", err)
+			return eb.Wrapf(err, "failed to save vulnerability detail")
 		}
 
 		// for optimization
 		if err = vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
-			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+			return eb.Wrapf(err, "failed to save vulnerability ID")
 		}
 		return nil
 	})

@@ -2,15 +2,15 @@ package azure
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/azure/oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -30,7 +30,7 @@ const (
 )
 
 var (
-	ErrNotSupported = xerrors.New("format not supported")
+	ErrNotSupported = oops.Errorf("format not supported")
 
 	azureSource = types.DataSource{
 		ID:   vulnerability.AzureLinux,
@@ -53,6 +53,7 @@ type resolvedTest struct {
 
 type VulnSrc struct {
 	dbc            db.Operation
+	logger         *log.Logger
 	azureDir       string
 	source         types.DataSource
 	platformFormat string
@@ -69,6 +70,7 @@ func NewVulnSrc(dist Distribution) VulnSrc {
 func azureVulnSrc() VulnSrc {
 	return VulnSrc{
 		dbc:            db.Config{},
+		logger:         log.WithPrefix("azure"),
 		azureDir:       azureDir,
 		source:         azureSource,
 		platformFormat: azurePlatformFormat,
@@ -78,6 +80,7 @@ func azureVulnSrc() VulnSrc {
 func marinerVulnSrc() VulnSrc {
 	return VulnSrc{
 		dbc:            db.Config{},
+		logger:         log.WithPrefix("mariner"),
 		azureDir:       marinerDir,
 		source:         marinerSource,
 		platformFormat: marinerPlatformFormat,
@@ -90,38 +93,42 @@ func (vs VulnSrc) Name() types.SourceID {
 
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", vs.azureDir)
+	eb := oops.In(string(vs.source.ID)).With("root_dir", rootDir)
+
 	versions, err := os.ReadDir(rootDir)
 	if err != nil {
-		return xerrors.Errorf("unable to list directory entries (%s): %w", rootDir, err)
+		return eb.Wrapf(err, "unable to list directory entries")
 	}
 
 	for _, ver := range versions {
 		versionDir := filepath.Join(rootDir, ver.Name())
-		entries, err := parseOVAL(filepath.Join(versionDir))
+		eb := eb.With("version_dir", versionDir)
+
+		entries, err := vs.parseOVAL(versionDir)
 		if err != nil {
-			return xerrors.Errorf("failed to parse CBL-Mariner OVAL: %w ", err)
+			return eb.Wrapf(err, "failed to parse OVAL")
 		}
 
 		if err = vs.save(ver.Name(), entries); err != nil {
-			return xerrors.Errorf("error in CBL-Mariner save: %w", err)
+			return eb.Wrapf(err, "save error")
 		}
 	}
 
 	return nil
 }
 
-func parseOVAL(dir string) ([]Entry, error) {
-	log.Printf("    Parsing %s", dir)
+func (vs VulnSrc) parseOVAL(dir string) ([]Entry, error) {
+	vs.logger.Info("Parsing OVAL", log.DirPath(dir))
 
 	// Parse and resolve tests
 	tests, err := resolveTests(dir)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to resolve tests: %w", err)
+		return nil, oops.Wrapf(err, "failed to resolve tests")
 	}
 
 	defs, err := oval.ParseDefinitions(dir)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to parse definitions: %w", err)
+		return nil, oops.Wrapf(err, "failed to parse definitions")
 	}
 
 	return resolveDefinitions(defs, tests), nil
@@ -162,17 +169,17 @@ const (
 func resolveTests(dir string) (map[string]resolvedTest, error) {
 	objects, err := oval.ParseObjects(dir)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to parse objects: %w", err)
+		return nil, oops.Wrapf(err, "failed to parse objects")
 	}
 
 	states, err := oval.ParseStates(dir)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to parse states: %w", err)
+		return nil, oops.Wrapf(err, "failed to parse states")
 	}
 
 	tt, err := oval.ParseTests(dir)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to parse tests: %w", err)
+		return nil, oops.Wrapf(err, "failed to parse tests")
 	}
 
 	tests := map[string]resolvedTest{}
@@ -184,7 +191,7 @@ func resolveTests(dir string) (map[string]resolvedTest, error) {
 
 		t, err := followTestRefs(test, objects, states)
 		if err != nil {
-			return nil, xerrors.Errorf("unable to follow test refs: %w", err)
+			return nil, oops.Wrapf(err, "unable to follow test refs")
 		}
 
 		if t.Name != "" {
@@ -196,30 +203,30 @@ func resolveTests(dir string) (map[string]resolvedTest, error) {
 }
 
 func followTestRefs(test oval.RpmInfoTest, objects map[string]string, states map[string]oval.RpmInfoState) (resolvedTest, error) {
+	eb := oops.With("object_ref", test.Object.ObjectRef).With("state_ref", test.State.StateRef).With("test_ref", test.ID)
+
 	// Follow object ref
 	if test.Object.ObjectRef == "" {
-		return resolvedTest{}, xerrors.New("invalid test, no object ref")
+		return resolvedTest{}, eb.Errorf("invalid test, no object ref")
 	}
 
 	pkgName, ok := objects[test.Object.ObjectRef]
 	if !ok {
-		return resolvedTest{}, xerrors.Errorf("invalid test data, can't find object ref: %s, test ref: %s",
-			test.Object.ObjectRef, test.ID)
+		return resolvedTest{}, eb.Errorf("invalid test data, can't find object ref")
 	}
 
 	// Follow state ref
 	if test.State.StateRef == "" {
-		return resolvedTest{}, xerrors.New("invalid test, no state ref")
+		return resolvedTest{}, eb.Errorf("invalid test, no state ref")
 	}
 
 	state, ok := states[test.State.StateRef]
 	if !ok {
-		return resolvedTest{}, xerrors.Errorf("invalid tests data, can't find ovalstate ref %s, test ref: %s",
-			test.State.StateRef, test.ID)
+		return resolvedTest{}, eb.Errorf("invalid tests data, can't find ovalstate ref")
 	}
 
 	if state.Evr.Datatype != "evr_string" {
-		return resolvedTest{}, xerrors.Errorf("state data type (%s): %w", state.Evr.Datatype, ErrNotSupported)
+		return resolvedTest{}, eb.With("data_type", state.Evr.Datatype).Wrapf(ErrNotSupported, "state data type")
 	}
 
 	// We don't currently support `greater than` operator
@@ -228,7 +235,7 @@ func followTestRefs(test oval.RpmInfoTest, objects map[string]string, states map
 	}
 
 	if state.Evr.Operation != string(lte) && state.Evr.Operation != string(lt) {
-		return resolvedTest{}, xerrors.Errorf("state operation (%s): %w", state.Evr.Operation, ErrNotSupported)
+		return resolvedTest{}, eb.With("operation", state.Evr.Operation).Wrapf(ErrNotSupported, "state operation")
 	}
 
 	return resolvedTest{
@@ -239,19 +246,21 @@ func followTestRefs(test oval.RpmInfoTest, objects map[string]string, states map
 }
 
 func (vs VulnSrc) save(majorVer string, entries []Entry) error {
+	eb := oops.With("major_version", majorVer)
+
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		platformName := fmt.Sprintf(vs.platformFormat, majorVer)
 		if err := vs.dbc.PutDataSource(tx, platformName, vs.source); err != nil {
-			return xerrors.Errorf("failed to put data source: %w", err)
+			return eb.Wrapf(err, "failed to put data source")
 		}
 
 		if err := vs.commit(tx, platformName, entries); err != nil {
-			return xerrors.Errorf("%s commit error: %w", platformName, err)
+			return eb.Wrapf(err, "failed to commit entries")
 		}
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in db batch update: %w", err)
+		return eb.Wrapf(err, "batch update failed")
 	}
 	return nil
 }
@@ -270,7 +279,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, entries []Entry) erro
 		}
 
 		if err := vs.dbc.PutAdvisoryDetail(tx, cveID, entry.PkgName, []string{platformName}, advisory); err != nil {
-			return xerrors.Errorf("failed to save %s advisory detail: %w", platformName, err)
+			return oops.Wrapf(err, "failed to save advisory detail")
 		}
 
 		severity, _ := types.NewSeverity(strings.ToUpper(entry.Metadata.Severity))
@@ -281,21 +290,22 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, entries []Entry) erro
 			References:  []string{entry.Metadata.Reference.RefURL},
 		}
 		if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, vs.source.ID, vuln); err != nil {
-			return xerrors.Errorf("failed to save %s vulnerability detail: %w", platformName, err)
+			return oops.Wrapf(err, "failed to save vulnerability detail")
 		}
 
 		if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
-			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+			return oops.Wrapf(err, "failed to save the vulnerability ID")
 		}
 	}
 	return nil
 }
 
 func (vs VulnSrc) Get(release, pkgName string) ([]types.Advisory, error) {
+	eb := oops.In(string(vs.source.ID)).With("release", release).With("package_name", pkgName)
 	bucket := fmt.Sprintf(vs.platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get %s advisories: %w", bucket, err)
+		return nil, eb.Wrapf(err, "failed to get advisories")
 	}
 	return advisories, nil
 }

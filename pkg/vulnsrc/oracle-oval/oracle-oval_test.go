@@ -546,7 +546,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad path (failed to decode)",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "failed to decode Oracle Linux OVAL JSON",
+			wantErr: "json decode error",
 		},
 		{
 			name: "same fix version with different ELSA ids and architectures",
@@ -742,7 +742,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 			version: "8",
 			pkgName: "bind",
-			wantErr: "failed to unmarshal advisory JSON",
+			wantErr: "json unmarshal error",
 		},
 	}
 	for _, tt := range tests {

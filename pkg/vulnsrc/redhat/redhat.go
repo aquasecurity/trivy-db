@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"path/filepath"
 	"strconv"
 	"strings"
 
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -28,12 +28,14 @@ const (
 )
 
 type VulnSrc struct {
-	dbc db.Operation
+	dbc    db.Operation
+	logger *log.Logger
 }
 
 func NewVulnSrc() VulnSrc {
 	return VulnSrc{
-		dbc: db.Config{},
+		dbc:    db.Config{},
+		logger: log.WithPrefix("redhat"),
 	}
 }
 
@@ -43,73 +45,78 @@ func (vs VulnSrc) Name() types.SourceID {
 
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, vulnListDir, apiDir)
+	eb := oops.In("redhat").With("root_dir", rootDir)
 
 	var cves []RedhatCVE
-	err := utils.FileWalk(rootDir, func(r io.Reader, _ string) error {
+	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
+		eb := eb.With("file_path", path)
+
 		content, err := io.ReadAll(r)
 		if err != nil {
-			return err
+			return eb.Wrap(err)
 		}
 		cve := RedhatCVE{}
 		if err = json.Unmarshal(content, &cve); err != nil {
-			return xerrors.Errorf("failed to decode RedHat JSON: %w", err)
+			return eb.Wrapf(err, "json decode error")
 		}
+
 		switch cve.TempAffectedRelease.(type) {
 		case []interface{}:
 			var ar RedhatCVEAffectedReleaseArray
 			if err = json.Unmarshal(content, &ar); err != nil {
-				return xerrors.Errorf("unknown affected_release type: %w", err)
+				return eb.Wrapf(err, "unknown affected_release type")
 			}
 			cve.AffectedRelease = ar.AffectedRelease
 		case map[string]interface{}:
 			var ar RedhatCVEAffectedReleaseObject
 			if err = json.Unmarshal(content, &ar); err != nil {
-				return xerrors.Errorf("unknown affected_release type: %w", err)
+				return eb.Wrapf(err, "unknown affected_release type")
 			}
 			cve.AffectedRelease = []RedhatAffectedRelease{ar.AffectedRelease}
 		case nil:
 		default:
-			return xerrors.New("unknown affected_release type")
+			return eb.Errorf("unknown affected_release type")
 		}
 
 		switch cve.TempPackageState.(type) {
 		case []interface{}:
 			var ps RedhatCVEPackageStateArray
 			if err = json.Unmarshal(content, &ps); err != nil {
-				return xerrors.Errorf("unknown package_state type: %w", err)
+				return eb.Wrapf(err, "unknown package_state type")
 			}
 			cve.PackageState = ps.PackageState
 		case map[string]interface{}:
 			var ps RedhatCVEPackageStateObject
 			if err = json.Unmarshal(content, &ps); err != nil {
-				return xerrors.Errorf("unknown package_state type: %w", err)
+				return eb.Wrapf(err, "unknown package_state type")
 			}
 			cve.PackageState = []RedhatPackageState{ps.PackageState}
 		case nil:
 		default:
-			return xerrors.New("unknown package_state type")
+			return eb.Errorf("unknown package_state type")
 		}
+
 		cves = append(cves, cve)
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in Red Hat walk: %w", err)
+		return eb.Wrapf(err, "walk error")
 	}
 
 	if err = vs.save(cves); err != nil {
-		return xerrors.Errorf("error in Red Hat save: %w", err)
+		return eb.Wrapf(err, "save error")
 	}
 
 	return nil
 }
 
 func (vs VulnSrc) save(cves []RedhatCVE) error {
-	log.Println("Saving Red Hat DB")
+	vs.logger.Info("Saving DB")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, cves)
 	})
 	if err != nil {
-		return xerrors.Errorf("failed batch update: %w", err)
+		return oops.Wrapf(err, "batch update error")
 	}
 	return nil
 }
@@ -141,12 +148,12 @@ func (vs VulnSrc) putVulnerabilityDetail(tx *bolt.Tx, cve RedhatCVE) error {
 		Description:  strings.TrimSpace(strings.Join(cve.Details, "")),
 	}
 	if err := vs.dbc.PutVulnerabilityDetail(tx, cve.Name, vulnerability.RedHat, vuln); err != nil {
-		return xerrors.Errorf("failed to save Red Hat vulnerability: %w", err)
+		return oops.Wrapf(err, "failed to save vulnerability detail")
 	}
 
 	// for optimization
 	if err := vs.dbc.PutVulnerabilityID(tx, cve.Name); err != nil {
-		return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+		return oops.Wrapf(err, "failed to save the vulnerability ID")
 	}
 	return nil
 }

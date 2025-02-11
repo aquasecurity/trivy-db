@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"path/filepath"
 	"slices"
 	"strings"
 
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -35,6 +35,7 @@ var (
 
 type VulnSrc struct {
 	dbc        db.Operation
+	logger     *log.Logger
 	advisories map[string][]ALAS
 }
 
@@ -66,6 +67,7 @@ type Reference struct {
 func NewVulnSrc() VulnSrc {
 	return VulnSrc{
 		dbc:        db.Config{},
+		logger:     log.WithPrefix("amazon"),
 		advisories: map[string][]ALAS{},
 	}
 }
@@ -76,14 +78,15 @@ func (vs VulnSrc) Name() types.SourceID {
 
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", amazonDir)
+	eb := oops.In("amazon").With("root_dir", rootDir)
 
 	err := utils.FileWalk(rootDir, vs.walkFunc)
 	if err != nil {
-		return xerrors.Errorf("error in Amazon walk: %w", err)
+		return eb.Wrapf(err, "walk error")
 	}
 
 	if err = vs.save(); err != nil {
-		return xerrors.Errorf("error in Amazon save: %w", err)
+		return eb.Wrapf(err, "save error")
 	}
 
 	return nil
@@ -96,13 +99,13 @@ func (vs *VulnSrc) walkFunc(r io.Reader, path string) error {
 	}
 	version := paths[len(paths)-2]
 	if !slices.Contains(targetVersions, version) {
-		log.Printf("unsupported Amazon version: %s\n", version)
+		vs.logger.Warn("Unsupported Amazon version", "version", version)
 		return nil
 	}
 
 	var alas ALAS
 	if err := json.NewDecoder(r).Decode(&alas); err != nil {
-		return xerrors.Errorf("failed to decode Amazon JSON: %w", err)
+		return oops.With("file_path", path).With("version", version).Wrapf(err, "json decode error")
 	}
 
 	vs.advisories[version] = append(vs.advisories[version], alas)
@@ -110,12 +113,12 @@ func (vs *VulnSrc) walkFunc(r io.Reader, path string) error {
 }
 
 func (vs VulnSrc) save() error {
-	log.Println("Saving Amazon DB")
+	vs.logger.Info("Saving DB")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx)
 	})
 	if err != nil {
-		return xerrors.Errorf("error in batch update: %w", err)
+		return oops.Wrapf(err, "batch update error")
 	}
 	return nil
 }
@@ -123,8 +126,9 @@ func (vs VulnSrc) save() error {
 func (vs VulnSrc) commit(tx *bolt.Tx) error {
 	for majorVersion, alasList := range vs.advisories {
 		platformName := fmt.Sprintf(platformFormat, majorVersion)
+
 		if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
-			return xerrors.Errorf("failed to put data source: %w", err)
+			return oops.Wrapf(err, "failed to put data source")
 		}
 		for _, alas := range alasList {
 			for _, cveID := range alas.CveIDs {
@@ -133,28 +137,28 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 						FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
 					}
 					if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkg.Name, []string{platformName}, advisory); err != nil {
-						return xerrors.Errorf("failed to save Amazon advisory: %w", err)
+						return oops.Wrapf(err, "failed to save advisory")
 					}
 
-					var references []string
-					for _, ref := range alas.References {
-						references = append(references, ref.Href)
-					}
+				}
+				var references []string
+				for _, ref := range alas.References {
+					references = append(references, ref.Href)
+				}
 
-					vuln := types.VulnerabilityDetail{
-						Severity:    severityFromPriority(alas.Severity),
-						References:  references,
-						Description: alas.Description,
-						Title:       "",
-					}
-					if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, source.ID, vuln); err != nil {
-						return xerrors.Errorf("failed to save Amazon vulnerability detail: %w", err)
-					}
+				vuln := types.VulnerabilityDetail{
+					Severity:    severityFromPriority(alas.Severity),
+					References:  references,
+					Description: alas.Description,
+					Title:       "",
+				}
+				if err := vs.dbc.PutVulnerabilityDetail(tx, cveID, source.ID, vuln); err != nil {
+					return oops.Wrapf(err, "failed to save vulnerability detail")
+				}
 
-					// for optimization
-					if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
-						return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
-					}
+				// for optimization
+				if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
+					return oops.Wrapf(err, "failed to save vulnerability ID")
 				}
 			}
 		}
@@ -164,10 +168,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 
 // Get returns a security advisory
 func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) {
+	eb := oops.In("amazon").With("version", version)
 	bucket := fmt.Sprintf(platformFormat, version)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get Amazon advisories: %w", err)
+		return nil, eb.Wrapf(err, "failed to get advisories")
 	}
 	return advisories, nil
 }

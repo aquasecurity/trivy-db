@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 
 	debver "github.com/knqyf263/go-deb-version"
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -63,8 +63,9 @@ func WithCustomPut(put db.CustomPut) Option {
 }
 
 type VulnSrc struct {
-	put db.CustomPut
-	dbc db.Operation
+	put    db.CustomPut
+	dbc    db.Operation
+	logger *log.Logger
 
 	// Hold a map of codenames and major versions from distributions.json
 	// e.g. "buster" => "10"
@@ -96,6 +97,7 @@ func NewVulnSrc(opts ...Option) VulnSrc {
 	src := VulnSrc{
 		put:              defaultPut,
 		dbc:              db.Config{},
+		logger:           log.WithPrefix("debian"),
 		distributions:    map[string]string{},
 		details:          map[string]VulnerabilityDetail{},
 		pkgVersions:      map[bucket]string{},
@@ -116,12 +118,13 @@ func (vs VulnSrc) Name() types.SourceID {
 }
 
 func (vs VulnSrc) Update(dir string) error {
+	eb := oops.In("debian")
 	if err := vs.parse(dir); err != nil {
-		return xerrors.Errorf("parse error: %w", err)
+		return eb.Wrapf(err, "parse error")
 	}
 
 	if err := vs.save(); err != nil {
-		return xerrors.Errorf("save error: %w", err)
+		return eb.Wrapf(err, "save error")
 	}
 
 	return nil
@@ -129,61 +132,64 @@ func (vs VulnSrc) Update(dir string) error {
 
 func (vs VulnSrc) parse(dir string) error {
 	rootDir := filepath.Join(dir, debianDir, "tracker")
+	eb := oops.With("root_dir", rootDir)
 
 	// Parse distributions.json
 	if err := vs.parseDistributions(rootDir); err != nil {
-		return xerrors.Errorf("distributions error: %w", err)
+		return eb.Wrapf(err, "distributions error")
 	}
 
 	// Parse source/**.json
 	if err := vs.parseSources(filepath.Join(rootDir, sourcesDir)); err != nil {
-		return xerrors.Errorf("source parse error: %w", err)
+		return eb.Wrapf(err, "source parse error")
 	}
 
 	// Parse updates-source/**.json
 	if err := vs.parseSources(filepath.Join(rootDir, updateSourcesDir)); err != nil {
-		return xerrors.Errorf("updates-source parse error: %w", err)
+		return eb.Wrapf(err, "updates-source parse error")
 	}
 
 	// Parse CVE/*.json
 	if err := vs.parseCVE(rootDir); err != nil {
-		return xerrors.Errorf("CVE error: %w", err)
+		return eb.Wrapf(err, "CVE error")
 	}
 
 	// Parse DLA/*.json
 	if err := vs.parseDLA(rootDir); err != nil {
-		return xerrors.Errorf("DLA error: %w", err)
+		return eb.Wrapf(err, "DLA error")
 	}
 
 	// Parse DSA/*.json
 	if err := vs.parseDSA(rootDir); err != nil {
-		return xerrors.Errorf("DSA error: %w", err)
+		return eb.Wrapf(err, "DSA error")
 	}
 
 	return nil
 }
 
 func (vs VulnSrc) parseBug(dir string, fn func(bug) error) error {
+	eb := oops.With("dir", dir)
 	err := utils.FileWalk(dir, func(r io.Reader, path string) error {
+		eb := eb.With("file_path", path)
 		var bg bug
 		if err := json.NewDecoder(r).Decode(&bg); err != nil {
-			return xerrors.Errorf("json decode error: %w", err)
+			return eb.Wrapf(err, "json decode error")
 		}
 
 		if err := fn(bg); err != nil {
-			return xerrors.Errorf("parse debian bug error: %w", err)
+			return eb.Wrapf(err, "parse debian bug error")
 		}
 		return nil
 	})
 
 	if err != nil {
-		return xerrors.Errorf("walk error: %w", err)
+		return eb.Wrapf(err, "walk error")
 	}
 	return nil
 }
 
 func (vs VulnSrc) parseCVE(dir string) error {
-	log.Println("  Parsing CVE JSON files...")
+	vs.logger.Info("Parsing CVE JSON files...")
 	err := vs.parseBug(filepath.Join(dir, cveDir), func(bug bug) error {
 		// Hold severities per the packages
 		severities := map[string]string{}
@@ -255,23 +261,23 @@ func (vs VulnSrc) parseCVE(dir string) error {
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("CVE parse error: %w", err)
+		return oops.Wrapf(err, "CVE parse error")
 	}
 	return nil
 }
 
 func (vs VulnSrc) parseDLA(dir string) error {
-	log.Println("  Parsing DLA JSON files...")
+	vs.logger.Info("Parsing DLA JSON files...")
 	if err := vs.parseAdvisory(filepath.Join(dir, dlaDir)); err != nil {
-		return xerrors.Errorf("DLA parse error: %w", err)
+		return oops.Wrapf(err, "DLA parse error")
 	}
 	return nil
 }
 
 func (vs VulnSrc) parseDSA(dir string) error {
-	log.Println("  Parsing DSA JSON files...")
+	vs.logger.Info("Parsing DSA JSON files...")
 	if err := vs.parseAdvisory(filepath.Join(dir, dsaDir)); err != nil {
-		return xerrors.Errorf("DSA parse error: %w", err)
+		return oops.Wrapf(err, "DSA parse error")
 	}
 	return nil
 }
@@ -308,6 +314,7 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 					pkgName:  ann.Package,
 					vulnID:   vulnID,
 				}
+				eb := oops.With("vuln_id", vulnID).With("package_name", ann.Package).With("code_name", ann.Release)
 
 				// Skip not-affected, removed or undetermined advisories
 				if slices.Contains(skipStatuses, ann.Kind) {
@@ -321,7 +328,7 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 					// We assume that the first fix was insufficient and the next advisory fixed it correctly.
 					res, err := compareVersions(ann.Version, adv.FixedVersion)
 					if err != nil {
-						return xerrors.Errorf("version error %s: %w", advisoryID, err)
+						return eb.Wrapf(err, "version error")
 					}
 
 					// Replace the fixed version with the newer version.
@@ -346,14 +353,14 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 }
 
 func (vs VulnSrc) save() error {
-	log.Println("Saving Debian DB")
+	vs.logger.Info("Saving DB")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx)
 	})
 	if err != nil {
-		return xerrors.Errorf("batch update error: %w", err)
+		return oops.Wrapf(err, "batch update error")
 	}
-	log.Println("Saved Debian DB")
+	vs.logger.Info("Saved DB")
 	return nil
 }
 
@@ -378,6 +385,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 				pkgName:  pkgName,
 				vulnID:   cveID,
 			}
+			eb := oops.With("sid", sidVer).With("package_name", pkgName).With("vuln_id", cveID).With("code_name", code)
 
 			// Skip if the advisory is stated as "not-affected" for the specific distribution.
 			if _, ok := vs.notAffected[bkt]; ok {
@@ -411,7 +419,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 			// Check if the release has the fixed version
 			fixed, err := hasFixedVersion(sidVer, codeVer)
 			if err != nil {
-				return xerrors.Errorf("version error: %w", err)
+				return eb.Wrapf(err, "version error")
 			}
 
 			if fixed {
@@ -425,7 +433,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 
 			bkt.vulnID = cveID
 			if err = vs.putAdvisory(tx, bkt, adv); err != nil {
-				return xerrors.Errorf("put advisory error: %w", err)
+				return eb.Wrapf(err, "put advisory error")
 			}
 		}
 	}
@@ -433,7 +441,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 	// All advisories with codename and fixed version are inserted into DB here.
 	for bkt, advisory := range vs.bktAdvisories {
 		if err := vs.putAdvisory(tx, bkt, advisory); err != nil {
-			return xerrors.Errorf("put advisory error: %w", err)
+			return oops.Wrapf(err, "put advisory error")
 		}
 	}
 	return nil
@@ -454,8 +462,9 @@ func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt bucket, advisory Advisory) error 
 	advisory.Platform = fmt.Sprintf(platformFormat, majorVersion)
 	advisory.Title = vs.details[bkt.vulnID].Description // The Debian description is short, so we'll use it as a title.
 
+	eb := oops.With("vuln_id", advisory.VulnerabilityID).With("package_name", advisory.PkgName).With("platform", advisory.Platform)
 	if err := vs.put(vs.dbc, tx, advisory); err != nil {
-		return xerrors.Errorf("put error: %w", err)
+		return eb.Wrapf(err, "put error")
 	}
 
 	return nil
@@ -465,7 +474,7 @@ func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt bucket, advisory Advisory) error 
 func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 	adv, ok := advisory.(Advisory)
 	if !ok {
-		return xerrors.New("unknown type")
+		return oops.Errorf("unknown type")
 	}
 
 	detail := types.Advisory{
@@ -476,33 +485,34 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 	}
 
 	if err := dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.PkgName, []string{adv.Platform}, &detail); err != nil {
-		return xerrors.Errorf("failed to save Debian advisory: %w", err)
+		return oops.Wrapf(err, "failed to save advisory")
 	}
 
 	vuln := types.VulnerabilityDetail{
 		Title: adv.Title,
 	}
 	if err := dbc.PutVulnerabilityDetail(tx, adv.VulnerabilityID, source.ID, vuln); err != nil {
-		return xerrors.Errorf("failed to save Debian vulnerability detail: %w", err)
+		return oops.Wrapf(err, "failed to save vulnerability detail")
 	}
 
 	// for optimization
 	if err := dbc.PutVulnerabilityID(tx, adv.VulnerabilityID); err != nil {
-		return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+		return oops.Wrapf(err, "failed to save vulnerability ID")
 	}
 
 	if err := dbc.PutDataSource(tx, adv.Platform, source); err != nil {
-		return xerrors.Errorf("failed to put data source: %w", err)
+		return oops.Wrapf(err, "failed to put data source")
 	}
 
 	return nil
 }
 
 func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
+	eb := oops.In("debian").With("release", release).With("package_name", pkgName)
 	bkt := fmt.Sprintf(platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bkt, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get Debian advisories: %w", err)
+		return nil, eb.Wrapf(err, "failed to get advisories")
 	}
 
 	return advisories, nil
@@ -527,10 +537,13 @@ func severityFromUrgency(urgency string) types.Severity {
 }
 
 func (vs VulnSrc) parseDistributions(rootDir string) error {
-	log.Println("  Parsing distributions...")
-	f, err := os.Open(filepath.Join(rootDir, distributionsFile))
+	vs.logger.Info("Parsing distributions...")
+	filePath := filepath.Join(rootDir, distributionsFile)
+	eb := oops.With("root_dir", rootDir).With("file_path", filePath)
+
+	f, err := os.Open(filePath)
 	if err != nil {
-		return xerrors.Errorf("failed to open file: %w", err)
+		return eb.Wrapf(err, "failed to open file")
 	}
 	defer f.Close()
 
@@ -539,7 +552,7 @@ func (vs VulnSrc) parseDistributions(rootDir string) error {
 		MajorVersion string `json:"major-version"`
 	}
 	if err = json.NewDecoder(f).Decode(&parsed); err != nil {
-		return xerrors.Errorf("failed to decode Debian distribution JSON: %w", err)
+		return eb.Wrapf(err, "json decode error")
 	}
 	for dist, val := range parsed {
 		if val.MajorVersion == "" {
@@ -553,21 +566,25 @@ func (vs VulnSrc) parseDistributions(rootDir string) error {
 }
 
 func (vs VulnSrc) parseSources(dir string) error {
+	eb := oops.With("dir", dir)
 	for code := range vs.distributions {
 		codePath := filepath.Join(dir, code)
 		if ok, _ := utils.Exists(codePath); !ok {
 			continue
 		}
+		eb = eb.With("code_name", code)
 
-		log.Printf("  Parsing %s sources...", code)
+		vs.logger.Info("Parsing sources...", log.String("code", code))
 		err := utils.FileWalk(codePath, func(r io.Reader, path string) error {
+			eb := eb.With("file_path", path)
+
 			// To parse Sources.json
 			var pkg struct {
 				Package []string
 				Version []string
 			}
 			if err := json.NewDecoder(r).Decode(&pkg); err != nil {
-				return xerrors.Errorf("failed to decode %s: %w", path, err)
+				return eb.Wrapf(err, "json decode error")
 			}
 
 			if len(pkg.Package) == 0 || len(pkg.Version) == 0 {
@@ -580,12 +597,13 @@ func (vs VulnSrc) parseSources(dir string) error {
 			}
 
 			version := pkg.Version[0]
+			eb = eb.With("pkg_name", bkt.pkgName).With("version", version)
 
 			// Skip the update when the stored version is greater than the processing version.
 			if v, ok := vs.pkgVersions[bkt]; ok {
 				res, err := compareVersions(v, version)
 				if err != nil {
-					return xerrors.Errorf("version comparison error: %w", err)
+					return eb.Wrapf(err, "version comparison error")
 				}
 
 				if res >= 0 {
@@ -599,7 +617,7 @@ func (vs VulnSrc) parseSources(dir string) error {
 			return nil
 		})
 		if err != nil {
-			return xerrors.Errorf("filepath walk error: %w", err)
+			return eb.Wrapf(err, "walk error")
 		}
 	}
 
@@ -640,9 +658,11 @@ func hasFixedVersion(sidVer, codeVer string) (bool, error) {
 		return false, nil
 	}
 
+	eb := oops.With("sid_ver", sidVer).With("code_ver", codeVer)
+
 	res, err := compareVersions(codeVer, sidVer)
 	if err != nil {
-		return false, xerrors.Errorf("version comparison error")
+		return false, eb.Wrapf(err, "version comparison error")
 	}
 
 	// Greater than or equal
@@ -662,12 +682,12 @@ func compareVersions(v1, v2 string) (int, error) {
 
 	ver1, err := debver.NewVersion(v1)
 	if err != nil {
-		return 0, xerrors.Errorf("version error: %w", err)
+		return 0, oops.Wrapf(err, "version error")
 	}
 
 	ver2, err := debver.NewVersion(v2)
 	if err != nil {
-		return 0, xerrors.Errorf("version error: %w", err)
+		return 0, oops.Wrapf(err, "version error")
 	}
 
 	return ver1.Compare(ver2), nil

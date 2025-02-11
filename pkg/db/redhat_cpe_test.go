@@ -34,7 +34,7 @@ func TestConfig_GetRedHatCPEs(t *testing.T) {
 			name:       "broken value",
 			fixtures:   []string{"testdata/fixtures/redhat-cpe.yaml"},
 			repository: "broken",
-			wantErr:    "JSON unmarshal error",
+			wantErr:    "json unmarshal error",
 		},
 	}
 	for _, tt := range tests {

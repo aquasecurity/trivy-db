@@ -3,16 +3,16 @@ package glad
 import (
 	"encoding/json"
 	"io"
-	"log"
 	"path/filepath"
 	"strings"
 
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
@@ -49,12 +49,14 @@ var (
 type packageType string
 
 type VulnSrc struct {
-	dbc db.Operation
+	dbc    db.Operation
+	logger *log.Logger
 }
 
 func NewVulnSrc() VulnSrc {
 	return VulnSrc{
-		dbc: db.Config{},
+		dbc:    db.Config{},
+		logger: log.WithPrefix("glad"),
 	}
 }
 
@@ -63,37 +65,44 @@ func (vs VulnSrc) Name() types.SourceID {
 }
 
 func (vs VulnSrc) Update(dir string) error {
+	eb := oops.In("glad")
 	for t := range ecosystems {
-		log.Printf("    Updating GitLab Advisory Database %s...", cases.Title(language.English).String(string(t)))
+		vs.logger.Info("Updating GitLab Advisory Database",
+			log.String("type", cases.Title(language.English).String(string(t))))
+
 		rootDir := filepath.Join(dir, "vuln-list", gladDir, string(t))
+		eb := eb.With("root_dir", rootDir)
+
 		if err := vs.update(t, rootDir); err != nil {
-			return xerrors.Errorf("update error: %w", err)
+			return eb.Wrapf(err, "update error")
 		}
 	}
 	return nil
 }
 
 func (vs VulnSrc) update(pkgType packageType, rootDir string) error {
+	eb := oops.With("package_type", pkgType)
 	var glads []Advisory
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		if !supportedIDs(filepath.Base(path)) {
 			return nil
 		}
+		eb := eb.With("file_path", path)
 
 		var glad Advisory
 		if err := json.NewDecoder(r).Decode(&glad); err != nil {
-			return xerrors.Errorf("failed to decode GLAD: %w", err)
+			return eb.Wrapf(err, "json decode error")
 		}
 
 		glads = append(glads, glad)
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("walk error: %w", err)
+		return eb.Wrapf(err, "walk error")
 	}
 
 	if err = vs.save(pkgType, glads); err != nil {
-		return xerrors.Errorf("save error: %w", err)
+		return eb.Wrapf(err, "save error")
 	}
 
 	return nil
@@ -104,7 +113,7 @@ func (vs VulnSrc) save(pkgType packageType, glads []Advisory) error {
 		return vs.commit(tx, pkgType, glads)
 	})
 	if err != nil {
-		return xerrors.Errorf("batch update error: %w", err)
+		return oops.Wrapf(err, "batch update error")
 	}
 	return nil
 }
@@ -115,25 +124,28 @@ func (vs VulnSrc) commit(tx *bolt.Tx, pkgType packageType, glads []Advisory) err
 			VulnerableVersions: []string{glad.AffectedRange},
 			PatchedVersions:    glad.FixedVersions,
 		}
+		eb := oops.With("vuln_id", glad.Identifier).With("slug", glad.PackageSlug)
 
 		// e.g. "go/github.com/go-ldap/ldap" => "go", "github.com/go-ldap/ldap"
 		ss := strings.SplitN(glad.PackageSlug, "/", 2)
 		if len(ss) < 2 {
-			return xerrors.Errorf("failed to parse package slug: %s", glad.PackageSlug)
+			return eb.Errorf("failed to parse package slug")
 		}
 
 		pkgName := ss[1]
 		ecosystem, ok := ecosystems[pkgType]
 		if !ok {
-			return xerrors.Errorf("failed to get ecosystem: %s", pkgType)
+			return eb.Errorf("failed to get ecosystem: %s", pkgType)
 		}
 		bucketName := bucket.Name(ecosystem, source.Name)
+		eb = eb.With("ecosystem", ecosystem)
+
 		if err := vs.dbc.PutDataSource(tx, bucketName, source); err != nil {
-			return xerrors.Errorf("failed to put data source: %w", err)
+			return eb.Wrapf(err, "failed to put data source")
 		}
 
 		if err := vs.dbc.PutAdvisoryDetail(tx, glad.Identifier, pkgName, []string{bucketName}, a); err != nil {
-			return xerrors.Errorf("failed to save GLAD advisory detail: %w", err)
+			return eb.Wrapf(err, "failed to save advisory")
 		}
 
 		// glad's cvss score is taken from NVD
@@ -146,12 +158,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, pkgType packageType, glads []Advisory) err
 		}
 
 		if err := vs.dbc.PutVulnerabilityDetail(tx, glad.Identifier, source.ID, vuln); err != nil {
-			return xerrors.Errorf("failed to save GLAD vulnerability detail: %w", err)
+			return eb.Wrapf(err, "failed to save vulnerability detail")
 		}
 
 		// for optimization
 		if err := vs.dbc.PutVulnerabilityID(tx, glad.Identifier); err != nil {
-			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+			return eb.Wrapf(err, "failed to save vulnerability ID")
 		}
 	}
 

@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"path/filepath"
 	"slices"
 
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -73,14 +73,16 @@ func WithCustomPut(put db.CustomPut) Option {
 }
 
 type VulnSrc struct {
-	put db.CustomPut
-	dbc db.Operation
+	put    db.CustomPut
+	dbc    db.Operation
+	logger *log.Logger
 }
 
 func NewVulnSrc(opts ...Option) VulnSrc {
 	src := VulnSrc{
-		put: defaultPut,
-		dbc: db.Config{},
+		put:    defaultPut,
+		dbc:    db.Config{},
+		logger: log.WithPrefix("ubuntu"),
 	}
 
 	for _, o := range opts {
@@ -96,28 +98,29 @@ func (vs VulnSrc) Name() types.SourceID {
 
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", ubuntuDir)
+	eb := oops.In("ubuntu").With("root_dir", rootDir)
 	var cves []UbuntuCVE
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		var cve UbuntuCVE
 		if err := json.NewDecoder(r).Decode(&cve); err != nil {
-			return xerrors.Errorf("failed to decode Ubuntu JSON: %w", err)
+			return eb.With("file_path", path).Wrapf(err, "json decode error")
 		}
 		cves = append(cves, cve)
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in Ubuntu walk: %w", err)
+		return eb.Wrapf(err, "walk error")
 	}
 
 	if err = vs.save(cves); err != nil {
-		return xerrors.Errorf("error in Ubuntu save: %w", err)
+		return eb.Wrapf(err, "save error")
 	}
 
 	return nil
 }
 
 func (vs VulnSrc) save(cves []UbuntuCVE) error {
-	log.Println("Saving Ubuntu DB")
+	vs.logger.Info("Saving DB")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		err := vs.commit(tx, cves)
 		if err != nil {
@@ -126,7 +129,7 @@ func (vs VulnSrc) save(cves []UbuntuCVE) error {
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in batch update: %w", err)
+		return oops.Wrapf(err, "batch update error")
 	}
 	return nil
 }
@@ -134,17 +137,18 @@ func (vs VulnSrc) save(cves []UbuntuCVE) error {
 func (vs VulnSrc) commit(tx *bolt.Tx, cves []UbuntuCVE) error {
 	for _, cve := range cves {
 		if err := vs.put(vs.dbc, tx, cve); err != nil {
-			return xerrors.Errorf("put error: %w", err)
+			return oops.Wrapf(err, "put error")
 		}
 	}
 	return nil
 }
 
 func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
+	eb := oops.In("ubuntu").With("release", release).With("package_name", pkgName)
 	bucket := fmt.Sprintf(platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get Ubuntu advisories: %w", err)
+		return nil, eb.Wrapf(err, "failed to get advisories")
 	}
 	return advisories, nil
 }
@@ -152,7 +156,7 @@ func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) 
 func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 	cve, ok := advisory.(UbuntuCVE)
 	if !ok {
-		return xerrors.New("unknown type")
+		return oops.Errorf("unknown type")
 	}
 
 	for packageName, patch := range cve.Patches {
@@ -167,7 +171,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 			}
 			platformName := fmt.Sprintf(platformFormat, osVersion)
 			if err := dbc.PutDataSource(tx, platformName, source); err != nil {
-				return xerrors.Errorf("failed to put data source: %w", err)
+				return oops.Wrapf(err, "failed to put data source")
 			}
 
 			adv := types.Advisory{}
@@ -175,7 +179,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 				adv.FixedVersion = status.Note
 			}
 			if err := dbc.PutAdvisoryDetail(tx, cve.Candidate, pkgName, []string{platformName}, adv); err != nil {
-				return xerrors.Errorf("failed to save Ubuntu advisory: %w", err)
+				return oops.Wrapf(err, "failed to save advisory")
 			}
 
 			vuln := types.VulnerabilityDetail{
@@ -184,12 +188,12 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 				Description: cve.Description,
 			}
 			if err := dbc.PutVulnerabilityDetail(tx, cve.Candidate, source.ID, vuln); err != nil {
-				return xerrors.Errorf("failed to save Ubuntu vulnerability: %w", err)
+				return oops.Wrapf(err, "failed to save vulnerability")
 			}
 
 			// for optimization
 			if err := dbc.PutVulnerabilityID(tx, cve.Candidate); err != nil {
-				return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+				return oops.Wrapf(err, "failed to save the vulnerability ID")
 			}
 		}
 	}

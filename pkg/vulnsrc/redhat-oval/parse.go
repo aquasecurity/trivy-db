@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"golang.org/x/xerrors"
+	"github.com/samber/oops"
 )
 
 type rpmInfoTest struct {
@@ -16,14 +16,16 @@ type rpmInfoTest struct {
 }
 
 func unmarshalJSONFile(v interface{}, fileName string) error {
+	eb := oops.With("file_path", fileName)
+
 	f, err := os.Open(fileName)
 	if err != nil {
-		return xerrors.Errorf("unable to open a file (%s): %w", fileName, err)
+		return eb.Wrapf(err, "unable to open a file")
 	}
 	defer f.Close()
 
 	if err = json.NewDecoder(f).Decode(v); err != nil {
-		return xerrors.Errorf("failed to decode Red Hat OVAL JSON: %w", err)
+		return eb.Wrapf(err, "json decode error")
 	}
 	return nil
 }
@@ -31,7 +33,7 @@ func unmarshalJSONFile(v interface{}, fileName string) error {
 func parseObjects(dir string) (map[string]string, error) {
 	var objects ovalObjects
 	if err := unmarshalJSONFile(&objects, filepath.Join(dir, "objects", "objects.json")); err != nil {
-		return nil, xerrors.Errorf("failed to unmarshal objects: %w", err)
+		return nil, oops.Wrapf(err, "failed to unmarshal objects")
 	}
 	objs := map[string]string{}
 	for _, obj := range objects.RpminfoObjects {
@@ -43,7 +45,7 @@ func parseObjects(dir string) (map[string]string, error) {
 func parseStates(dir string) (map[string]rpminfoState, error) {
 	var ss ovalStates
 	if err := unmarshalJSONFile(&ss, filepath.Join(dir, "states", "states.json")); err != nil {
-		return nil, xerrors.Errorf("failed to unmarshal states: %w", err)
+		return nil, oops.Wrapf(err, "failed to unmarshal states")
 	}
 
 	states := map[string]rpminfoState{}
@@ -56,17 +58,17 @@ func parseStates(dir string) (map[string]rpminfoState, error) {
 func parseTests(dir string) (map[string]rpmInfoTest, error) {
 	objects, err := parseObjects(dir)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to parse objects: %w", err)
+		return nil, oops.Wrapf(err, "failed to parse objects")
 	}
 
 	states, err := parseStates(dir)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to parse states: %w", err)
+		return nil, oops.Wrapf(err, "failed to parse states")
 	}
 
 	var tt ovalTests
 	if err := unmarshalJSONFile(&tt, filepath.Join(dir, "tests", "tests.json")); err != nil {
-		return nil, xerrors.Errorf("failed to unmarshal states: %w", err)
+		return nil, oops.Wrapf(err, "failed to unmarshal states")
 	}
 
 	tests := map[string]rpmInfoTest{}
@@ -78,7 +80,7 @@ func parseTests(dir string) (map[string]rpmInfoTest, error) {
 
 		t, err := followTestRefs(test, objects, states)
 		if err != nil {
-			return nil, xerrors.Errorf("unable to follow test refs: %w", err)
+			return nil, oops.Wrapf(err, "unable to follow test refs")
 		}
 		tests[test.ID] = t
 	}
@@ -87,6 +89,7 @@ func parseTests(dir string) (map[string]rpmInfoTest, error) {
 
 func followTestRefs(test rpminfoTest, objects map[string]string, states map[string]rpminfoState) (rpmInfoTest, error) {
 	var t rpmInfoTest
+	eb := oops.With("object_ref", test.Object.ObjectRef).With("test_ref", test.ID).With("state_ref", test.State.StateRef)
 
 	// Follow object ref
 	if test.Object.ObjectRef == "" {
@@ -95,8 +98,7 @@ func followTestRefs(test rpminfoTest, objects map[string]string, states map[stri
 
 	pkgName, ok := objects[test.Object.ObjectRef]
 	if !ok {
-		return t, xerrors.Errorf("invalid tests data, can't find object ref: %s, test ref: %s",
-			test.Object.ObjectRef, test.ID)
+		return t, eb.Errorf("invalid tests data, can't find object ref")
 	}
 	t.Name = pkgName
 
@@ -107,8 +109,7 @@ func followTestRefs(test rpminfoTest, objects map[string]string, states map[stri
 
 	state, ok := states[test.State.StateRef]
 	if !ok {
-		return t, xerrors.Errorf("invalid tests data, can't find ovalstate ref %s, test ref: %s",
-			test.State.StateRef, test.ID)
+		return t, eb.Errorf("invalid tests data, can't find ovalstate ref")
 	}
 
 	t.SignatureKeyID = state.SignatureKeyID

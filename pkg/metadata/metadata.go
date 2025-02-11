@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"golang.org/x/xerrors"
+	"github.com/samber/oops"
 )
 
 const metadataFile = "metadata.json"
@@ -36,32 +36,36 @@ func Path(dbDir string) string {
 
 // Get returns the file metadata
 func (c Client) Get() (Metadata, error) {
+	eb := oops.With("file_path", c.filePath)
+
 	f, err := os.Open(c.filePath)
 	if err != nil {
-		return Metadata{}, xerrors.Errorf("unable to open a file: %w", err)
+		return Metadata{}, eb.Wrapf(err, "file open error")
 	}
 	defer f.Close()
 
 	var metadata Metadata
 	if err = json.NewDecoder(f).Decode(&metadata); err != nil {
-		return Metadata{}, xerrors.Errorf("unable to decode metadata: %w", err)
+		return Metadata{}, eb.Wrapf(err, "json decode error")
 	}
 	return metadata, nil
 }
 
 func (c Client) Update(meta Metadata) error {
+	eb := oops.With("file_path", c.filePath)
+
 	if err := os.MkdirAll(filepath.Dir(c.filePath), 0744); err != nil {
-		return xerrors.Errorf("mkdir error: %w", err)
+		return eb.Wrapf(err, "mkdir error")
 	}
 
 	f, err := os.Create(c.filePath)
 	if err != nil {
-		return xerrors.Errorf("unable to open a file: %w", err)
+		return eb.Wrapf(err, "file create error")
 	}
 	defer f.Close()
 
 	if err = json.NewEncoder(f).Encode(&meta); err != nil {
-		return xerrors.Errorf("unable to decode metadata: %w", err)
+		return eb.Wrapf(err, "json encode error")
 	}
 	return nil
 }
@@ -69,7 +73,7 @@ func (c Client) Update(meta Metadata) error {
 // Delete deletes the file of database metadata
 func (c Client) Delete() error {
 	if err := os.Remove(c.filePath); err != nil {
-		return xerrors.Errorf("unable to remove the metadata file: %w", err)
+		return oops.With("file_path", c.filePath).Wrapf(err, "file remove error")
 	}
 	return nil
 }

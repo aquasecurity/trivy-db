@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"path/filepath"
 	"slices"
 	"sort"
@@ -12,11 +11,12 @@ import (
 
 	version "github.com/knqyf263/go-rpm-version"
 	"github.com/samber/lo"
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/exp/maps"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -49,7 +49,8 @@ type DB interface {
 }
 
 type VulnSrc struct {
-	DB // Those who want to customize Trivy DB can override put/get methods.
+	DB     // Those who want to customize Trivy DB can override put/get methods.
+	logger *log.Logger
 }
 
 type Oracle struct {
@@ -58,7 +59,8 @@ type Oracle struct {
 
 func NewVulnSrc() *VulnSrc {
 	return &VulnSrc{
-		DB: &Oracle{Operation: db.Config{}},
+		DB:     &Oracle{Operation: db.Config{}},
+		logger: log.WithPrefix("oracle-oval"),
 	}
 }
 
@@ -68,12 +70,14 @@ func (vs *VulnSrc) Name() types.SourceID {
 
 func (vs *VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", oracleDir)
+	eb := oops.In("oracle").Tags("oval").With("root_dir", rootDir)
+
 	ovals, err := vs.parse(rootDir)
 	if err != nil {
-		return err
+		return eb.Wrap(err)
 	}
 	if err = vs.put(ovals); err != nil {
-		return xerrors.Errorf("error in Oracle Linux OVAL save: %w", err)
+		return eb.Wrapf(err, "put error")
 	}
 
 	return nil
@@ -86,30 +90,29 @@ func (vs *VulnSrc) parse(rootDir string) ([]OracleOVAL, error) {
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		var oval OracleOVAL
 		if err := json.NewDecoder(r).Decode(&oval); err != nil {
-			return xerrors.Errorf("failed to decode Oracle Linux OVAL JSON: %w", err)
+			return oops.With("file_path", path).Wrapf(err, "json decode error")
 		}
 		ovals = append(ovals, oval)
 		return nil
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("error in Oracle Linux OVAL walk: %w", err)
+		return nil, oops.Wrapf(err, "walk error")
 	}
 
 	return ovals, nil
 }
 
 func (vs *VulnSrc) put(ovals []OracleOVAL) error {
-	log.Println("Saving Oracle Linux OVAL")
+	vs.logger.Info("Saving Oracle Linux OVAL")
 
 	err := vs.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, ovals)
 	})
 	if err != nil {
-		return xerrors.Errorf("error in batch update: %w", err)
+		return oops.Wrapf(err, "batch update error")
 	}
 
 	return nil
-
 }
 
 func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
@@ -144,7 +147,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			}
 
 			if err := vs.PutDataSource(tx, platformName, source); err != nil {
-				return xerrors.Errorf("failed to put data source: %w", err)
+				return oops.With("platform", platformName).Wrapf(err, "failed to put data source")
 			}
 			// The ELSA IDs are included in the input for Aqua storage, but OSS does not require them.
 			// Therefore, the VendorIDs will be removed before saving to the database.
@@ -161,7 +164,6 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 				advs.Entries = append(advs.Entries, savedAdvs.Entries...)
 			}
 			advisories[affectedPkg.Package] = advs
-
 		}
 
 		var references []string
@@ -204,9 +206,8 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			input.Advisories[pkg] = mergeAdvisoriesEntries(advs)
 		}
 
-		err := vs.Put(tx, input)
-		if err != nil {
-			return xerrors.Errorf("db put error: %w", err)
+		if err := vs.Put(tx, input); err != nil {
+			return oops.Wrapf(err, "db put error")
 		}
 	}
 
@@ -358,13 +359,14 @@ func PackageFlavor(version string) PkgFlavor {
 }
 
 func (o *Oracle) Put(tx *bolt.Tx, input PutInput) error {
+	eb := oops.With("vuln_id", input.VulnID)
 	if err := o.PutVulnerabilityDetail(tx, input.VulnID, source.ID, input.Vuln); err != nil {
-		return xerrors.Errorf("failed to save Oracle Linux OVAL vulnerability: %w", err)
+		return eb.Wrapf(err, "failed to save vulnerability detail")
 	}
 
 	// for optimization
 	if err := o.PutVulnerabilityID(tx, input.VulnID); err != nil {
-		return xerrors.Errorf("failed to save %s: %w", input.VulnID, err)
+		return eb.Wrapf(err, "failed to save vulnerability ID")
 	}
 
 	for pkg, advisory := range input.Advisories {
@@ -373,23 +375,24 @@ func (o *Oracle) Put(tx *bolt.Tx, input PutInput) error {
 		}
 		platformName := pkg.PlatformName()
 		if err := o.PutAdvisoryDetail(tx, input.VulnID, pkg.Name, []string{platformName}, advisory); err != nil {
-			return xerrors.Errorf("failed to save Oracle Linux advisory: %w", err)
+			return eb.With("package_name", pkg.Name).With("bucket_name", platformName).Wrapf(err, "failed to save advisory")
 		}
 	}
 	return nil
 }
 
 func (o *Oracle) Get(release, pkgName, arch string) ([]types.Advisory, error) {
+	eb := oops.In("oracle").Tags("oval").With("release", release).With("package_name", pkgName).With("arch", arch)
 	bucket := fmt.Sprintf(platformFormat, release)
 	rawAdvisories, err := o.ForEachAdvisory([]string{bucket}, pkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("unable to iterate advisories: %w", err)
+		return nil, eb.Wrapf(err, "unable to iterate advisories")
 	}
 	var advisories []types.Advisory
 	for vulnID, v := range rawAdvisories {
 		var adv types.Advisories
 		if err = json.Unmarshal(v.Content, &adv); err != nil {
-			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
+			return nil, eb.Wrapf(err, "json unmarshal error")
 		}
 
 		// For backward compatibility (This code can be deleted after Dec 19th, 2024)
