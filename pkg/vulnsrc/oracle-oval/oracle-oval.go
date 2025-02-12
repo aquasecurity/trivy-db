@@ -227,7 +227,7 @@ type versionVendorID struct {
 	VendorID string
 }
 
-// mergeAdvisoriesEntries merges advisories by picking the latest version for each arch+flavor.
+// mergeAdvisoriesEntries merges advisories by picking the latest version (with vendorID) for each arch+flavor.
 // There may be multiple advisories that fix the same vulnerability, possibly providing multiple fixed versions.
 // In this case, we need to determine the "latest" version, which is now defined as the highest (greatest) version number.
 //
@@ -237,7 +237,7 @@ func mergeAdvisoriesEntries(advisories types.Advisories) types.Advisories {
 	// Step 1: Select the latest version per (arch, flavor)
 	latestVersions := selectLatestVersions(advisories)
 
-	// Step 2: Aggregate arches by their chosen version
+	// Step 2: Aggregate arches by their chosen version + vendorID
 	versionToArches := make(map[versionVendorID][]string)
 	for k, v := range latestVersions {
 		versionToArches[v] = append(versionToArches[v], k.Arch)
@@ -356,17 +356,15 @@ func (o *Oracle) Put(tx *bolt.Tx, input PutInput) error {
 	return nil
 }
 
-// removeVendorIDs removes VendorID from recommendations + merges arches for recommendations (by fixedVersion).
+// removeVendorIDs removes VendorID from advisories + merges arches for advisories (by fixedVersion).
 // This is needed to save space in OSS trivy-db.
 // But Aqua storage requires this information.
 func removeVendorIDs(advs types.Advisories) types.Advisories {
 	versionToArches := make(map[string][]string) // fixed version -> arches
 	for _, entry := range advs.Entries {
-		entry.VendorIDs = nil
 		versionToArches[entry.FixedVersion] = append(versionToArches[entry.FixedVersion], entry.Arches...)
 	}
 
-	// Step 3: Build final entries, sorted by version
 	entries := lo.MapToSlice(versionToArches, func(ver string, arches []string) types.Advisory {
 		sort.Strings(arches)
 		return types.Advisory{

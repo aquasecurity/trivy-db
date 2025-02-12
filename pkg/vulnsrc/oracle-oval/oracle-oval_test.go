@@ -550,7 +550,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		},
 		{
 			name: "same fix version with different ELSA ids and architectures",
-			dir:  filepath.Join("testdata", "multiple_elsa_ids_same_fix_version"),
+			dir:  filepath.Join("testdata", "multiple-elsa-ids-same-fix-version"),
 			wantValues: []vulnsrctest.WantValues{
 				{
 					Key: []string{"data-source", "Oracle Linux 8"},
