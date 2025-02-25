@@ -80,10 +80,13 @@ func Init(dbDir string, opts ...Option) (err error) {
 	eb = eb.With("db_path", dbPath)
 
 	// bbolt sometimes occurs the fatal error of "unexpected fault address".
-	// In that case, the local DB should be broken and we need to return error.
+	// In that case, the local DB should be broken and needs to be removed.
 	debug.SetPanicOnFault(true)
 	defer func() {
 		if r := recover(); r != nil {
+			if err = os.Remove(dbPath); err != nil {
+				return
+			}
 			err = eb.Errorf("failed to open db: %s", r)
 		}
 		debug.SetPanicOnFault(false)
