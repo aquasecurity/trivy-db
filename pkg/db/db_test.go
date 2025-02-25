@@ -6,25 +6,26 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/stretchr/testify/require"
 	"go.etcd.io/bbolt"
-
-	"github.com/aquasecurity/trivy-db/pkg/db"
 )
 
 func TestInit(t *testing.T) {
 	tests := []struct {
-		name   string
-		dbPath string
-		dbOpts *bbolt.Options
+		name    string
+		dbPath  string
+		wantErr string
+		dbOpts  *bbolt.Options
 	}{
 		{
 			name:   "normal db",
 			dbPath: "testdata/normal.db",
 		},
 		{
-			name:   "broken db",
-			dbPath: "testdata/broken.db",
+			name:    "broken db",
+			dbPath:  "testdata/broken.db",
+			wantErr: "invalid memory address or nil pointer dereference",
 		},
 		{
 			name:   "no db",
@@ -46,6 +47,11 @@ func TestInit(t *testing.T) {
 			}
 
 			err := db.Init(tmpDir, db.WithBoltOptions(tt.dbOpts))
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+				return
+			}
+
 			require.NoError(t, err)
 		})
 	}

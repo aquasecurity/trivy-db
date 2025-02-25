@@ -8,11 +8,10 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/samber/oops"
-	bolt "go.etcd.io/bbolt"
-
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/samber/oops"
+	bolt "go.etcd.io/bbolt"
 )
 
 type CustomPut func(dbc Operation, tx *bolt.Tx, adv interface{}) error
@@ -80,14 +79,11 @@ func Init(dbDir string, opts ...Option) (err error) {
 	eb = eb.With("db_path", dbPath)
 
 	// bbolt sometimes occurs the fatal error of "unexpected fault address".
-	// In that case, the local DB should be broken and needs to be removed.
+	// In that case, the local DB should be broken and we need to return error.
 	debug.SetPanicOnFault(true)
 	defer func() {
 		if r := recover(); r != nil {
-			if err = os.Remove(dbPath); err != nil {
-				return
-			}
-			db, err = bolt.Open(dbPath, 0644, dbOptions.boltOptions)
+			err = eb.Errorf("failed to open db: %s", r)
 		}
 		debug.SetPanicOnFault(false)
 	}()
