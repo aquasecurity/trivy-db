@@ -87,7 +87,7 @@ func Init(dbDir string, opts ...Option) (err error) {
 			if err = os.Remove(dbPath); err != nil {
 				return
 			}
-			err = eb.Errorf("failed to open db: %s", r)
+			err = eb.Errorf("db corrupted: %s", r)
 		}
 		debug.SetPanicOnFault(false)
 	}()
