@@ -8,10 +8,11 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/aquasecurity/trivy-db/pkg/log"
-	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
+
+	"github.com/aquasecurity/trivy-db/pkg/log"
+	"github.com/aquasecurity/trivy-db/pkg/types"
 )
 
 type CustomPut func(dbc Operation, tx *bolt.Tx, adv interface{}) error
