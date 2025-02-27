@@ -87,7 +87,7 @@ func Init(dbDir string, opts ...Option) (err error) {
 			if err = os.Remove(dbPath); err != nil {
 				return
 			}
-			db, err = bolt.Open(dbPath, 0644, dbOptions.boltOptions)
+			err = eb.Errorf("db corrupted: %s", r)
 		}
 		debug.SetPanicOnFault(false)
 	}()
