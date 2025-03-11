@@ -548,6 +548,50 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:     filepath.Join("testdata", "sad"),
 			wantErr: "json decode error",
 		},
+		{
+			name: "same fix version with different ELSA ids and architectures",
+			dir:  filepath.Join("testdata", "multiple-elsa-ids-same-fix-version"),
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "Oracle Linux 8"},
+					Value: types.DataSource{
+						ID:   vulnerability.OracleOVAL,
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2016-10228", "Oracle Linux 8", "glibc"},
+					Value: types.Advisories{
+						FixedVersion: "2:2.28-151.0.1.ksplice1.el8",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "2:2.28-151.0.1.ksplice1.el8",
+								Arches: []string{
+									"i386",
+									"x86_64",
+								},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "CVE-2016-10228", "oracle-oval"},
+					Value: types.VulnerabilityDetail{
+						Title: "ELSA-2021-9344:  glibc security update (IMPORTANT)",
+						References: []string{
+							"https://linux.oracle.com/cve/CVE-2016-10228.html",
+							"https://linux.oracle.com/errata/ELSA-2021-9344.html",
+						},
+						Severity: types.SeverityHigh,
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-2016-10228"},
+					Value: map[string]interface{}{},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
