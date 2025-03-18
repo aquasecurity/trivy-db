@@ -55,6 +55,7 @@ var (
 		"precise/esm":      "12.04-ESM",
 		"trusty/esm":       "14.04-ESM",
 		"esm-infra/xenial": "16.04-ESM",
+		"esm-infra/bionic": "18.04-ESM",
 	}
 
 	source = types.DataSource{
