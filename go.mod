@@ -18,7 +18,7 @@ require (
 	github.com/samber/oops v1.16.1
 	github.com/stretchr/testify v1.10.0
 	github.com/urfave/cli v1.22.16
-	go.etcd.io/bbolt v1.3.11
+	go.etcd.io/bbolt v1.4.0
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	golang.org/x/text v0.21.0
 	golang.org/x/tools v0.29.0
