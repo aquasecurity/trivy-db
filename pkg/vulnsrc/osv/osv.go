@@ -32,6 +32,8 @@ type Advisory struct {
 	// Advisory detail
 	VulnerableVersions []string
 	PatchedVersions    []string
+	OSes               []string
+	Arches             []string
 
 	// Vulnerability detail
 	Severity     types.Severity
@@ -161,6 +163,8 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 			VendorIDs:          adv.Aliases,
 			VulnerableVersions: adv.VulnerableVersions,
 			PatchedVersions:    adv.PatchedVersions,
+			OSes:               adv.OSes,
+			Arches:             adv.Arches,
 		}
 		if err = o.dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.PkgName, []string{bktName}, advisory); err != nil {
 			return oops.Wrapf(err, "failed to save advisory")

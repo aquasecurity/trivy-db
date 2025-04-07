@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"path/filepath"
 
+	"github.com/samber/lo"
 	"github.com/samber/oops"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
@@ -49,6 +50,18 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 		return nil, oops.With("vuln_id", entry.ID).With("aliases", entry.Aliases).Wrapf(err, "json decode error")
 	}
 
+	var oses, arches []string
+	for _, affected := range entry.Affected {
+		if affected.Package.Name != "stdlib" {
+			continue
+		}
+
+		for _, imp := range affected.EcosystemSpecific.Imports {
+			oses = append(oses, imp.GOOS...)
+			arches = append(arches, imp.GOARCH...)
+		}
+	}
+
 	var filtered []osv.Advisory
 	for _, adv := range advisories {
 		// Insert only stdlib advisories
@@ -59,6 +72,10 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 		if specific.URL != "" {
 			adv.References = append(adv.References, specific.URL)
 		}
+
+		adv.OSes = lo.Uniq(oses)
+		adv.Arches = lo.Uniq(arches)
+
 		filtered = append(filtered, adv)
 	}
 
