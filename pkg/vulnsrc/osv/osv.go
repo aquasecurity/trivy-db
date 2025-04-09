@@ -32,6 +32,8 @@ type Advisory struct {
 	// Advisory detail
 	VulnerableVersions []string
 	PatchedVersions    []string
+	OSes               []string
+	Arches             []string
 
 	// Vulnerability detail
 	Severity     types.Severity
@@ -54,10 +56,18 @@ type OSV struct {
 }
 
 type Transformer interface {
+	// PostParseAffected is called after parseAffected to transform Advisory with Affected
+	PostParseAffected(Advisory, Affected) (Advisory, error)
+
+	// TransformAdvisories transforms the advisories
 	TransformAdvisories([]Advisory, Entry) ([]Advisory, error)
 }
 
 type defaultTransformer struct{}
+
+func (t *defaultTransformer) PostParseAffected(adv Advisory, _ Affected) (Advisory, error) {
+	return adv, nil
+}
 
 func (t *defaultTransformer) TransformAdvisories(advs []Advisory, _ Entry) ([]Advisory, error) {
 	return advs, nil
@@ -135,7 +145,7 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 	})
 
 	// Parse []affected
-	advisories, err := parseAffected(entry, vulnIDs, aliases, references)
+	advisories, err := o.parseAffected(entry, vulnIDs, aliases, references)
 	if err != nil {
 		return oops.Wrapf(err, "failed to parse affected")
 	}
@@ -161,6 +171,8 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 			VendorIDs:          adv.Aliases,
 			VulnerableVersions: adv.VulnerableVersions,
 			PatchedVersions:    adv.PatchedVersions,
+			OSes:               adv.OSes,
+			Arches:             adv.Arches,
 		}
 		if err = o.dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.PkgName, []string{bktName}, advisory); err != nil {
 			return oops.Wrapf(err, "failed to save advisory")
@@ -187,26 +199,9 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 	return nil
 }
 
-func groupVulnIDs(id string, aliases []string) ([]string, []string) {
-	var cveIDs, nonCVEIDs []string
-	for _, a := range append(aliases, id) {
-		if strings.HasPrefix(a, "CVE-") {
-			cveIDs = append(cveIDs, a)
-		} else {
-			nonCVEIDs = append(nonCVEIDs, a)
-		}
-	}
-	if len(cveIDs) == 0 {
-		// Use the original vulnerability ID
-		// e.g. PYSEC-2021-335 and GHSA-wjx8-cgrm-hh8p
-		return []string{id}, aliases
-	}
-	return cveIDs, nonCVEIDs
-}
-
 // parseAffected parses the affected fields
 // cf. https://ossf.github.io/osv-schema/#affected-fields
-func parseAffected(entry Entry, vulnIDs, aliases, references []string) ([]Advisory, error) {
+func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) ([]Advisory, error) {
 	eb := oops.With("entry_id", entry.ID).With("vuln_ids", vulnIDs).With("aliases", aliases)
 
 	// Severities can be found both in severity and affected[].severity fields.
@@ -239,14 +234,14 @@ func parseAffected(entry Entry, vulnIDs, aliases, references []string) ([]Adviso
 
 		key := fmt.Sprintf("%s/%s", ecosystem, pkgName)
 		for _, vulnID := range vulnIDs {
-			if adv, ok := uniqAdvisories[key]; ok {
+			adv, ok := uniqAdvisories[key]
+			if ok {
 				// The same package could be repeated with different version ranges.
 				// cf. https://github.com/github/advisory-database/blob/0996f81ca6f1b65ba25f8e71fba263cb1e54ced5/advisories/github-reviewed/2019/12/GHSA-wjx8-cgrm-hh8p/GHSA-wjx8-cgrm-hh8p.json
 				adv.VulnerableVersions = append(adv.VulnerableVersions, vulnerableVersions...)
 				adv.PatchedVersions = append(adv.PatchedVersions, patchedVersions...)
-				uniqAdvisories[key] = adv
 			} else {
-				uniqAdvisories[key] = Advisory{
+				adv = Advisory{
 					Ecosystem:          ecosystem,
 					PkgName:            pkgName,
 					VulnerabilityID:    vulnID,
@@ -261,9 +256,33 @@ func parseAffected(entry Entry, vulnIDs, aliases, references []string) ([]Adviso
 					DatabaseSpecific:   affected.DatabaseSpecific,
 				}
 			}
+
+			// Call PostParseAffected hook
+			adv, err = o.transformer.PostParseAffected(adv, affected)
+			if err != nil {
+				return nil, eb.Wrapf(err, "failed to post process affected")
+			}
+			uniqAdvisories[key] = adv
 		}
 	}
 	return maps.Values(uniqAdvisories), nil
+}
+
+func groupVulnIDs(id string, aliases []string) ([]string, []string) {
+	var cveIDs, nonCVEIDs []string
+	for _, a := range append(aliases, id) {
+		if strings.HasPrefix(a, "CVE-") {
+			cveIDs = append(cveIDs, a)
+		} else {
+			nonCVEIDs = append(nonCVEIDs, a)
+		}
+	}
+	if len(cveIDs) == 0 {
+		// Use the original vulnerability ID
+		// e.g. PYSEC-2021-335 and GHSA-wjx8-cgrm-hh8p
+		return []string{id}, aliases
+	}
+	return cveIDs, nonCVEIDs
 }
 
 // parseAffectedVersions parses the affected.versions and affected.ranges fields
