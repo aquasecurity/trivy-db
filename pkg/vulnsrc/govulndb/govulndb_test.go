@@ -53,6 +53,13 @@ func TestVulnSrc_Update(t *testing.T) {
 							"<1.21.9",
 							">=1.22.0-0, <1.22.2",
 						},
+						OSes: []string{
+							"windows",
+						},
+						Arches: []string{
+							"amd64",
+							"ppc64le",
+						},
 					},
 				},
 				{
