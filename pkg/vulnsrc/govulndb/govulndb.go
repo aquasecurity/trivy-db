@@ -44,22 +44,24 @@ func (VulnDB) Update(root string) error {
 
 type transformer struct{}
 
+// PostParseAffected parses the affected[].ecosystem_specific.imports[] field for goos and goarch.
+func (t *transformer) PostParseAffected(advisory osv.Advisory, affected osv.Affected) (osv.Advisory, error) {
+	var oses, arches []string
+	for _, imp := range affected.EcosystemSpecific.Imports {
+		oses = append(oses, imp.GOOS...)
+		arches = append(arches, imp.GOARCH...)
+	}
+
+	advisory.OSes = lo.Uniq(oses)
+	advisory.Arches = lo.Uniq(arches)
+
+	return advisory, nil
+}
+
 func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.Entry) ([]osv.Advisory, error) {
 	var specific DatabaseSpecific
 	if err := json.Unmarshal(entry.DatabaseSpecific, &specific); err != nil {
 		return nil, oops.With("vuln_id", entry.ID).With("aliases", entry.Aliases).Wrapf(err, "json decode error")
-	}
-
-	var oses, arches []string
-	for _, affected := range entry.Affected {
-		if affected.Package.Name != "stdlib" {
-			continue
-		}
-
-		for _, imp := range affected.EcosystemSpecific.Imports {
-			oses = append(oses, imp.GOOS...)
-			arches = append(arches, imp.GOARCH...)
-		}
 	}
 
 	var filtered []osv.Advisory
@@ -72,9 +74,6 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 		if specific.URL != "" {
 			adv.References = append(adv.References, specific.URL)
 		}
-
-		adv.OSes = lo.Uniq(oses)
-		adv.Arches = lo.Uniq(arches)
 
 		filtered = append(filtered, adv)
 	}
