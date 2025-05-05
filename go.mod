@@ -1,7 +1,6 @@
 module github.com/aquasecurity/trivy-db
 
-go 1.23
-toolchain go1.24.1
+go 1.23.0
 
 require (
 	github.com/aquasecurity/bolt-fixtures v0.0.0-20200903104109-d34e7f983986
