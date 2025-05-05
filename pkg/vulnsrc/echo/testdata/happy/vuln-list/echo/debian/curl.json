@@ -1,6 +1,0 @@
-{
-  "package_name": "curl",
-  "version_fixes": {
-    "7.88.1-10+deb12u8": ["CVE-2024-11053"]
-  }
-}
