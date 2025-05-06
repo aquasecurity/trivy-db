@@ -111,7 +111,7 @@ func (vs VulnSrc) saveVulnerabilities(tx *bolt.Tx, pkgName string, advisory Advi
 		adv := types.Advisory{
 			FixedVersion: vulnInfo.FixedVersion,
 		}
-		
+
 		// Convert severity string to types.Severity if present
 		if vulnInfo.Severity != "" {
 			severity, err := types.NewSeverity(strings.ToUpper(vulnInfo.Severity))
@@ -124,7 +124,7 @@ func (vs VulnSrc) saveVulnerabilities(tx *bolt.Tx, pkgName string, advisory Advi
 		// e.g. CVE-2017-2616 (+ regression fix)
 		ids := strings.Fields(cveID)
 		for _, id := range ids {
-			if err := vs.dbc.PutAdvisoryDetail(tx, id, pkgName, []string{"echo debian"}, adv); err != nil {
+			if err := vs.dbc.PutAdvisoryDetail(tx, id, pkgName, []string{distroName}, adv); err != nil {
 				return oops.Wrapf(err, "failed to save advisory detail")
 			}
 

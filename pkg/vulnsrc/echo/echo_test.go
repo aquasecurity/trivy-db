@@ -30,7 +30,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2024-11053", "echo debian", "curl"},
+					Key: []string{"advisory-detail", "CVE-2024-11053", "echo", "curl"},
 					Value: types.Advisory{
 						FixedVersion: "7.88.1-10+deb12u8",
 						Severity:     types.SeverityHigh,
