@@ -51,11 +51,11 @@ GLOBAL OPTIONS:
 ### Building the DB
 To build trivy-db locally, you can use the following order of commands from the Makefile:
 ```bash
-make db-fetch-langs db-fetch-vuln-list // To download all advisories and other required files (`./cache` dir by default)
-make build // Build `trivy-db` binary
-make db-build // Build database (`./out` dir by default)
-make db-compact // Compact database (`./assets` dir by default)
-make db-compress // Compress database into `db.tar.gz` file
+make db-fetch-langs db-fetch-vuln-list  # To download all advisories and other required files (`./cache` dir by default)
+make build  # Build `trivy-db` binary
+make db-build  # Build database (`./out` dir by default)
+make db-compact  # Compact database (`./assets` dir by default)
+make db-compress  # Compress database into `db.tar.gz` file
 ```
 
 To build trivy-db image and push into registry, you need to use [Oras CLI](https://oras.land/cli/).

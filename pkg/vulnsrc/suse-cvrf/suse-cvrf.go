@@ -28,6 +28,7 @@ const (
 	OpenSUSETumbleweed
 
 	platformOpenSUSELeapFormat             = "openSUSE Leap %s"
+	platformOpenSUSELeapMicroFormat        = "openSUSE Leap Micro %s"
 	platformOpenSUSETumbleweedFormat       = "openSUSE Tumbleweed"
 	platformSUSELinuxFormat                = "SUSE Linux Enterprise %s"
 	platformSUSELinuxEnterpriseMicroFormat = "SUSE Linux Enterprise Micro %s"
@@ -199,6 +200,20 @@ func (vs VulnSrc) getOSVersion(platformName string) string {
 		// Tumbleweed has no version, it is a rolling release
 		return platformOpenSUSETumbleweedFormat
 	}
+	if strings.HasPrefix(platformName, "openSUSE Leap Micro") {
+		ss := strings.Fields(platformName)
+		if len(ss) < 4 {
+			vs.logger.Warn("Invalid version", log.String("platform", platformName))
+			return ""
+		}
+
+		if _, err := version.Parse(ss[3]); err != nil {
+			vs.logger.Warn("Invalid version", log.String("platform", platformName), log.Err(err))
+			return ""
+		}
+
+		return fmt.Sprintf(platformOpenSUSELeapMicroFormat, ss[3])
+	}
 	if strings.HasPrefix(platformName, "openSUSE Leap") {
 		// openSUSE Leap 15.0
 		ss := strings.Split(platformName, " ")
@@ -323,6 +338,7 @@ func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) 
 	}
 	return advisories, nil
 }
+
 func severityFromThreat(sev string) types.Severity {
 	switch sev {
 	case "low":

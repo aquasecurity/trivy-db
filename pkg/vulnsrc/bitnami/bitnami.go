@@ -32,6 +32,10 @@ type DatabaseSpecific struct {
 	Severity string `json:"severity"`
 }
 
+func (t *transformer) PostParseAffected(advisory osv.Advisory, _ osv.Affected) (osv.Advisory, error) {
+	return advisory, nil
+}
+
 func (t *transformer) TransformAdvisories(advs []osv.Advisory, entry osv.Entry) ([]osv.Advisory, error) {
 	var specific DatabaseSpecific
 	if err := json.Unmarshal(entry.DatabaseSpecific, &specific); err != nil {
