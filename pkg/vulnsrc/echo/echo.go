@@ -110,7 +110,6 @@ func (vs VulnSrc) saveVulnerabilities(tx *bolt.Tx, pkgName string, advisory Advi
 			FixedVersion: vulnInfo.FixedVersion,
 		}
 
-		// Convert severity string to types.Severity if present
 		if vulnInfo.Severity != "" {
 			severity, err := types.NewSeverity(strings.ToUpper(vulnInfo.Severity))
 			if err == nil {
@@ -118,15 +117,12 @@ func (vs VulnSrc) saveVulnerabilities(tx *bolt.Tx, pkgName string, advisory Advi
 			}
 		}
 
-		// See https://gitlab.alpinelinux.org/alpine/infra/docker/secdb/-/issues/3
-		// e.g. CVE-2017-2616 (+ regression fix)
 		ids := strings.Fields(cveID)
 		for _, id := range ids {
 			if err := vs.dbc.PutAdvisoryDetail(tx, id, pkgName, []string{distroName}, adv); err != nil {
 				return oops.Wrapf(err, "failed to save advisory detail")
 			}
 
-			// for optimization
 			if err := vs.dbc.PutVulnerabilityID(tx, id); err != nil {
 				return oops.Wrapf(err, "failed to save the vulnerability ID")
 			}
