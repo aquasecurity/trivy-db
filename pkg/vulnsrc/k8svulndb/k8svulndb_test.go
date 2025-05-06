@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/k8svulndb"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
@@ -45,6 +46,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						References:   []string{"https: //www.cve.org/cverecord?id=CVE-2023-2727"},
 						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:N",
 						CvssScoreV3:  6.5,
+						LastModifiedDate: utils.MustTimeParse("2023-06-13T14:42:06Z"),
+						PublishedDate: utils.MustTimeParse("2023-06-13T14:42:06Z"),
 					},
 				},
 			},

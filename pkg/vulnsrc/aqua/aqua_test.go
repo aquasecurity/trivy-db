@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/aqua"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
@@ -66,6 +67,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						},
 						CvssScoreV3:  9.8,
 						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+						LastModifiedDate: utils.MustTimeParse("2024-12-18T12:00:00Z"),
+						PublishedDate: utils.MustTimeParse("2024-12-18T12:00:00Z"),
 					},
 				},
 				{

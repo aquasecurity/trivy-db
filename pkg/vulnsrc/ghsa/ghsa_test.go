@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
@@ -65,6 +66,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						Severity:     types.SeverityMedium,
 						CvssVectorV3: "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N",
 						CvssScoreV3:  5.9,
+						LastModifiedDate: utils.MustTimeParse("2021-09-22T18:26:44Z"),
+						PublishedDate: utils.MustTimeParse("2018-10-18T18:05:57Z"),
 					},
 				},
 				{
@@ -131,6 +134,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						Severity:     types.SeverityCritical,
 						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
 						CvssScoreV3:  9.8,
+						LastModifiedDate: utils.MustTimeParse("2023-04-14T20:31:15Z"),
+						PublishedDate: utils.MustTimeParse("2023-04-05T15:30:24Z"),
 					},
 				},
 				{
@@ -184,6 +189,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						Severity:     types.SeverityHigh,
 						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
 						CvssScoreV3:  7.5,
+						LastModifiedDate: utils.MustTimeParse("2022-06-14T20:54:51Z"),
+						PublishedDate: utils.MustTimeParse("2021-08-25T20:46:06Z"),
 					},
 				},
 				{
@@ -243,6 +250,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						Severity:     types.SeverityMedium,
 						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/E:P/RL:O/RC:C",
 						CvssScoreV3:  8.8,
+						LastModifiedDate: utils.MustTimeParse("2023-02-07T21:27:07Z"),
+						PublishedDate: utils.MustTimeParse("2022-02-11T23:26:26Z"),
 					},
 				},
 				{
@@ -361,6 +370,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						Severity:     types.SeverityMedium,
 						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
 						CvssScoreV3:  5.3,
+						LastModifiedDate: utils.MustTimeParse("2023-06-07T16:01:53Z"),
+						PublishedDate: utils.MustTimeParse("2023-06-07T16:01:53Z"),
 					},
 				},
 				{
