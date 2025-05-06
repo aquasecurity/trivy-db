@@ -65,10 +65,10 @@ func TestVulnSrc_Update(t *testing.T) {
 							"https://github.com/ultralytics/ultralytics/issues/18027",
 							"https://github.com/ultralytics/ultralytics/issues/18030",
 						},
-						CvssScoreV3:  9.8,
-						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+						CvssScoreV3:      9.8,
+						CvssVectorV3:     "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
 						LastModifiedDate: utils.MustTimeParse("2024-12-18T12:00:00Z"),
-						PublishedDate: utils.MustTimeParse("2024-12-18T12:00:00Z"),
+						PublishedDate:    utils.MustTimeParse("2024-12-18T12:00:00Z"),
 					},
 				},
 				{

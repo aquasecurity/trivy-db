@@ -65,7 +65,7 @@ func TestVulnSrc_Update(t *testing.T) {
 							"https://github.com/advisories/GHSA-wgmx-52ph-qqcw",
 						},
 						LastModifiedDate: utils.MustTimeParse("2021-06-10T06:51:37.378319Z"),
-						PublishedDate: utils.MustTimeParse("2018-07-12T12:29:00Z"),
+						PublishedDate:    utils.MustTimeParse("2018-07-12T12:29:00Z"),
 					},
 				},
 				{
