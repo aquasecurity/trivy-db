@@ -14,13 +14,11 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-// VulnInfo holds the vulnerability details
 type VulnInfo struct {
 	FixedVersion string `json:"fixed_version"`
 	Severity     string `json:"severity"`
 }
 
-// Advisory is a map of CVE IDs to vulnerability information
 type Advisory map[string]VulnInfo
 
 const (
