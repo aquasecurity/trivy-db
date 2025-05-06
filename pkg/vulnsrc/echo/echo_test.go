@@ -26,7 +26,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.DataSource{
 						ID:   vulnerability.Echo,
 						Name: "Echo",
-						URL:  "https://github.com/buildecho/security-advisory/releases/latest/advisories.json",
+						URL:  "https://advisory.echohq.com/data.json",
 					},
 				},
 				{
