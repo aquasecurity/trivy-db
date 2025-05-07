@@ -180,14 +180,6 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 			return oops.Wrapf(err, "failed to save advisory")
 		}
 
-		var modified, published *time.Time
-		if !adv.Modified.IsZero() {
-			modified = &(adv.Modified)
-		}
-		if !adv.Published.IsZero() {
-			published = &(adv.Published)
-		}
-
 		// Store vulnerability details
 		vuln := types.VulnerabilityDetail{
 			Severity:         adv.Severity,
@@ -196,8 +188,8 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 			Description:      adv.Description,
 			CvssScoreV3:      adv.CVSSScoreV3,
 			CvssVectorV3:     adv.CVSSVectorV3,
-			PublishedDate:    published,
-			LastModifiedDate: modified,
+			PublishedDate:    lo.Ternary(!adv.Published.IsZero(), &adv.Published, nil),
+			LastModifiedDate: lo.Ternary(!adv.Modified.IsZero(), &adv.Modified, nil),
 		}
 
 		if err = o.dbc.PutVulnerabilityDetail(tx, adv.VulnerabilityID, o.sourceID, vuln); err != nil {
