@@ -42,6 +42,8 @@ type Advisory struct {
 	References   []string
 	CVSSScoreV3  float64
 	CVSSVectorV3 string
+	Modified     time.Time
+	Published    time.Time
 
 	// From affected[].database_specific
 	DatabaseSpecific json.RawMessage
@@ -180,12 +182,14 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 
 		// Store vulnerability details
 		vuln := types.VulnerabilityDetail{
-			Severity:     adv.Severity,
-			References:   adv.References,
-			Title:        adv.Title,
-			Description:  adv.Description,
-			CvssScoreV3:  adv.CVSSScoreV3,
-			CvssVectorV3: adv.CVSSVectorV3,
+			Severity:         adv.Severity,
+			References:       adv.References,
+			Title:            adv.Title,
+			Description:      adv.Description,
+			CvssScoreV3:      adv.CVSSScoreV3,
+			CvssVectorV3:     adv.CVSSVectorV3,
+			PublishedDate:    lo.Ternary(!adv.Published.IsZero(), &adv.Published, nil),
+			LastModifiedDate: lo.Ternary(!adv.Modified.IsZero(), &adv.Modified, nil),
 		}
 
 		if err = o.dbc.PutVulnerabilityDetail(tx, adv.VulnerabilityID, o.sourceID, vuln); err != nil {
@@ -253,6 +257,8 @@ func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) (
 					References:         references,
 					CVSSVectorV3:       cvssVectorV3,
 					CVSSScoreV3:        cvssScoreV3,
+					Modified:           entry.Modified,
+					Published:          entry.Published,
 					DatabaseSpecific:   affected.DatabaseSpecific,
 				}
 			}
