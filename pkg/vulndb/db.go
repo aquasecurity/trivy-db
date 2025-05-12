@@ -147,7 +147,7 @@ func (t TrivyDB) optimize() error {
 			return nil
 		}
 
-		vuln := t.vulnClient.Normalize(details)
+		vuln := t.vulnClient.Normalize(cveID, details)
 		if err := t.dbc.PutVulnerability(tx, cveID, vuln); err != nil {
 			return eb.Wrapf(err, "failed to put vulnerability")
 		}
