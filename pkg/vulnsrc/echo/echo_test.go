@@ -55,3 +55,54 @@ func TestVulnSrc_Update(t *testing.T) {
 		})
 	}
 }
+func TestVulnSrc_Get(t *testing.T) {
+	type args struct {
+		pkgName string
+	}
+	tests := []struct {
+		name     string
+		fixtures []string
+		args     args
+		want     []types.Advisory
+		wantErr  string
+	}{
+		{
+			name:     "happy path",
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			args: args{
+				pkgName: "curl",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2008-5514",
+					FixedVersion:    "2.02-3.1",
+					Severity:        types.SeverityHigh,
+				},
+				{
+					VulnerabilityID: "CVE-2024-11053",
+					FixedVersion:    "7.88.1-10+de12u8",
+					Status:          types.StatusAffected,
+				},
+			},
+		},
+		{
+			name:     "broken bucket",
+			fixtures: []string{"testdata/fixtures/broken.yaml"},
+			args: args{
+				pkgName: "curl",
+			},
+			wantErr: "failed to get advisories",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			vs := echo.NewVulnSrc()
+			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
+				Fixtures:   tt.fixtures,
+				WantValues: tt.want,
+				PkgName:    tt.args.pkgName,
+				WantErr:    tt.wantErr,
+			})
+		})
+	}
+}

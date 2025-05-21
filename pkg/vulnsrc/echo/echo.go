@@ -22,7 +22,6 @@ type VulnInfo struct {
 type Advisory map[string]VulnInfo
 
 const (
-	echoDir    = "echo"
 	distroName = "echo"
 )
 
@@ -49,7 +48,7 @@ func (vs VulnSrc) Name() types.SourceID {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	rootDir := filepath.Join(dir, "vuln-list", echoDir)
+	rootDir := filepath.Join(dir, "vuln-list", distroName)
 	eb := oops.In(string(source.ID)).With("root_dir", rootDir)
 
 	entries, err := os.ReadDir(rootDir)
@@ -117,21 +116,18 @@ func (vs VulnSrc) saveVulnerabilities(tx *bolt.Tx, pkgName string, advisory Advi
 			}
 		}
 
-		ids := strings.Fields(cveID)
-		for _, id := range ids {
-			if err := vs.dbc.PutAdvisoryDetail(tx, id, pkgName, []string{distroName}, adv); err != nil {
-				return oops.Wrapf(err, "failed to save advisory detail")
-			}
+		if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkgName, []string{distroName}, adv); err != nil {
+			return oops.Wrapf(err, "failed to save advisory detail")
+		}
 
-			if err := vs.dbc.PutVulnerabilityID(tx, id); err != nil {
-				return oops.Wrapf(err, "failed to save the vulnerability ID")
-			}
+		if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
+			return oops.Wrapf(err, "failed to save the vulnerability ID")
 		}
 	}
 	return nil
 }
 
-func (vs VulnSrc) Get(pkgName string) ([]types.Advisory, error) {
+func (vs VulnSrc) Get(_, pkgName string) ([]types.Advisory, error) {
 	eb := oops.In(string(source.ID))
 
 	advisories, err := vs.dbc.GetAdvisories(distroName, pkgName)
