@@ -1,11 +1,11 @@
-package echo_test
+package echo
 
 import (
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/echo"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 )
@@ -46,7 +46,7 @@ func TestVulnSrc_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			vs := echo.NewVulnSrc()
+			vs := NewVulnSrc()
 			vulnsrctest.TestUpdate(t, vs, vulnsrctest.TestUpdateArgs{
 				Dir:        tt.dir,
 				WantValues: tt.wantValues,
@@ -96,13 +96,66 @@ func TestVulnSrc_Get(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			vs := echo.NewVulnSrc()
+			vs := NewVulnSrc()
 			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
 				Fixtures:   tt.fixtures,
 				WantValues: tt.want,
 				PkgName:    tt.args.pkgName,
 				WantErr:    tt.wantErr,
 			})
+		})
+	}
+}
+
+func Test_readPackageAdvisory(t *testing.T) {
+	type args struct {
+		rootDir  string
+		fileName string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		want1   Advisory
+		wantErr bool
+	}{
+		{
+			name: "happy path",
+			args: args{
+				rootDir:  "testdata/happy/vuln-list/echo",
+				fileName: "curl.json",
+			},
+			want: "curl",
+			want1: Advisory{
+				"CVE-2024-11053": {
+					FixedVersion: "7.88.1-10+deb12u8",
+					Severity:     "HIGH",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "sad path",
+			args: args{
+				rootDir:  "testdata/sad/vuln-list/echo",
+				fileName: "curl.json",
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1, err := readPackageAdvisory(tt.args.rootDir, tt.args.fileName)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("readPackageAdvisory() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("readPackageAdvisory() got = %v, want %v", got, tt.want)
+			}
+			if !reflect.DeepEqual(got1, tt.want1) {
+				t.Errorf("readPackageAdvisory() got1 = %v, want %v", got1, tt.want1)
+			}
 		})
 	}
 }
