@@ -81,8 +81,8 @@ type VulnerabilityDetail struct {
 	References       []string   `json:",omitempty"`
 	Title            string     `json:",omitempty"`
 	Description      string     `json:",omitempty"`
-	PublishedDate    *time.Time `json:",omitempty"` // Take from NVD
-	LastModifiedDate *time.Time `json:",omitempty"` // Take from NVD
+	PublishedDate    *time.Time `json:",omitempty"` // Take from NVD or GHSA
+	LastModifiedDate *time.Time `json:",omitempty"` // Take from NVD or GHSA
 }
 
 type AdvisoryDetail struct {
