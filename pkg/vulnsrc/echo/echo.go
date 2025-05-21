@@ -63,17 +63,9 @@ func (vs VulnSrc) Update(dir string) error {
 			continue
 		}
 
-		filePath := filepath.Join(rootDir, entry.Name())
-		f, err := os.Open(filePath)
+		pkgName, advisory, err := readPackageAdvisory(rootDir, entry.Name())
 		if err != nil {
-			return eb.With("file_path", filePath).Wrapf(err, "failed to open file")
-		}
-		defer f.Close()
-
-		pkgName := strings.TrimSuffix(entry.Name(), filepath.Ext(entry.Name()))
-		var advisory Advisory
-		if err := json.NewDecoder(f).Decode(&advisory); err != nil {
-			return eb.With("file_path", filePath).Wrapf(err, "json decode error")
+			return eb.With("file_name", entry.Name()).Wrapf(err, "failed to read package advisory")
 		}
 		advisoryMap[pkgName] = advisory
 	}
@@ -83,6 +75,23 @@ func (vs VulnSrc) Update(dir string) error {
 	}
 
 	return nil
+}
+
+func readPackageAdvisory(rootDir, fileName string) (string, Advisory, error) {
+	filePath := filepath.Join(rootDir, fileName)
+	pkgName := strings.TrimSuffix(fileName, filepath.Ext(fileName))
+	f, err := os.Open(filePath)
+	if err != nil {
+		return "", nil, oops.Wrapf(err, "failed to open file")
+	}
+	defer f.Close()
+
+	var advisory Advisory
+	if err := json.NewDecoder(f).Decode(&advisory); err != nil {
+		return "", nil, oops.Wrapf(err, "json decode error")
+	}
+
+	return pkgName, advisory, nil
 }
 
 func (vs VulnSrc) save(advisoryMap map[string]Advisory) error {
