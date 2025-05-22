@@ -1,0 +1,12 @@
+- bucket: echo
+  pairs:
+    - bucket: curl
+      pairs:
+        - key: CVE-2024-11053
+          value:
+            FixedVersion: "7.88.1-10+de12u8"
+            Status: 2
+        - key: CVE-2008-5514
+          value:
+            FixedVersion: "2.02-3.1"
+            Severity: 3
