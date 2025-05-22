@@ -19,7 +19,7 @@ type VulnInfo struct {
 	Severity     string `json:"severity"`
 }
 
-type Advisory map[string]VulnInfo
+type Advisories map[string]VulnInfo
 
 const (
 	distroName = "echo"
@@ -56,18 +56,18 @@ func (vs VulnSrc) Update(dir string) error {
 		return eb.Wrapf(err, "failed to read directory")
 	}
 
-	advisoryMap := make(map[string]Advisory)
+	advisoryMap := make(map[string]Advisories)
 
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
 		}
 
-		pkgName, advisory, err := readPackageAdvisory(rootDir, entry.Name())
+		pkgName, advisories, err := readPackageAdvisories(rootDir, entry.Name())
 		if err != nil {
-			return eb.With("file_name", entry.Name()).Wrapf(err, "failed to read package advisory")
+			return eb.With("file_name", entry.Name()).Wrapf(err, "failed to read package advisories")
 		}
-		advisoryMap[pkgName] = advisory
+		advisoryMap[pkgName] = advisories
 	}
 
 	if err = vs.save(advisoryMap); err != nil {
@@ -77,30 +77,13 @@ func (vs VulnSrc) Update(dir string) error {
 	return nil
 }
 
-func readPackageAdvisory(rootDir, fileName string) (string, Advisory, error) {
-	filePath := filepath.Join(rootDir, fileName)
-	pkgName := strings.TrimSuffix(fileName, filepath.Ext(fileName))
-	f, err := os.Open(filePath)
-	if err != nil {
-		return "", nil, oops.Wrapf(err, "failed to open file")
-	}
-	defer f.Close()
-
-	var advisory Advisory
-	if err := json.NewDecoder(f).Decode(&advisory); err != nil {
-		return "", nil, oops.Wrapf(err, "json decode error")
-	}
-
-	return pkgName, advisory, nil
-}
-
-func (vs VulnSrc) save(advisoryMap map[string]Advisory) error {
+func (vs VulnSrc) save(advisoryMap map[string]Advisories) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		if err := vs.dbc.PutDataSource(tx, distroName, source); err != nil {
 			return oops.Wrapf(err, "failed to put data source")
 		}
-		for pkgName, advisory := range advisoryMap {
-			if err := vs.saveVulnerabilities(tx, pkgName, advisory); err != nil {
+		for pkgName, advisories := range advisoryMap {
+			if err := vs.saveAdvisories(tx, pkgName, advisories); err != nil {
 				return oops.Wrapf(err, "failed to save vulnerabilities")
 			}
 		}
@@ -112,8 +95,8 @@ func (vs VulnSrc) save(advisoryMap map[string]Advisory) error {
 	return nil
 }
 
-func (vs VulnSrc) saveVulnerabilities(tx *bolt.Tx, pkgName string, advisory Advisory) error {
-	for cveID, vulnInfo := range advisory {
+func (vs VulnSrc) saveAdvisories(tx *bolt.Tx, pkgName string, advisories Advisories) error {
+	for cveID, vulnInfo := range advisories {
 		adv := types.Advisory{
 			FixedVersion: vulnInfo.FixedVersion,
 		}
@@ -145,4 +128,21 @@ func (vs VulnSrc) Get(_, pkgName string) ([]types.Advisory, error) {
 	}
 
 	return advisories, nil
+}
+
+func readPackageAdvisories(rootDir, fileName string) (string, Advisories, error) {
+	filePath := filepath.Join(rootDir, fileName)
+	pkgName := strings.TrimSuffix(fileName, filepath.Ext(fileName))
+	f, err := os.Open(filePath)
+	if err != nil {
+		return "", nil, oops.Wrapf(err, "failed to open file")
+	}
+	defer f.Close()
+
+	var advisories Advisories
+	if err := json.NewDecoder(f).Decode(&advisories); err != nil {
+		return "", nil, oops.Wrapf(err, "json decode error")
+	}
+
+	return pkgName, advisories, nil
 }
