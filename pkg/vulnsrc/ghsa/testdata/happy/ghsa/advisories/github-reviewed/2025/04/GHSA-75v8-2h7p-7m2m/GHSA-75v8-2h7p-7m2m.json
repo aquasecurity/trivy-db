@@ -1,0 +1,92 @@
+{
+  "schema_version": "1.4.0",
+  "id": "GHSA-75v8-2h7p-7m2m",
+  "modified": "2025-04-30T21:07:20Z",
+  "published": "2025-04-26T21:31:26Z",
+  "aliases": [
+    "CVE-2025-46653"
+  ],
+  "summary": "Formidable relies on hexoid to prevent guessing of filenames for untrusted executable content",
+  "details": "Formidable (aka node-formidable) 2.1.0 through 3.x before 3.5.3 relies on hexoid to prevent guessing of filenames for untrusted executable content; however, hexoid is documented as not \"cryptographically secure.\" (Also, there is a scenario in which only the last two characters of a hexoid string need to be guessed, but this is not often relevant.) NOTE: this does not imply that, in a typical use case, attackers will be able to exploit any hexoid behavior to upload and execute their own content.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:L/A:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "npm",
+        "name": "formidable"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.1.1-canary.20211030"
+            },
+            {
+              "fixed": "3.5.3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "package": {
+        "ecosystem": "npm",
+        "name": "formidable"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.1.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "last_known_affected_version_range": "< 2.1.3"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-46653"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/node-formidable/formidable/commit/022c2c5577dfe14d2947f10909d81b03b6070bf5"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/node-formidable/formidable/commit/37a3e89fca1ed68ec674a539f13aafd62221ddaa"
+    },
+    {
+      "type": "PACKAGE",
+      "url": "https://github.com/node-formidable/formidable"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/node-formidable/formidable/blob/d0fbec13edc8add54a1afb9ce1a8d3db803f8d47/CHANGELOG.md?plain=1#L10"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/zast-ai/vulnerability-reports/blob/main/formidable/file_upload/report.md"
+    }
+  ],
+  "database_specific": {
+    "cwe_ids": [
+      "CWE-338"
+    ],
+    "severity": "LOW",
+    "github_reviewed": true,
+    "github_reviewed_at": "2025-04-29T14:07:17Z",
+    "nvd_published_at": "2025-04-26T21:15:14Z"
+  }
+}
