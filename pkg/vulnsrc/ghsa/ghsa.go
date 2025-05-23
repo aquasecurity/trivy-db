@@ -102,8 +102,12 @@ func newTransformer(root string) (*transformer, error) {
 	}, nil
 }
 
-func (t *transformer) PostParseAffected(advisory osv.Advisory, _ osv.Affected) (osv.Advisory, error) {
-	return advisory, nil
+func (t *transformer) PostParseAffected(adv osv.Advisory, affected osv.Affected) (osv.Advisory, error) {
+	eb := oops.With("ecosystem", adv.Ecosystem).With("package_name", adv.PkgName).With("vuln_id", adv.VulnerabilityID).With("aliases", adv.Aliases)
+	if err := parseDatabaseSpecific(adv, affected.DatabaseSpecific); err != nil {
+		return osv.Advisory{}, eb.Wrapf(err, "failed to parse database specific")
+	}
+	return adv, nil
 }
 
 func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.Entry) ([]osv.Advisory, error) {
@@ -114,12 +118,6 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 
 	severity := convertSeverity(specific.Severity)
 	for i, adv := range advisories {
-		eb := oops.With("ecosystem", adv.Ecosystem).With("package_name", adv.PkgName).With("vuln_id", adv.VulnerabilityID).With("aliases", adv.Aliases)
-		// Parse database_specific
-		if err := parseDatabaseSpecific(adv); err != nil {
-			return nil, eb.Wrapf(err, "failed to parse database specific")
-		}
-
 		// Fill severity from GHSA
 		advisories[i].Severity = severity
 
@@ -147,14 +145,14 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 
 // parseDatabaseSpecific adds a version from the last_known_affected_version_range field
 // cf. https://github.com/github/advisory-database/issues/470#issuecomment-1998604377
-func parseDatabaseSpecific(advisory osv.Advisory) error {
+func parseDatabaseSpecific(advisory osv.Advisory, databaseSpecific json.RawMessage) error {
 	// Skip if the `affected[].database_specific` field doesn't exist
-	if advisory.DatabaseSpecific == nil {
+	if databaseSpecific == nil {
 		return nil
 	}
 
 	var affectedSpecific DatabaseSpecific
-	if err := json.Unmarshal(advisory.DatabaseSpecific, &affectedSpecific); err != nil {
+	if err := json.Unmarshal(databaseSpecific, &affectedSpecific); err != nil {
 		return oops.Wrapf(err, "json unmarshal error")
 	}
 
