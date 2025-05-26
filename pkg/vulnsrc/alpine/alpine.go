@@ -100,7 +100,10 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 			ids := strings.Fields(vulnID)
 			for _, cveID := range ids {
 				cveID = strings.ReplaceAll(cveID, "CVE_", "CVE-")
-				if !strings.HasPrefix(cveID, "CVE-") {
+				// Possible cases when vulnID contains only one non-CVE-ID
+				// e.g. only GHSA-ID
+				// cf. https://github.com/aquasecurity/vuln-list/blob/a830a1cc031f51a29a1a6f1c28d8366bbb5e7b64/alpine/3.21/community/vaultwarden.json#L9-L13
+				if !strings.HasPrefix(cveID, "CVE-") && len(ids) > 1 {
 					continue
 				}
 				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkgName, []string{platform}, advisory); err != nil {
