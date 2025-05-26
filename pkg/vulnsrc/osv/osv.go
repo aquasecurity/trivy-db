@@ -44,9 +44,6 @@ type Advisory struct {
 	CVSSVectorV3 string
 	Modified     time.Time
 	Published    time.Time
-
-	// From affected[].database_specific
-	DatabaseSpecific json.RawMessage
 }
 
 type OSV struct {
@@ -259,7 +256,6 @@ func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) (
 					CVSSScoreV3:        cvssScoreV3,
 					Modified:           entry.Modified,
 					Published:          entry.Published,
-					DatabaseSpecific:   affected.DatabaseSpecific,
 				}
 			}
 
