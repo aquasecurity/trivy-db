@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"path/filepath"
 	"slices"
 	"sort"
@@ -184,7 +185,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			input := PutInput{
 				VulnID:     vulnID,
 				Vuln:       vuln,
-				Advisories: lo.Assign(advisories),
+				Advisories: maps.Clone(advisories),
 				OVALs:      []OracleOVAL{oval},
 			}
 
