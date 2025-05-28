@@ -76,49 +76,49 @@ func TestVulnSrc_Update(t *testing.T) {
 						"vulnerability-id",
 						"CVE-2019-14904",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
 						"CVE-2019-14905",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
 						"CVE-2024-22195",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
 						"CVE-2017-2616",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
 						"GHSA-f7r5-w49x-gxm3",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
 						"GHSA-h6cc-rc6q-23j4",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
 						"CVE-2020-1737",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
