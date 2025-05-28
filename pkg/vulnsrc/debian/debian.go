@@ -354,9 +354,7 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 
 func (vs VulnSrc) save() error {
 	vs.logger.Info("Saving DB")
-	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		return vs.commit(tx)
-	})
+	err := vs.dbc.BatchUpdate(vs.commit)
 	if err != nil {
 		return oops.Wrapf(err, "batch update error")
 	}
@@ -507,7 +505,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
 	return nil
 }
 
-func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
+func (vs VulnSrc) Get(release, pkgName string) ([]types.Advisory, error) {
 	eb := oops.In("debian").With("release", release).With("package_name", pkgName)
 	bkt := fmt.Sprintf(platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bkt, pkgName)

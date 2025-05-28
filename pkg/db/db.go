@@ -73,7 +73,7 @@ func Init(dbDir string, opts ...Option) (err error) {
 	}
 
 	eb := oops.With("db_dir", dbDir)
-	if err = os.MkdirAll(dbDir, 0700); err != nil {
+	if err = os.MkdirAll(dbDir, 0o700); err != nil {
 		return eb.Wrapf(err, "failed to mkdir")
 	}
 	dbPath := Path(dbDir)
@@ -92,7 +92,7 @@ func Init(dbDir string, opts ...Option) (err error) {
 		debug.SetPanicOnFault(false)
 	}()
 
-	db, err = bolt.Open(dbPath, 0644, dbOptions.boltOptions)
+	db, err = bolt.Open(dbPath, 0o644, dbOptions.boltOptions)
 	if err != nil {
 		return eb.Wrapf(err, "failed to open db")
 	}

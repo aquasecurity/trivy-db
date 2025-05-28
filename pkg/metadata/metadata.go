@@ -54,7 +54,7 @@ func (c Client) Get() (Metadata, error) {
 func (c Client) Update(meta Metadata) error {
 	eb := oops.With("file_path", c.filePath)
 
-	if err := os.MkdirAll(filepath.Dir(c.filePath), 0744); err != nil {
+	if err := os.MkdirAll(filepath.Dir(c.filePath), 0o744); err != nil {
 		return eb.Wrapf(err, "mkdir error")
 	}
 

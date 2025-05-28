@@ -114,9 +114,7 @@ func (vs *VulnSrc) walkFunc(r io.Reader, path string) error {
 
 func (vs VulnSrc) save() error {
 	vs.logger.Info("Saving DB")
-	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		return vs.commit(tx)
-	})
+	err := vs.dbc.BatchUpdate(vs.commit)
 	if err != nil {
 		return oops.Wrapf(err, "batch update error")
 	}
@@ -167,7 +165,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 }
 
 // Get returns a security advisory
-func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) {
+func (vs VulnSrc) Get(version, pkgName string) ([]types.Advisory, error) {
 	eb := oops.In("amazon").With("version", version)
 	bucket := fmt.Sprintf(platformFormat, version)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)

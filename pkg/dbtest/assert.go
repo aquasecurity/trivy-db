@@ -98,7 +98,7 @@ func get(t *testing.T, dbPath string, keys []string, msgAndArgs ...interface{}) 
 }
 
 func open(t *testing.T, dbPath string) *bolt.DB {
-	db, err := bolt.Open(dbPath, 0600, &bolt.Options{ReadOnly: true})
+	db, err := bolt.Open(dbPath, 0o600, &bolt.Options{ReadOnly: true})
 	require.NoError(t, err)
 
 	return db
