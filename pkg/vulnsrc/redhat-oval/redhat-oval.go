@@ -450,11 +450,11 @@ func walkCriterion(cri criteria, tests map[string]rpmInfoTest) (string, []pkg) {
 		})
 	}
 
-	if len(cri.Criteria) == 0 {
+	if len(cri.Criterias) == 0 {
 		return moduleName, packages
 	}
 
-	for _, c := range cri.Criteria {
+	for _, c := range cri.Criterias {
 		m, pkgs := walkCriterion(c, tests)
 		if m != "" {
 			moduleName = m

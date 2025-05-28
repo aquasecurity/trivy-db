@@ -27,7 +27,7 @@ type Cve struct {
 
 type Criteria struct {
 	Operator   string
-	Criteria   []Criteria
+	Criterias  []Criteria
 	Criterions []Criterion
 }
 
