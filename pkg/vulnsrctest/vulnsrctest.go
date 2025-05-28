@@ -40,7 +40,7 @@ func TestUpdate(t *testing.T, vulnsrc Updater, args TestUpdateArgs) {
 
 	err = vulnsrc.Update(args.Dir)
 	if args.WantErr != "" {
-		require.NotNil(t, err)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), args.WantErr)
 		return
 	}

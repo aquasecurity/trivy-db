@@ -961,7 +961,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			got, err := vs.Get(tt.args.pkgName, tt.args.repositories, tt.args.nvrs)
 
 			if tt.wantErr != "" {
-				require.NotNil(t, err)
+				require.Error(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
 				return
 			}

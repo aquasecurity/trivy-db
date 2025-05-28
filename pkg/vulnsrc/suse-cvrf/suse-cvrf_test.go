@@ -659,7 +659,7 @@ func TestGetOSVersion(t *testing.T) {
 		t.Run(tc.inputPlatformName, func(t *testing.T) {
 			vs := NewVulnSrc(OpenSUSE)
 			actual := vs.getOSVersion(tc.inputPlatformName)
-			assert.Equal(t, tc.expectedPlatformName, actual, fmt.Sprintf("input data: %s", tc.inputPlatformName))
+			assert.Equal(t, tc.expectedPlatformName, actual, "input data: %s", tc.inputPlatformName)
 		})
 	}
 }

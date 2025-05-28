@@ -257,7 +257,7 @@ func (vs VulnSrc) getOSVersion(platformName string) string {
 			if err != nil {
 				continue
 			}
-			versions = append(versions, fmt.Sprintf("%d", v))
+			versions = append(versions, strconv.Itoa(v))
 			if len(versions) == 2 {
 				break
 			}

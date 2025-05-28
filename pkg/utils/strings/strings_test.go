@@ -51,7 +51,7 @@ func TestUnique(t *testing.T) {
 	}
 	for _, tt := range tests {
 		actualData := strings.Unique(tt.input)
-		assert.Equal(t, actualData, tt.want, tt.name)
+		assert.Equal(t, tt.want, actualData, tt.name)
 	}
 
 }
