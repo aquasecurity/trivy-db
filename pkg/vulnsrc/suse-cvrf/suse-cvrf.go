@@ -316,7 +316,7 @@ func splitPkgName(pkgName string) (string, string) {
 	return pkgName, version
 }
 
-func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) {
+func (vs VulnSrc) Get(version, pkgName string) ([]types.Advisory, error) {
 	eb := oops.In("suse").Tags("cvrf").With("version", version).With("package_name", pkgName)
 	var bucket string
 	switch vs.dist {

@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"io"
 	"path/filepath"
+	"slices"
 
 	"github.com/samber/oops"
-	"slices"
 
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/utils"

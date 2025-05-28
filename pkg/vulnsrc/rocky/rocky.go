@@ -112,7 +112,10 @@ func (vs *VulnSrc) parse(rootDir string) (map[string][]RLSA, error) {
 		// vulnerabilities are contained in directories with a minor version(like 8.5)
 		majorVer := dirs[0]
 		if strings.Count(dirs[0], ".") > 0 {
-			majorVer = dirs[0][:strings.Index(dirs[0], ".")]
+			idx := strings.Index(dirs[0], ".")
+			if idx != -1 {
+				majorVer = dirs[0][:idx]
+			}
 		}
 		repo, arch := dirs[1], dirs[2]
 		if !slices.Contains(targetRepos, repo) {

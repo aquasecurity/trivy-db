@@ -59,7 +59,7 @@ type bucketer interface {
 
 func get(t *testing.T, dbPath string, keys []string, msgAndArgs ...any) []byte {
 	if len(keys) < 2 {
-		require.Failf(t, "malformed keys: %v", "", keys)
+		require.Failf(t, "malformed keys: %v", "keys: %v", keys)
 	}
 	db := open(t, dbPath)
 	defer db.Close()

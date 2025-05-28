@@ -86,6 +86,6 @@ func TestGet(t *testing.T, vulnsrc Getter, args TestGetArgs) {
 		return got[i].VulnerabilityID < got[j].VulnerabilityID
 	})
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, args.WantValues, got)
 }

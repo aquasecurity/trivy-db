@@ -971,7 +971,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			})
 
 			// Compare
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
 	}

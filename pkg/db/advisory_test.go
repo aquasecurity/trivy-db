@@ -93,7 +93,7 @@ func TestConfig_ForEachAdvisory(t *testing.T) {
 				return
 			}
 
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			// Compare
 			assert.Len(t, got, len(tt.want))
@@ -213,7 +213,7 @@ func TestConfig_GetAdvisories(t *testing.T) {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
 			default:
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 
 			// Compare

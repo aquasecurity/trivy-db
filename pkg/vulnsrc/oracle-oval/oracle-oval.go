@@ -449,7 +449,7 @@ func walkOracle(cri Criteria, osVer, arch string, pkgs []AffectedPackage) []Affe
 	return pkgs
 }
 
-func referencesFromContains(sources []string, matches []string) []string {
+func referencesFromContains(sources, matches []string) []string {
 	var references []string
 	for _, s := range sources {
 		for _, m := range matches {
