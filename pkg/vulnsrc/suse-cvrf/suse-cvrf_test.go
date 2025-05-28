@@ -1,7 +1,6 @@
 package susecvrf
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"

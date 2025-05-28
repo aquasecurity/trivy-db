@@ -13,7 +13,6 @@ import (
 	"github.com/samber/lo"
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/exp/maps"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/log"
@@ -185,7 +184,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			input := PutInput{
 				VulnID:     vulnID,
 				Vuln:       vuln,
-				Advisories: maps.Clone(advisories),
+				Advisories: lo.Assign(advisories),
 				OVALs:      []OracleOVAL{oval},
 			}
 

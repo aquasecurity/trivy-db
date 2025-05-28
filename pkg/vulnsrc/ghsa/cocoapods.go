@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/samber/oops"
-	"golang.org/x/exp/slices"
+	"slices"
 
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
