@@ -42,10 +42,83 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
+					Key: []string{"advisory-detail", "CVE-2024-22195", "alpine 3.12", "ansible"},
+					Value: types.Advisory{
+						FixedVersion: "2.9.3-r0",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2017-2616", "alpine 3.12", "ansible"},
+					Value: types.Advisory{
+						FixedVersion: "2.9.3-r0",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "GHSA-f7r5-w49x-gxm3", "alpine 3.12", "ansible"},
+					Value: types.Advisory{
+						FixedVersion: "2.9.3-r0",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "GHSA-h6cc-rc6q-23j4", "alpine 3.12", "ansible"},
+					Value: types.Advisory{
+						FixedVersion: "2.9.3-r0",
+					},
+				},
+				{
 					Key: []string{"advisory-detail", "CVE-2020-1737", "alpine 3.12", "ansible"},
 					Value: types.Advisory{
 						FixedVersion: "2.9.6-r0",
 					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2019-14904",
+					},
+					Value: map[string]interface{}{},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2019-14905",
+					},
+					Value: map[string]interface{}{},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2024-22195",
+					},
+					Value: map[string]interface{}{},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2017-2616",
+					},
+					Value: map[string]interface{}{},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"GHSA-f7r5-w49x-gxm3",
+					},
+					Value: map[string]interface{}{},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"GHSA-h6cc-rc6q-23j4",
+					},
+					Value: map[string]interface{}{},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2020-1737",
+					},
+					Value: map[string]interface{}{},
 				},
 			},
 		},
