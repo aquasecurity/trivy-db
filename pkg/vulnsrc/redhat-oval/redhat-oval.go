@@ -450,11 +450,11 @@ func walkCriterion(cri criteria, tests map[string]rpmInfoTest) (string, []pkg) {
 		})
 	}
 
-	if len(cri.Criterias) == 0 {
+	if len(cri.Criterias) == 0 { //nolint:misspell
 		return moduleName, packages
 	}
 
-	for _, c := range cri.Criterias {
+	for _, c := range cri.Criterias { //nolint:misspell
 		m, pkgs := walkCriterion(c, tests)
 		if m != "" {
 			moduleName = m

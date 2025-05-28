@@ -444,7 +444,7 @@ func walkOracle(cri Criteria, osVer, arch string, pkgs []AffectedPackage) []Affe
 		})
 	}
 
-	for _, c := range cri.Criterias {
+	for _, c := range cri.Criterias { //nolint:misspell
 		pkgs = walkOracle(c, osVer, arch, pkgs)
 	}
 	return pkgs
