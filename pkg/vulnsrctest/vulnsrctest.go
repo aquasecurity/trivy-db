@@ -18,7 +18,7 @@ type Updater interface {
 
 type WantValues struct {
 	Key   []string
-	Value interface{}
+	Value any
 }
 
 type TestUpdateArgs struct {

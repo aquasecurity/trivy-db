@@ -469,7 +469,7 @@ func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt bucket, advisory Advisory) error 
 }
 
 // defaultPut puts the advisory into Trivy DB, but it can be overwritten.
-func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
+func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory any) error {
 	adv, ok := advisory.(Advisory)
 	if !ok {
 		return oops.Errorf("unknown type")

@@ -154,7 +154,7 @@ func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) 
 	return advisories, nil
 }
 
-func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory interface{}) error {
+func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory any) error {
 	cve, ok := advisory.(UbuntuCVE)
 	if !ok {
 		return oops.Errorf("unknown type")

@@ -40,7 +40,7 @@ type Number struct {
 // In NPM package CVSSScore is like: 4.8, Type float64
 // Details: https://github.com/golang/go/issues/37308
 func (n *Number) UnmarshalJSON(b []byte) error {
-	var data interface{}
+	var data any
 	if err := json.Unmarshal(b, &data); err != nil {
 		return err
 	}

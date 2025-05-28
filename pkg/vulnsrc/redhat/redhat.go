@@ -61,13 +61,13 @@ func (vs VulnSrc) Update(dir string) error {
 		}
 
 		switch cve.TempAffectedRelease.(type) {
-		case []interface{}:
+		case []any:
 			var ar RedhatCVEAffectedReleaseArray
 			if err = json.Unmarshal(content, &ar); err != nil {
 				return eb.Wrapf(err, "unknown affected_release type")
 			}
 			cve.AffectedRelease = ar.AffectedRelease
-		case map[string]interface{}:
+		case map[string]any:
 			var ar RedhatCVEAffectedReleaseObject
 			if err = json.Unmarshal(content, &ar); err != nil {
 				return eb.Wrapf(err, "unknown affected_release type")
@@ -79,13 +79,13 @@ func (vs VulnSrc) Update(dir string) error {
 		}
 
 		switch cve.TempPackageState.(type) {
-		case []interface{}:
+		case []any:
 			var ps RedhatCVEPackageStateArray
 			if err = json.Unmarshal(content, &ps); err != nil {
 				return eb.Wrapf(err, "unknown package_state type")
 			}
 			cve.PackageState = ps.PackageState
-		case map[string]interface{}:
+		case map[string]any:
 			var ps RedhatCVEPackageStateObject
 			if err = json.Unmarshal(content, &ps); err != nil {
 				return eb.Wrapf(err, "unknown package_state type")

@@ -119,7 +119,7 @@ func TestTrivyDB_Build(t *testing.T) {
 
 	type wantKV struct {
 		key   []string
-		value interface{}
+		value any
 	}
 	tests := []struct {
 		name       string

@@ -28,7 +28,7 @@ type OperationBatchUpdateExpectation struct {
 }
 
 func (_m *MockOperation) ApplyBatchUpdateExpectation(e OperationBatchUpdateExpectation) {
-	var args []interface{}
+	var args []any
 	if e.Args.FnAnything {
 		args = append(args, mock.Anything)
 	} else {
@@ -66,7 +66,7 @@ type OperationDeleteAdvisoryDetailBucketExpectation struct {
 }
 
 func (_m *MockOperation) ApplyDeleteAdvisoryDetailBucketExpectation(e OperationDeleteAdvisoryDetailBucketExpectation) {
-	var args []interface{}
+	var args []any
 	_m.On("DeleteAdvisoryDetailBucket", args...).Return(e.Returns._a0)
 }
 
@@ -99,7 +99,7 @@ type OperationDeleteVulnerabilityDetailBucketExpectation struct {
 }
 
 func (_m *MockOperation) ApplyDeleteVulnerabilityDetailBucketExpectation(e OperationDeleteVulnerabilityDetailBucketExpectation) {
-	var args []interface{}
+	var args []any
 	_m.On("DeleteVulnerabilityDetailBucket", args...).Return(e.Returns.Err)
 }
 
@@ -141,7 +141,7 @@ type OperationForEachAdvisoryExpectation struct {
 }
 
 func (_m *MockOperation) ApplyForEachAdvisoryExpectation(e OperationForEachAdvisoryExpectation) {
-	var args []interface{}
+	var args []any
 	if e.Args.SourcesAnything {
 		args = append(args, mock.Anything)
 	} else {
@@ -199,7 +199,7 @@ type OperationForEachVulnerabilityIDExpectation struct {
 }
 
 func (_m *MockOperation) ApplyForEachVulnerabilityIDExpectation(e OperationForEachVulnerabilityIDExpectation) {
-	var args []interface{}
+	var args []any
 	if e.Args.FnAnything {
 		args = append(args, mock.Anything)
 	} else {
@@ -246,7 +246,7 @@ type OperationGetAdvisoriesExpectation struct {
 }
 
 func (_m *MockOperation) ApplyGetAdvisoriesExpectation(e OperationGetAdvisoriesExpectation) {
-	var args []interface{}
+	var args []any
 	if e.Args.SourceAnything {
 		args = append(args, mock.Anything)
 	} else {
@@ -305,7 +305,7 @@ type OperationGetVulnerabilityExpectation struct {
 }
 
 func (_m *MockOperation) ApplyGetVulnerabilityExpectation(e OperationGetVulnerabilityExpectation) {
-	var args []interface{}
+	var args []any
 	if e.Args.VulnerabilityIDAnything {
 		args = append(args, mock.Anything)
 	} else {
@@ -357,7 +357,7 @@ type OperationGetVulnerabilityDetailExpectation struct {
 }
 
 func (_m *MockOperation) ApplyGetVulnerabilityDetailExpectation(e OperationGetVulnerabilityDetailExpectation) {
-	var args []interface{}
+	var args []any
 	if e.Args.CveIDAnything {
 		args = append(args, mock.Anything)
 	} else {
@@ -404,7 +404,7 @@ type OperationPutAdvisoryDetailArgs struct {
 	PkgNameAnything         bool
 	NestedBktNames          []string
 	NestedBktNamesAnything  bool
-	Advisory                interface{}
+	Advisory                any
 	AdvisoryAnything        bool
 }
 
@@ -418,7 +418,7 @@ type OperationPutAdvisoryDetailExpectation struct {
 }
 
 func (_m *MockOperation) ApplyPutAdvisoryDetailExpectation(e OperationPutAdvisoryDetailExpectation) {
-	var args []interface{}
+	var args []any
 	if e.Args.TxAnything {
 		args = append(args, mock.Anything)
 	} else {
@@ -454,11 +454,11 @@ func (_m *MockOperation) ApplyPutAdvisoryDetailExpectations(expectations []Opera
 }
 
 // PutAdvisoryDetail provides a mock function with given fields: tx, vulnerabilityID, pkgName, nestedBktNames, advisory
-func (_m *MockOperation) PutAdvisoryDetail(tx *bbolt.Tx, vulnerabilityID string, pkgName string, nestedBktNames []string, advisory interface{}) error {
+func (_m *MockOperation) PutAdvisoryDetail(tx *bbolt.Tx, vulnerabilityID string, pkgName string, nestedBktNames []string, advisory any) error {
 	ret := _m.Called(tx, vulnerabilityID, pkgName, nestedBktNames, advisory)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*bbolt.Tx, string, string, []string, interface{}) error); ok {
+	if rf, ok := ret.Get(0).(func(*bbolt.Tx, string, string, []string, any) error); ok {
 		r0 = rf(tx, vulnerabilityID, pkgName, nestedBktNames, advisory)
 	} else {
 		r0 = ret.Error(0)
@@ -486,7 +486,7 @@ type OperationPutDataSourceExpectation struct {
 }
 
 func (_m *MockOperation) ApplyPutDataSourceExpectation(e OperationPutDataSourceExpectation) {
-	var args []interface{}
+	var args []any
 	if e.Args.TxAnything {
 		args = append(args, mock.Anything)
 	} else {
@@ -544,7 +544,7 @@ type OperationPutRedHatCPEsExpectation struct {
 }
 
 func (_m *MockOperation) ApplyPutRedHatCPEsExpectation(e OperationPutRedHatCPEsExpectation) {
-	var args []interface{}
+	var args []any
 	if e.Args.TxAnything {
 		args = append(args, mock.Anything)
 	} else {
@@ -602,7 +602,7 @@ type OperationPutRedHatNVRsExpectation struct {
 }
 
 func (_m *MockOperation) ApplyPutRedHatNVRsExpectation(e OperationPutRedHatNVRsExpectation) {
-	var args []interface{}
+	var args []any
 	if e.Args.TxAnything {
 		args = append(args, mock.Anything)
 	} else {
@@ -660,7 +660,7 @@ type OperationPutRedHatRepositoriesExpectation struct {
 }
 
 func (_m *MockOperation) ApplyPutRedHatRepositoriesExpectation(e OperationPutRedHatRepositoriesExpectation) {
-	var args []interface{}
+	var args []any
 	if e.Args.TxAnything {
 		args = append(args, mock.Anything)
 	} else {
@@ -718,7 +718,7 @@ type OperationPutVulnerabilityExpectation struct {
 }
 
 func (_m *MockOperation) ApplyPutVulnerabilityExpectation(e OperationPutVulnerabilityExpectation) {
-	var args []interface{}
+	var args []any
 	if e.Args.TxAnything {
 		args = append(args, mock.Anything)
 	} else {
@@ -778,7 +778,7 @@ type OperationPutVulnerabilityDetailExpectation struct {
 }
 
 func (_m *MockOperation) ApplyPutVulnerabilityDetailExpectation(e OperationPutVulnerabilityDetailExpectation) {
-	var args []interface{}
+	var args []any
 	if e.Args.TxAnything {
 		args = append(args, mock.Anything)
 	} else {
@@ -839,7 +839,7 @@ type OperationPutVulnerabilityIDExpectation struct {
 }
 
 func (_m *MockOperation) ApplyPutVulnerabilityIDExpectation(e OperationPutVulnerabilityIDExpectation) {
-	var args []interface{}
+	var args []any
 	if e.Args.TxAnything {
 		args = append(args, mock.Anything)
 	} else {
@@ -889,7 +889,7 @@ type OperationRedHatNVRToCPEsExpectation struct {
 }
 
 func (_m *MockOperation) ApplyRedHatNVRToCPEsExpectation(e OperationRedHatNVRToCPEsExpectation) {
-	var args []interface{}
+	var args []any
 	if e.Args.NvrAnything {
 		args = append(args, mock.Anything)
 	} else {
@@ -943,7 +943,7 @@ type OperationRedHatRepoToCPEsExpectation struct {
 }
 
 func (_m *MockOperation) ApplyRedHatRepoToCPEsExpectation(e OperationRedHatRepoToCPEsExpectation) {
-	var args []interface{}
+	var args []any
 	if e.Args.RepositoryAnything {
 		args = append(args, mock.Anything)
 	} else {
@@ -998,7 +998,7 @@ type OperationSaveAdvisoryDetailsExpectation struct {
 }
 
 func (_m *MockOperation) ApplySaveAdvisoryDetailsExpectation(e OperationSaveAdvisoryDetailsExpectation) {
-	var args []interface{}
+	var args []any
 	if e.Args.TxAnything {
 		args = append(args, mock.Anything)
 	} else {

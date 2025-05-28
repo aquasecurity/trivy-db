@@ -46,7 +46,7 @@ type Package struct {
 	Src             string      `json:"src"`
 	Filename        string      `json:"filename"`
 	Sum             string      `json:"sum"`
-	SumType         interface{} `json:"sum_type"`
+	SumType         any `json:"sum_type"`
 	RebootSuggested int         `json:"reboot_suggested"`
 }
 
