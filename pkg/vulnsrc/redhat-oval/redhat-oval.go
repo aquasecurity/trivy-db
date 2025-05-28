@@ -7,12 +7,12 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/exp/slices"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/log"
@@ -450,11 +450,11 @@ func walkCriterion(cri criteria, tests map[string]rpmInfoTest) (string, []pkg) {
 		})
 	}
 
-	if len(cri.Criterias) == 0 {
+	if len(cri.Criterias) == 0 { //nolint:misspell
 		return moduleName, packages
 	}
 
-	for _, c := range cri.Criterias {
+	for _, c := range cri.Criterias { //nolint:misspell
 		m, pkgs := walkCriterion(c, tests)
 		if m != "" {
 			moduleName = m

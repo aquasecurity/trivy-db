@@ -1,7 +1,6 @@
 package susecvrf
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -64,7 +63,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "openSUSE-SU-2019:2598-1"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -108,7 +107,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "openSUSE-SU-2024:10400-1"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -146,7 +145,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "SUSE-SU-2019:0048-2"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -189,7 +188,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "openSUSE-SU-2019:0003-1"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -239,7 +238,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "SUSE-SU-2024:2546-1"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -659,7 +658,7 @@ func TestGetOSVersion(t *testing.T) {
 		t.Run(tc.inputPlatformName, func(t *testing.T) {
 			vs := NewVulnSrc(OpenSUSE)
 			actual := vs.getOSVersion(tc.inputPlatformName)
-			assert.Equal(t, tc.expectedPlatformName, actual, fmt.Sprintf("input data: %s", tc.inputPlatformName))
+			assert.Equal(t, tc.expectedPlatformName, actual, "input data: %s", tc.inputPlatformName)
 		})
 	}
 }

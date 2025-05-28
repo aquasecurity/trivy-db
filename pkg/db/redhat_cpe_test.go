@@ -47,7 +47,7 @@ func TestConfig_GetRedHatCPEs(t *testing.T) {
 			got, err := dbc.RedHatRepoToCPEs(tt.repository)
 
 			if tt.wantErr != "" {
-				require.NotNil(t, err)
+				require.Error(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
 				return
 			}

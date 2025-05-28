@@ -134,18 +134,19 @@ func getCvssV3(metricsV31, metricsV30 []CvssMetricV3) (score float64, vector str
 func getCvssV40(metricsV40 []CvssMetricV40) (score float64, vector string, severity types.Severity) {
 	for _, metricV40 := range metricsV40 {
 		// save only NVD metric
-		if metricV40.Source == nvdSource {
-			score = metricV40.CvssData.BaseScore
-			cvss40, err := gocvss40.ParseVector(strings.TrimSuffix(metricV40.CvssData.VectorString, "/"))
-			if err != nil {
-				log.WithPrefix("nvd").Warn("Failed to parse CVSSv4.0 vector",
-					log.String("vector", metricV40.CvssData.VectorString),
-					log.Err(err))
-				return 0, "", types.SeverityUnknown
-			}
-			severity, _ = types.NewSeverity(metricV40.CvssData.BaseSeverity)
-			return score, cvss40.Vector(), severity
+		if metricV40.Source != nvdSource {
+			continue
 		}
+		score = metricV40.CvssData.BaseScore
+		cvss40, err := gocvss40.ParseVector(strings.TrimSuffix(metricV40.CvssData.VectorString, "/"))
+		if err != nil {
+			log.WithPrefix("nvd").Warn("Failed to parse CVSSv4.0 vector",
+				log.String("vector", metricV40.CvssData.VectorString),
+				log.Err(err))
+			return 0, "", types.SeverityUnknown
+		}
+		severity, _ = types.NewSeverity(metricV40.CvssData.BaseSeverity)
+		return score, cvss40.Vector(), severity
 	}
 	return
 }

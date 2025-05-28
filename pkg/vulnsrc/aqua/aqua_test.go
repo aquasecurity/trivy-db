@@ -76,7 +76,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"vulnerability-id",
 						"AQUA-2024-0001",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 			noBuckets: [][]string{

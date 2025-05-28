@@ -61,7 +61,7 @@ func Exists(path string) (bool, error) {
 	return true, err
 }
 
-func UnmarshalJSONFile(v interface{}, fileName string) error {
+func UnmarshalJSONFile(v any, fileName string) error {
 	eb := oops.With("file_name", fileName)
 
 	f, err := os.Open(fileName)

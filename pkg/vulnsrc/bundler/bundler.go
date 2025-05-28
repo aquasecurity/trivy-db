@@ -130,11 +130,12 @@ func (vs VulnSrc) walkFunc(err error, info os.FileInfo, path string, tx *bolt.Tx
 	}
 
 	var vulnerabilityID string
-	if advisory.Cve != "" {
+	switch {
+	case advisory.Cve != "":
 		vulnerabilityID = fmt.Sprintf("CVE-%s", advisory.Cve)
-	} else if advisory.Ghsa != "" {
+	case advisory.Ghsa != "":
 		vulnerabilityID = fmt.Sprintf("GHSA-%s", advisory.Ghsa)
-	} else {
+	default:
 		return nil
 	}
 

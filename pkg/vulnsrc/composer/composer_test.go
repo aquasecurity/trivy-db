@@ -46,7 +46,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2015-5723"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},

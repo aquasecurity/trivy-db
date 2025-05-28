@@ -11,9 +11,9 @@ type RedhatCVE struct {
 	Statement            string         `json:"statement"`
 	Acknowledgement      string         `json:"acknowledgement"`
 	Mitigation           string         `json:"mitigation"`
-	TempAffectedRelease  interface{}    `json:"affected_release"` // affected_release is array or object
+	TempAffectedRelease  any            `json:"affected_release"` // affected_release is array or object
 	AffectedRelease      []RedhatAffectedRelease
-	TempPackageState     interface{} `json:"package_state"` // package_state is array or object
+	TempPackageState     any `json:"package_state"` // package_state is array or object
 	PackageState         []RedhatPackageState
 	Name                 string `json:"name"`
 	DocumentDistribution string `json:"document_distribution"`
