@@ -97,23 +97,32 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 		for _, vulnID := range vulnIDs {
 			// See https://gitlab.alpinelinux.org/alpine/infra/docker/secdb/-/issues/3
 			// e.g. CVE-2017-2616 (+ regression fix)
+			// e.g. GHSA-h6cc-rc6q-23j4 (+regression fix)
 			ids := strings.Fields(vulnID)
-			for _, cveID := range ids {
-				cveID = strings.ReplaceAll(cveID, "CVE_", "CVE-")
-				// Possible cases when vulnID contains only one non-CVE-ID
-				// e.g. only GHSA-ID
-				// cf. https://github.com/aquasecurity/vuln-list/blob/a830a1cc031f51a29a1a6f1c28d8366bbb5e7b64/alpine/3.21/community/vaultwarden.json#L9-L13
-				if !strings.HasPrefix(cveID, "CVE-") && len(ids) > 1 {
-					continue
+			// Find CVE-ID first, if not found, use GHSA-ID
+			var selectedID string
+			for _, id := range ids {
+				id = strings.ReplaceAll(id, "CVE_", "CVE-")
+				if strings.HasPrefix(id, "CVE-") {
+					selectedID = id
+					break // CVE-ID found, prioritize it
+				} else if strings.HasPrefix(id, "GHSA-") {
+					selectedID = id // Use GHSA-ID if no CVE-ID found yet
 				}
-				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkgName, []string{platform}, advisory); err != nil {
-					return oops.Wrapf(err, "failed to save advisory")
-				}
+			}
 
-				// for optimization
-				if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
-					return oops.Wrapf(err, "failed to save the vulnerability ID")
-				}
+			if selectedID == "" {
+				// No valid vulnerability ID found
+				continue
+			}
+
+			if err := vs.dbc.PutAdvisoryDetail(tx, selectedID, pkgName, []string{platform}, advisory); err != nil {
+				return oops.Wrapf(err, "failed to save advisory")
+			}
+
+			// for optimization
+			if err := vs.dbc.PutVulnerabilityID(tx, selectedID); err != nil {
+				return oops.Wrapf(err, "failed to save the vulnerability ID")
 			}
 		}
 	}
