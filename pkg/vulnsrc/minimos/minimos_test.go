@@ -30,6 +30,12 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
+					Key: []string{"advisory-detail", "CVE-1999-0289", "minimos", "apache2"},
+					Value: types.Advisory{
+						FixedVersion: "0",
+					},
+				},
+				{
 					Key: []string{"advisory-detail", "CVE-2022-38126", "minimos", "binutils"},
 					Value: types.Advisory{
 						FixedVersion: "2.39-r1",
@@ -40,6 +46,14 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.Advisory{
 						FixedVersion: "2.39-r2",
 					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-1999-0289"},
+					Value: map[string]any{},
+				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-2022-38126"},
+					Value: map[string]any{},
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2022-38533"},
