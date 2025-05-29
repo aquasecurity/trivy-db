@@ -36,7 +36,7 @@ type ovalAdvisory struct {
 
 type criteria struct {
 	Operator   string
-	Criterias  []criteria
+	Criterias  []criteria //nolint:misspell
 	Criterions []criterion
 }
 

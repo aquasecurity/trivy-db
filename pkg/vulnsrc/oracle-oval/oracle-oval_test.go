@@ -122,11 +122,11 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2007-0493"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2007-0494"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -288,11 +288,11 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2018-1094"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2018-19824"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -365,7 +365,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2021-20232"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -426,7 +426,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2021-23133"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -469,7 +469,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2016-10228"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -512,7 +512,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "ELSA-2007-0057"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -534,7 +534,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-0001-0001"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -588,7 +588,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2016-10228"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},

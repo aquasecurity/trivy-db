@@ -40,10 +40,10 @@ func TestInit(t *testing.T) {
 			if tt.dbPath != "" {
 				dbPath := db.Path(tmpDir)
 				dbDir := filepath.Dir(dbPath)
-				err := os.MkdirAll(dbDir, 0700)
+				err := os.MkdirAll(dbDir, 0o700)
 				require.NoError(t, err)
 
-				err = copy(dbPath, tt.dbPath)
+				err = copyFile(dbPath, tt.dbPath)
 				require.NoError(t, err)
 			}
 
@@ -58,7 +58,7 @@ func TestInit(t *testing.T) {
 	}
 }
 
-func copy(dstPath, srcPath string) error {
+func copyFile(dstPath, srcPath string) error {
 	src, err := os.Open(srcPath)
 	if err != nil {
 		return err

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"path/filepath"
 	"slices"
 	"sort"
@@ -13,7 +14,6 @@ import (
 	"github.com/samber/lo"
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/exp/maps"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/log"
@@ -444,13 +444,13 @@ func walkOracle(cri Criteria, osVer, arch string, pkgs []AffectedPackage) []Affe
 		})
 	}
 
-	for _, c := range cri.Criterias {
+	for _, c := range cri.Criterias { //nolint:misspell
 		pkgs = walkOracle(c, osVer, arch, pkgs)
 	}
 	return pkgs
 }
 
-func referencesFromContains(sources []string, matches []string) []string {
+func referencesFromContains(sources, matches []string) []string {
 	var references []string
 	for _, s := range sources {
 		for _, m := range matches {

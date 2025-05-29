@@ -27,7 +27,7 @@ type Cve struct {
 
 type Criteria struct {
 	Operator   string
-	Criterias  []Criteria
+	Criterias  []Criteria //nolint:misspell
 	Criterions []Criterion
 }
 

@@ -112,21 +112,21 @@ func TestVulnSrc_Update(t *testing.T) {
 						"vulnerability-id",
 						"CVE-2023-27534",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
 						"CVE-2018-1999023",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
 						"CVE-2023-29409",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -245,21 +245,21 @@ func TestVulnSrc_Update(t *testing.T) {
 						"vulnerability-id",
 						"CVE-2008-3914",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
 						"CVE-2021-39924",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
 						"CVE-2023-5678",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},

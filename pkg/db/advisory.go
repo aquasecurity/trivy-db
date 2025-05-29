@@ -9,7 +9,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/types"
 )
 
-func (dbc Config) PutAdvisory(tx *bolt.Tx, bktNames []string, key string, advisory interface{}) error {
+func (dbc Config) PutAdvisory(tx *bolt.Tx, bktNames []string, key string, advisory any) error {
 	if err := dbc.put(tx, bktNames, key, advisory); err != nil {
 		return oops.With("key", key).Wrapf(err, "failed to put advisory")
 	}

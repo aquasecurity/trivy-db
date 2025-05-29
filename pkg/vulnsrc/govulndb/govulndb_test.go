@@ -84,7 +84,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"vulnerability-id",
 						"CVE-2023-45288",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 			noBuckets: [][]string{

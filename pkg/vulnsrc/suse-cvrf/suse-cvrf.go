@@ -257,7 +257,7 @@ func (vs VulnSrc) getOSVersion(platformName string) string {
 			if err != nil {
 				continue
 			}
-			versions = append(versions, fmt.Sprintf("%d", v))
+			versions = append(versions, strconv.Itoa(v))
 			if len(versions) == 2 {
 				break
 			}
@@ -316,7 +316,7 @@ func splitPkgName(pkgName string) (string, string) {
 	return pkgName, version
 }
 
-func (vs VulnSrc) Get(version string, pkgName string) ([]types.Advisory, error) {
+func (vs VulnSrc) Get(version, pkgName string) ([]types.Advisory, error) {
 	eb := oops.In("suse").Tags("cvrf").With("version", version).With("package_name", pkgName)
 	var bucket string
 	switch vs.dist {

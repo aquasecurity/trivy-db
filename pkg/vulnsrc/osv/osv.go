@@ -13,7 +13,6 @@ import (
 	"github.com/samber/lo"
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/exp/maps"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/log"
@@ -42,9 +41,8 @@ type Advisory struct {
 	References   []string
 	CVSSScoreV3  float64
 	CVSSVectorV3 string
-
-	// From affected[].database_specific
-	DatabaseSpecific json.RawMessage
+	Modified     time.Time
+	Published    time.Time
 }
 
 type OSV struct {
@@ -180,12 +178,14 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 
 		// Store vulnerability details
 		vuln := types.VulnerabilityDetail{
-			Severity:     adv.Severity,
-			References:   adv.References,
-			Title:        adv.Title,
-			Description:  adv.Description,
-			CvssScoreV3:  adv.CVSSScoreV3,
-			CvssVectorV3: adv.CVSSVectorV3,
+			Severity:         adv.Severity,
+			References:       adv.References,
+			Title:            adv.Title,
+			Description:      adv.Description,
+			CvssScoreV3:      adv.CVSSScoreV3,
+			CvssVectorV3:     adv.CVSSVectorV3,
+			PublishedDate:    lo.Ternary(!adv.Published.IsZero(), &adv.Published, nil),
+			LastModifiedDate: lo.Ternary(!adv.Modified.IsZero(), &adv.Modified, nil),
 		}
 
 		if err = o.dbc.PutVulnerabilityDetail(tx, adv.VulnerabilityID, o.sourceID, vuln); err != nil {
@@ -253,7 +253,8 @@ func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) (
 					References:         references,
 					CVSSVectorV3:       cvssVectorV3,
 					CVSSScoreV3:        cvssScoreV3,
-					DatabaseSpecific:   affected.DatabaseSpecific,
+					Modified:           entry.Modified,
+					Published:          entry.Published,
 				}
 			}
 
@@ -265,7 +266,7 @@ func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) (
 			uniqAdvisories[key] = adv
 		}
 	}
-	return maps.Values(uniqAdvisories), nil
+	return lo.Values(uniqAdvisories), nil
 }
 
 func groupVulnIDs(id string, aliases []string) ([]string, []string) {

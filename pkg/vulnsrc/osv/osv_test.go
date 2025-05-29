@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
@@ -63,6 +64,8 @@ func TestVulnSrc_Update(t *testing.T) {
 							"http://www.openwall.com/lists/oss-security/2018/07/11/7",
 							"https://github.com/advisories/GHSA-wgmx-52ph-qqcw",
 						},
+						LastModifiedDate: utils.MustTimeParse("2021-06-10T06:51:37.378319Z"),
+						PublishedDate:    utils.MustTimeParse("2018-07-12T12:29:00Z"),
 					},
 				},
 				{
@@ -70,14 +73,14 @@ func TestVulnSrc_Update(t *testing.T) {
 						"vulnerability-id",
 						"CVE-2018-10895",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
 						"CVE-2013-4251",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
