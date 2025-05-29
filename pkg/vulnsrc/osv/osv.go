@@ -13,7 +13,6 @@ import (
 	"github.com/samber/lo"
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/exp/maps"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/log"
@@ -44,9 +43,6 @@ type Advisory struct {
 	CVSSVectorV3 string
 	Modified     time.Time
 	Published    time.Time
-
-	// From affected[].database_specific
-	DatabaseSpecific json.RawMessage
 }
 
 type OSV struct {
@@ -259,7 +255,6 @@ func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) (
 					CVSSScoreV3:        cvssScoreV3,
 					Modified:           entry.Modified,
 					Published:          entry.Published,
-					DatabaseSpecific:   affected.DatabaseSpecific,
 				}
 			}
 
@@ -271,7 +266,7 @@ func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) (
 			uniqAdvisories[key] = adv
 		}
 	}
-	return maps.Values(uniqAdvisories), nil
+	return lo.Values(uniqAdvisories), nil
 }
 
 func groupVulnIDs(id string, aliases []string) ([]string, []string) {

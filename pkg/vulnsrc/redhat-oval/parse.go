@@ -15,7 +15,7 @@ type rpmInfoTest struct {
 	Arch           string
 }
 
-func unmarshalJSONFile(v interface{}, fileName string) error {
+func unmarshalJSONFile(v any, fileName string) error {
 	eb := oops.With("file_path", fileName)
 
 	f, err := os.Open(fileName)

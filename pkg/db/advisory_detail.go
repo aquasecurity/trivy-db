@@ -11,7 +11,7 @@ const (
 	advisoryDetailBucket = "advisory-detail"
 )
 
-func (dbc Config) PutAdvisoryDetail(tx *bolt.Tx, vulnID, pkgName string, nestedBktNames []string, advisory interface{}) error {
+func (dbc Config) PutAdvisoryDetail(tx *bolt.Tx, vulnID, pkgName string, nestedBktNames []string, advisory any) error {
 	bktNames := append([]string{advisoryDetailBucket, vulnID}, nestedBktNames...)
 	if err := dbc.put(tx, bktNames, pkgName, advisory); err != nil {
 		return oops.With("vuln_id", vulnID).With("package_name", pkgName).Wrapf(err, "failed to put advisory detail")
@@ -53,7 +53,7 @@ func (dbc Config) saveAdvisories(tx *bolt.Tx, bkt *bolt.Bucket, bktNames []strin
 				return eb.Wrapf(err, "unable to save advisories")
 			}
 		} else {
-			detail := map[string]interface{}{}
+			detail := map[string]any{}
 			if err := json.Unmarshal(v, &detail); err != nil {
 				return eb.Wrapf(err, "json unmarshal error")
 			}

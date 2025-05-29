@@ -75,7 +75,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"vulnerability-id",
 						"CVE-2018-1196",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
@@ -143,7 +143,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"vulnerability-id",
 						"CVE-2023-25330",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
@@ -198,7 +198,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"vulnerability-id",
 						"CVE-2020-25792",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
@@ -259,7 +259,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"vulnerability-id",
 						"CVE-2020-8911",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
@@ -379,7 +379,69 @@ func TestVulnSrc_Update(t *testing.T) {
 						"vulnerability-id",
 						"CVE-2022-3215",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"npm::GitHub Security Advisory npm",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.GHSA,
+						Name: "GitHub Security Advisory npm",
+						URL:  "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2025-46653",
+						"npm::GitHub Security Advisory npm",
+						"formidable",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-75v8-2h7p-7m2m",
+						},
+						PatchedVersions: []string{
+							"3.5.3",
+						},
+						VulnerableVersions: []string{
+							">=3.1.1-canary.20211030, <3.5.3",
+							">=2.1.0, <2.1.3",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2025-46653",
+						"ghsa",
+					},
+					Value: types.VulnerabilityDetail{
+						Title:       "Formidable relies on hexoid to prevent guessing of filenames for untrusted executable content",
+						Description: "Formidable (aka node-formidable) 2.1.0 through 3.x before 3.5.3 relies on hexoid to prevent guessing of filenames for untrusted executable content; however, hexoid is documented as not \"cryptographically secure.\" (Also, there is a scenario in which only the last two characters of a hexoid string need to be guessed, but this is not often relevant.) NOTE: this does not imply that, in a typical use case, attackers will be able to exploit any hexoid behavior to upload and execute their own content.",
+						References: []string{
+							"https://nvd.nist.gov/vuln/detail/CVE-2025-46653",
+							"https://github.com/node-formidable/formidable/commit/022c2c5577dfe14d2947f10909d81b03b6070bf5",
+							"https://github.com/node-formidable/formidable/commit/37a3e89fca1ed68ec674a539f13aafd62221ddaa",
+							"https://github.com/node-formidable/formidable",
+							"https://github.com/node-formidable/formidable/blob/d0fbec13edc8add54a1afb9ce1a8d3db803f8d47/CHANGELOG.md?plain=1#L10",
+							"https://github.com/zast-ai/vulnerability-reports/blob/main/formidable/file_upload/report.md",
+						},
+						Severity:         types.SeverityLow,
+						CvssVectorV3:     "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:L/A:N",
+						CvssScoreV3:      3.1,
+						LastModifiedDate: utils.MustTimeParse("2025-04-30T21:07:20Z"),
+						PublishedDate:    utils.MustTimeParse("2025-04-26T21:31:26Z"),
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2025-46653",
+					},
+					Value: map[string]any{},
 				},
 			},
 			noBuckets: [][]string{

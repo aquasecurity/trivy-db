@@ -2,7 +2,7 @@ package db
 
 import (
 	"encoding/json"
-	"fmt"
+	"strconv"
 
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
@@ -34,7 +34,7 @@ func (dbc Config) PutRedHatNVRs(tx *bolt.Tx, nvr string, cpeIndices []int) error
 }
 
 func (dbc Config) PutRedHatCPEs(tx *bolt.Tx, cpeIndex int, cpe string) error {
-	index := fmt.Sprint(cpeIndex)
+	index := strconv.Itoa(cpeIndex)
 	if err := dbc.put(tx, []string{redhatCPERootBucket, redhatCPEBucket}, index, cpe); err != nil {
 		return oops.With("cpe_index", cpeIndex).With("cpe", cpe).Wrapf(err, "failed to put Red Hat CPEs")
 	}

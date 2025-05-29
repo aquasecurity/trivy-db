@@ -15,14 +15,14 @@ var (
 	ErrNoBucket = oops.Errorf("no such bucket")
 )
 
-func NoKey(t *testing.T, dbPath string, keys []string, msgAndArgs ...interface{}) {
+func NoKey(t *testing.T, dbPath string, keys []string, msgAndArgs ...any) {
 	t.Helper()
 
 	value := get(t, dbPath, keys)
 	assert.Nil(t, value, msgAndArgs...)
 }
 
-func NoBucket(t *testing.T, dbPath string, buckets []string, msgAndArgs ...interface{}) {
+func NoBucket(t *testing.T, dbPath string, buckets []string, msgAndArgs ...any) {
 	t.Helper()
 
 	db := open(t, dbPath)
@@ -43,7 +43,7 @@ func NoBucket(t *testing.T, dbPath string, buckets []string, msgAndArgs ...inter
 	require.NoError(t, err, msgAndArgs...)
 }
 
-func JSONEq(t *testing.T, dbPath string, key []string, want interface{}, msgAndArgs ...interface{}) {
+func JSONEq(t *testing.T, dbPath string, key []string, want any, msgAndArgs ...any) {
 	t.Helper()
 
 	wantByte, err := json.Marshal(want)
@@ -57,9 +57,9 @@ type bucketer interface {
 	Bucket(name []byte) *bolt.Bucket
 }
 
-func get(t *testing.T, dbPath string, keys []string, msgAndArgs ...interface{}) []byte {
+func get(t *testing.T, dbPath string, keys []string, msgAndArgs ...any) []byte {
 	if len(keys) < 2 {
-		require.Failf(t, "malformed keys: %v", "", keys)
+		require.Failf(t, "malformed keys: %v", "keys: %v", keys)
 	}
 	db := open(t, dbPath)
 	defer db.Close()
@@ -98,7 +98,7 @@ func get(t *testing.T, dbPath string, keys []string, msgAndArgs ...interface{}) 
 }
 
 func open(t *testing.T, dbPath string) *bolt.DB {
-	db, err := bolt.Open(dbPath, 0600, &bolt.Options{ReadOnly: true})
+	db, err := bolt.Open(dbPath, 0o600, &bolt.Options{ReadOnly: true})
 	require.NoError(t, err)
 
 	return db

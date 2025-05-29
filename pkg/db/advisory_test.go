@@ -88,15 +88,15 @@ func TestConfig_ForEachAdvisory(t *testing.T) {
 			got, err := dbc.ForEachAdvisory([]string{tt.args.source}, tt.args.pkgName)
 
 			if tt.wantErr != "" {
-				require.NotNil(t, err)
+				require.Error(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
 				return
 			}
 
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			// Compare
-			assert.Equal(t, len(tt.want), len(got))
+			assert.Len(t, got, len(tt.want))
 			for cveID, g := range got {
 				wantAdvisory, ok := tt.want[cveID]
 				if !ok {
@@ -210,10 +210,10 @@ func TestConfig_GetAdvisories(t *testing.T) {
 
 			switch {
 			case tt.wantErr != "":
-				require.NotNil(t, err)
+				require.Error(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
 			default:
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 
 			// Compare
