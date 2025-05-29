@@ -43,7 +43,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2022-38533"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
