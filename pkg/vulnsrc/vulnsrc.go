@@ -17,6 +17,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/glad"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/govulndb"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/k8svulndb"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/minimos"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
@@ -59,6 +60,7 @@ var (
 		chainguard.NewVulnSrc(),
 		bitnami.NewVulnSrc(),
 		echo.NewVulnSrc(),
+		minimos.NewVulnSrc(),
 
 		k8svulndb.NewVulnSrc(),
 
