@@ -90,7 +90,11 @@ func (vs VulnSrc) save(advisories []advisory) error {
 
 func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes map[string][]string) error {
 	for fixedVersion, vulnIDs := range secfixes {
-		advisory := types.Advisory{
+		// Fixed version is "0" when package doesn't contain specified vulnerabilities.
+		if fixedVersion == "0" {
+			continue
+		}
+		adv := types.Advisory{
 			FixedVersion: fixedVersion,
 		}
 		for _, vulnID := range vulnIDs {
@@ -100,7 +104,7 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 				continue
 			}
 
-			if err := vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{platform}, advisory); err != nil {
+			if err := vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{platform}, adv); err != nil {
 				return oops.Wrapf(err, "failed to save advisory")
 			}
 
