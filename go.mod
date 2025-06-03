@@ -14,12 +14,11 @@ require (
 	github.com/knqyf263/go-rpm-version v0.0.0-20170716094938-74609b86c936
 	github.com/masahiro331/go-mvn-version v0.0.0-20250131095131-f4974fa13b8a
 	github.com/pandatix/go-cvss v0.6.2
-	github.com/samber/lo v1.49.1
-	github.com/samber/oops v1.16.1
+	github.com/samber/lo v1.50.0
+	github.com/samber/oops v1.18.1
 	github.com/stretchr/testify v1.10.0
 	github.com/urfave/cli v1.22.16
 	go.etcd.io/bbolt v1.3.11
-	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	golang.org/x/text v0.24.0
 	golang.org/x/tools v0.29.0
 	gopkg.in/cheggaaa/pb.v1 v1.0.28
@@ -36,7 +35,7 @@ require (
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
-	github.com/oklog/ulid/v2 v2.1.0 // indirect
+	github.com/oklog/ulid/v2 v2.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
