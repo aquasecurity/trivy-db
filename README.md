@@ -58,7 +58,7 @@ make db-compact  # Compact database (`./assets` dir by default)
 make db-compress  # Compress database into `db.tar.gz` file
 ```
 
-To build trivy-db image and push into registry, you need to use [Oras CLI](https://oras.land/cli/).
+To build trivy-db image and push into registry, you need to use [Oras CLI](https://oras.land/docs/installation/).
 For example for `ghcr`:
 ```bash
 ./oras push --artifact-type application/vnd.aquasec.trivy.config.v1+json \
