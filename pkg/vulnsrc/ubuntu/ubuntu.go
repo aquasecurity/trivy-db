@@ -61,6 +61,7 @@ var (
 		"esm-apps/xenial":  "16.04-ESM",
 		"esm-infra/bionic": "18.04-ESM",
 		"esm-apps/bionic":  "18.04-ESM",
+		"esm-infra/focal":  "20.04-ESM",
 		"esm-apps/focal":   "20.04-ESM",
 	}
 
