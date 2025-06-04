@@ -52,10 +52,17 @@ var (
 		"noble":    "24.04",
 		"oracular": "24.10",
 		// ESM versions:
-		"precise/esm":      "12.04-ESM",
-		"trusty/esm":       "14.04-ESM",
+		"precise/esm": "12.04-ESM",
+		"trusty/esm":  "14.04-ESM",
+		// Possible multiple values for one release:
+		// (release_list="trusty trusty/esm xenial esm-infra/xenial esm-apps/xenial bionic esm-infra/bionic esm-apps/bionic focal esm-apps/focal jammy esm-apps/jammy noble oracular plucky")
+		// cf. https://wiki.ubuntu.com/SecurityTeam/BuildEnvironment#line867
 		"esm-infra/xenial": "16.04-ESM",
+		"esm-apps/xenial":  "16.04-ESM",
 		"esm-infra/bionic": "18.04-ESM",
+		"esm-apps/bionic":  "18.04-ESM",
+		"esm-infra/focal":  "20.04-ESM",
+		"esm-apps/focal":   "20.04-ESM",
 	}
 
 	source = types.DataSource{
