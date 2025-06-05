@@ -44,7 +44,13 @@ var (
 	}
 )
 
+type DB interface {
+	db.Operation
+	Put(tx *bolt.Tx, cvrf SuseCvrf, vuln types.VulnerabilityDetail, affectedPkgs []AffectedPackage) error
+}
+
 type VulnSrc struct {
+	DB
 	dist   Distribution
 	dbc    db.Operation
 	logger *log.Logger
@@ -156,14 +162,22 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 			Severity:    severity,
 		}
 
-		if err := vs.dbc.PutVulnerabilityDetail(tx, cvrf.Tracking.ID, source.ID, vuln); err != nil {
-			return oops.With("tracking_id", cvrf.Tracking.ID).Wrapf(err, "failed to save SUSE CVRF vulnerability")
+		err := vs.Put(tx, cvrf, vuln, affectedPkgs)
+		if err != nil {
+			return oops.Wrapf(err, "Put error")
 		}
+	}
+	return nil
+}
 
-		// for optimization
-		if err := vs.dbc.PutVulnerabilityID(tx, cvrf.Tracking.ID); err != nil {
-			return oops.With("tracking_id", cvrf.Tracking.ID).Wrapf(err, "failed to save the vulnerability ID")
-		}
+func (vs VulnSrc) Put(tx *bolt.Tx, cvrf SuseCvrf, vuln types.VulnerabilityDetail, _ []AffectedPackage) error {
+	if err := vs.dbc.PutVulnerabilityDetail(tx, cvrf.Tracking.ID, source.ID, vuln); err != nil {
+		return oops.With("tracking_id", cvrf.Tracking.ID).Wrapf(err, "failed to save SUSE CVRF vulnerability")
+	}
+
+	// for optimization
+	if err := vs.dbc.PutVulnerabilityID(tx, cvrf.Tracking.ID); err != nil {
+		return oops.With("tracking_id", cvrf.Tracking.ID).Wrapf(err, "failed to save the vulnerability ID")
 	}
 	return nil
 }
