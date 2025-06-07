@@ -44,27 +44,36 @@ var (
 	}
 )
 
+type PutInput struct {
+	Cvrf         SuseCvrf
+	Vuln         types.VulnerabilityDetail
+	AffectedPkgs []AffectedPackage
+}
+
 type DB interface {
 	db.Operation
-	Put(tx *bolt.Tx, cvrf SuseCvrf, vuln types.VulnerabilityDetail, affectedPkgs []AffectedPackage) error
+	Put(tx *bolt.Tx, input PutInput) error
 }
 
 type VulnSrc struct {
 	DB
 	dist   Distribution
-	dbc    db.Operation
 	logger *log.Logger
 }
 
-func NewVulnSrc(dist Distribution) VulnSrc {
-	return VulnSrc{
+type Suse struct {
+	db.Operation
+}
+
+func NewVulnSrc(dist Distribution) *VulnSrc {
+	return &VulnSrc{
+		DB:     &Suse{Operation: db.Config{}},
 		dist:   dist,
-		dbc:    db.Config{},
 		logger: log.WithPrefix("suse-cvrf"),
 	}
 }
 
-func (vs VulnSrc) Name() types.SourceID {
+func (vs *VulnSrc) Name() types.SourceID {
 	if vs.dist == OpenSUSE {
 		return "opensuse-cvrf"
 	}
@@ -74,7 +83,7 @@ func (vs VulnSrc) Name() types.SourceID {
 	return source.ID
 }
 
-func (vs VulnSrc) Update(dir string) error {
+func (vs *VulnSrc) Update(dir string) error {
 	vs.logger.Info("Saving SUSE CVRF")
 	rootDir := filepath.Join(dir, "vuln-list", suseDir)
 	eb := oops.In("suse").Tags("cvrf").With("root_dir", rootDir)
@@ -108,8 +117,8 @@ func (vs VulnSrc) Update(dir string) error {
 	return nil
 }
 
-func (vs VulnSrc) save(cvrfs []SuseCvrf) error {
-	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
+func (vs *VulnSrc) save(cvrfs []SuseCvrf) error {
+	err := vs.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, cvrfs)
 	})
 	if err != nil {
@@ -118,7 +127,7 @@ func (vs VulnSrc) save(cvrfs []SuseCvrf) error {
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
+func (vs *VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 	for _, cvrf := range cvrfs {
 		affectedPkgs := vs.getAffectedPackages(cvrf.ProductTree.Relationships)
 		if len(affectedPkgs) == 0 {
@@ -130,11 +139,11 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 				FixedVersion: affectedPkg.Package.FixedVersion,
 			}
 
-			if err := vs.dbc.PutDataSource(tx, affectedPkg.OSVer, source); err != nil {
+			if err := vs.PutDataSource(tx, affectedPkg.OSVer, source); err != nil {
 				return oops.Wrapf(err, "failed to put data source")
 			}
 
-			if err := vs.dbc.PutAdvisoryDetail(tx, cvrf.Tracking.ID, affectedPkg.Package.Name,
+			if err := vs.PutAdvisoryDetail(tx, cvrf.Tracking.ID, affectedPkg.Package.Name,
 				[]string{affectedPkg.OSVer}, advisory); err != nil {
 				return oops.Wrapf(err, "unable to save CVRF")
 			}
@@ -155,34 +164,37 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 			}
 		}
 
-		vuln := types.VulnerabilityDetail{
-			References:  references,
-			Title:       cvrf.Title,
-			Description: getDetail(cvrf.Notes),
-			Severity:    severity,
+		input := PutInput{
+			Cvrf: cvrf,
+			Vuln: types.VulnerabilityDetail{
+				References:  references,
+				Title:       cvrf.Title,
+				Description: getDetail(cvrf.Notes),
+				Severity:    severity,
+			},
+			AffectedPkgs: affectedPkgs,
 		}
 
-		err := vs.Put(tx, cvrf, vuln, affectedPkgs)
-		if err != nil {
+		if err := vs.Put(tx, input); err != nil {
 			return oops.Wrapf(err, "Put error")
 		}
 	}
 	return nil
 }
 
-func (vs VulnSrc) Put(tx *bolt.Tx, cvrf SuseCvrf, vuln types.VulnerabilityDetail, _ []AffectedPackage) error {
-	if err := vs.dbc.PutVulnerabilityDetail(tx, cvrf.Tracking.ID, source.ID, vuln); err != nil {
-		return oops.With("tracking_id", cvrf.Tracking.ID).Wrapf(err, "failed to save SUSE CVRF vulnerability")
+func (vs *Suse) Put(tx *bolt.Tx, input PutInput) error {
+	if err := vs.PutVulnerabilityDetail(tx, input.Cvrf.Tracking.ID, source.ID, input.Vuln); err != nil {
+		return oops.With("tracking_id", input.Cvrf.Tracking.ID).Wrapf(err, "failed to save SUSE CVRF vulnerability")
 	}
 
 	// for optimization
-	if err := vs.dbc.PutVulnerabilityID(tx, cvrf.Tracking.ID); err != nil {
-		return oops.With("tracking_id", cvrf.Tracking.ID).Wrapf(err, "failed to save the vulnerability ID")
+	if err := vs.PutVulnerabilityID(tx, input.Cvrf.Tracking.ID); err != nil {
+		return oops.With("tracking_id", input.Cvrf.Tracking.ID).Wrapf(err, "failed to save the vulnerability ID")
 	}
 	return nil
 }
 
-func (vs VulnSrc) getAffectedPackages(relationships []Relationship) []AffectedPackage {
+func (vs *VulnSrc) getAffectedPackages(relationships []Relationship) []AffectedPackage {
 	var pkgs []AffectedPackage
 	for _, relationship := range relationships {
 		osVer := vs.getOSVersion(relationship.RelatesToProductReference)
@@ -205,7 +217,7 @@ func (vs VulnSrc) getAffectedPackages(relationships []Relationship) []AffectedPa
 	return pkgs
 }
 
-func (vs VulnSrc) getOSVersion(platformName string) string {
+func (vs *VulnSrc) getOSVersion(platformName string) string {
 	if strings.Contains(platformName, "SUSE Manager") {
 		// SUSE Linux Enterprise Module for SUSE Manager Server 4.0
 		return ""
@@ -330,7 +342,7 @@ func splitPkgName(pkgName string) (string, string) {
 	return pkgName, version
 }
 
-func (vs VulnSrc) Get(version, pkgName string) ([]types.Advisory, error) {
+func (vs *VulnSrc) Get(version, pkgName string) ([]types.Advisory, error) {
 	eb := oops.In("suse").Tags("cvrf").With("version", version).With("package_name", pkgName)
 	var bucket string
 	switch vs.dist {
@@ -346,7 +358,7 @@ func (vs VulnSrc) Get(version, pkgName string) ([]types.Advisory, error) {
 		return nil, eb.Errorf("unknown distribution")
 	}
 
-	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
+	advisories, err := vs.GetAdvisories(bucket, pkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories")
 	}
