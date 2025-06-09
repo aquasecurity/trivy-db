@@ -135,17 +135,8 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 		}
 
 		for _, affectedPkg := range affectedPkgs {
-			advisory := types.Advisory{
-				FixedVersion: affectedPkg.Package.FixedVersion,
-			}
-
 			if err := vs.PutDataSource(tx, affectedPkg.OSVer, source); err != nil {
 				return oops.Wrapf(err, "failed to put data source")
-			}
-
-			if err := vs.PutAdvisoryDetail(tx, cvrf.Tracking.ID, affectedPkg.Package.Name,
-				[]string{affectedPkg.OSVer}, advisory); err != nil {
-				return oops.Wrapf(err, "unable to save CVRF")
 			}
 		}
 
@@ -183,6 +174,17 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 }
 
 func (vs *Suse) Put(tx *bolt.Tx, input PutInput) error {
+	for _, affectedPkg := range input.AffectedPkgs {
+		advisory := types.Advisory{
+			FixedVersion: affectedPkg.Package.FixedVersion,
+		}
+
+		if err := vs.PutAdvisoryDetail(tx, input.Cvrf.Tracking.ID, affectedPkg.Package.Name,
+			[]string{affectedPkg.OSVer}, advisory); err != nil {
+			return oops.Wrapf(err, "unable to save CVRF")
+		}
+	}
+
 	if err := vs.PutVulnerabilityDetail(tx, input.Cvrf.Tracking.ID, source.ID, input.Vuln); err != nil {
 		return oops.With("tracking_id", input.Cvrf.Tracking.ID).Wrapf(err, "failed to save SUSE CVRF vulnerability")
 	}
