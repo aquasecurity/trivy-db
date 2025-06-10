@@ -128,6 +128,7 @@ func (vs *VulnSrc) save(cvrfs []SuseCvrf) error {
 }
 
 func (vs *VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
+	var savedDataSources = make(map[string]struct{})
 	for _, cvrf := range cvrfs {
 		affectedPkgs := vs.getAffectedPackages(cvrf.ProductTree.Relationships)
 		if len(affectedPkgs) == 0 {
@@ -135,9 +136,14 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 		}
 
 		for _, affectedPkg := range affectedPkgs {
+			if _, ok := savedDataSources[affectedPkg.OSVer]; ok {
+				continue
+			}
+
 			if err := vs.PutDataSource(tx, affectedPkg.OSVer, source); err != nil {
 				return oops.Wrapf(err, "failed to put data source")
 			}
+			savedDataSources[affectedPkg.OSVer] = struct{}{}
 		}
 
 		var references []string
