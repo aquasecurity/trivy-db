@@ -23,6 +23,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"vulnerability-detail", "CVE-2020-0001", "nvd"},
 					Value: types.VulnerabilityDetail{
+						VulnStatus:       "Analyzed",
 						Description:      "In getProcessRecordLocked of ActivityManagerService.java isolated apps are not handled correctly. This could lead to local escalation of privilege with no additional execution privileges needed. User interaction is not needed for exploitation. Product: Android Versions: Android-8.0, Android-8.1, Android-9, and Android-10 Android ID: A-140055304",
 						CvssScore:        7.2,
 						CvssVector:       "AV:L/AC:L/Au:N/C:C/I:C/A:C",
@@ -38,6 +39,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"vulnerability-detail", "CVE-2023-0001", "nvd"},
 					Value: types.VulnerabilityDetail{
+						VulnStatus:       "Undergoing Analysis",
 						Description:      "An information exposure vulnerability in the Palo Alto Networks Cortex XDR agent on Windows devices allows a local system administrator to disclose the admin password for the agent in cleartext, which bad actors can then use to execute privileged cytool commands that disable or uninstall the agent.",
 						CvssScoreV3:      6.7,
 						CvssVectorV3:     "CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
@@ -51,6 +53,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"vulnerability-detail", "CVE-2024-0069", "nvd"},
 					Value: types.VulnerabilityDetail{
+						VulnStatus:       "Rejected",
 						Description:      "Rejected reason: This CVE ID was unused by the CNA.",
 						LastModifiedDate: utils.MustTimeParse("2023-11-28T00:15:07.140Z"),
 						PublishedDate:    utils.MustTimeParse("2023-11-28T00:15:07.140Z"),
@@ -59,6 +62,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"vulnerability-detail", "CVE-2024-5732", "nvd"},
 					Value: types.VulnerabilityDetail{
+						VulnStatus:       "Analyzed",
 						Description:      "A vulnerability was found in Clash up to 0.20.1 on Windows. It has been declared as critical. This vulnerability affects unknown code of the component Proxy Port. The manipulation leads to improper authentication. The attack can be initiated remotely. The exploit has been disclosed to the public and may be used. It is recommended to change the configuration settings. VDB-267406 is the identifier assigned to this vulnerability.",
 						CvssScoreV3:      9.8,
 						CvssVectorV3:     "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
