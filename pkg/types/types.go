@@ -83,7 +83,7 @@ type VulnerabilityDetail struct {
 	Description      string     `json:",omitempty"`
 	PublishedDate    *time.Time `json:",omitempty"` // Take from NVD or GHSA
 	LastModifiedDate *time.Time `json:",omitempty"` // Take from NVD or GHSA
-	VulnStatus       string     `json:",omitempty"`
+	Status           string     `json:",omitempty"` // Rejected or not
 }
 
 type AdvisoryDetail struct {

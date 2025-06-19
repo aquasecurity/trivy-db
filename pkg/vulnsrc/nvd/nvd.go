@@ -198,7 +198,7 @@ func (nvd *NVD) Put(tx *bolt.Tx, cve Cve) error {
 		Description:      description,
 		PublishedDate:    &publishedDate,
 		LastModifiedDate: &lastModifiedDate,
-		VulnStatus:       strings.ToUpper(cve.VulnStatus),
+		Status:           strings.ToUpper(cve.VulnStatus),
 	}
 
 	return nvd.PutVulnerabilityDetail(tx, cve.ID, vulnerability.NVD, vuln)
