@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
 	"github.com/samber/lo"
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/exp/slices"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -32,57 +32,76 @@ var (
 	}
 )
 
-type VulnSrc struct {
-	dbc db.Operation
+type PutInput struct {
+	Cvrf         EulerCvrf
+	Vuln         types.VulnerabilityDetail
+	AffectedPkgs []Package
 }
 
-func NewVulnSrc() VulnSrc {
-	return VulnSrc{
-		dbc: db.Config{},
+type DB interface {
+	db.Operation
+	Put(tx *bolt.Tx, input PutInput) error
+}
+
+type VulnSrc struct {
+	DB
+	logger *log.Logger
+}
+
+type Euler struct {
+	db.Operation
+}
+
+func NewVulnSrc() *VulnSrc {
+	return &VulnSrc{
+		DB:     &Euler{Operation: db.Config{}},
+		logger: log.WithPrefix("openeuler"),
 	}
 }
 
-func (vs VulnSrc) Name() types.SourceID {
+func (vs *VulnSrc) Name() types.SourceID {
 	return source.ID
 }
 
-func (vs VulnSrc) Update(dir string) error {
-	log.Println("Saving openEuler CVRF")
-	var cvrfs []Cvrf
+func (vs *VulnSrc) Update(dir string) error {
+	vs.logger.Info("Saving openEuler CVRF")
+	var cvrfs []EulerCvrf
 	rootDir := filepath.Join(dir, "vuln-list", eulerDir)
+	eb := oops.In("openeuler").With("root_dir", rootDir)
+
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-		var cvrf Cvrf
+		var cvrf EulerCvrf
 		if err := json.NewDecoder(r).Decode(&cvrf); err != nil {
-			return xerrors.Errorf("failed to decode openEuler CVRF JSON: %w %+v", err, cvrf)
+			return eb.With("file_path", path).Wrapf(err, "json decode error")
 		}
 		cvrfs = append(cvrfs, cvrf)
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in openEuler CVRF walk: %w", err)
+		return eb.Wrapf(err, "openEuler CVRF walk error")
 	}
 
 	if err = vs.save(cvrfs); err != nil {
-		return xerrors.Errorf("error in openEuler CVRF save: %w", err)
+		return eb.Wrapf(err, "openEuler CVRF save error")
 	}
 
 	return nil
 }
 
-func (vs VulnSrc) save(cvrfs []Cvrf) error {
-	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
+func (vs *VulnSrc) save(cvrfs []EulerCvrf) error {
+	err := vs.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, cvrfs)
 	})
 	if err != nil {
-		return xerrors.Errorf("error in batch update: %w", err)
+		return oops.Wrapf(err, "batch update error")
 	}
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []Cvrf) error {
+func (vs *VulnSrc) commit(tx *bolt.Tx, cvrfs []EulerCvrf) error {
 	var uniqOSVers = make(map[string]struct{})
 	for _, cvrf := range cvrfs {
-		affectedPkgs := getAffectedPackages(cvrf.ProductTree)
+		affectedPkgs := vs.getAffectedPackages(cvrf.ProductTree)
 		if len(affectedPkgs) == 0 {
 			continue
 		}
@@ -95,14 +114,14 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []Cvrf) error {
 			// Don't put the same data source multiple times.
 			if _, ok := uniqOSVers[pkg.OSVer]; !ok {
 				uniqOSVers[pkg.OSVer] = struct{}{}
-				if err := vs.dbc.PutDataSource(tx, pkg.OSVer, source); err != nil {
-					return xerrors.Errorf("failed to put data source: %w", err)
+				if err := vs.PutDataSource(tx, pkg.OSVer, source); err != nil {
+					return oops.Wrapf(err, "failed to put data source")
 				}
 			}
 
-			if err := vs.dbc.PutAdvisoryDetail(tx, cvrf.Tracking.ID, pkg.Name,
+			if err := vs.PutAdvisoryDetail(tx, cvrf.Tracking.ID, pkg.Name,
 				[]string{pkg.OSVer}, advisory); err != nil {
-				return xerrors.Errorf("unable to save %s CVRF: %w", pkg.OSVer, err)
+				return oops.Wrapf(err, "unable to save %s CVRF", pkg.OSVer)
 			}
 		}
 
@@ -121,25 +140,38 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []Cvrf) error {
 			}
 		}
 
-		vuln := types.VulnerabilityDetail{
-			References:  references,
-			Title:       cvrf.Title,
-			Description: getDetail(cvrf.Notes),
-			Severity:    severity,
-		}
-		if err := vs.dbc.PutVulnerabilityDetail(tx, cvrf.Tracking.ID, source.ID, vuln); err != nil {
-			return xerrors.Errorf("failed to save openEuler CVRF vulnerability: %w", err)
+		input := PutInput{
+			Cvrf: cvrf,
+			Vuln: types.VulnerabilityDetail{
+				References:  references,
+				Title:       cvrf.Title,
+				Description: getDetail(cvrf.Notes),
+				Severity:    severity,
+			},
+			AffectedPkgs: affectedPkgs,
 		}
 
-		// for optimization
-		if err := vs.dbc.PutVulnerabilityID(tx, cvrf.Tracking.ID); err != nil {
-			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+		if err := vs.Put(tx, input); err != nil {
+			return oops.Wrapf(err, "Put error")
 		}
 	}
 	return nil
 }
 
-func getAffectedPackages(productTree ProductTree) []Package {
+func (vs *Euler) Put(tx *bolt.Tx, input PutInput) error {
+	if err := vs.PutVulnerabilityDetail(tx, input.Cvrf.Tracking.ID, source.ID, input.Vuln); err != nil {
+		return oops.With("tracking_id", input.Cvrf.Tracking.ID).Wrapf(err, "failed to save openEuler vulnerability")
+	}
+
+	// for optimization
+	if err := vs.PutVulnerabilityID(tx, input.Cvrf.Tracking.ID); err != nil {
+		return oops.With("tracking_id", input.Cvrf.Tracking.ID).Wrapf(err, "failed to save the vulnerability ID")
+	}
+
+	return nil
+}
+
+func (vs *VulnSrc) getAffectedPackages(productTree ProductTree) []Package {
 	var pkgs []Package
 	var osArches = make(map[string][]string) // OS version => arches
 	for _, branch := range productTree.Branches {
@@ -148,9 +180,9 @@ func getAffectedPackages(productTree ProductTree) []Package {
 			continue
 		}
 		for _, production := range branch.Productions {
-			osVer := getOSVersion(production.CPE)
+			osVer := vs.getOSVersion(production.CPE)
 			if osVer == "" {
-				log.Printf("Unable to parse OS version: %s", production.CPE)
+				vs.logger.Warn("Unable to parse OS version", log.String("version", production.CPE))
 				continue
 			}
 
@@ -168,7 +200,7 @@ func getAffectedPackages(productTree ProductTree) []Package {
 			// e.g., `ignition-2.14.0-2` or `ignition-2.14.0-2.oe2203sp2.src.rpm`
 			pkgName, pkgVersion := parseProduction(production)
 			if pkgName == "" || pkgVersion == "" {
-				log.Printf("Unable to parse Production: %s", production)
+				vs.logger.Warn("Unable to parse Production", log.String("production", production.ProductID))
 				continue
 			}
 			pkg := Package{
@@ -190,7 +222,7 @@ func getAffectedPackages(productTree ProductTree) []Package {
 	return pkgs
 }
 
-func getOSVersion(cpe string) string {
+func (vs *VulnSrc) getOSVersion(cpe string) string {
 	// e.g. cpe:/a:openEuler:openEuler:22.03-LTS-SP3
 	parts := strings.Split(cpe, ":")
 	// Wrong CPE format
@@ -213,7 +245,7 @@ func getOSVersion(cpe string) string {
 	// see https://github.com/aquasecurity/trivy-db/pull/397#discussion_r1680608109
 	// So we need to keep the full version (with `LTS` and `SPX` suffixes)
 	if len(strings.Split(version, "-")) > 3 || version == "" {
-		log.Printf("Invalid openEuler version: %s", version)
+		vs.logger.Warn("Invalid openEuler version", log.String("version", version))
 		return ""
 	}
 	return fmt.Sprintf(openEulerFormat, version)
@@ -259,10 +291,12 @@ func splitPkgName(product string) (string, string) {
 }
 
 func (vs VulnSrc) Get(version, pkgName, arch string) ([]types.Advisory, error) {
+	eb := oops.In("openeuler").With("version", version).With("package_name", pkgName)
 	bucket := fmt.Sprintf(openEulerFormat, version)
-	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
+	advisories, err := vs.GetAdvisories(bucket, pkgName)
+
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get openEuler advisories: %w", err)
+		return nil, eb.Wrapf(err, "failed to get openEuler advisories")
 	}
 
 	// Filter advisories by arch

@@ -1,12 +1,12 @@
 package openeuler
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/dbtest"
@@ -105,7 +105,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"vulnerability-id",
 						"openEuler-SA-2021-1061",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -117,7 +117,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad path (failed to decode)",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "failed to decode openEuler CVRF JSON",
+			wantErr: "json decode error",
 		},
 	}
 	for _, tt := range tests {
@@ -179,7 +179,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			fixtures: []string{"testdata/fixtures/sad.yaml"},
 			version:  "22.03-LTS-SP2",
 			pkgName:  "kernel",
-			wantErr:  "failed to unmarshal advisory JSON",
+			wantErr:  "json unmarshal error",
 		},
 	}
 	for _, tt := range tests {
@@ -194,7 +194,7 @@ func TestVulnSrc_Get(t *testing.T) {
 				return
 			}
 
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
 	}
@@ -250,8 +250,9 @@ func TestGetOSVersion(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.inputPlatformCPE, func(t *testing.T) {
-			actual := getOSVersion(tc.inputPlatformCPE)
-			assert.Equal(t, tc.expectedOsVersion, actual, fmt.Sprintf("input data: %s", tc.inputPlatformCPE))
+			vs := NewVulnSrc()
+			actual := vs.getOSVersion(tc.inputPlatformCPE)
+			assert.Equal(t, tc.expectedOsVersion, actual, "input data: %s", tc.inputPlatformCPE)
 		})
 	}
 }

@@ -1,6 +1,6 @@
 package openeuler
 
-type Cvrf struct {
+type EulerCvrf struct {
 	Title           string            `xml:"DocumentTitle"`
 	Type            string            `xml:"DocumentType"`
 	Publisher       DocumentPublisher `xml:"DocumentPublisher"`
