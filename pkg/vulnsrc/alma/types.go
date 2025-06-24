@@ -38,16 +38,16 @@ type Pkglist struct {
 }
 
 type Package struct {
-	Name            string      `json:"name"`
-	Version         string      `json:"version"`
-	Release         string      `json:"release"`
-	Epoch           string      `json:"epoch"`
-	Arch            string      `json:"arch"`
-	Src             string      `json:"src"`
-	Filename        string      `json:"filename"`
-	Sum             string      `json:"sum"`
-	SumType         interface{} `json:"sum_type"`
-	RebootSuggested int         `json:"reboot_suggested"`
+	Name            string `json:"name"`
+	Version         string `json:"version"`
+	Release         string `json:"release"`
+	Epoch           string `json:"epoch"`
+	Arch            string `json:"arch"`
+	Src             string `json:"src"`
+	Filename        string `json:"filename"`
+	Sum             string `json:"sum"`
+	SumType         any    `json:"sum_type"`
+	RebootSuggested int    `json:"reboot_suggested"`
 }
 
 type Module struct {

@@ -17,6 +17,24 @@
         "Datatype": "evr_string",
         "Operation": "less than"
       }
+    },
+    {
+      "ID": "oval:com.microsoft.azurelinux:ste:52881005",
+      "Version": "1",
+      "Evr": {
+        "Text": "0:0.0.0.azl3",
+        "Datatype": "evr_string",
+        "Operation": "greater than"
+      }
+    },
+    {
+      "ID": "oval:com.microsoft.azurelinux:ste:52881002",
+      "Version": "1",
+      "Evr": {
+        "Text": "0:1.20.7-1.azl3",
+        "Datatype": "evr_string",
+        "Operation": "less than"
+      }
     }
   ]
 }

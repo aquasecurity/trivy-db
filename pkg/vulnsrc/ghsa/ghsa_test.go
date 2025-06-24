@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
@@ -62,9 +63,11 @@ func TestVulnSrc_Update(t *testing.T) {
 							"https://github.com/advisories/GHSA-xx65-cc7g-9pfp",
 							"https://pivotal.io/security/cve-2018-1196",
 						},
-						Severity:     types.SeverityMedium,
-						CvssVectorV3: "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N",
-						CvssScoreV3:  5.9,
+						Severity:         types.SeverityMedium,
+						CvssVectorV3:     "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N",
+						CvssScoreV3:      5.9,
+						LastModifiedDate: utils.MustTimeParse("2021-09-22T18:26:44Z"),
+						PublishedDate:    utils.MustTimeParse("2018-10-18T18:05:57Z"),
 					},
 				},
 				{
@@ -72,7 +75,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"vulnerability-id",
 						"CVE-2018-1196",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
@@ -128,9 +131,11 @@ func TestVulnSrc_Update(t *testing.T) {
 							"https://github.com/FCncdn/MybatisPlusTenantPluginSQLInjection-POC/blob/master/Readme.en.md",
 							"https://github.com/baomidou/mybatis-plus",
 						},
-						Severity:     types.SeverityCritical,
-						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
-						CvssScoreV3:  9.8,
+						Severity:         types.SeverityCritical,
+						CvssVectorV3:     "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+						CvssScoreV3:      9.8,
+						LastModifiedDate: utils.MustTimeParse("2023-04-14T20:31:15Z"),
+						PublishedDate:    utils.MustTimeParse("2023-04-05T15:30:24Z"),
 					},
 				},
 				{
@@ -138,7 +143,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"vulnerability-id",
 						"CVE-2023-25330",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
@@ -181,9 +186,11 @@ func TestVulnSrc_Update(t *testing.T) {
 							"https://github.com/bodil/sized-chunks",
 							"https://rustsec.org/advisories/RUSTSEC-2020-0041.html",
 						},
-						Severity:     types.SeverityHigh,
-						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
-						CvssScoreV3:  7.5,
+						Severity:         types.SeverityHigh,
+						CvssVectorV3:     "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+						CvssScoreV3:      7.5,
+						LastModifiedDate: utils.MustTimeParse("2022-06-14T20:54:51Z"),
+						PublishedDate:    utils.MustTimeParse("2021-08-25T20:46:06Z"),
 					},
 				},
 				{
@@ -191,7 +198,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"vulnerability-id",
 						"CVE-2020-25792",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
@@ -240,9 +247,11 @@ func TestVulnSrc_Update(t *testing.T) {
 							"https://github.com/sophieschmieg/exploits/tree/master/aws_s3_crypto_poc",
 							"https://pkg.go.dev/vuln/GO-2022-0646",
 						},
-						Severity:     types.SeverityMedium,
-						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/E:P/RL:O/RC:C",
-						CvssScoreV3:  8.8,
+						Severity:         types.SeverityMedium,
+						CvssVectorV3:     "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/E:P/RL:O/RC:C",
+						CvssScoreV3:      8.8,
+						LastModifiedDate: utils.MustTimeParse("2023-02-07T21:27:07Z"),
+						PublishedDate:    utils.MustTimeParse("2022-02-11T23:26:26Z"),
 					},
 				},
 				{
@@ -250,7 +259,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"vulnerability-id",
 						"CVE-2020-8911",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
@@ -358,9 +367,11 @@ func TestVulnSrc_Update(t *testing.T) {
 							"https://github.com/apple/swift-nio/commit/a16e2f54a25b2af217044e5168997009a505930f",
 							"https://github.com/apple/swift-nio",
 						},
-						Severity:     types.SeverityMedium,
-						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
-						CvssScoreV3:  5.3,
+						Severity:         types.SeverityMedium,
+						CvssVectorV3:     "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+						CvssScoreV3:      5.3,
+						LastModifiedDate: utils.MustTimeParse("2023-06-07T16:01:53Z"),
+						PublishedDate:    utils.MustTimeParse("2023-06-07T16:01:53Z"),
 					},
 				},
 				{
@@ -368,7 +379,69 @@ func TestVulnSrc_Update(t *testing.T) {
 						"vulnerability-id",
 						"CVE-2022-3215",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"npm::GitHub Security Advisory npm",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.GHSA,
+						Name: "GitHub Security Advisory npm",
+						URL:  "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2025-46653",
+						"npm::GitHub Security Advisory npm",
+						"formidable",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-75v8-2h7p-7m2m",
+						},
+						PatchedVersions: []string{
+							"3.5.3",
+						},
+						VulnerableVersions: []string{
+							">=3.1.1-canary.20211030, <3.5.3",
+							">=2.1.0, <2.1.3",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2025-46653",
+						"ghsa",
+					},
+					Value: types.VulnerabilityDetail{
+						Title:       "Formidable relies on hexoid to prevent guessing of filenames for untrusted executable content",
+						Description: "Formidable (aka node-formidable) 2.1.0 through 3.x before 3.5.3 relies on hexoid to prevent guessing of filenames for untrusted executable content; however, hexoid is documented as not \"cryptographically secure.\" (Also, there is a scenario in which only the last two characters of a hexoid string need to be guessed, but this is not often relevant.) NOTE: this does not imply that, in a typical use case, attackers will be able to exploit any hexoid behavior to upload and execute their own content.",
+						References: []string{
+							"https://nvd.nist.gov/vuln/detail/CVE-2025-46653",
+							"https://github.com/node-formidable/formidable/commit/022c2c5577dfe14d2947f10909d81b03b6070bf5",
+							"https://github.com/node-formidable/formidable/commit/37a3e89fca1ed68ec674a539f13aafd62221ddaa",
+							"https://github.com/node-formidable/formidable",
+							"https://github.com/node-formidable/formidable/blob/d0fbec13edc8add54a1afb9ce1a8d3db803f8d47/CHANGELOG.md?plain=1#L10",
+							"https://github.com/zast-ai/vulnerability-reports/blob/main/formidable/file_upload/report.md",
+						},
+						Severity:         types.SeverityLow,
+						CvssVectorV3:     "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:L/A:N",
+						CvssScoreV3:      3.1,
+						LastModifiedDate: utils.MustTimeParse("2025-04-30T21:07:20Z"),
+						PublishedDate:    utils.MustTimeParse("2025-04-26T21:31:26Z"),
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2025-46653",
+					},
+					Value: map[string]any{},
 				},
 			},
 			noBuckets: [][]string{
@@ -395,7 +468,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad path (failed to decode)",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "JSON decode error",
+			wantErr: "json decode error",
 		},
 		{
 			name:    "sad path (cocoapods-specs doesn't exist)",

@@ -1,7 +1,6 @@
 package susecvrf
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -64,7 +63,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "openSUSE-SU-2019:2598-1"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -108,7 +107,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "openSUSE-SU-2024:10400-1"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -146,7 +145,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "SUSE-SU-2019:0048-2"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -189,7 +188,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "openSUSE-SU-2019:0003-1"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -239,7 +238,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "SUSE-SU-2024:2546-1"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -253,7 +252,7 @@ func TestVulnSrc_Update(t *testing.T) {
 			name:    "sad path (failed to decode)",
 			dir:     filepath.Join("testdata", "sad"),
 			dist:    OpenSUSE,
-			wantErr: "failed to decode SUSE CVRF JSON",
+			wantErr: "json decode error",
 		},
 	}
 	for _, tt := range tests {
@@ -305,7 +304,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			version:  "13.1",
 			pkgName:  "bind",
 			dist:     OpenSUSE,
-			wantErr:  "failed to unmarshal advisory JSON",
+			wantErr:  "json unmarshal error",
 		},
 	}
 	for _, tt := range tests {
@@ -562,6 +561,14 @@ func TestGetOSVersion(t *testing.T) {
 			expectedPlatformName: "openSUSE Leap 15.1",
 		},
 		{
+			inputPlatformName:    "openSUSE Leap Micro 15.1 NonFree",
+			expectedPlatformName: "openSUSE Leap Micro 15.1",
+		},
+		{
+			inputPlatformName:    "openSUSE Leap Micro 15.1",
+			expectedPlatformName: "openSUSE Leap Micro 15.1",
+		},
+		{
 			inputPlatformName:    "openSUSE Tumbleweed",
 			expectedPlatformName: "openSUSE Tumbleweed",
 		},
@@ -649,8 +656,9 @@ func TestGetOSVersion(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.inputPlatformName, func(t *testing.T) {
-			actual := getOSVersion(tc.inputPlatformName)
-			assert.Equal(t, tc.expectedPlatformName, actual, fmt.Sprintf("input data: %s", tc.inputPlatformName))
+			vs := NewVulnSrc(OpenSUSE)
+			actual := vs.getOSVersion(tc.inputPlatformName)
+			assert.Equal(t, tc.expectedPlatformName, actual, "input data: %s", tc.inputPlatformName)
 		})
 	}
 }

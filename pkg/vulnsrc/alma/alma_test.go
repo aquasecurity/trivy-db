@@ -71,11 +71,11 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2021-27918"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2021-31525"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -105,14 +105,14 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2020-7754"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
 		{
 			name:    "sad path",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "failed to decode Alma erratum",
+			wantErr: "json decode error",
 		},
 	}
 	for _, tt := range tests {

@@ -11,10 +11,8 @@ import (
 	gocvss30 "github.com/pandatix/go-cvss/30"
 	gocvss31 "github.com/pandatix/go-cvss/31"
 	"github.com/samber/lo"
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"go.uber.org/zap"
-	"golang.org/x/exp/maps"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/log"
@@ -33,6 +31,8 @@ type Advisory struct {
 	// Advisory detail
 	VulnerableVersions []string
 	PatchedVersions    []string
+	OSes               []string
+	Arches             []string
 
 	// Vulnerability detail
 	Severity     types.Severity
@@ -41,9 +41,8 @@ type Advisory struct {
 	References   []string
 	CVSSScoreV3  float64
 	CVSSVectorV3 string
-
-	// From affected[].database_specific
-	DatabaseSpecific json.RawMessage
+	Modified     time.Time
+	Published    time.Time
 }
 
 type OSV struct {
@@ -55,10 +54,18 @@ type OSV struct {
 }
 
 type Transformer interface {
+	// PostParseAffected is called after parseAffected to transform Advisory with Affected
+	PostParseAffected(Advisory, Affected) (Advisory, error)
+
+	// TransformAdvisories transforms the advisories
 	TransformAdvisories([]Advisory, Entry) ([]Advisory, error)
 }
 
 type defaultTransformer struct{}
+
+func (t *defaultTransformer) PostParseAffected(adv Advisory, _ Affected) (Advisory, error) {
+	return adv, nil
+}
 
 func (t *defaultTransformer) TransformAdvisories(advs []Advisory, _ Entry) ([]Advisory, error) {
 	return advs, nil
@@ -83,6 +90,7 @@ func (o OSV) Name() types.SourceID {
 
 func (o OSV) Update(root string) error {
 	rootDir := filepath.Join(root, o.dir)
+	eb := oops.In(string(o.sourceID)).With("root_dir", rootDir)
 
 	var entries []Entry
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
@@ -91,17 +99,17 @@ func (o OSV) Update(root string) error {
 		}
 		var entry Entry
 		if err := json.NewDecoder(r).Decode(&entry); err != nil {
-			return xerrors.Errorf("JSON decode error (%s): %w", path, err)
+			return oops.With("file_path", path).Wrapf(err, "json decode error")
 		}
 		entries = append(entries, entry)
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("walk error: %w", err)
+		return eb.Wrapf(err, "walk error")
 	}
 
 	if err = o.save(entries); err != nil {
-		return xerrors.Errorf("save error: %w", err)
+		return eb.Wrapf(err, "save error")
 	}
 
 	return nil
@@ -117,7 +125,7 @@ func (o OSV) save(entries []Entry) error {
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("batch update error: %w", err)
+		return oops.Wrapf(err, "batch update error")
 	}
 	return nil
 }
@@ -135,15 +143,15 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 	})
 
 	// Parse []affected
-	advisories, err := parseAffected(entry, vulnIDs, aliases, references)
+	advisories, err := o.parseAffected(entry, vulnIDs, aliases, references)
 	if err != nil {
-		return xerrors.Errorf("failed to parse affected: %w", err)
+		return oops.Wrapf(err, "failed to parse affected")
 	}
 
 	// Transform advisories
 	advisories, err = o.transformer.TransformAdvisories(advisories, entry)
 	if err != nil {
-		return xerrors.Errorf("failed to transform advisories: %w", err)
+		return oops.Wrapf(err, "failed to transform advisories")
 	}
 
 	for _, adv := range advisories {
@@ -152,9 +160,8 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 			continue
 		}
 		bktName := bucket.Name(adv.Ecosystem, dataSource.Name)
-
 		if err = o.dbc.PutDataSource(tx, bktName, dataSource); err != nil {
-			return xerrors.Errorf("failed to put data source: %w", err)
+			return oops.Wrapf(err, "failed to put data source")
 		}
 
 		// Store advisories
@@ -162,30 +169,104 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 			VendorIDs:          adv.Aliases,
 			VulnerableVersions: adv.VulnerableVersions,
 			PatchedVersions:    adv.PatchedVersions,
+			OSes:               adv.OSes,
+			Arches:             adv.Arches,
 		}
 		if err = o.dbc.PutAdvisoryDetail(tx, adv.VulnerabilityID, adv.PkgName, []string{bktName}, advisory); err != nil {
-			return xerrors.Errorf("failed to save OSV advisory: %w", err)
+			return oops.Wrapf(err, "failed to save advisory")
 		}
 
 		// Store vulnerability details
 		vuln := types.VulnerabilityDetail{
-			Severity:     adv.Severity,
-			References:   adv.References,
-			Title:        adv.Title,
-			Description:  adv.Description,
-			CvssScoreV3:  adv.CVSSScoreV3,
-			CvssVectorV3: adv.CVSSVectorV3,
+			Severity:         adv.Severity,
+			References:       adv.References,
+			Title:            adv.Title,
+			Description:      adv.Description,
+			CvssScoreV3:      adv.CVSSScoreV3,
+			CvssVectorV3:     adv.CVSSVectorV3,
+			PublishedDate:    lo.Ternary(!adv.Published.IsZero(), &adv.Published, nil),
+			LastModifiedDate: lo.Ternary(!adv.Modified.IsZero(), &adv.Modified, nil),
 		}
 
 		if err = o.dbc.PutVulnerabilityDetail(tx, adv.VulnerabilityID, o.sourceID, vuln); err != nil {
-			return xerrors.Errorf("failed to put vulnerability detail (%s): %w", adv.VulnerabilityID, err)
+			return oops.Wrapf(err, "failed to put vulnerability detail")
 		}
 
 		if err = o.dbc.PutVulnerabilityID(tx, adv.VulnerabilityID); err != nil {
-			return xerrors.Errorf("failed to put vulnerability id (%s): %w", adv.VulnerabilityID, err)
+			return oops.Wrapf(err, "failed to put vulnerability id")
 		}
 	}
 	return nil
+}
+
+// parseAffected parses the affected fields
+// cf. https://ossf.github.io/osv-schema/#affected-fields
+func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) ([]Advisory, error) {
+	eb := oops.With("entry_id", entry.ID).With("vuln_ids", vulnIDs).With("aliases", aliases)
+
+	// Severities can be found both in severity and affected[].severity fields.
+	cvssVectorV3, cvssScoreV3, err := parseSeverity(entry.Severities)
+	if err != nil {
+		return nil, eb.Wrapf(err, "failed to decode CVSS vector")
+	}
+
+	uniqAdvisories := map[string]Advisory{}
+	for _, affected := range entry.Affected {
+		ecosystem := convertEcosystem(affected.Package.Ecosystem)
+		if ecosystem == vulnerability.Unknown {
+			continue
+		}
+		pkgName := vulnerability.NormalizePkgName(ecosystem, affected.Package.Name)
+		eb := eb.With("ecosystem", ecosystem).With("package_name", pkgName)
+
+		vulnerableVersions, patchedVersions, err := parseAffectedVersions(affected)
+		if err != nil {
+			return nil, eb.Wrapf(err, "failed to parse affected")
+		}
+
+		// Parse affected[].severity
+		if vecV3, scoreV3, err := parseSeverity(affected.Severities); err != nil {
+			return nil, eb.Wrapf(err, "failed to decode CVSS vector")
+		} else if vecV3 != "" {
+			// Overwrite the CVSS vector and score if affected[].severity is set
+			cvssVectorV3, cvssScoreV3 = vecV3, scoreV3
+		}
+
+		key := fmt.Sprintf("%s/%s", ecosystem, pkgName)
+		for _, vulnID := range vulnIDs {
+			adv, ok := uniqAdvisories[key]
+			if ok {
+				// The same package could be repeated with different version ranges.
+				// cf. https://github.com/github/advisory-database/blob/0996f81ca6f1b65ba25f8e71fba263cb1e54ced5/advisories/github-reviewed/2019/12/GHSA-wjx8-cgrm-hh8p/GHSA-wjx8-cgrm-hh8p.json
+				adv.VulnerableVersions = append(adv.VulnerableVersions, vulnerableVersions...)
+				adv.PatchedVersions = append(adv.PatchedVersions, patchedVersions...)
+			} else {
+				adv = Advisory{
+					Ecosystem:          ecosystem,
+					PkgName:            pkgName,
+					VulnerabilityID:    vulnID,
+					Aliases:            aliases,
+					VulnerableVersions: vulnerableVersions,
+					PatchedVersions:    patchedVersions,
+					Title:              entry.Summary,
+					Description:        entry.Details,
+					References:         references,
+					CVSSVectorV3:       cvssVectorV3,
+					CVSSScoreV3:        cvssScoreV3,
+					Modified:           entry.Modified,
+					Published:          entry.Published,
+				}
+			}
+
+			// Call PostParseAffected hook
+			adv, err = o.transformer.PostParseAffected(adv, affected)
+			if err != nil {
+				return nil, eb.Wrapf(err, "failed to post process affected")
+			}
+			uniqAdvisories[key] = adv
+		}
+	}
+	return lo.Values(uniqAdvisories), nil
 }
 
 func groupVulnIDs(id string, aliases []string) ([]string, []string) {
@@ -203,65 +284,6 @@ func groupVulnIDs(id string, aliases []string) ([]string, []string) {
 		return []string{id}, aliases
 	}
 	return cveIDs, nonCVEIDs
-}
-
-// parseAffected parses the affected fields
-// cf. https://ossf.github.io/osv-schema/#affected-fields
-func parseAffected(entry Entry, vulnIDs, aliases, references []string) ([]Advisory, error) {
-	// Severities can be found both in severity and affected[].severity fields.
-	cvssVectorV3, cvssScoreV3, err := parseSeverity(entry.Severities)
-	if err != nil {
-		return nil, xerrors.Errorf("failed to decode CVSS vector (%s): %w", entry.ID, err)
-	}
-
-	uniqAdvisories := map[string]Advisory{}
-	for _, affected := range entry.Affected {
-		ecosystem := convertEcosystem(affected.Package.Ecosystem)
-		if ecosystem == vulnerability.Unknown {
-			continue
-		}
-		pkgName := vulnerability.NormalizePkgName(ecosystem, affected.Package.Name)
-
-		vulnerableVersions, patchedVersions, err := parseAffectedVersions(affected)
-		if err != nil {
-			return nil, xerrors.Errorf("failed to parse affected: %w", err)
-		}
-
-		// Parse affected[].severity
-		if vecV3, scoreV3, err := parseSeverity(affected.Severities); err != nil {
-			return nil, xerrors.Errorf("failed to decode CVSS vector (%s): %w", entry.ID, err)
-		} else if vecV3 != "" {
-			// Overwrite the CVSS vector and score if affected[].severity is set
-			cvssVectorV3, cvssScoreV3 = vecV3, scoreV3
-		}
-
-		key := fmt.Sprintf("%s/%s", ecosystem, pkgName)
-		for _, vulnID := range vulnIDs {
-			if adv, ok := uniqAdvisories[key]; ok {
-				// The same package could be repeated with different version ranges.
-				// cf. https://github.com/github/advisory-database/blob/0996f81ca6f1b65ba25f8e71fba263cb1e54ced5/advisories/github-reviewed/2019/12/GHSA-wjx8-cgrm-hh8p/GHSA-wjx8-cgrm-hh8p.json
-				adv.VulnerableVersions = append(adv.VulnerableVersions, vulnerableVersions...)
-				adv.PatchedVersions = append(adv.PatchedVersions, patchedVersions...)
-				uniqAdvisories[key] = adv
-			} else {
-				uniqAdvisories[key] = Advisory{
-					Ecosystem:          ecosystem,
-					PkgName:            pkgName,
-					VulnerabilityID:    vulnID,
-					Aliases:            aliases,
-					VulnerableVersions: vulnerableVersions,
-					PatchedVersions:    patchedVersions,
-					Title:              entry.Summary,
-					Description:        entry.Details,
-					References:         references,
-					CVSSVectorV3:       cvssVectorV3,
-					CVSSScoreV3:        cvssScoreV3,
-					DatabaseSpecific:   affected.DatabaseSpecific,
-				}
-			}
-		}
-	}
-	return maps.Values(uniqAdvisories), nil
 }
 
 // parseAffectedVersions parses the affected.versions and affected.ranges fields
@@ -303,10 +325,10 @@ func parseAffectedVersions(affected Affected) ([]string, []string, error) {
 		// We don't need to add the versions that are already included in the ranges
 		ok, err := versionContains(affectedRanges, v)
 		if err != nil {
-			log.Logger.Errorw("Version comparison error",
-				zap.String("ecosystem", string(affected.Package.Ecosystem)),
-				zap.String("package", affected.Package.Name),
-				zap.Error(err),
+			log.WithPrefix("osv").Error("Version comparison error",
+				log.String("ecosystem", string(affected.Package.Ecosystem)),
+				log.String("package", affected.Package.Name),
+				log.Err(err),
 			)
 		}
 		if !ok {
@@ -328,11 +350,12 @@ func parseSeverity(severities []Severity) (string, float64, error) {
 			// e.g. https://github.com/github/advisory-database/blob/2d3bc73d2117893b217233aeb95b9236c7b93761/advisories/github-reviewed/2019/05/GHSA-j59f-6m4q-62h6/GHSA-j59f-6m4q-62h6.json#L14
 			// Trim the suffix to avoid errors
 			cvssVectorV3 := strings.TrimSuffix(s.Score, "/")
+			eb := oops.With("cvss_vector_v3", cvssVectorV3)
 			switch {
 			case strings.HasPrefix(cvssVectorV3, "CVSS:3.0"):
 				cvss, err := gocvss30.ParseVector(cvssVectorV3)
 				if err != nil {
-					return "", 0, xerrors.Errorf("failed to parse CVSSv3.0 vector: %w", err)
+					return "", 0, eb.Wrapf(err, "failed to parse CVSSv3.0 vector")
 				}
 				// cvss.EnvironmentalScore() returns the optimal score required from Vector.
 				// If the Environmental Metrics is not set, it will be the same value as TemporalScore(),
@@ -341,14 +364,14 @@ func parseSeverity(severities []Severity) (string, float64, error) {
 			case strings.HasPrefix(s.Score, "CVSS:3.1"):
 				cvss, err := gocvss31.ParseVector(cvssVectorV3)
 				if err != nil {
-					return "", 0, xerrors.Errorf("failed to parse CVSSv3.1 vector: %w", err)
+					return "", 0, oops.Wrapf(err, "failed to parse CVSSv3.1 vector")
 				}
 				// cvss.EnvironmentalScore() returns the optimal score required from Vector.
 				// If the Environmental Metrics is not set, it will be the same value as TemporalScore(),
 				// and if Temporal Metrics is not set, it will be the same value as Basescore().
 				return cvssVectorV3, cvss.EnvironmentalScore(), nil
 			default:
-				return "", 0, xerrors.Errorf("vector:%s does not have CVSS v3 prefix: \"CVSS:3.0\" or \"CVSS:3.1\"", s.Score)
+				return "", 0, eb.Errorf("vector does not have CVSS v3 prefix: \"CVSS:3.0\" or \"CVSS:3.1\"")
 			}
 		}
 	}

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"golang.org/x/xerrors"
+	"github.com/samber/oops"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
@@ -32,10 +32,14 @@ type DatabaseSpecific struct {
 	Severity string `json:"severity"`
 }
 
+func (t *transformer) PostParseAffected(advisory osv.Advisory, _ osv.Affected) (osv.Advisory, error) {
+	return advisory, nil
+}
+
 func (t *transformer) TransformAdvisories(advs []osv.Advisory, entry osv.Entry) ([]osv.Advisory, error) {
 	var specific DatabaseSpecific
 	if err := json.Unmarshal(entry.DatabaseSpecific, &specific); err != nil {
-		return nil, xerrors.Errorf("JSON decode error: %w", err)
+		return nil, oops.Tags("bitnami").With("vuln_id", entry.ID).With("aliases", entry.Aliases).Wrapf(err, "json decode error")
 	}
 
 	severity := convertSeverity(specific.Severity)

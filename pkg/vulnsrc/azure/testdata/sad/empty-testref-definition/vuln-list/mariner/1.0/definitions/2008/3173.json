@@ -21,8 +21,10 @@
   },
   "Criteria": {
     "Operator": "AND",
-    "Criterion": {
-      "Comment": "Package clamav is earlier than 0.103.2-1, affected by CVE-2008-3914"
-    }
+    "Criterion": [
+      {
+        "Comment": "Package clamav is earlier than 0.103.2-1, affected by CVE-2008-3914"
+      }
+    ]
   }
 }

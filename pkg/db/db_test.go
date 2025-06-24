@@ -14,17 +14,19 @@ import (
 
 func TestInit(t *testing.T) {
 	tests := []struct {
-		name   string
-		dbPath string
-		dbOpts *bbolt.Options
+		name    string
+		dbPath  string
+		wantErr string
+		dbOpts  *bbolt.Options
 	}{
 		{
 			name:   "normal db",
 			dbPath: "testdata/normal.db",
 		},
 		{
-			name:   "broken db",
-			dbPath: "testdata/broken.db",
+			name:    "broken db",
+			dbPath:  "testdata/broken.db",
+			wantErr: "invalid memory address or nil pointer dereference",
 		},
 		{
 			name:   "no db",
@@ -38,20 +40,25 @@ func TestInit(t *testing.T) {
 			if tt.dbPath != "" {
 				dbPath := db.Path(tmpDir)
 				dbDir := filepath.Dir(dbPath)
-				err := os.MkdirAll(dbDir, 0700)
+				err := os.MkdirAll(dbDir, 0o700)
 				require.NoError(t, err)
 
-				err = copy(dbPath, tt.dbPath)
+				err = copyFile(dbPath, tt.dbPath)
 				require.NoError(t, err)
 			}
 
 			err := db.Init(tmpDir, db.WithBoltOptions(tt.dbOpts))
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+				return
+			}
+
 			require.NoError(t, err)
 		})
 	}
 }
 
-func copy(dstPath, srcPath string) error {
+func copyFile(dstPath, srcPath string) error {
 	src, err := os.Open(srcPath)
 	if err != nil {
 		return err

@@ -34,7 +34,7 @@ deps:
 	go mod tidy
 
 $(GOBIN)/golangci-lint:
-	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOBIN) v1.54.2
+	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOBIN) v1.63.4
 
 .PHONY: test
 test:
@@ -104,3 +104,5 @@ db-fetch-vuln-list:
 	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-debian/archive/main.tar.gz | tar xz -C $(CACHE_DIR)/vuln-list-debian --strip-components=1
 	mkdir -p $(CACHE_DIR)/vuln-list-nvd
 	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-nvd/archive/main.tar.gz | tar xz -C $(CACHE_DIR)/vuln-list-nvd --strip-components=1
+	mkdir -p $(CACHE_DIR)/vuln-list-aqua
+	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-aqua/archive/main.tar.gz | tar xz -C $(CACHE_DIR)/vuln-list-aqua --strip-components=1

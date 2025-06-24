@@ -5,24 +5,24 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/samber/oops"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 )
 
 var (
-	ErrNoBucket = xerrors.New("no such bucket")
+	ErrNoBucket = oops.Errorf("no such bucket")
 )
 
-func NoKey(t *testing.T, dbPath string, keys []string, msgAndArgs ...interface{}) {
+func NoKey(t *testing.T, dbPath string, keys []string, msgAndArgs ...any) {
 	t.Helper()
 
 	value := get(t, dbPath, keys)
 	assert.Nil(t, value, msgAndArgs...)
 }
 
-func NoBucket(t *testing.T, dbPath string, buckets []string, msgAndArgs ...interface{}) {
+func NoBucket(t *testing.T, dbPath string, buckets []string, msgAndArgs ...any) {
 	t.Helper()
 
 	db := open(t, dbPath)
@@ -43,7 +43,7 @@ func NoBucket(t *testing.T, dbPath string, buckets []string, msgAndArgs ...inter
 	require.NoError(t, err, msgAndArgs...)
 }
 
-func JSONEq(t *testing.T, dbPath string, key []string, want interface{}, msgAndArgs ...interface{}) {
+func JSONEq(t *testing.T, dbPath string, key []string, want any, msgAndArgs ...any) {
 	t.Helper()
 
 	wantByte, err := json.Marshal(want)
@@ -57,9 +57,9 @@ type bucketer interface {
 	Bucket(name []byte) *bolt.Bucket
 }
 
-func get(t *testing.T, dbPath string, keys []string, msgAndArgs ...interface{}) []byte {
+func get(t *testing.T, dbPath string, keys []string, msgAndArgs ...any) []byte {
 	if len(keys) < 2 {
-		require.Failf(t, "malformed keys: %v", "", keys)
+		require.Failf(t, "malformed keys: %v", "keys: %v", keys)
 	}
 	db := open(t, dbPath)
 	defer db.Close()
@@ -67,19 +67,20 @@ func get(t *testing.T, dbPath string, keys []string, msgAndArgs ...interface{}) 
 	var b []byte
 	err := db.View(func(tx *bolt.Tx) error {
 		bkts, key := keys[:len(keys)-1], keys[len(keys)-1]
+		eb := oops.With("bucket_names", bkts).With("key", key)
 
 		var bucket bucketer = tx
 		for _, k := range bkts {
 			if reflect.ValueOf(bucket).IsNil() {
-				return xerrors.Errorf("bucket error %s: %w", k, ErrNoBucket)
+				return eb.With("bucket_name", k).Wrapf(ErrNoBucket, "bucket error")
 			}
 			bucket = bucket.Bucket([]byte(k))
 		}
 		bkt, ok := bucket.(*bolt.Bucket)
 		if !ok {
-			return xerrors.Errorf("bucket error %v: %w", keys, ErrNoBucket)
+			return eb.Wrapf(ErrNoBucket, "bucket error")
 		} else if bkt == nil {
-			return xerrors.Errorf("empty bucket %v: %w", keys, ErrNoBucket)
+			return eb.Wrapf(ErrNoBucket, "empty bucket")
 		}
 		res := bkt.Get([]byte(key))
 		if res == nil {
@@ -97,23 +98,24 @@ func get(t *testing.T, dbPath string, keys []string, msgAndArgs ...interface{}) 
 }
 
 func open(t *testing.T, dbPath string) *bolt.DB {
-	db, err := bolt.Open(dbPath, 0600, &bolt.Options{ReadOnly: true})
+	db, err := bolt.Open(dbPath, 0o600, &bolt.Options{ReadOnly: true})
 	require.NoError(t, err)
 
 	return db
 }
 
 func nestedBuckets(start bucketer, buckets []string) (*bolt.Bucket, error) {
+	eb := oops.With("bucket_names", buckets)
 	bucket := start
 	for _, k := range buckets {
 		if reflect.ValueOf(bucket).IsNil() {
-			return nil, xerrors.Errorf("bucket error %v: %w", buckets, ErrNoBucket)
+			return nil, eb.With("bucket_name", k).Wrapf(ErrNoBucket, "bucket error")
 		}
 		bucket = bucket.Bucket([]byte(k))
 	}
 	bkt, ok := bucket.(*bolt.Bucket)
 	if !ok {
-		return nil, xerrors.Errorf("bucket error %v: %w", buckets, ErrNoBucket)
+		return nil, eb.Wrapf(ErrNoBucket, "bucket error")
 	}
 	return bkt, nil
 }

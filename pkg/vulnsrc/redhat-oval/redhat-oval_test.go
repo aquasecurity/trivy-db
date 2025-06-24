@@ -783,12 +783,12 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "broken repo-to-cpe",
 			dir:     filepath.Join("testdata", "broken-repo-to-cpe"),
-			wantErr: "JSON parse error",
+			wantErr: "json parse error",
 		},
 		{
 			name:    "broken JSON",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "failed to decode",
+			wantErr: "failed to parse OVAL stream",
 		},
 	}
 
@@ -961,7 +961,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			got, err := vs.Get(tt.args.pkgName, tt.args.repositories, tt.args.nvrs)
 
 			if tt.wantErr != "" {
-				require.NotNil(t, err)
+				require.Error(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
 				return
 			}
@@ -971,7 +971,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			})
 
 			// Compare
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
 	}

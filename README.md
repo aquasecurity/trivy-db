@@ -49,14 +49,27 @@ GLOBAL OPTIONS:
 ```
 
 ### Building the DB
-You can utilize `make db-all` to build the database, the DB artifact is outputted to the assets folder.
+To build trivy-db locally, you can use the following order of commands from the Makefile:
+```bash
+make db-fetch-langs db-fetch-vuln-list  # To download all advisories and other required files (`./cache` dir by default)
+make build  # Build `trivy-db` binary
+make db-build  # Build database (`./out` dir by default)
+make db-compact  # Compact database (`./assets` dir by default)
+make db-compress  # Compress database into `db.tar.gz` file
+```
 
-Alternatively Docker is supported, you can run `docker build . -t trivy-db`.
-
-If you want to build a trivy integration test DB, please run `make create-test-db`
+To build trivy-db image and push into registry, you need to use [Oras CLI](https://oras.land/docs/installation/).
+For example for `ghcr`:
+```bash
+./oras push --artifact-type application/vnd.aquasec.trivy.config.v1+json \
+"ghcr.io/aquasecurity/trivy-db:2" \
+db.tar.gz:application/vnd.aquasec.trivy.db.layer.v1.tar+gzip
+```
 
 ## Update interval
-Every 6 hours
+Trivy DB is built every 6 hours.
+By default, the update interval specified in the metadata file is 24 hours.
+If you need to update Trivy DB more frequently, you can upload a new Trivy DB manually.
 
 ## Download the vulnerability database
 ### version 1 (deprecated)
