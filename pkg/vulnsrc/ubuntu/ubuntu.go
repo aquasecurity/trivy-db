@@ -51,6 +51,7 @@ var (
 		"mantic":   "23.10",
 		"noble":    "24.04",
 		"oracular": "24.10",
+		"plucky":   "25.04",
 		// ESM versions:
 		"precise/esm": "12.04-ESM",
 		"trusty/esm":  "14.04-ESM",
