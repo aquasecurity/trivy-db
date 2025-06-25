@@ -1,0 +1,18 @@
+{
+  "base_os": "ubuntu",
+  "version": "20.04",
+  "patches": {
+    "nginx": [
+      {
+        "vulnerability_id": "CVE-2023-44487",
+        "description": "HTTP/2 Rapid Reset vulnerability in Nginx",
+        "severity": "critical",
+        "references": [
+          "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-44487"
+        ],
+        "vulnerable_versions": [">=1.18.0, <1.18.0-6ubuntu14.4"],
+        "fixed_version": "1.18.0-6ubuntu14.4.root.io.1"
+      }
+    ]
+  }
+}

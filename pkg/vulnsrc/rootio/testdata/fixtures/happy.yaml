@@ -1,0 +1,45 @@
+buckets:
+  - bucket: root.io debian 11
+    data:
+      - key: openssl
+        value:
+          CVE-2023-0464:
+            VulnerableVersions:
+              - ">=1.1.1, <1.1.1t"
+            FixedVersion: "1.1.1t-1+deb11u2.root.io.1"
+  - bucket: root.io ubuntu 20.04
+    data:
+      - key: nginx
+        value:
+          CVE-2023-44487:
+            VulnerableVersions:
+              - ">=1.18.0, <1.18.0-6ubuntu14.4"
+            FixedVersion: "1.18.0-6ubuntu14.4.root.io.1"
+  - bucket: root.io alpine 3.20
+    data:
+      - key: busybox
+        value:
+          CVE-2023-42363:
+            VulnerableVersions:
+              - ">=1.36.1, <1.36.1-r5"
+            FixedVersion: "1.36.1-r00071"
+
+vulnerability-details:
+  CVE-2023-0464:
+    rootio:
+      Severity: "high"
+      Description: "A security vulnerability in OpenSSL"
+      References:
+        - "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-0464"
+  CVE-2023-44487:
+    rootio:
+      Severity: "critical"
+      Description: "HTTP/2 Rapid Reset vulnerability in Nginx"
+      References:
+        - "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-44487"
+  CVE-2023-42363:
+    rootio:
+      Severity: "low"
+      Description: "A security vulnerability in busybox"
+      References:
+        - "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-42363"

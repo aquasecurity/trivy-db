@@ -1,0 +1,18 @@
+{
+  "base_os": "alpine",
+  "version": "3.20",
+  "patches": {
+    "busybox": [
+      {
+        "vulnerability_id": "CVE-2023-42363",
+        "description": "A security vulnerability in busybox",
+        "severity": "low",
+        "references": [
+          "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-42363"
+        ],
+        "vulnerable_versions": [">=1.36.1, <1.36.1-r5"],
+        "fixed_version": "1.36.1-r00071"
+      }
+    ]
+  }
+}
