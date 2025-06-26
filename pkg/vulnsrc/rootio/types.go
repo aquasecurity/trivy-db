@@ -1,10 +1,12 @@
 package rootio
 
+import "github.com/aquasecurity/trivy-db/pkg/types"
+
 // RootIOFeed represents the Root.io patch feed structure (internal format)
 type RootIOFeed struct {
-	BaseOS  string             `json:"base_os"` // debian, ubuntu, alpine
-	Version string             `json:"version"` // OS version (e.g., "11", "20.04", "3.20")
-	Patches map[string][]Patch `json:"patches"` // package name -> patches
+	VulnerabilityID string
+	PkgName         string
+	Patch           types.Advisory
 }
 
 // RawRootIOFeed represents the actual Root.io API feed format
@@ -35,14 +37,6 @@ type RawPackageInfo struct {
 type RawCVEInfo struct {
 	VulnerableRanges []string `json:"vulnerable_ranges"`
 	FixedVersions    []string `json:"fixed_versions"`
-}
-
-// Patch represents a single patch entry from Root.io
-type Patch struct {
-	VulnerabilityID string `json:"vulnerability_id"` // CVE-ID
-	// VulnerableVersions contains constraint format (e.g., ">=1.2.3, <2.0.0")
-	VulnerableVersions []string `json:"vulnerable_versions"`
-	FixedVersion       string   `json:"fixed_version,omitempty"`
 }
 
 // OSType represents supported base operating systems
