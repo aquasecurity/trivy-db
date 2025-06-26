@@ -33,7 +33,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.DataSource{
 						ID:   vulnerability.RootIO,
 						Name: "Root.io Security Patches",
-						URL:  "https://root.io/",
+						URL:  "https://api.root.io/external/patch_feed",
 					},
 				},
 				{
@@ -89,7 +89,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.DataSource{
 						ID:   vulnerability.RootIO,
 						Name: "Root.io Security Patches",
-						URL:  "https://root.io/",
+						URL:  "https://api.root.io/external/patch_feed",
 					},
 				},
 				{
@@ -126,7 +126,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.DataSource{
 						ID:   vulnerability.RootIO,
 						Name: "Root.io Security Patches",
-						URL:  "https://root.io/",
+						URL:  "https://api.root.io/external/patch_feed",
 					},
 				},
 				{
