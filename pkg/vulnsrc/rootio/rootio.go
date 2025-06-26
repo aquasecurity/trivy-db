@@ -30,26 +30,18 @@ var (
 	}
 )
 
-type Option func(src *VulnSrc)
-
 type VulnSrc struct {
 	baseOS types.SourceID
 	dbc    db.Operation
 	logger *log.Logger
 }
 
-func NewVulnSrc(baseOS types.SourceID, opts ...Option) VulnSrc {
-	src := VulnSrc{
+func NewVulnSrc(baseOS types.SourceID) VulnSrc {
+	return VulnSrc{
 		baseOS: baseOS,
 		dbc:    db.Config{},
 		logger: log.WithPrefix(fmt.Sprintf("rootio-%s", baseOS)),
 	}
-
-	for _, o := range opts {
-		o(&src)
-	}
-
-	return src
 }
 
 func (vs VulnSrc) Name() types.SourceID {
