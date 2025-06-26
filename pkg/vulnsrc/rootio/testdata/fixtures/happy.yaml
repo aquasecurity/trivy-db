@@ -63,16 +63,16 @@
         - key: CVE-2023-44487
           value:
             VulnerableVersions:
-              - ">=1.18.0, <1.18.0-6ubuntu14.4"
+              - "<1.22.1-9+deb12u2.root.io.1"
             PatchedVersions:
-              - "1.18.0-6ubuntu14.4"
-- bucket: root.io alpine 3.20
+              - "1.22.1-9+deb12u2.root.io.1"
+- bucket: root.io alpine 3.19
   pairs:
-    - bucket: busybox
+    - bucket: less
       pairs:
-        - key: CVE-2023-42363
+        - key: CVE-2024-32487
           value:
             VulnerableVersions:
-              - ">=1.36.1, <1.36.1-r5"
+              - "<643-r00072"
             PatchedVersions:
-              - "1.36.1-r5"
+              - "643-r00072"

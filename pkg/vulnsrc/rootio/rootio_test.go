@@ -214,8 +214,8 @@ func TestVulnSrc_Get(t *testing.T) {
 			want: []types.Advisory{
 				{
 					VulnerabilityID:    "CVE-2023-44487",
-					VulnerableVersions: []string{">=1.18.0, <1.18.0-6ubuntu14.4"},
-					PatchedVersions:    []string{"1.18.0-6ubuntu14.4"},
+					VulnerableVersions: []string{"<1.22.1-9+deb12u2.root.io.1"},
+					PatchedVersions:    []string{"1.22.1-9+deb12u2.root.io.1"},
 				},
 			},
 		},
@@ -224,14 +224,14 @@ func TestVulnSrc_Get(t *testing.T) {
 			baseOS:   vulnerability.Alpine,
 			fixtures: []string{"testdata/fixtures/happy.yaml"},
 			args: args{
-				osVer:   "3.20",
-				pkgName: "busybox",
+				osVer:   "3.19",
+				pkgName: "less",
 			},
 			want: []types.Advisory{
 				{
-					VulnerabilityID:    "CVE-2023-42363",
-					VulnerableVersions: []string{">=1.36.1, <1.36.1-r5"},
-					PatchedVersions:    []string{"1.36.1-r5"},
+					VulnerabilityID:    "CVE-2024-32487",
+					VulnerableVersions: []string{"<643-r00072"},
+					PatchedVersions:    []string{"643-r00072"},
 				},
 			},
 		},
