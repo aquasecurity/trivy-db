@@ -28,7 +28,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"data-source",
-						"root.io debian 11",
+						"root.io debian 12",
 					},
 					Value: types.DataSource{
 						ID:   vulnerability.RootIO,
@@ -39,38 +39,19 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"advisory-detail",
-						"CVE-2023-0464",
-						"root.io debian 11",
-						"openssl",
+						"CVE-2025-29088",
+						"root.io debian 12",
+						"sqlite3",
 					},
 					Value: types.Advisory{
-						VulnerableVersions: []string{">=1.1.1, <1.1.1t"},
-						PatchedVersions:    []string{"1.1.1t-1+deb11u2"},
-					},
-				},
-				{
-					Key: []string{
-						"advisory-detail",
-						"CVE-2023-28321",
-						"root.io debian 11",
-						"curl",
-					},
-					Value: types.Advisory{
-						VulnerableVersions: []string{">=7.74.0, <7.88.1"},
-						PatchedVersions:    []string{"7.74.0-1.3+deb11u7"},
+						VulnerableVersions: []string{"<3.40.1-2+deb12u1.root.io.2"},
+						PatchedVersions:    []string{"3.40.1-2+deb12u1.root.io.2"},
 					},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
-						"CVE-2023-0464",
-					},
-					Value: map[string]any{},
-				},
-				{
-					Key: []string{
-						"vulnerability-id",
-						"CVE-2023-28321",
+						"CVE-2025-29088",
 					},
 					Value: map[string]any{},
 				},
@@ -84,7 +65,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"data-source",
-						"root.io ubuntu 20.04",
+						"root.io ubuntu 22.04",
 					},
 					Value: types.DataSource{
 						ID:   vulnerability.RootIO,
@@ -95,19 +76,19 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"advisory-detail",
-						"CVE-2023-44487",
-						"root.io ubuntu 20.04",
-						"nginx",
+						"CVE-2023-29383",
+						"root.io ubuntu 22.04",
+						"shadow",
 					},
 					Value: types.Advisory{
-						VulnerableVersions: []string{">=1.18.0, <1.18.0-6ubuntu14.4"},
-						PatchedVersions:    []string{"1.18.0-6ubuntu14.4"},
+						VulnerableVersions: []string{"<1:4.8.1-2ubuntu2.2.root.io.2"},
+						PatchedVersions:    []string{"1:4.8.1-2ubuntu2.2.root.io.2"},
 					},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
-						"CVE-2023-44487",
+						"CVE-2023-29383",
 					},
 					Value: map[string]any{},
 				},
@@ -121,7 +102,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"data-source",
-						"root.io alpine 3.20",
+						"root.io alpine 3.17",
 					},
 					Value: types.DataSource{
 						ID:   vulnerability.RootIO,
@@ -132,19 +113,19 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"advisory-detail",
-						"CVE-2023-42363",
-						"root.io alpine 3.20",
-						"busybox",
+						"CVE-2023-46853",
+						"root.io alpine 3.17",
+						"memcached",
 					},
 					Value: types.Advisory{
-						VulnerableVersions: []string{">=1.36.1, <1.36.1-r5"},
-						PatchedVersions:    []string{"1.36.1-r5"},
+						VulnerableVersions: []string{"<1.6.17-r00071"},
+						PatchedVersions:    []string{"1.6.17-r00071"},
 					},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
-						"CVE-2023-42363",
+						"CVE-2023-46853",
 					},
 					Value: map[string]any{},
 				},
@@ -196,6 +177,29 @@ func TestVulnSrc_Get(t *testing.T) {
 					VulnerabilityID:    "CVE-2023-0464",
 					VulnerableVersions: []string{">=1.1.1, <1.1.1t"},
 					PatchedVersions:    []string{"1.1.1t-1+deb11u2"},
+				},
+			},
+		},
+		{
+			name:     "only Root.io debian advisories (with fixed version by Root.io and Debian)",
+			baseOS:   vulnerability.Debian,
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			args: args{
+				osVer:   "12",
+				pkgName: "openssl",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2024-13176",
+					VulnerableVersions: []string{
+						"<3.0.15-1~deb12u1.root.io.1",
+						">3.0.15-1~deb12u1.root.io.1 <3.0.16-1~deb12u1",
+					},
+
+					PatchedVersions: []string{
+						"3.0.15-1~deb12u1.root.io.1",
+						"3.0.16-1~deb12u1",
+					},
 				},
 			},
 		},

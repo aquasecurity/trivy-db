@@ -1,26 +1,41 @@
 {
-  "debian": [
+  "alpine": [
     {
-      "distroversion": "11",
+      "distroversion": "3.17",
       "packages": [
         {
           "pkg": {
-            "name": "openssl",
+            "name": "memcached",
             "cves": {
-              "CVE-2023-0464": {
-                "vulnerable_ranges": [">=1.1.1, <1.1.1t"],
-                "fixed_versions": ["1.1.1t-1+deb11u2"]
+              "CVE-2023-46853": {
+                "vulnerable_ranges": [
+                  "\u003c1.6.17-r00071"
+                ],
+                "fixed_versions": [
+                  "1.6.17-r00071"
+                ]
               }
             }
           }
-        },
+        }
+      ]
+    }
+  ],
+  "debian": [
+    {
+      "distroversion": "12",
+      "packages": [
         {
           "pkg": {
-            "name": "curl",
+            "name": "sqlite3",
             "cves": {
-              "CVE-2023-28321": {
-                "vulnerable_ranges": [">=7.74.0, <7.88.1"],
-                "fixed_versions": ["7.74.0-1.3+deb11u7"]
+              "CVE-2025-29088": {
+                "vulnerable_ranges": [
+                  "\u003c3.40.1-2+deb12u1.root.io.2"
+                ],
+                "fixed_versions": [
+                  "3.40.1-2+deb12u1.root.io.2"
+                ]
               }
             }
           }
@@ -30,33 +45,19 @@
   ],
   "ubuntu": [
     {
-      "distroversion": "20.04",
+      "distroversion": "22.04",
       "packages": [
         {
           "pkg": {
-            "name": "nginx",
+            "name": "shadow",
             "cves": {
-              "CVE-2023-44487": {
-                "vulnerable_ranges": [">=1.18.0, <1.18.0-6ubuntu14.4"],
-                "fixed_versions": ["1.18.0-6ubuntu14.4"]
-              }
-            }
-          }
-        }
-      ]
-    }
-  ],
-  "alpine": [
-    {
-      "distroversion": "3.20",
-      "packages": [
-        {
-          "pkg": {
-            "name": "busybox",
-            "cves": {
-              "CVE-2023-42363": {
-                "vulnerable_ranges": [">=1.36.1, <1.36.1-r5"],
-                "fixed_versions": ["1.36.1-r5"]
+              "CVE-2023-29383": {
+                "vulnerable_ranges": [
+                  "\u003c1:4.8.1-2ubuntu2.2.root.io.2"
+                ],
+                "fixed_versions": [
+                  "1:4.8.1-2ubuntu2.2.root.io.2"
+                ]
               }
             }
           }
