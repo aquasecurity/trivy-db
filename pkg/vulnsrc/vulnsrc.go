@@ -28,6 +28,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rootio"
 	susecvrf "github.com/aquasecurity/trivy-db/pkg/vulnsrc/suse-cvrf"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/wolfi"
 )
 
@@ -64,9 +65,9 @@ var (
 		minimos.NewVulnSrc(),
 
 		// Root.io patches for different base OS
-		rootio.NewVulnSrc(rootio.Debian),
-		rootio.NewVulnSrc(rootio.Ubuntu),
-		rootio.NewVulnSrc(rootio.Alpine),
+		rootio.NewVulnSrc(vulnerability.Debian),
+		rootio.NewVulnSrc(vulnerability.Ubuntu),
+		rootio.NewVulnSrc(vulnerability.Alpine),
 
 		k8svulndb.NewVulnSrc(),
 

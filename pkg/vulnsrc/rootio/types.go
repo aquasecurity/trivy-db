@@ -2,15 +2,15 @@ package rootio
 
 import "github.com/aquasecurity/trivy-db/pkg/types"
 
-// RootIOFeed represents the Root.io patch feed structure (internal format)
-type RootIOFeed struct {
+// Feed represents the Root.io patch feed structure (internal format)
+type Feed struct {
 	VulnerabilityID string
 	PkgName         string
 	Patch           types.Advisory
 }
 
-// RawRootIOFeed represents the actual Root.io API feed format
-type RawRootIOFeed struct {
+// RawFeed represents the actual Root.io API feed format
+type RawFeed struct {
 	Alpine []RawDistroData `json:"alpine,omitempty"`
 	Debian []RawDistroData `json:"debian,omitempty"`
 	Ubuntu []RawDistroData `json:"ubuntu,omitempty"`
@@ -37,23 +37,4 @@ type RawPackageInfo struct {
 type RawCVEInfo struct {
 	VulnerableRanges []string `json:"vulnerable_ranges"`
 	FixedVersions    []string `json:"fixed_versions"`
-}
-
-// OSType represents supported base operating systems
-type OSType string
-
-const (
-	Debian OSType = "debian"
-	Ubuntu OSType = "ubuntu"
-	Alpine OSType = "alpine"
-)
-
-// IsValidOSType checks if the given OS type is supported
-func IsValidOSType(osType string) bool {
-	switch OSType(osType) {
-	case Debian, Ubuntu, Alpine:
-		return true
-	default:
-		return false
-	}
 }

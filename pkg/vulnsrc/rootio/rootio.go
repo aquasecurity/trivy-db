@@ -33,12 +33,12 @@ var (
 type Option func(src *VulnSrc)
 
 type VulnSrc struct {
-	baseOS OSType
+	baseOS types.SourceID
 	dbc    db.Operation
 	logger *log.Logger
 }
 
-func NewVulnSrc(baseOS OSType, opts ...Option) VulnSrc {
+func NewVulnSrc(baseOS types.SourceID, opts ...Option) VulnSrc {
 	src := VulnSrc{
 		baseOS: baseOS,
 		dbc:    db.Config{},
@@ -61,9 +61,9 @@ func (vs VulnSrc) Update(dir string) error {
 	eb := oops.In("rootio").With("root_dir", rootDir).With("base_os", vs.baseOS)
 
 	// platform => feeds
-	feeds := make(map[string][]RootIOFeed)
+	feeds := make(map[string][]Feed)
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-		var rawFeed RawRootIOFeed
+		var rawFeed RawFeed
 		if err := json.NewDecoder(r).Decode(&rawFeed); err != nil {
 			return eb.With("file_path", path).Wrapf(err, "json decode error")
 		}
@@ -71,22 +71,22 @@ func (vs VulnSrc) Update(dir string) error {
 		// Extract data for our specific base OS and convert to internal format
 		var rawDistroData []RawDistroData
 		switch vs.baseOS {
-		case Alpine:
+		case vulnerability.Alpine:
 			rawDistroData = rawFeed.Alpine
-		case Debian:
+		case vulnerability.Debian:
 			rawDistroData = rawFeed.Debian
-		case Ubuntu:
+		case vulnerability.Ubuntu:
 			rawDistroData = rawFeed.Ubuntu
 		}
 
-		// Convert each distro version to our internal RootIOFeed format
+		// Convert each distro version to our internal Feed format
 		for _, distro := range rawDistroData {
 			platformName := fmt.Sprintf(platformFormat, strings.ToLower(string(vs.baseOS)), distro.DistroVersion)
 
 			// Convert packages to patches
 			for _, pkg := range distro.Packages {
 				for cveID, cveInfo := range pkg.Pkg.CVEs {
-					feed := RootIOFeed{
+					feed := Feed{
 						VulnerabilityID: cveID,
 						PkgName:         pkg.Pkg.Name,
 						Patch: types.Advisory{
@@ -112,7 +112,7 @@ func (vs VulnSrc) Update(dir string) error {
 	return nil
 }
 
-func (vs VulnSrc) save(feeds map[string][]RootIOFeed) error {
+func (vs VulnSrc) save(feeds map[string][]Feed) error {
 	vs.logger.Info("Saving Root.io DB", "base_os", vs.baseOS)
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for platform, platformFeeds := range feeds {
@@ -131,7 +131,7 @@ func (vs VulnSrc) save(feeds map[string][]RootIOFeed) error {
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, platform string, feeds []RootIOFeed) error {
+func (vs VulnSrc) commit(tx *bolt.Tx, platform string, feeds []Feed) error {
 	for _, feed := range feeds {
 		if err := vs.put(tx, platform, feed); err != nil {
 			return oops.Wrapf(err, "put error")
@@ -140,7 +140,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platform string, feeds []RootIOFeed) error
 	return nil
 }
 
-func (vs VulnSrc) put(tx *bolt.Tx, platform string, feed RootIOFeed) error {
+func (vs VulnSrc) put(tx *bolt.Tx, platform string, feed Feed) error {
 	eb := oops.With("platform", platform).With("package", feed.PkgName).With("cve", feed.VulnerabilityID)
 
 	if err := vs.dbc.PutAdvisoryDetail(tx, feed.VulnerabilityID, feed.PkgName, []string{platform}, feed.Patch); err != nil {
