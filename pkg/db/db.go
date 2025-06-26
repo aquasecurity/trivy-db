@@ -52,6 +52,10 @@ type Operation interface {
 	RedHatNVRToCPEs(nvr string) (cpeIndices []int, err error)
 }
 
+type Getter interface {
+	Get(string, string) ([]types.Advisory, error)
+}
+
 type Config struct{}
 
 type Option func(*Options)
