@@ -182,7 +182,8 @@ func (vs VulnSrc) Get(osVer, pkgName string) ([]types.Advisory, error) {
 		return adv.VulnerabilityID, adv
 	})
 
-	// Merge the advisories from the original distributors with Root.io's advisories
+	// // Merge the advisories from the original distributors with Root.io's advisories.
+	// If both have the same vulnerability ID - only Root.io recommendation will be kept.
 	maps.Copy(allAdvs, rootAdvs)
 
 	return slices.Collect(maps.Values(allAdvs)), nil
