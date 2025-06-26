@@ -1,0 +1,67 @@
+{
+  "debian": [
+    {
+      "distroversion": "11",
+      "packages": [
+        {
+          "pkg": {
+            "name": "openssl",
+            "cves": {
+              "CVE-2023-0464": {
+                "vulnerable_ranges": [">=1.1.1, <1.1.1t"],
+                "fixed_versions": ["1.1.1t-1+deb11u2"]
+              }
+            }
+          }
+        },
+        {
+          "pkg": {
+            "name": "curl",
+            "cves": {
+              "CVE-2023-28321": {
+                "vulnerable_ranges": [">=7.74.0, <7.88.1"],
+                "fixed_versions": ["7.74.0-1.3+deb11u7"]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "ubuntu": [
+    {
+      "distroversion": "20.04",
+      "packages": [
+        {
+          "pkg": {
+            "name": "nginx",
+            "cves": {
+              "CVE-2023-44487": {
+                "vulnerable_ranges": [">=1.18.0, <1.18.0-6ubuntu14.4"],
+                "fixed_versions": ["1.18.0-6ubuntu14.4"]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "alpine": [
+    {
+      "distroversion": "3.20",
+      "packages": [
+        {
+          "pkg": {
+            "name": "busybox",
+            "cves": {
+              "CVE-2023-42363": {
+                "vulnerable_ranges": [">=1.36.1, <1.36.1-r5"],
+                "fixed_versions": ["1.36.1-r5"]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
