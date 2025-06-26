@@ -65,15 +65,15 @@ type Suse struct {
 	db.Operation
 }
 
-func NewVulnSrc(dist Distribution) *VulnSrc {
-	return &VulnSrc{
+func NewVulnSrc(dist Distribution) VulnSrc {
+	return VulnSrc{
 		DB:     &Suse{Operation: db.Config{}},
 		dist:   dist,
 		logger: log.WithPrefix("suse-cvrf"),
 	}
 }
 
-func (vs *VulnSrc) Name() types.SourceID {
+func (vs VulnSrc) Name() types.SourceID {
 	if vs.dist == OpenSUSE {
 		return "opensuse-cvrf"
 	}
@@ -83,7 +83,7 @@ func (vs *VulnSrc) Name() types.SourceID {
 	return source.ID
 }
 
-func (vs *VulnSrc) Update(dir string) error {
+func (vs VulnSrc) Update(dir string) error {
 	vs.logger.Info("Saving SUSE CVRF")
 	rootDir := filepath.Join(dir, "vuln-list", suseDir)
 	eb := oops.In("suse").Tags("cvrf").With("root_dir", rootDir)
@@ -117,7 +117,7 @@ func (vs *VulnSrc) Update(dir string) error {
 	return nil
 }
 
-func (vs *VulnSrc) save(cvrfs []SuseCvrf) error {
+func (vs VulnSrc) save(cvrfs []SuseCvrf) error {
 	err := vs.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, cvrfs)
 	})
@@ -127,7 +127,7 @@ func (vs *VulnSrc) save(cvrfs []SuseCvrf) error {
 	return nil
 }
 
-func (vs *VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
+func (vs VulnSrc) commit(tx *bolt.Tx, cvrfs []SuseCvrf) error {
 	var savedDataSources = make(map[string]struct{})
 	for _, cvrf := range cvrfs {
 		affectedPkgs := vs.getAffectedPackages(cvrf.ProductTree.Relationships)
@@ -202,7 +202,7 @@ func (vs *Suse) Put(tx *bolt.Tx, input PutInput) error {
 	return nil
 }
 
-func (vs *VulnSrc) getAffectedPackages(relationships []Relationship) []AffectedPackage {
+func (vs VulnSrc) getAffectedPackages(relationships []Relationship) []AffectedPackage {
 	var pkgs []AffectedPackage
 	for _, relationship := range relationships {
 		osVer := vs.getOSVersion(relationship.RelatesToProductReference)
@@ -225,7 +225,7 @@ func (vs *VulnSrc) getAffectedPackages(relationships []Relationship) []AffectedP
 	return pkgs
 }
 
-func (vs *VulnSrc) getOSVersion(platformName string) string {
+func (vs VulnSrc) getOSVersion(platformName string) string {
 	if strings.Contains(platformName, "SUSE Manager") {
 		// SUSE Linux Enterprise Module for SUSE Manager Server 4.0
 		return ""
@@ -350,7 +350,7 @@ func splitPkgName(pkgName string) (string, string) {
 	return pkgName, version
 }
 
-func (vs *VulnSrc) Get(version, pkgName string) ([]types.Advisory, error) {
+func (vs VulnSrc) Get(version, pkgName string) ([]types.Advisory, error) {
 	eb := oops.In("suse").Tags("cvrf").With("version", version).With("package_name", pkgName)
 	var bucket string
 	switch vs.dist {
