@@ -1,3 +1,25 @@
+- bucket: debian 10
+  pairs:
+    - bucket: pam
+      pairs:
+        - key: CVE-2024-10041
+          value:
+            FixedVersion: ""
+            Status: 2
+        - key: CVE-2024-22365
+          value:
+            FixedVersion: "1.5.2-6+deb12u2"
+- bucket: debian 11
+  pairs:
+    - bucket: pam
+      pairs:
+        - key: CVE-2024-10041
+          value:
+            FixedVersion: ""
+            Status: 2
+        - key: CVE-2024-22365
+          value:
+            FixedVersion: "1.5.2-6+deb12u2"
 - bucket: root.io debian 11
   pairs:
     - bucket: openssl
@@ -8,6 +30,20 @@
               - ">=1.1.1, <1.1.1t"
             PatchedVersions:
               - "1.1.1t-1+deb11u2"
+    - bucket: pam
+      pairs:
+        - key: CVE-2024-10041
+          value:
+            VulnerableVersions:
+              - "<1.5.2-6+deb12u1.root.io.3"
+            PatchedVersions:
+              - "1.5.2-6+deb12u1.root.io.3"
+        - key: CVE-2024-22365
+          value:
+            VulnerableVersions:
+              - "<1.5.2-6+deb12u1.root.io.3"
+            PatchedVersions:
+              - "1.5.2-6+deb12u1.root.io.3"
 - bucket: root.io ubuntu 20.04
   pairs:
     - bucket: nginx

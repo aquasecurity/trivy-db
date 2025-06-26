@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"path/filepath"
+	"slices"
 	"strings"
 
+	"github.com/samber/lo"
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
 
@@ -14,6 +17,9 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -149,12 +155,47 @@ func (vs VulnSrc) put(tx *bolt.Tx, platform string, feed Feed) error {
 
 func (vs VulnSrc) Get(osVer, pkgName string) ([]types.Advisory, error) {
 	eb := oops.In("rootio").With("base_os", vs.baseOS).With("os_version", osVer).With("package_name", pkgName)
+	// Get advisories from the original distributors, like Debian or Alpine
+	advs, err := vs.baseOSGetter().Get(osVer, pkgName)
+	if err != nil {
+		return nil, eb.Wrapf(err, "failed to get advisories for base OS")
+	}
 
-	// Generate bucket name: "root.io {baseOS} {osVer}"
-	bucket := fmt.Sprintf(platformFormat, string(vs.baseOS), osVer)
-	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
+	// Simulate the advisories with Root.io's version constraints
+	allAdvs := make(map[string]types.Advisory, len(advs))
+	for _, adv := range advs {
+		if adv.FixedVersion != "" {
+			adv.VulnerableVersions = []string{"<" + adv.FixedVersion}
+			adv.PatchedVersions = []string{adv.FixedVersion}
+			adv.FixedVersion = "" // Clear fixed version to avoid confusion
+		}
+		allAdvs[adv.VulnerabilityID] = adv
+	}
+
+	rootioOSVer := fmt.Sprintf(platformFormat, vs.baseOS, osVer)
+	advs, err = vs.dbc.GetAdvisories(rootioOSVer, pkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories")
 	}
-	return advisories, nil
+
+	rootAdvs := lo.SliceToMap(advs, func(adv types.Advisory) (string, types.Advisory) {
+		return adv.VulnerabilityID, adv
+	})
+
+	// Merge the advisories from the original distributors with Root.io's advisories
+	maps.Copy(allAdvs, rootAdvs)
+
+	return slices.Collect(maps.Values(allAdvs)), nil
+}
+
+func (vs VulnSrc) baseOSGetter() db.Getter {
+	switch vs.baseOS {
+	case vulnerability.Debian:
+		return debian.NewVulnSrc()
+	case vulnerability.Ubuntu:
+		return ubuntu.NewVulnSrc()
+	case vulnerability.Alpine:
+		return alpine.NewVulnSrc()
+	}
+	return nil
 }

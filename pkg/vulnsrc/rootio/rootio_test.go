@@ -184,7 +184,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		wantErr  string
 	}{
 		{
-			name:     "debian",
+			name:     "only Root.io debian advisories",
 			baseOS:   vulnerability.Debian,
 			fixtures: []string{"testdata/fixtures/happy.yaml"},
 			args: args{
@@ -200,7 +200,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 		},
 		{
-			name:     "ubuntu",
+			name:     "only Root.io ubuntu advisories",
 			baseOS:   vulnerability.Ubuntu,
 			fixtures: []string{"testdata/fixtures/happy.yaml"},
 			args: args{
@@ -216,7 +216,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 		},
 		{
-			name:     "alpine",
+			name:     "only Root.io alpine advisories",
 			baseOS:   vulnerability.Alpine,
 			fixtures: []string{"testdata/fixtures/happy.yaml"},
 			args: args{
@@ -229,6 +229,58 @@ func TestVulnSrc_Get(t *testing.T) {
 					VulnerableVersions: []string{">=1.36.1, <1.36.1-r5"},
 					PatchedVersions:    []string{"1.36.1-r5"},
 				},
+			},
+		},
+		{
+			name:     "Root.io and Debian have advisories",
+			baseOS:   vulnerability.Debian,
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			args: args{
+				osVer:   "11",
+				pkgName: "pam",
+			},
+			want: []types.Advisory{
+				{
+					// Debian has no fixed version
+					VulnerabilityID:    "CVE-2024-10041",
+					VulnerableVersions: []string{"<1.5.2-6+deb12u1.root.io.3"},
+					PatchedVersions:    []string{"1.5.2-6+deb12u1.root.io.3"},
+				},
+				{
+					// Debian has fixed version
+					VulnerabilityID:    "CVE-2024-22365",
+					VulnerableVersions: []string{"<1.5.2-6+deb12u1.root.io.3"},
+					PatchedVersions:    []string{"1.5.2-6+deb12u1.root.io.3"},
+				},
+			},
+		},
+		{
+			name:     "only debian advisories",
+			baseOS:   vulnerability.Debian,
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			args: args{
+				osVer:   "10",
+				pkgName: "pam",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2024-10041",
+					Status:          2,
+				},
+				{
+					VulnerabilityID:    "CVE-2024-22365",
+					VulnerableVersions: []string{"<1.5.2-6+deb12u2"},
+					PatchedVersions:    []string{"1.5.2-6+deb12u2"},
+				},
+			},
+		},
+		{
+			name:     "Root.io and Debian don't have advisories",
+			baseOS:   vulnerability.Debian,
+			fixtures: []string{"testdata/fixtures/broken.yaml"},
+			args: args{
+				osVer:   "12",
+				pkgName: "openssl",
 			},
 		},
 		{
