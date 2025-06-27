@@ -74,6 +74,7 @@ func (vs VulnSrc) Update(dir string) error {
 	if err != nil {
 		return eb.Wrapf(err, "failed to open feed file %s", feedFilePath)
 	}
+	defer feedFile.Close()
 
 	// platform => feeds
 	feeds := make(map[string][]Feed)
