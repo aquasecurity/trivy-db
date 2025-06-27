@@ -1,0 +1,11 @@
+- bucket: root.io debian 11
+  pairs:
+    - bucket: openssl
+      pairs:
+        - key: CVE-2023-0464
+          value:
+            VulnerableVersions:
+              - foo
+              - bar
+            PatchedVersions:
+              - invalid: format

@@ -1,0 +1,12 @@
+{
+  "debian": [
+    {
+      "distroversion": "11",
+      "packages": [
+        {
+          "pkg": {
+            "name": "openssl",
+            "cves": {
+              "CVE-2023-0464": {
+                "vulnerable_ranges": [">=1.1.1, <1.1.1t"]
+                // Missing closing brace and fixed_versions field

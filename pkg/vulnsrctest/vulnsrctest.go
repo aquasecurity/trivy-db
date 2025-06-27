@@ -56,10 +56,6 @@ func TestUpdate(t *testing.T, vulnsrc Updater, args TestUpdateArgs) {
 	}
 }
 
-type Getter interface {
-	Get(string, string) ([]types.Advisory, error)
-}
-
 type TestGetArgs struct {
 	Fixtures   []string
 	WantValues []types.Advisory
@@ -68,7 +64,7 @@ type TestGetArgs struct {
 	WantErr    string
 }
 
-func TestGet(t *testing.T, vulnsrc Getter, args TestGetArgs) {
+func TestGet(t *testing.T, vulnsrc db.Getter, args TestGetArgs) {
 	t.Helper()
 
 	_ = dbtest.InitDB(t, args.Fixtures)

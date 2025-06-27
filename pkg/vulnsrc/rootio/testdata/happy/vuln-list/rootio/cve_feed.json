@@ -1,0 +1,68 @@
+{
+  "alpine": [
+    {
+      "distroversion": "3.17",
+      "packages": [
+        {
+          "pkg": {
+            "name": "memcached",
+            "cves": {
+              "CVE-2023-46853": {
+                "vulnerable_ranges": [
+                  "\u003c1.6.17-r00071"
+                ],
+                "fixed_versions": [
+                  "1.6.17-r00071"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "debian": [
+    {
+      "distroversion": "12",
+      "packages": [
+        {
+          "pkg": {
+            "name": "sqlite3",
+            "cves": {
+              "CVE-2025-29088": {
+                "vulnerable_ranges": [
+                  "\u003c3.40.1-2+deb12u1.root.io.2"
+                ],
+                "fixed_versions": [
+                  "3.40.1-2+deb12u1.root.io.2"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "ubuntu": [
+    {
+      "distroversion": "22.04",
+      "packages": [
+        {
+          "pkg": {
+            "name": "shadow",
+            "cves": {
+              "CVE-2023-29383": {
+                "vulnerable_ranges": [
+                  "\u003c1:4.8.1-2ubuntu2.2.root.io.2"
+                ],
+                "fixed_versions": [
+                  "1:4.8.1-2ubuntu2.2.root.io.2"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
