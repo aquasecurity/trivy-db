@@ -9,6 +9,7 @@ type Cve struct {
 	Metrics      Metrics      `json:"metrics,omitempty"`
 	Weaknesses   []Weakness   `json:"weaknesses,omitempty"`
 	References   []Reference  `json:"references"`
+	VulnStatus   string       `json:"vulnStatus"`
 }
 
 type LangString struct {
