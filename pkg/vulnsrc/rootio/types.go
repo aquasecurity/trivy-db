@@ -10,11 +10,7 @@ type Feed struct {
 }
 
 // RawFeed represents the actual Root.io API feed format
-type RawFeed struct {
-	Alpine []RawDistroData `json:"alpine,omitempty"`
-	Debian []RawDistroData `json:"debian,omitempty"`
-	Ubuntu []RawDistroData `json:"ubuntu,omitempty"`
-}
+type RawFeed map[string][]RawDistroData
 
 // RawDistroData represents distribution data from the API
 type RawDistroData struct {

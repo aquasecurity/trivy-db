@@ -15,15 +15,13 @@ import (
 func TestVulnSrc_Update(t *testing.T) {
 	tests := []struct {
 		name       string
-		baseOS     types.SourceID
 		dir        string
 		wantValues []vulnsrctest.WantValues
 		wantErr    string
 	}{
 		{
-			name:   "happy path debian",
-			baseOS: vulnerability.Debian,
-			dir:    filepath.Join("testdata", "happy"),
+			name: "happy path",
+			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []vulnsrctest.WantValues{
 				{
 					Key: []string{
@@ -55,13 +53,36 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: map[string]any{},
 				},
-			},
-		},
-		{
-			name:   "happy path ubuntu",
-			baseOS: vulnerability.Ubuntu,
-			dir:    filepath.Join("testdata", "happy"),
-			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{
+						"data-source",
+						"root.io alpine 3.17",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.RootIO,
+						Name: "Root.io Security Patches",
+						URL:  "https://api.root.io/external/patch_feed",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-46853",
+						"root.io alpine 3.17",
+						"memcached",
+					},
+					Value: types.Advisory{
+						VulnerableVersions: []string{"<1.6.17-r00071"},
+						PatchedVersions:    []string{"1.6.17-r00071"},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2023-46853",
+					},
+					Value: map[string]any{},
+				},
 				{
 					Key: []string{
 						"data-source",
@@ -95,45 +116,7 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
-			name:   "happy path alpine",
-			baseOS: vulnerability.Alpine,
-			dir:    filepath.Join("testdata", "happy"),
-			wantValues: []vulnsrctest.WantValues{
-				{
-					Key: []string{
-						"data-source",
-						"root.io alpine 3.17",
-					},
-					Value: types.DataSource{
-						ID:   vulnerability.RootIO,
-						Name: "Root.io Security Patches",
-						URL:  "https://api.root.io/external/patch_feed",
-					},
-				},
-				{
-					Key: []string{
-						"advisory-detail",
-						"CVE-2023-46853",
-						"root.io alpine 3.17",
-						"memcached",
-					},
-					Value: types.Advisory{
-						VulnerableVersions: []string{"<1.6.17-r00071"},
-						PatchedVersions:    []string{"1.6.17-r00071"},
-					},
-				},
-				{
-					Key: []string{
-						"vulnerability-id",
-						"CVE-2023-46853",
-					},
-					Value: map[string]any{},
-				},
-			},
-		},
-		{
 			name:    "sad path - invalid JSON",
-			baseOS:  vulnerability.Debian,
 			dir:     filepath.Join("testdata", "sad"),
 			wantErr: "json decode error",
 		},
@@ -141,7 +124,7 @@ func TestVulnSrc_Update(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			vs := rootio.NewVulnSrc(tt.baseOS)
+			vs := rootio.NewVulnSrc()
 			vulnsrctest.TestUpdate(t, vs, vulnsrctest.TestUpdateArgs{
 				Dir:        tt.dir,
 				WantValues: tt.wantValues,
@@ -301,7 +284,7 @@ func TestVulnSrc_Get(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			vs := rootio.NewVulnSrc(tt.baseOS)
+			vs := rootio.NewVulnSrcGetter(tt.baseOS)
 			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
 				Fixtures:   tt.fixtures,
 				WantValues: tt.want,
@@ -314,6 +297,6 @@ func TestVulnSrc_Get(t *testing.T) {
 }
 
 func TestVulnSrc_Name(t *testing.T) {
-	vs := rootio.NewVulnSrc(vulnerability.Debian)
+	vs := rootio.NewVulnSrc()
 	assert.Equal(t, vulnerability.RootIO, vs.Name())
 }
