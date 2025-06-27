@@ -17,6 +17,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		name       string
 		dir        string
 		wantValues []vulnsrctest.WantValues
+		noBuckets  [][]string
 		wantErr    string
 	}{
 		{
@@ -116,6 +117,15 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
+			name: "happy path with unsupported OS",
+			dir:  filepath.Join("testdata", "unsupported-os"),
+			noBuckets: [][]string{
+				{"advisory-detail"},
+				{"vulnerability-id"},
+				{"vulnerability-detail"},
+			},
+		},
+		{
 			name:    "sad path - invalid JSON",
 			dir:     filepath.Join("testdata", "sad"),
 			wantErr: "json decode error",
@@ -128,6 +138,7 @@ func TestVulnSrc_Update(t *testing.T) {
 			vulnsrctest.TestUpdate(t, vs, vulnsrctest.TestUpdateArgs{
 				Dir:        tt.dir,
 				WantValues: tt.wantValues,
+				NoBuckets:  tt.noBuckets,
 				WantErr:    tt.wantErr,
 			})
 		})

@@ -34,6 +34,12 @@ var (
 		Name: "Root.io Security Patches",
 		URL:  "https://api.root.io/external/patch_feed",
 	}
+
+	supportedOSes = []types.SourceID{
+		vulnerability.Alpine,
+		vulnerability.Debian,
+		vulnerability.Ubuntu,
+	}
 )
 
 type config struct {
@@ -42,11 +48,13 @@ type config struct {
 }
 
 type VulnSrc struct {
+	supportedOSes []types.SourceID
 	config
 }
 
 func NewVulnSrc() VulnSrc {
 	return VulnSrc{
+		supportedOSes: supportedOSes,
 		config: config{
 			dbc:    db.Config{},
 			logger: log.WithPrefix("rootio"),
@@ -76,6 +84,11 @@ func (vs VulnSrc) Update(dir string) error {
 
 	// Take rawDistroData for each base OS
 	for baseOS, rawDistroData := range rawFeed {
+		if !slices.Contains(vs.supportedOSes, types.SourceID(baseOS)) {
+			vs.logger.Warn("Unsupported base OS", "base_os", baseOS)
+			continue
+
+		}
 		// Convert each distro version to our internal Feed format
 		for _, distro := range rawDistroData {
 			platformName := fmt.Sprintf(platformFormat, strings.ToLower(baseOS), distro.DistroVersion)
