@@ -6,6 +6,7 @@
           value:
             FixedVersion: ""
             Status: 2
+            Severity: 1
         - key: CVE-2024-22365
           value:
             FixedVersion: "1.5.2-6+deb12u2"
@@ -17,6 +18,7 @@
           value:
             FixedVersion: ""
             Status: 2
+            Severity: 2
         - key: CVE-2024-22365
           value:
             FixedVersion: "1.5.2-6+deb12u2"

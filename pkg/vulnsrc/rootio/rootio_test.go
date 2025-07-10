@@ -243,6 +243,7 @@ func TestVulnSrc_Get(t *testing.T) {
 					VulnerabilityID:    "CVE-2024-10041",
 					VulnerableVersions: []string{"<1.5.2-6+deb12u1.root.io.3"},
 					PatchedVersions:    []string{"1.5.2-6+deb12u1.root.io.3"},
+					Severity:           types.SeverityMedium,
 				},
 				{
 					// Debian has fixed version
@@ -264,6 +265,7 @@ func TestVulnSrc_Get(t *testing.T) {
 				{
 					VulnerabilityID: "CVE-2024-10041",
 					Status:          2,
+					Severity:        1,
 				},
 				{
 					VulnerabilityID:    "CVE-2024-22365",

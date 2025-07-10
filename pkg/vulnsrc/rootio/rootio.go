@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"sort"
 	"strings"
 
 	"github.com/samber/lo"
@@ -203,14 +204,29 @@ func (vs VulnSrcGetter) Get(osVer, pkgName string) ([]types.Advisory, error) {
 	}
 
 	rootAdvs := lo.SliceToMap(advs, func(adv types.Advisory) (string, types.Advisory) {
+		baseAdv := allAdvs[adv.VulnerabilityID]
+		adv.Severity = baseAdv.Severity
 		return adv.VulnerabilityID, adv
 	})
 
-	// // Merge the advisories from the original distributors with Root.io's advisories.
+	// Merge the advisories from the original distributors with Root.io's advisories.
 	// If both have the same vulnerability ID - only Root.io recommendation will be kept.
 	maps.Copy(allAdvs, rootAdvs)
 
-	return slices.Collect(maps.Values(allAdvs)), nil
+	if len(allAdvs) == 0 {
+		return nil, nil
+	}
+
+	allAdvsSlice := lo.Values(allAdvs)
+	sort.Slice(allAdvsSlice, func(i, j int) bool {
+		return allAdvsSlice[i].VulnerabilityID < allAdvsSlice[j].VulnerabilityID
+	})
+
+	return allAdvsSlice, nil
+}
+
+func (vs VulnSrcGetter) BaseOS() types.SourceID {
+	return vs.baseOS
 }
 
 func (vs VulnSrcGetter) baseOSGetter() db.Getter {
