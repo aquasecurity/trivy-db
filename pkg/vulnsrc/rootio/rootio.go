@@ -206,13 +206,6 @@ func (vs VulnSrcGetter) Get(osVer, pkgName string) ([]types.Advisory, error) {
 	rootAdvs := lo.SliceToMap(advs, func(adv types.Advisory) (string, types.Advisory) {
 		baseAdv := allAdvs[adv.VulnerabilityID]
 		adv.Severity = baseAdv.Severity
-		// If both `root.io` and `baseOS` contain the same vulnerability:
-		// Merge their dataSource, since we will use severity from baseOS in Trivy.
-		if baseAdv.DataSource != nil {
-			adv.DataSource.ID = adv.DataSource.ID + "+" + baseAdv.DataSource.ID
-			adv.DataSource.Name = adv.DataSource.Name + " + " + baseAdv.DataSource.Name
-		}
-
 		return adv.VulnerabilityID, adv
 	})
 
