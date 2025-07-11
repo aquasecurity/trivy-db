@@ -77,10 +77,8 @@ func (vs VulnSrc) Update(dir string) error {
 	}
 	defer feedFile.Close()
 
-	// platform => feeds
-	feeds := make(map[string][]Feed)
 	var rawFeed RawFeed
-	if err := json.NewDecoder(feedFile).Decode(&rawFeed); err != nil {
+	if err = json.NewDecoder(feedFile).Decode(&rawFeed); err != nil {
 		return eb.With("file_path", feedFilePath).Wrapf(err, "json decode error")
 	}
 
@@ -91,6 +89,9 @@ func (vs VulnSrc) Update(dir string) error {
 			continue
 
 		}
+
+		// platform => feeds
+		feeds := make(map[string][]Feed)
 		// Convert each distro version to our internal Feed format
 		for _, distro := range rawDistroData {
 			platformName := fmt.Sprintf(platformFormat, strings.ToLower(baseOS), distro.DistroVersion)
@@ -124,7 +125,12 @@ func (vs VulnSrc) save(baseOS string, feeds map[string][]Feed) error {
 	vs.logger.Info("Saving Root.io DB", "base_os", baseOS)
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for platform, platformFeeds := range feeds {
-			if err := vs.dbc.PutDataSource(tx, platform, source); err != nil {
+			dataSource := types.DataSource{
+				ID:   types.SourceID(baseOS) + "-based-" + source.ID,
+				Name: source.Name + fmt.Sprintf(" (%s)", baseOS),
+				URL:  source.URL,
+			}
+			if err := vs.dbc.PutDataSource(tx, platform, dataSource); err != nil {
 				return oops.Wrapf(err, "failed to put data source")
 			}
 			if err := vs.commit(tx, platform, platformFeeds); err != nil {
