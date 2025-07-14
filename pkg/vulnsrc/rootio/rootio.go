@@ -27,6 +27,8 @@ const (
 	rootioDir      = "rootio"
 	feedFileName   = "cve_feed.json"
 	platformFormat = "root.io %s %s" // "root.io {baseOS} {version}"
+
+	sourceIDSeparator = "-for-"
 )
 
 var (
@@ -126,7 +128,7 @@ func (vs VulnSrc) save(baseOS string, feeds map[string][]Feed) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for platform, platformFeeds := range feeds {
 			dataSource := types.DataSource{
-				ID:   types.SourceID(baseOS) + "-based-" + source.ID,
+				ID:   source.ID + sourceIDSeparator + types.SourceID(baseOS),
 				Name: source.Name + fmt.Sprintf(" (%s)", baseOS),
 				URL:  source.URL,
 			}
@@ -210,8 +212,9 @@ func (vs VulnSrcGetter) Get(osVer, pkgName string) ([]types.Advisory, error) {
 	}
 
 	rootAdvs := lo.SliceToMap(advs, func(adv types.Advisory) (string, types.Advisory) {
-		baseAdv := allAdvs[adv.VulnerabilityID]
-		adv.Severity = baseAdv.Severity
+		// Debian may contain severity in the advisory.
+		// We need to save this severity for the Root.io advisory.
+		adv.Severity = allAdvs[adv.VulnerabilityID].Severity
 		return adv.VulnerabilityID, adv
 	})
 
