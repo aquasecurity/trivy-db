@@ -234,10 +234,6 @@ func (vs VulnSrcGetter) Get(osVer, pkgName string) ([]types.Advisory, error) {
 	return allAdvsSlice, nil
 }
 
-func (vs VulnSrcGetter) BaseOS() types.SourceID {
-	return vs.baseOS
-}
-
 func (vs VulnSrcGetter) baseOSGetter() db.Getter {
 	switch vs.baseOS {
 	case vulnerability.Debian:
