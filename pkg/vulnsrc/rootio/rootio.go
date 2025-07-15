@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"sort"
 	"strings"
 
 	"github.com/samber/lo"
@@ -26,6 +27,8 @@ const (
 	rootioDir      = "rootio"
 	feedFileName   = "cve_feed.json"
 	platformFormat = "root.io %s %s" // "root.io {baseOS} {version}"
+
+	sourceIDSeparator = "-for-"
 )
 
 var (
@@ -76,10 +79,8 @@ func (vs VulnSrc) Update(dir string) error {
 	}
 	defer feedFile.Close()
 
-	// platform => feeds
-	feeds := make(map[string][]Feed)
 	var rawFeed RawFeed
-	if err := json.NewDecoder(feedFile).Decode(&rawFeed); err != nil {
+	if err = json.NewDecoder(feedFile).Decode(&rawFeed); err != nil {
 		return eb.With("file_path", feedFilePath).Wrapf(err, "json decode error")
 	}
 
@@ -90,6 +91,9 @@ func (vs VulnSrc) Update(dir string) error {
 			continue
 
 		}
+
+		// platform => feeds
+		feeds := make(map[string][]Feed)
 		// Convert each distro version to our internal Feed format
 		for _, distro := range rawDistroData {
 			platformName := fmt.Sprintf(platformFormat, strings.ToLower(baseOS), distro.DistroVersion)
@@ -123,7 +127,12 @@ func (vs VulnSrc) save(baseOS string, feeds map[string][]Feed) error {
 	vs.logger.Info("Saving Root.io DB", "base_os", baseOS)
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for platform, platformFeeds := range feeds {
-			if err := vs.dbc.PutDataSource(tx, platform, source); err != nil {
+			dataSource := types.DataSource{
+				ID:   source.ID + sourceIDSeparator + types.SourceID(baseOS),
+				Name: source.Name + fmt.Sprintf(" (%s)", baseOS),
+				URL:  source.URL,
+			}
+			if err := vs.dbc.PutDataSource(tx, platform, dataSource); err != nil {
 				return oops.Wrapf(err, "failed to put data source")
 			}
 			if err := vs.commit(tx, platform, platformFeeds); err != nil {
@@ -203,14 +212,26 @@ func (vs VulnSrcGetter) Get(osVer, pkgName string) ([]types.Advisory, error) {
 	}
 
 	rootAdvs := lo.SliceToMap(advs, func(adv types.Advisory) (string, types.Advisory) {
+		// Debian may contain severity in the advisory.
+		// We need to save this severity for the Root.io advisory.
+		adv.Severity = allAdvs[adv.VulnerabilityID].Severity
 		return adv.VulnerabilityID, adv
 	})
 
-	// // Merge the advisories from the original distributors with Root.io's advisories.
+	// Merge the advisories from the original distributors with Root.io's advisories.
 	// If both have the same vulnerability ID - only Root.io recommendation will be kept.
 	maps.Copy(allAdvs, rootAdvs)
 
-	return slices.Collect(maps.Values(allAdvs)), nil
+	if len(allAdvs) == 0 {
+		return nil, nil
+	}
+
+	allAdvsSlice := lo.Values(allAdvs)
+	sort.Slice(allAdvsSlice, func(i, j int) bool {
+		return allAdvsSlice[i].VulnerabilityID < allAdvsSlice[j].VulnerabilityID
+	})
+
+	return allAdvsSlice, nil
 }
 
 func (vs VulnSrcGetter) baseOSGetter() db.Getter {

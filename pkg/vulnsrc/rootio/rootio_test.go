@@ -30,8 +30,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						"root.io debian 12",
 					},
 					Value: types.DataSource{
-						ID:   vulnerability.RootIO,
-						Name: "Root.io Security Patches",
+						ID:   vulnerability.RootIO + "-for-" + vulnerability.Debian,
+						Name: "Root.io Security Patches (debian)",
 						URL:  "https://api.root.io/external/patch_feed",
 					},
 				},
@@ -60,8 +60,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						"root.io alpine 3.17",
 					},
 					Value: types.DataSource{
-						ID:   vulnerability.RootIO,
-						Name: "Root.io Security Patches",
+						ID:   vulnerability.RootIO + "-for-" + vulnerability.Alpine,
+						Name: "Root.io Security Patches (alpine)",
 						URL:  "https://api.root.io/external/patch_feed",
 					},
 				},
@@ -90,8 +90,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						"root.io ubuntu 22.04",
 					},
 					Value: types.DataSource{
-						ID:   vulnerability.RootIO,
-						Name: "Root.io Security Patches",
+						ID:   vulnerability.RootIO + "-for-" + vulnerability.Ubuntu,
+						Name: "Root.io Security Patches (ubuntu)",
 						URL:  "https://api.root.io/external/patch_feed",
 					},
 				},
@@ -243,6 +243,7 @@ func TestVulnSrc_Get(t *testing.T) {
 					VulnerabilityID:    "CVE-2024-10041",
 					VulnerableVersions: []string{"<1.5.2-6+deb12u1.root.io.3"},
 					PatchedVersions:    []string{"1.5.2-6+deb12u1.root.io.3"},
+					Severity:           types.SeverityMedium,
 				},
 				{
 					// Debian has fixed version
@@ -263,7 +264,8 @@ func TestVulnSrc_Get(t *testing.T) {
 			want: []types.Advisory{
 				{
 					VulnerabilityID: "CVE-2024-10041",
-					Status:          2,
+					Status:          types.StatusAffected,
+					Severity:        types.SeverityLow,
 				},
 				{
 					VulnerabilityID:    "CVE-2024-22365",
