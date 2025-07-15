@@ -264,8 +264,8 @@ func TestVulnSrc_Get(t *testing.T) {
 			want: []types.Advisory{
 				{
 					VulnerabilityID: "CVE-2024-10041",
-					Status:          2,
-					Severity:        1,
+					Status:          types.StatusAffected,
+					Severity:        types.SeverityLow,
 				},
 				{
 					VulnerabilityID:    "CVE-2024-22365",
