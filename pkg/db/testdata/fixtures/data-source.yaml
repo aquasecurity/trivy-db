@@ -1,0 +1,12 @@
+- bucket: data-source
+  pairs:
+    - key: composer::GitHub Security Advisory Composer
+      value:
+        ID: "ghsa"
+        Name: "GitHub Security Advisory Composer"
+        URL: "https://github.com/advisories?query=type%%3Areviewed+ecosystem%%3Acomposer"
+    - key: composer::php-security-advisories
+      value:
+        ID: "php-security-advisories"
+        Name: "PHP Security Advisories Database"
+        URL: "https://github.com/FriendsOfPHP/security-advisories"
