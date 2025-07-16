@@ -40,7 +40,12 @@ func (dbc Config) GetAdvisories(source, pkgName string) ([]types.Advisory, error
 
 		advisory.VulnerabilityID = vulnID
 		if !lo.IsEmpty(v.Source) {
-			advisory.DataSource = &v.Source
+			advisory.DataSource = &types.DataSource{
+				ID:     v.Source.ID,
+				Name:   v.Source.Name,
+				URL:    v.Source.URL,
+				BaseID: v.Source.BaseID,
+			}
 		}
 
 		results = append(results, advisory)
