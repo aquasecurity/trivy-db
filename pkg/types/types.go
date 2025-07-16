@@ -99,6 +99,10 @@ type DataSource struct {
 	ID   SourceID `json:",omitempty"`
 	Name string   `json:",omitempty"`
 	URL  string   `json:",omitempty"`
+
+	// BaseID shows Base source of advisories.
+	// e.g. `Root.io` based on Debian/Ubuntu/Alpine advisories.
+	BaseID SourceID `json:",omitempty"`
 }
 
 type Advisory struct {
