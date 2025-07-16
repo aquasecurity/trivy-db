@@ -30,9 +30,10 @@ func TestVulnSrc_Update(t *testing.T) {
 						"root.io debian 12",
 					},
 					Value: types.DataSource{
-						ID:   vulnerability.RootIO + "-for-" + vulnerability.Debian,
-						Name: "Root.io Security Patches (debian)",
-						URL:  "https://api.root.io/external/patch_feed",
+						ID:     vulnerability.RootIO,
+						Name:   "Root.io Security Patches (debian)",
+						URL:    "https://api.root.io/external/patch_feed",
+						BaseID: vulnerability.Debian,
 					},
 				},
 				{
@@ -60,9 +61,10 @@ func TestVulnSrc_Update(t *testing.T) {
 						"root.io alpine 3.17",
 					},
 					Value: types.DataSource{
-						ID:   vulnerability.RootIO + "-for-" + vulnerability.Alpine,
-						Name: "Root.io Security Patches (alpine)",
-						URL:  "https://api.root.io/external/patch_feed",
+						ID:     vulnerability.RootIO,
+						Name:   "Root.io Security Patches (alpine)",
+						URL:    "https://api.root.io/external/patch_feed",
+						BaseID: vulnerability.Alpine,
 					},
 				},
 				{
@@ -90,9 +92,10 @@ func TestVulnSrc_Update(t *testing.T) {
 						"root.io ubuntu 22.04",
 					},
 					Value: types.DataSource{
-						ID:   vulnerability.RootIO + "-for-" + vulnerability.Ubuntu,
-						Name: "Root.io Security Patches (ubuntu)",
-						URL:  "https://api.root.io/external/patch_feed",
+						ID:     vulnerability.RootIO,
+						Name:   "Root.io Security Patches (ubuntu)",
+						URL:    "https://api.root.io/external/patch_feed",
+						BaseID: vulnerability.Ubuntu,
 					},
 				},
 				{

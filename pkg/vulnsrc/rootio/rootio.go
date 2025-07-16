@@ -27,8 +27,6 @@ const (
 	rootioDir      = "rootio"
 	feedFileName   = "cve_feed.json"
 	platformFormat = "root.io %s %s" // "root.io {baseOS} {version}"
-
-	sourceIDSeparator = "-for-"
 )
 
 var (
@@ -128,9 +126,10 @@ func (vs VulnSrc) save(baseOS string, feeds map[string][]Feed) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for platform, platformFeeds := range feeds {
 			dataSource := types.DataSource{
-				ID:   source.ID + sourceIDSeparator + types.SourceID(baseOS),
-				Name: source.Name + fmt.Sprintf(" (%s)", baseOS),
-				URL:  source.URL,
+				ID:     source.ID,
+				Name:   source.Name + fmt.Sprintf(" (%s)", baseOS),
+				URL:    source.URL,
+				BaseID: types.SourceID(baseOS),
 			}
 			if err := vs.dbc.PutDataSource(tx, platform, dataSource); err != nil {
 				return oops.Wrapf(err, "failed to put data source")
