@@ -40,6 +40,7 @@ var (
 		vulnerability.Alpine,
 		vulnerability.Debian,
 		vulnerability.Ubuntu,
+		vulnerability.Rocky,
 	}
 )
 
@@ -239,6 +240,8 @@ func (vs VulnSrcGetter) baseOSGetter() db.Getter {
 		return debian.NewVulnSrc()
 	case vulnerability.Ubuntu:
 		return ubuntu.NewVulnSrc()
+	// case vulnerability.Rocky:
+	// 	return rocky.NewVulnSrc()
 	case vulnerability.Alpine:
 		return alpine.NewVulnSrc()
 	}
