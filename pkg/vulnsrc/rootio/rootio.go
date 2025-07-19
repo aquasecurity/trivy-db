@@ -19,6 +19,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rocky"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
@@ -186,10 +187,10 @@ func NewVulnSrcGetter(baseOS types.SourceID) VulnSrcGetter {
 	}
 }
 
-func (vs VulnSrcGetter) Get(osVer, pkgName string) ([]types.Advisory, error) {
+func (vs VulnSrcGetter) Get(osVer, pkgName, arch string) ([]types.Advisory, error) {
 	eb := oops.In("rootio").With("base_os", vs.baseOS).With("os_version", osVer).With("package_name", pkgName)
 	// Get advisories from the original distributors, like Debian or Alpine
-	advs, err := vs.baseOSGetter().Get(osVer, pkgName)
+	advs, err := vs.baseOSGetter().Get(osVer, pkgName, arch)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories for base OS")
 	}
@@ -234,16 +235,16 @@ func (vs VulnSrcGetter) Get(osVer, pkgName string) ([]types.Advisory, error) {
 	return allAdvsSlice, nil
 }
 
-func (vs VulnSrcGetter) baseOSGetter() db.Getter {
+func (vs VulnSrcGetter) baseOSGetter() db.TrioGetter {
 	switch vs.baseOS {
 	case vulnerability.Debian:
-		return debian.NewVulnSrc()
+		return db.TwoGetAdapter{G: debian.NewVulnSrc()}
 	case vulnerability.Ubuntu:
-		return ubuntu.NewVulnSrc()
-	// case vulnerability.Rocky:
-	// 	return rocky.NewVulnSrc()
+		return db.TwoGetAdapter{G: ubuntu.NewVulnSrc()}
+	case vulnerability.Rocky:
+		return rocky.NewVulnSrc()
 	case vulnerability.Alpine:
-		return alpine.NewVulnSrc()
+		return db.TwoGetAdapter{G: alpine.NewVulnSrc()}
 	}
 	return nil
 }

@@ -54,6 +54,7 @@ type DB interface {
 	db.Operation
 	Put(*bolt.Tx, PutInput) error
 	Get(release, pkgName, arch string) ([]types.Advisory, error)
+	ArchGet(release, pkgName, arch string) ([]types.Advisory, error)
 }
 
 type VulnSrc struct {
@@ -303,6 +304,10 @@ func (r *Rocky) Get(release, pkgName, arch string) ([]types.Advisory, error) {
 	}
 
 	return advisories, nil
+}
+
+func (r *Rocky) ArchGet(release, pkgName, arch string) ([]types.Advisory, error) {
+	return r.Get(release, pkgName, arch)
 }
 
 func generalizeSeverity(severity string) types.Severity {

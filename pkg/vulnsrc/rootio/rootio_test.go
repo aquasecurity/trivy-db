@@ -152,6 +152,7 @@ func TestVulnSrc_Get(t *testing.T) {
 	type args struct {
 		osVer   string
 		pkgName string
+		arch    string
 	}
 	tests := []struct {
 		name     string
@@ -171,6 +172,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			args: args{
 				osVer:   "11",
 				pkgName: "openssl",
+				arch:    "amd64",
 			},
 			want: []types.Advisory{
 				{
@@ -196,6 +198,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			args: args{
 				osVer:   "12",
 				pkgName: "openssl",
+				arch:    "amd64",
 			},
 			want: []types.Advisory{
 				{
@@ -227,6 +230,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			args: args{
 				osVer:   "20.04",
 				pkgName: "nginx",
+				arch:    "amd64",
 			},
 			want: []types.Advisory{
 				{
@@ -252,6 +256,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			args: args{
 				osVer:   "3.19",
 				pkgName: "less",
+				arch:    "amd64",
 			},
 			want: []types.Advisory{
 				{
@@ -277,6 +282,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			args: args{
 				osVer:   "11",
 				pkgName: "pam",
+				arch:    "amd64",
 			},
 			want: []types.Advisory{
 				{
@@ -316,6 +322,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			args: args{
 				osVer:   "10",
 				pkgName: "pam",
+				arch:    "amd64",
 			},
 			want: []types.Advisory{
 				{
@@ -347,6 +354,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			args: args{
 				osVer:   "12",
 				pkgName: "openssl",
+				arch:    "amd64",
 			},
 		},
 		{
@@ -356,8 +364,75 @@ func TestVulnSrc_Get(t *testing.T) {
 			args: args{
 				osVer:   "11",
 				pkgName: "openssl",
+				arch:    "amd64",
 			},
 			wantErr: "failed to get advisories",
+		},
+		{
+			name:     "only Root.io rocky advisories",
+			baseOS:   vulnerability.Rocky,
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			args: args{
+				osVer:   "8",
+				pkgName: "openssl",
+				arch:    "amd64",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-0464",
+					VulnerableVersions: []string{"<1.1.1k-7.el8_6.root.io.1"},
+					PatchedVersions:    []string{"1.1.1k-7.el8_6.root.io.1"},
+				},
+				{
+					VulnerabilityID:    "CVE-2024-13176",
+					VulnerableVersions: []string{"<3.0.7-1.el8.root.io.2"},
+					PatchedVersions:    []string{"3.0.7-1.el8.root.io.2"},
+				},
+			},
+		},
+		{
+			name:     "Root.io and Rocky have advisories",
+			baseOS:   vulnerability.Rocky,
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			args: args{
+				osVer:   "8",
+				pkgName: "openssl",
+				arch:    "arm64",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-0464",
+					VulnerableVersions: []string{"<1.1.1k-7.el8_6.root.io.1"},
+					PatchedVersions:    []string{"1.1.1k-7.el8_6.root.io.1"},
+				},
+				{
+					VulnerabilityID:    "CVE-2024-13176",
+					VulnerableVersions: []string{"<3.0.7-1.el8.root.io.2"},
+					PatchedVersions:    []string{"3.0.7-1.el8.root.io.2"},
+				},
+			},
+		},
+		{
+			name:     "only rocky advisories (no Root.io)",
+			baseOS:   vulnerability.Rocky,
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			args: args{
+				osVer:   "9",
+				pkgName: "openssl",
+				arch:    "amd64",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2023-0464",
+					Status:          types.StatusUnknown,
+					DataSource:      &types.DataSource{},
+				},
+				{
+					VulnerabilityID: "CVE-2024-13176",
+					Status:          types.StatusUnknown,
+					DataSource:      &types.DataSource{},
+				},
+			},
 		},
 	}
 
@@ -369,6 +444,7 @@ func TestVulnSrc_Get(t *testing.T) {
 				WantValues: tt.want,
 				Release:    tt.args.osVer,
 				PkgName:    tt.args.pkgName,
+				Arch:       tt.args.arch,
 				WantErr:    tt.wantErr,
 			})
 		})

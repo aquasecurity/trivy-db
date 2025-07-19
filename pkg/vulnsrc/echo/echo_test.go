@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
@@ -54,6 +55,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		})
 	}
 }
+
 func TestVulnSrc_Get(t *testing.T) {
 	type args struct {
 		pkgName string
@@ -96,7 +98,7 @@ func TestVulnSrc_Get(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			vs := NewVulnSrc()
-			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
+			vulnsrctest.TestGet(t, db.TwoGetAdapter{G: vs}, vulnsrctest.TestGetArgs{
 				Fixtures:   tt.fixtures,
 				WantValues: tt.want,
 				PkgName:    tt.args.pkgName,
