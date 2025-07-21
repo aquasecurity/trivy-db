@@ -61,6 +61,7 @@ type TestGetArgs struct {
 	WantValues []types.Advisory
 	Release    string
 	PkgName    string
+	Arch       string
 	WantErr    string
 }
 
@@ -70,7 +71,7 @@ func TestGet(t *testing.T, vulnsrc db.Getter, args TestGetArgs) {
 	_ = dbtest.InitDB(t, args.Fixtures)
 	defer db.Close()
 
-	got, err := vulnsrc.Get(args.Release, args.PkgName)
+	got, err := vulnsrc.Get(args.Release, args.PkgName, args.Arch)
 
 	if args.WantErr != "" {
 		require.Error(t, err)

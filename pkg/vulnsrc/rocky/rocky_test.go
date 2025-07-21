@@ -4,11 +4,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	"github.com/aquasecurity/trivy-db/pkg/db"
-	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rocky"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -394,7 +389,7 @@ func TestRocky_Get(t *testing.T) {
 		args     args
 		fixtures []string
 		want     []types.Advisory
-		wantErr  require.ErrorAssertionFunc
+		wantErr  string
 	}{
 		{
 			name:     "the same fixed version",
@@ -420,7 +415,6 @@ func TestRocky_Get(t *testing.T) {
 					},
 				},
 			},
-			wantErr: require.NoError,
 		},
 		{
 			name:     "different fixed versions for different arches",
@@ -445,7 +439,6 @@ func TestRocky_Get(t *testing.T) {
 					},
 				},
 			},
-			wantErr: require.NoError,
 		},
 		{
 			name:     "old schema, no entries",
@@ -466,7 +459,6 @@ func TestRocky_Get(t *testing.T) {
 					},
 				},
 			},
-			wantErr: require.NoError,
 		},
 		{
 			name:     "broken JSON",
@@ -476,19 +468,20 @@ func TestRocky_Get(t *testing.T) {
 				pkgName: "bind",
 				arch:    "aarch64",
 			},
-			wantErr: require.Error,
+			wantErr: "json: cannot unmarshal string",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_ = dbtest.InitDB(t, tt.fixtures)
-			defer db.Close()
-
 			vs := rocky.NewVulnSrc()
-			got, err := vs.Get(tt.args.release, tt.args.pkgName, tt.args.arch)
-
-			tt.wantErr(t, err)
-			assert.Equal(t, tt.want, got)
+			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
+				Fixtures:   tt.fixtures,
+				WantValues: tt.want,
+				Release:    tt.args.release,
+				PkgName:    tt.args.pkgName,
+				Arch:       tt.args.arch,
+				WantErr:    tt.wantErr,
+			})
 		})
 	}
 }
