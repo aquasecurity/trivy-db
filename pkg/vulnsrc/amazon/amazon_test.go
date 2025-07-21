@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/amazon"
@@ -150,7 +149,7 @@ func TestVulnSrc_Get(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			vs := amazon.NewVulnSrc()
-			vulnsrctest.TestGet(t, db.TwoGetAdapter{G: vs}, vulnsrctest.TestGetArgs{
+			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
 				Fixtures:   tt.fixtures,
 				WantValues: tt.want,
 				GetParams: db.GetParams{

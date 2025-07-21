@@ -62,22 +62,6 @@ type GetParams struct {
 	Arch    string
 }
 
-type TrioGetter interface {
-	Get(string, string, string) ([]types.Advisory, error)
-}
-
-type TwoGetAdapter struct {
-	G Getter
-}
-
-func (a TwoGetAdapter) Get(osVer, pkgName, _ string) ([]types.Advisory, error) {
-	advs, err := a.G.Get(osVer, pkgName)
-	if err != nil {
-		return nil, err
-	}
-	return advs, nil
-}
-
 type Config struct{}
 
 type Option func(*Options)
