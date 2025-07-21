@@ -59,9 +59,7 @@ func TestUpdate(t *testing.T, vulnsrc Updater, args TestUpdateArgs) {
 type TestGetArgs struct {
 	Fixtures   []string
 	WantValues []types.Advisory
-	Release    string
-	PkgName    string
-	Arch       string
+	GetParams  db.GetParams
 	WantErr    string
 }
 
@@ -71,11 +69,7 @@ func TestGet(t *testing.T, vulnsrc db.Getter, args TestGetArgs) {
 	_ = dbtest.InitDB(t, args.Fixtures)
 	defer db.Close()
 
-	got, err := vulnsrc.Get(db.GetParams{
-		Release: args.Release,
-		PkgName: args.PkgName,
-		Arch:    args.Arch,
-	})
+	got, err := vulnsrc.Get(args.GetParams)
 
 	if args.WantErr != "" {
 		require.Error(t, err)
