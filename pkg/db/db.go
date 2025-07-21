@@ -53,7 +53,9 @@ type Operation interface {
 }
 
 type Getter interface {
-	Get(string, string) ([]types.Advisory, error)
+	// Get uses the following parameters:
+	// `osVer`, `pkgName`, `arch`
+	Get(string, string, string) ([]types.Advisory, error)
 }
 
 type Config struct{}
