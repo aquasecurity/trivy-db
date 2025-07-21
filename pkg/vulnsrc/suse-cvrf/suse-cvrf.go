@@ -350,23 +350,23 @@ func splitPkgName(pkgName string) (string, string) {
 	return pkgName, version
 }
 
-func (vs VulnSrc) Get(version, pkgName, _ string) ([]types.Advisory, error) {
-	eb := oops.In("suse").Tags("cvrf").With("version", version).With("package_name", pkgName)
+func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
+	eb := oops.In("suse").Tags("cvrf").With("release", params.Release).With("package_name", params.PkgName)
 	var bucket string
 	switch vs.dist {
 	case SUSEEnterpriseLinuxMicro:
-		bucket = fmt.Sprintf(platformSUSELinuxEnterpriseMicroFormat, version)
+		bucket = fmt.Sprintf(platformSUSELinuxEnterpriseMicroFormat, params.Release)
 	case SUSEEnterpriseLinux:
-		bucket = fmt.Sprintf(platformSUSELinuxFormat, version)
+		bucket = fmt.Sprintf(platformSUSELinuxFormat, params.Release)
 	case OpenSUSE:
-		bucket = fmt.Sprintf(platformOpenSUSELeapFormat, version)
+		bucket = fmt.Sprintf(platformOpenSUSELeapFormat, params.Release)
 	case OpenSUSETumbleweed:
 		bucket = platformOpenSUSETumbleweedFormat
 	default:
 		return nil, eb.Errorf("unknown distribution")
 	}
 
-	advisories, err := vs.GetAdvisories(bucket, pkgName)
+	advisories, err := vs.GetAdvisories(bucket, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories")
 	}

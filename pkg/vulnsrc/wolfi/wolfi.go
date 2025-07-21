@@ -113,10 +113,10 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 	return nil
 }
 
-func (vs VulnSrc) Get(_, pkgName, _ string) ([]types.Advisory, error) {
+func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In(string(source.ID))
 	bucket := distroName
-	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
+	advisories, err := vs.dbc.GetAdvisories(bucket, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories")
 	}
