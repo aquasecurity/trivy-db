@@ -152,7 +152,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []UbuntuCVE) error {
 	return nil
 }
 
-func (vs VulnSrc) Get(release, pkgName string) ([]types.Advisory, error) {
+func (vs VulnSrc) Get(release, pkgName, _ string) ([]types.Advisory, error) {
 	eb := oops.In("ubuntu").With("release", release).With("package_name", pkgName)
 	bucket := fmt.Sprintf(platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)

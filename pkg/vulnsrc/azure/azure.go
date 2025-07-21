@@ -300,7 +300,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, entries []Entry) erro
 	return nil
 }
 
-func (vs VulnSrc) Get(release, pkgName string) ([]types.Advisory, error) {
+func (vs VulnSrc) Get(release, pkgName, _ string) ([]types.Advisory, error) {
 	eb := oops.In(string(vs.source.ID)).With("release", release).With("package_name", pkgName)
 	bucket := fmt.Sprintf(vs.platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)

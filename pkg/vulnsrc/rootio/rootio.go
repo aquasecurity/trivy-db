@@ -186,10 +186,10 @@ func NewVulnSrcGetter(baseOS types.SourceID) VulnSrcGetter {
 	}
 }
 
-func (vs VulnSrcGetter) Get(osVer, pkgName string) ([]types.Advisory, error) {
+func (vs VulnSrcGetter) Get(osVer, pkgName, _ string) ([]types.Advisory, error) {
 	eb := oops.In("rootio").With("base_os", vs.baseOS).With("os_version", osVer).With("package_name", pkgName)
 	// Get advisories from the original distributors, like Debian or Alpine
-	advs, err := vs.baseOSGetter().Get(osVer, pkgName)
+	advs, err := vs.baseOSGetter().Get(osVer, pkgName, "")
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories for base OS")
 	}

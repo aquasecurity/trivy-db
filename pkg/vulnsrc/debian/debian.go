@@ -505,7 +505,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory any) error {
 	return nil
 }
 
-func (vs VulnSrc) Get(release, pkgName string) ([]types.Advisory, error) {
+func (vs VulnSrc) Get(release, pkgName, _ string) ([]types.Advisory, error) {
 	eb := oops.In("debian").With("release", release).With("package_name", pkgName)
 	bkt := fmt.Sprintf(platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bkt, pkgName)

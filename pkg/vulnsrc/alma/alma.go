@@ -42,8 +42,8 @@ type PutInput struct {
 
 type DB interface {
 	db.Operation
+	db.Getter
 	Put(*bolt.Tx, PutInput) error
-	Get(release, pkgName string) ([]types.Advisory, error)
 }
 
 type VulnSrc struct {
@@ -213,7 +213,7 @@ func (a *Alma) Put(tx *bolt.Tx, input PutInput) error {
 	return nil
 }
 
-func (a *Alma) Get(release, pkgName string) ([]types.Advisory, error) {
+func (a *Alma) Get(release, pkgName, _ string) ([]types.Advisory, error) {
 	bucket := fmt.Sprintf(platformFormat, release)
 	advisories, err := a.GetAdvisories(bucket, pkgName)
 	if err != nil {

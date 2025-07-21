@@ -129,7 +129,7 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 	return nil
 }
 
-func (vs VulnSrc) Get(release, pkgName string) ([]types.Advisory, error) {
+func (vs VulnSrc) Get(release, pkgName, _ string) ([]types.Advisory, error) {
 	eb := oops.In("alpine").With("release", release)
 	bucket := fmt.Sprintf(platformFormat, release)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)

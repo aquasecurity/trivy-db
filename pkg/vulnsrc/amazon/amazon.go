@@ -165,7 +165,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 }
 
 // Get returns a security advisory
-func (vs VulnSrc) Get(version, pkgName string) ([]types.Advisory, error) {
+func (vs VulnSrc) Get(version, pkgName, _ string) ([]types.Advisory, error) {
 	eb := oops.In("amazon").With("version", version)
 	bucket := fmt.Sprintf(platformFormat, version)
 	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
