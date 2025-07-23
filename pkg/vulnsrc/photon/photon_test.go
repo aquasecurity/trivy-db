@@ -1,6 +1,7 @@
 package photon
 
 import (
+	"github.com/aquasecurity/trivy-db/pkg/db"
 	"path/filepath"
 	"testing"
 
