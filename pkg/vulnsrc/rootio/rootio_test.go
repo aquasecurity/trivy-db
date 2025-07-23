@@ -31,9 +31,10 @@ func TestVulnSrc_Update(t *testing.T) {
 						"root.io debian 12",
 					},
 					Value: types.DataSource{
-						ID:   vulnerability.RootIO + "-for-" + vulnerability.Debian,
-						Name: "Root.io Security Patches (debian)",
-						URL:  "https://api.root.io/external/patch_feed",
+						ID:     vulnerability.RootIO,
+						Name:   "Root.io Security Patches (debian)",
+						URL:    "https://api.root.io/external/patch_feed",
+						BaseID: vulnerability.Debian,
 					},
 				},
 				{
@@ -61,9 +62,10 @@ func TestVulnSrc_Update(t *testing.T) {
 						"root.io alpine 3.17",
 					},
 					Value: types.DataSource{
-						ID:   vulnerability.RootIO + "-for-" + vulnerability.Alpine,
-						Name: "Root.io Security Patches (alpine)",
-						URL:  "https://api.root.io/external/patch_feed",
+						ID:     vulnerability.RootIO,
+						Name:   "Root.io Security Patches (alpine)",
+						URL:    "https://api.root.io/external/patch_feed",
+						BaseID: vulnerability.Alpine,
 					},
 				},
 				{
@@ -91,9 +93,10 @@ func TestVulnSrc_Update(t *testing.T) {
 						"root.io ubuntu 22.04",
 					},
 					Value: types.DataSource{
-						ID:   vulnerability.RootIO + "-for-" + vulnerability.Ubuntu,
-						Name: "Root.io Security Patches (ubuntu)",
-						URL:  "https://api.root.io/external/patch_feed",
+						ID:     vulnerability.RootIO,
+						Name:   "Root.io Security Patches (ubuntu)",
+						URL:    "https://api.root.io/external/patch_feed",
+						BaseID: vulnerability.Ubuntu,
 					},
 				},
 				{
@@ -160,9 +163,12 @@ func TestVulnSrc_Get(t *testing.T) {
 		wantErr  string
 	}{
 		{
-			name:     "only Root.io debian advisories",
-			baseOS:   vulnerability.Debian,
-			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			name:   "only Root.io debian advisories",
+			baseOS: vulnerability.Debian,
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
 			args: args{
 				osVer:   "11",
 				pkgName: "openssl",
@@ -172,13 +178,22 @@ func TestVulnSrc_Get(t *testing.T) {
 					VulnerabilityID:    "CVE-2023-0464",
 					VulnerableVersions: []string{">=1.1.1, <1.1.1t"},
 					PatchedVersions:    []string{"1.1.1t-1+deb11u2"},
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RootIO,
+						BaseID: vulnerability.Debian,
+						Name:   "Root.io Security Patches (debian)",
+						URL:    "https://api.root.io/external/patch_feed",
+					},
 				},
 			},
 		},
 		{
-			name:     "only Root.io debian advisories (with fixed version by Root.io and Debian)",
-			baseOS:   vulnerability.Debian,
-			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			name:   "only Root.io debian advisories (with fixed version by Root.io and Debian)",
+			baseOS: vulnerability.Debian,
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
 			args: args{
 				osVer:   "12",
 				pkgName: "openssl",
@@ -190,18 +205,26 @@ func TestVulnSrc_Get(t *testing.T) {
 						"<3.0.15-1~deb12u1.root.io.1",
 						">3.0.15-1~deb12u1.root.io.1 <3.0.16-1~deb12u1",
 					},
-
 					PatchedVersions: []string{
 						"3.0.15-1~deb12u1.root.io.1",
 						"3.0.16-1~deb12u1",
+					},
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RootIO,
+						BaseID: vulnerability.Debian,
+						Name:   "Root.io Security Patches (debian)",
+						URL:    "https://api.root.io/external/patch_feed",
 					},
 				},
 			},
 		},
 		{
-			name:     "only Root.io ubuntu advisories",
-			baseOS:   vulnerability.Ubuntu,
-			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			name:   "only Root.io ubuntu advisories",
+			baseOS: vulnerability.Ubuntu,
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
 			args: args{
 				osVer:   "20.04",
 				pkgName: "nginx",
@@ -211,13 +234,22 @@ func TestVulnSrc_Get(t *testing.T) {
 					VulnerabilityID:    "CVE-2023-44487",
 					VulnerableVersions: []string{"<1.22.1-9+deb12u2.root.io.1"},
 					PatchedVersions:    []string{"1.22.1-9+deb12u2.root.io.1"},
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RootIO,
+						BaseID: vulnerability.Ubuntu,
+						Name:   "Root.io Security Patches (ubuntu)",
+						URL:    "https://api.root.io/external/patch_feed",
+					},
 				},
 			},
 		},
 		{
-			name:     "only Root.io alpine advisories",
-			baseOS:   vulnerability.Alpine,
-			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			name:   "only Root.io alpine advisories",
+			baseOS: vulnerability.Alpine,
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
 			args: args{
 				osVer:   "3.19",
 				pkgName: "less",
@@ -227,13 +259,22 @@ func TestVulnSrc_Get(t *testing.T) {
 					VulnerabilityID:    "CVE-2024-32487",
 					VulnerableVersions: []string{"<643-r00072"},
 					PatchedVersions:    []string{"643-r00072"},
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RootIO,
+						BaseID: vulnerability.Alpine,
+						Name:   "Root.io Security Patches (alpine)",
+						URL:    "https://api.root.io/external/patch_feed",
+					},
 				},
 			},
 		},
 		{
-			name:     "Root.io and Debian have advisories",
-			baseOS:   vulnerability.Debian,
-			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			name:   "Root.io and Debian have advisories",
+			baseOS: vulnerability.Debian,
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
 			args: args{
 				osVer:   "11",
 				pkgName: "pam",
@@ -245,19 +286,34 @@ func TestVulnSrc_Get(t *testing.T) {
 					VulnerableVersions: []string{"<1.5.2-6+deb12u1.root.io.3"},
 					PatchedVersions:    []string{"1.5.2-6+deb12u1.root.io.3"},
 					Severity:           types.SeverityMedium,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RootIO,
+						BaseID: vulnerability.Debian,
+						Name:   "Root.io Security Patches (debian)",
+						URL:    "https://api.root.io/external/patch_feed",
+					},
 				},
 				{
 					// Debian has fixed version
 					VulnerabilityID:    "CVE-2024-22365",
 					VulnerableVersions: []string{"<1.5.2-6+deb12u1.root.io.3"},
 					PatchedVersions:    []string{"1.5.2-6+deb12u1.root.io.3"},
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RootIO,
+						BaseID: vulnerability.Debian,
+						Name:   "Root.io Security Patches (debian)",
+						URL:    "https://api.root.io/external/patch_feed",
+					},
 				},
 			},
 		},
 		{
-			name:     "only debian advisories",
-			baseOS:   vulnerability.Debian,
-			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			name:   "only debian advisories",
+			baseOS: vulnerability.Debian,
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
 			args: args{
 				osVer:   "10",
 				pkgName: "pam",
@@ -267,11 +323,21 @@ func TestVulnSrc_Get(t *testing.T) {
 					VulnerabilityID: "CVE-2024-10041",
 					Status:          types.StatusAffected,
 					Severity:        types.SeverityLow,
+					DataSource: &types.DataSource{
+						ID:   vulnerability.Debian,
+						Name: "Debian Security Tracker",
+						URL:  "https://salsa.debian.org/security-tracker-team/security-tracker",
+					},
 				},
 				{
 					VulnerabilityID:    "CVE-2024-22365",
 					VulnerableVersions: []string{"<1.5.2-6+deb12u2"},
 					PatchedVersions:    []string{"1.5.2-6+deb12u2"},
+					DataSource: &types.DataSource{
+						ID:   vulnerability.Debian,
+						Name: "Debian Security Tracker",
+						URL:  "https://salsa.debian.org/security-tracker-team/security-tracker",
+					},
 				},
 			},
 		},

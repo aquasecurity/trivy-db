@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/json"
 
+	"github.com/samber/lo"
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
 
@@ -38,11 +39,12 @@ func (dbc Config) GetAdvisories(source, pkgName string) ([]types.Advisory, error
 		}
 
 		advisory.VulnerabilityID = vulnID
-		if v.Source != (types.DataSource{}) {
+		if !lo.IsEmpty(v.Source) {
 			advisory.DataSource = &types.DataSource{
-				ID:   v.Source.ID,
-				Name: v.Source.Name,
-				URL:  v.Source.URL,
+				ID:     v.Source.ID,
+				Name:   v.Source.Name,
+				URL:    v.Source.URL,
+				BaseID: v.Source.BaseID,
 			}
 		}
 

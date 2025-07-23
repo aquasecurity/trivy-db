@@ -10,6 +10,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 func TestConfig_ForEachAdvisory(t *testing.T) {
@@ -169,16 +170,29 @@ func TestConfig_GetAdvisories(t *testing.T) {
 				source:  "composer::",
 				pkgName: "symfony/symfony",
 			},
-			fixtures: []string{"testdata/fixtures/multiple-buckets.yaml"},
+			fixtures: []string{
+				"testdata/fixtures/multiple-buckets.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
 			want: []types.Advisory{
 				{
 					VulnerabilityID:    "CVE-2019-10909",
 					PatchedVersions:    []string{"4.2.7"},
 					VulnerableVersions: []string{">= 4.2.0, < 4.2.7"},
+					DataSource: &types.DataSource{
+						ID:   vulnerability.GHSA,
+						Name: "GitHub Security Advisory Composer",
+						URL:  "https://github.com/advisories?query=type%%3Areviewed+ecosystem%%3Acomposer",
+					},
 				},
 				{
 					VulnerabilityID:    "CVE-2020-5275",
 					VulnerableVersions: []string{">= 4.4.0, < 4.4.7"},
+					DataSource: &types.DataSource{
+						ID:   vulnerability.PhpSecurityAdvisories,
+						Name: "PHP Security Advisories Database",
+						URL:  "https://github.com/FriendsOfPHP/security-advisories",
+					},
 				},
 			},
 		},
