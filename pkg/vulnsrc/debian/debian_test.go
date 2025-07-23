@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -272,9 +273,11 @@ func TestVulnSrc_Get(t *testing.T) {
 			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
 				Fixtures:   tt.fixtures,
 				WantValues: tt.want,
-				Release:    tt.args.release,
-				PkgName:    tt.args.pkgName,
-				WantErr:    tt.wantErr,
+				GetParams: db.GetParams{
+					Release: tt.args.release,
+					PkgName: tt.args.pkgName,
+				},
+				WantErr: tt.wantErr,
 			})
 		})
 	}

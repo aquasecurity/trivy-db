@@ -44,8 +44,8 @@ type PutInput struct {
 
 type DB interface {
 	db.Operation
+	db.Getter
 	Put(*bolt.Tx, PutInput) error
-	Get(release, pkgName, arch string) ([]types.Advisory, error)
 }
 
 type VulnSrc struct {
@@ -380,10 +380,10 @@ func removeVendorIDs(advs types.Advisories) types.Advisories {
 	return advs
 }
 
-func (o *Oracle) Get(release, pkgName, arch string) ([]types.Advisory, error) {
-	eb := oops.In("oracle").Tags("oval").With("release", release).With("package_name", pkgName).With("arch", arch)
-	bucket := fmt.Sprintf(platformFormat, release)
-	rawAdvisories, err := o.ForEachAdvisory([]string{bucket}, pkgName)
+func (o *Oracle) Get(params db.GetParams) ([]types.Advisory, error) {
+	eb := oops.In("oracle").Tags("oval").With("release", params.Release).With("package_name", params.PkgName).With("arch", params.Arch)
+	bucket := fmt.Sprintf(platformFormat, params.Release)
+	rawAdvisories, err := o.ForEachAdvisory([]string{bucket}, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "unable to iterate advisories")
 	}
@@ -407,7 +407,7 @@ func (o *Oracle) Get(release, pkgName, arch string) ([]types.Advisory, error) {
 		}
 
 		for _, entry := range adv.Entries {
-			if !slices.Contains(entry.Arches, arch) {
+			if !slices.Contains(entry.Arches, params.Arch) {
 				continue
 			}
 

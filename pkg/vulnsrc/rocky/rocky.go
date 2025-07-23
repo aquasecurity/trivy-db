@@ -52,8 +52,8 @@ type PutInput struct {
 
 type DB interface {
 	db.Operation
+	db.Getter
 	Put(*bolt.Tx, PutInput) error
-	Get(release, pkgName, arch string) ([]types.Advisory, error)
 }
 
 type VulnSrc struct {
@@ -265,10 +265,10 @@ func (r *Rocky) Put(tx *bolt.Tx, input PutInput) error {
 	return nil
 }
 
-func (r *Rocky) Get(release, pkgName, arch string) ([]types.Advisory, error) {
-	eb := oops.In("rocky").With("release", release).With("package_name", pkgName).With("arch", arch)
-	bucket := fmt.Sprintf(platformFormat, release)
-	rawAdvisories, err := r.ForEachAdvisory([]string{bucket}, pkgName)
+func (r *Rocky) Get(params db.GetParams) ([]types.Advisory, error) {
+	eb := oops.In("rocky").With("release", params.Release).With("package_name", params.PkgName).With("arch", params.Arch)
+	bucket := fmt.Sprintf(platformFormat, params.Release)
+	rawAdvisories, err := r.ForEachAdvisory([]string{bucket}, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "unable to iterate advisories")
 	}
@@ -293,7 +293,7 @@ func (r *Rocky) Get(release, pkgName, arch string) ([]types.Advisory, error) {
 		}
 
 		for _, entry := range adv.Entries {
-			if !slices.Contains(entry.Arches, arch) {
+			if !slices.Contains(entry.Arches, params.Arch) {
 				continue
 			}
 			entry.VulnerabilityID = vulnID

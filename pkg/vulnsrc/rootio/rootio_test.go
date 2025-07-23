@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rootio"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -367,9 +368,11 @@ func TestVulnSrc_Get(t *testing.T) {
 			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
 				Fixtures:   tt.fixtures,
 				WantValues: tt.want,
-				Release:    tt.args.osVer,
-				PkgName:    tt.args.pkgName,
-				WantErr:    tt.wantErr,
+				GetParams: db.GetParams{
+					Release: tt.args.osVer,
+					PkgName: tt.args.pkgName,
+				},
+				WantErr: tt.wantErr,
 			})
 		})
 	}

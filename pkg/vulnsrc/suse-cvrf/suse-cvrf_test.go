@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
@@ -44,7 +45,9 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "openSUSE-SU-2019:2598-1", "openSUSE Leap 15.1", "strongswan-sqlite"},
+					Key: []string{
+						"advisory-detail", "openSUSE-SU-2019:2598-1", "openSUSE Leap 15.1", "strongswan-sqlite",
+					},
 					Value: types.Advisory{
 						FixedVersion: "5.6.0-lp151.4.3.1",
 					},
@@ -81,13 +84,17 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "openSUSE-SU-2024:10400-1", "openSUSE Tumbleweed", "python3-logilab-common"},
+					Key: []string{
+						"advisory-detail", "openSUSE-SU-2024:10400-1", "openSUSE Tumbleweed", "python3-logilab-common",
+					},
 					Value: types.Advisory{
 						FixedVersion: "1.2.2-1.2",
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "openSUSE-SU-2024:10400-1", "openSUSE Tumbleweed", "python-logilab-common"},
+					Key: []string{
+						"advisory-detail", "openSUSE-SU-2024:10400-1", "openSUSE Tumbleweed", "python-logilab-common",
+					},
 					Value: types.Advisory{
 						FixedVersion: "1.0.2-1.4",
 					},
@@ -125,7 +132,9 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "SUSE-SU-2019:0048-2", "SUSE Linux Enterprise 15.1", "helm-mirror"},
+					Key: []string{
+						"advisory-detail", "SUSE-SU-2019:0048-2", "SUSE Linux Enterprise 15.1", "helm-mirror",
+					},
 					Value: types.Advisory{
 						FixedVersion: "0.2.1-1.7.1",
 					},
@@ -163,13 +172,18 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "openSUSE-SU-2019:0003-1", "SUSE Linux Enterprise 15", "GraphicsMagick"},
+					Key: []string{
+						"advisory-detail", "openSUSE-SU-2019:0003-1", "SUSE Linux Enterprise 15", "GraphicsMagick",
+					},
 					Value: types.Advisory{
 						FixedVersion: "1.3.29-bp150.2.12.1",
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "openSUSE-SU-2019:0003-1", "SUSE Linux Enterprise 15", "GraphicsMagick-devel"},
+					Key: []string{
+						"advisory-detail", "openSUSE-SU-2019:0003-1", "SUSE Linux Enterprise 15",
+						"GraphicsMagick-devel",
+					},
 					Value: types.Advisory{
 						FixedVersion: "1.3.29-bp150.2.12.1",
 					},
@@ -206,14 +220,18 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "SUSE-SU-2024:2546-1", "SUSE Linux Enterprise Micro 5.3", "gnutls"},
+					Key: []string{
+						"advisory-detail", "SUSE-SU-2024:2546-1", "SUSE Linux Enterprise Micro 5.3", "gnutls",
+					},
 
 					Value: types.Advisory{
 						FixedVersion: "3.7.3-150400.8.1",
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "SUSE-SU-2024:2546-1", "SUSE Linux Enterprise Micro 5.3", "libgnutls30"},
+					Key: []string{
+						"advisory-detail", "SUSE-SU-2024:2546-1", "SUSE Linux Enterprise Micro 5.3", "libgnutls30",
+					},
 					Value: types.Advisory{
 						FixedVersion: "3.7.3-150400.8.1",
 					},
@@ -313,9 +331,11 @@ func TestVulnSrc_Get(t *testing.T) {
 			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
 				Fixtures:   tt.fixtures,
 				WantValues: tt.want,
-				Release:    tt.version,
-				PkgName:    tt.pkgName,
-				WantErr:    tt.wantErr,
+				GetParams: db.GetParams{
+					Release: tt.version,
+					PkgName: tt.pkgName,
+				},
+				WantErr: tt.wantErr,
 			})
 		})
 	}
