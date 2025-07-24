@@ -64,5 +64,27 @@
         }
       ]
     }
+  ],
+  "rocky": [
+    {
+      "distroversion": "8",
+      "packages": [
+        {
+          "pkg": {
+            "name": "nginx",
+            "cves": {
+              "CVE-2023-44487": {
+                "vulnerable_ranges": [
+                  "\u003c1.22.1-9+el8_9.rocky.root.io.1"
+                ],
+                "fixed_versions": [
+                  "1.22.1-9+el8_9.rocky.root.io.1"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
   ]
 }

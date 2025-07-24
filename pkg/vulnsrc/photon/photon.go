@@ -109,10 +109,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []PhotonCVE) error {
 	return nil
 }
 
-func (vs VulnSrc) Get(release, pkgName string) ([]types.Advisory, error) {
-	eb := oops.In("photon").With("release", release)
-	bucket := fmt.Sprintf(platformFormat, release)
-	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
+func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
+	eb := oops.In("photon").With("release", params.Release)
+	bucket := fmt.Sprintf(platformFormat, params.Release)
+	advisories, err := vs.dbc.GetAdvisories(bucket, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories")
 	}

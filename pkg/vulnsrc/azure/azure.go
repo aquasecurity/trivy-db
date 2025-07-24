@@ -300,10 +300,10 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, entries []Entry) erro
 	return nil
 }
 
-func (vs VulnSrc) Get(release, pkgName string) ([]types.Advisory, error) {
-	eb := oops.In(string(vs.source.ID)).With("release", release).With("package_name", pkgName)
-	bucket := fmt.Sprintf(vs.platformFormat, release)
-	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
+func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
+	eb := oops.In(string(vs.source.ID)).With("release", params.Release).With("package_name", params.PkgName)
+	bucket := fmt.Sprintf(vs.platformFormat, params.Release)
+	advisories, err := vs.dbc.GetAdvisories(bucket, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories")
 	}

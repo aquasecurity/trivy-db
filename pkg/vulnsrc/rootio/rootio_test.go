@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rootio"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -152,7 +153,6 @@ func TestVulnSrc_Get(t *testing.T) {
 	type args struct {
 		osVer   string
 		pkgName string
-		arch    string
 	}
 	tests := []struct {
 		name     string
@@ -172,7 +172,6 @@ func TestVulnSrc_Get(t *testing.T) {
 			args: args{
 				osVer:   "11",
 				pkgName: "openssl",
-				arch:    "amd64",
 			},
 			want: []types.Advisory{
 				{
@@ -198,7 +197,6 @@ func TestVulnSrc_Get(t *testing.T) {
 			args: args{
 				osVer:   "12",
 				pkgName: "openssl",
-				arch:    "amd64",
 			},
 			want: []types.Advisory{
 				{
@@ -230,7 +228,6 @@ func TestVulnSrc_Get(t *testing.T) {
 			args: args{
 				osVer:   "20.04",
 				pkgName: "nginx",
-				arch:    "amd64",
 			},
 			want: []types.Advisory{
 				{
@@ -256,7 +253,6 @@ func TestVulnSrc_Get(t *testing.T) {
 			args: args{
 				osVer:   "3.19",
 				pkgName: "less",
-				arch:    "amd64",
 			},
 			want: []types.Advisory{
 				{
@@ -282,7 +278,6 @@ func TestVulnSrc_Get(t *testing.T) {
 			args: args{
 				osVer:   "11",
 				pkgName: "pam",
-				arch:    "amd64",
 			},
 			want: []types.Advisory{
 				{
@@ -322,7 +317,6 @@ func TestVulnSrc_Get(t *testing.T) {
 			args: args{
 				osVer:   "10",
 				pkgName: "pam",
-				arch:    "amd64",
 			},
 			want: []types.Advisory{
 				{
@@ -354,7 +348,6 @@ func TestVulnSrc_Get(t *testing.T) {
 			args: args{
 				osVer:   "12",
 				pkgName: "openssl",
-				arch:    "amd64",
 			},
 		},
 		{
@@ -364,7 +357,6 @@ func TestVulnSrc_Get(t *testing.T) {
 			args: args{
 				osVer:   "11",
 				pkgName: "openssl",
-				arch:    "amd64",
 			},
 			wantErr: "failed to get advisories",
 		},
@@ -442,10 +434,11 @@ func TestVulnSrc_Get(t *testing.T) {
 			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
 				Fixtures:   tt.fixtures,
 				WantValues: tt.want,
-				Release:    tt.args.osVer,
-				PkgName:    tt.args.pkgName,
-				Arch:       tt.args.arch,
-				WantErr:    tt.wantErr,
+				GetParams: db.GetParams{
+					Release: tt.args.osVer,
+					PkgName: tt.args.pkgName,
+				},
+				WantErr: tt.wantErr,
 			})
 		})
 	}

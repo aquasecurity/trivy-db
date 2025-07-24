@@ -273,9 +273,11 @@ func TestVulnSrc_Get(t *testing.T) {
 			vulnsrctest.TestGet(t, db.TwoGetAdapter{G: vs}, vulnsrctest.TestGetArgs{
 				Fixtures:   tt.fixtures,
 				WantValues: tt.want,
-				Release:    tt.args.release,
-				PkgName:    tt.args.pkgName,
-				WantErr:    tt.wantErr,
+				GetParams: db.GetParams{
+					Release: tt.args.release,
+					PkgName: tt.args.pkgName,
+				},
+				WantErr: tt.wantErr,
 			})
 		})
 	}

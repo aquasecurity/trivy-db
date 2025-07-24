@@ -187,10 +187,10 @@ func NewVulnSrcGetter(baseOS types.SourceID) VulnSrcGetter {
 	}
 }
 
-func (vs VulnSrcGetter) Get(osVer, pkgName, arch string) ([]types.Advisory, error) {
-	eb := oops.In("rootio").With("base_os", vs.baseOS).With("os_version", osVer).With("package_name", pkgName)
+func (vs VulnSrcGetter) Get(params db.GetParams) ([]types.Advisory, error) {
+	eb := oops.In("rootio").With("base_os", vs.baseOS).With("os_version", params.Release).With("package_name", params.PkgName)
 	// Get advisories from the original distributors, like Debian or Alpine
-	advs, err := vs.baseOSGetter().Get(osVer, pkgName, arch)
+	advs, err := vs.baseOSGetter().Get(params)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories for base OS")
 	}
@@ -206,8 +206,8 @@ func (vs VulnSrcGetter) Get(osVer, pkgName, arch string) ([]types.Advisory, erro
 		allAdvs[adv.VulnerabilityID] = adv
 	}
 
-	rootioOSVer := fmt.Sprintf(platformFormat, vs.baseOS, osVer)
-	advs, err = vs.dbc.GetAdvisories(rootioOSVer, pkgName)
+	rootioOSVer := fmt.Sprintf(platformFormat, vs.baseOS, params.Release)
+	advs, err = vs.dbc.GetAdvisories(rootioOSVer, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories")
 	}
@@ -235,16 +235,16 @@ func (vs VulnSrcGetter) Get(osVer, pkgName, arch string) ([]types.Advisory, erro
 	return allAdvsSlice, nil
 }
 
-func (vs VulnSrcGetter) baseOSGetter() db.TrioGetter {
+func (vs VulnSrcGetter) baseOSGetter() db.Getter {
 	switch vs.baseOS {
 	case vulnerability.Debian:
-		return db.TwoGetAdapter{G: debian.NewVulnSrc()}
+		return debian.NewVulnSrc()
 	case vulnerability.Ubuntu:
-		return db.TwoGetAdapter{G: ubuntu.NewVulnSrc()}
+		return ubuntu.NewVulnSrc()
 	case vulnerability.Rocky:
 		return rocky.NewVulnSrc()
 	case vulnerability.Alpine:
-		return db.TwoGetAdapter{G: alpine.NewVulnSrc()}
+		return alpine.NewVulnSrc()
 	}
 	return nil
 }

@@ -119,10 +119,10 @@ func (vs VulnSrc) saveAdvisories(tx *bolt.Tx, pkgName string, advisories Advisor
 	return nil
 }
 
-func (vs VulnSrc) Get(_, pkgName string) ([]types.Advisory, error) {
+func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In(string(source.ID))
 
-	advisories, err := vs.dbc.GetAdvisories(distroName, pkgName)
+	advisories, err := vs.dbc.GetAdvisories(distroName, params.PkgName)
 	if err != nil {
 		return nil, eb.With("bucket", distroName).Wrapf(err, "failed to get advisories")
 	}
