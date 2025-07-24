@@ -53,13 +53,7 @@ type Operation interface {
 }
 
 type Getter interface {
-	Get(GetParams) ([]types.Advisory, error)
-}
-
-type GetParams struct {
-	Release string
-	PkgName string
-	Arch    string
+	Get(string, string) ([]types.Advisory, error)
 }
 
 type Config struct{}

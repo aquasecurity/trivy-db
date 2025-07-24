@@ -1,6 +1,7 @@
 package photon
 
 import (
+	"github.com/aquasecurity/trivy-db/pkg/db"
 	"path/filepath"
 	"testing"
 
@@ -109,7 +110,7 @@ func TestVulnSrc_Get(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			vs := NewVulnSrc()
-			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
+			vulnsrctest.TestGet(t, db.TwoGetAdapter{G: vs}, vulnsrctest.TestGetArgs{
 				Fixtures:   tt.fixtures,
 				WantValues: tt.want,
 				GetParams: db.GetParams{
