@@ -153,6 +153,7 @@ func TestVulnSrc_Get(t *testing.T) {
 	type args struct {
 		osVer   string
 		pkgName string
+		arch    string
 	}
 	tests := []struct {
 		name     string
