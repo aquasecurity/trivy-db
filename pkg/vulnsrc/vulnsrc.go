@@ -26,6 +26,7 @@ import (
 	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rocky"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rootio"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/seal"
 	susecvrf "github.com/aquasecurity/trivy-db/pkg/vulnsrc/suse-cvrf"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/wolfi"
@@ -76,5 +77,6 @@ var (
 		govulndb.NewVulnSrc(), // For Go stdlib packages
 
 		aqua.NewVulnSrc(),
+		seal.NewVulnSrc(),
 	}
 )
