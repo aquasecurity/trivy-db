@@ -3,10 +3,12 @@ package db
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"runtime/debug"
 	"strings"
+	"time"
 
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
@@ -17,7 +19,10 @@ import (
 
 type CustomPut func(dbc Operation, tx *bolt.Tx, adv any) error
 
-const SchemaVersion = 2
+const (
+	SchemaVersion        = 2
+	defaultDBOpenTimeout = 5 * time.Second
+)
 
 var db *bolt.DB
 
@@ -77,12 +82,16 @@ func WithBoltOptions(boltOpts *bolt.Options) Option {
 }
 
 func Init(dbDir string, opts ...Option) (err error) {
-	dbOptions := &Options{}
+	dbOptions := &Options{
+		boltOptions: &bolt.Options{
+			Timeout: defaultDBOpenTimeout,
+		},
+	}
 	for _, opt := range opts {
 		opt(dbOptions)
 	}
 
-	eb := oops.With("db_dir", dbDir)
+	eb := oops.With("db_dir", dbDir).With("database", "bbolt")
 	if err = os.MkdirAll(dbDir, 0o700); err != nil {
 		return eb.Wrapf(err, "failed to mkdir")
 	}
@@ -104,6 +113,10 @@ func Init(dbDir string, opts ...Option) (err error) {
 
 	db, err = bolt.Open(dbPath, 0o644, dbOptions.boltOptions)
 	if err != nil {
+		// Check if the error is due to timeout (database locked by another process)
+		if errors.Is(err, bolt.ErrTimeout) {
+			return eb.Wrapf(err, "vulnerability database may be in use by another process")
+		}
 		return eb.Wrapf(err, "failed to open db")
 	}
 	return nil
