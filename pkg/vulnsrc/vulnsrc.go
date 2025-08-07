@@ -20,6 +20,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/minimos"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/openeuler"
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/photon"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat"
@@ -62,6 +63,7 @@ var (
 		bitnami.NewVulnSrc(),
 		echo.NewVulnSrc(),
 		minimos.NewVulnSrc(),
+		openeuler.NewVulnSrc(),
 
 		rootio.NewVulnSrc(),
 
