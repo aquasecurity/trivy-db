@@ -10,6 +10,7 @@ import (
 	"golang.org/x/tools/go/packages"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
@@ -141,6 +142,10 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 	}
 
 	return advisories, nil
+}
+
+func (t *transformer) AdvisoryBucketName(ecosystem types.Ecosystem, dataSourceName string) string {
+	return bucket.Name(ecosystem, dataSourceName)
 }
 
 // parseDatabaseSpecific adds a version from the last_known_affected_version_range field

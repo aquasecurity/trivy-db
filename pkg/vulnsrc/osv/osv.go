@@ -59,6 +59,9 @@ type Transformer interface {
 
 	// TransformAdvisories transforms the advisories
 	TransformAdvisories([]Advisory, Entry) ([]Advisory, error)
+
+	// AdvisoryBucketName returns the bucket name for the advisory
+	AdvisoryBucketName(types.Ecosystem, string) string
 }
 
 type defaultTransformer struct{}
@@ -69,6 +72,10 @@ func (t *defaultTransformer) PostParseAffected(adv Advisory, _ Affected) (Adviso
 
 func (t *defaultTransformer) TransformAdvisories(advs []Advisory, _ Entry) ([]Advisory, error) {
 	return advs, nil
+}
+
+func (t *defaultTransformer) AdvisoryBucketName(ecosystem types.Ecosystem, dataSourceName string) string {
+	return bucket.Name(ecosystem, dataSourceName)
 }
 
 func New(dir string, sourceID types.SourceID, dataSources map[types.Ecosystem]types.DataSource, transformer Transformer) OSV {
@@ -159,7 +166,7 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 		if !ok {
 			continue
 		}
-		bktName := bucket.Name(adv.Ecosystem, dataSource.Name)
+		bktName := o.transformer.AdvisoryBucketName(adv.Ecosystem, dataSource.Name)
 		if err = o.dbc.PutDataSource(tx, bktName, dataSource); err != nil {
 			return oops.Wrapf(err, "failed to put data source")
 		}

@@ -8,6 +8,7 @@ import (
 	"github.com/samber/oops"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
@@ -79,4 +80,8 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 	}
 
 	return filtered, nil
+}
+
+func (t *transformer) AdvisoryBucketName(ecosystem types.Ecosystem, dataSourceName string) string {
+	return bucket.Name(ecosystem, dataSourceName)
 }
