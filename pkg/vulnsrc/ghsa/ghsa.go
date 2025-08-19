@@ -124,9 +124,9 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 
 		// Replace a git URL with a CocoaPods package name in a Swift vulnerability
 		// and store it as a CocoaPods vulnerability.
-		if adv.Ecosystem == vulnerability.Swift {
+		if adv.Ecosystem.Name == vulnerability.Swift {
 			adv.Severity = severity
-			adv.Ecosystem = vulnerability.Cocoapods
+			adv.Ecosystem.Name = vulnerability.Cocoapods
 			for _, pkgName := range t.cocoaPodsSpecs[adv.PkgName] {
 				adv.PkgName = pkgName
 				advisories = append(advisories, adv)
@@ -134,10 +134,8 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 		}
 
 		// Skip a standard Go package as we use the Go Vulnerability Database (govulndb) for standard packages.
-		if adv.Ecosystem == vulnerability.Go {
-			if isStandardGoPackage(adv.PkgName) {
-				advisories[i].Ecosystem = "" // An empty ecosystem is skipped later
-			}
+		if adv.Ecosystem.Name == vulnerability.Go && isStandardGoPackage(adv.PkgName) {
+			advisories[i].Ecosystem.Name = "" // An empty ecosystem is skipped later
 		}
 	}
 

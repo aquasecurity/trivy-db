@@ -11,6 +11,8 @@ import (
 	pep440 "github.com/aquasecurity/go-pep440-version"
 	"github.com/aquasecurity/go-version/pkg/semver"
 	"github.com/aquasecurity/go-version/pkg/version"
+	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 type VersionRange interface {
@@ -20,20 +22,20 @@ type VersionRange interface {
 	SetLastAffected(lastAffected string)
 }
 
-func NewVersionRange(ecosystem Ecosystem, from string) VersionRange {
+func NewVersionRange(ecosystem types.Ecosystem, from string) VersionRange {
 	vr := &versionRange{from: from}
 	switch ecosystem {
-	case EcosystemNpm:
+	case vulnerability.Npm:
 		return &NpmVersionRange{versionRange: vr}
-	case EcosystemRubygems:
+	case vulnerability.RubyGems:
 		return &RubyGemsVersionRange{versionRange: vr}
-	case EcosystemPyPI:
+	case vulnerability.Pip:
 		return &PyPIVersionRange{versionRange: vr}
-	case EcosystemMaven:
+	case vulnerability.Maven:
 		return &MavenVersionRange{versionRange: vr}
-	case EcosystemGo, EcosystemCrates, EcosystemNuGet:
+	case vulnerability.Go, vulnerability.Cargo, vulnerability.NuGet:
 		return &SemVerRange{versionRange: vr}
-	case EcosystemPackagist:
+	case vulnerability.Composer:
 		return &DefaultVersionRange{versionRange: vr}
 	default:
 		return &DefaultVersionRange{versionRange: vr}
