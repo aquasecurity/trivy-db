@@ -8,7 +8,6 @@ import (
 	"github.com/samber/oops"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
@@ -24,7 +23,7 @@ func NewVulnSrc() osv.OSV {
 		},
 	}
 
-	return osv.New(bitnamiDir, vulnerability.BitnamiVulndb, sources, &transformer{})
+	return osv.New(bitnamiDir, vulnerability.BitnamiVulndb, sources, osv.WithTransformer(&transformer{}))
 }
 
 type transformer struct{}
@@ -49,10 +48,6 @@ func (t *transformer) TransformAdvisories(advs []osv.Advisory, entry osv.Entry) 
 	}
 
 	return advs, nil
-}
-
-func (t *transformer) AdvisoryBucketName(ecosystem types.Ecosystem, dataSourceName string) string {
-	return bucket.Name(ecosystem, dataSourceName)
 }
 
 func convertSeverity(severity string) types.Severity {

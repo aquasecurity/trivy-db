@@ -46,11 +46,12 @@ type Advisory struct {
 }
 
 type OSV struct {
-	dir         string
-	dbc         db.Operation
-	sourceID    types.SourceID
-	dataSources map[types.Ecosystem]types.DataSource
-	transformer Transformer
+	dir            string
+	dbc            db.Operation
+	sourceID       types.SourceID
+	dataSources    map[types.Ecosystem]types.DataSource
+	bucketNameFunc BucketNameFunc
+	transformer    Transformer
 }
 
 type Transformer interface {
@@ -59,9 +60,6 @@ type Transformer interface {
 
 	// TransformAdvisories transforms the advisories
 	TransformAdvisories([]Advisory, Entry) ([]Advisory, error)
-
-	// AdvisoryBucketName returns the bucket name for the advisory
-	AdvisoryBucketName(types.Ecosystem, string) string
 }
 
 type defaultTransformer struct{}
@@ -74,21 +72,46 @@ func (t *defaultTransformer) TransformAdvisories(advs []Advisory, _ Entry) ([]Ad
 	return advs, nil
 }
 
-func (t *defaultTransformer) AdvisoryBucketName(ecosystem types.Ecosystem, dataSourceName string) string {
-	return bucket.Name(ecosystem, dataSourceName)
+type BucketNameFunc func(Ecosystem, string) string
+
+func defaultBucketName(ecosystem Ecosystem, dataSourceName string) string {
+	return bucket.Name(ecosystem.Name, dataSourceName)
 }
 
-func New(dir string, sourceID types.SourceID, dataSources map[types.Ecosystem]types.DataSource, transformer Transformer) OSV {
-	if transformer == nil {
-		transformer = &defaultTransformer{}
+// Option applies configuration to OSV using the functional options pattern.
+type Option func(*OSV)
+
+// WithTransformer sets a custom transformer.
+func WithTransformer(t Transformer) Option {
+	return func(o *OSV) {
+		o.transformer = t
 	}
-	return OSV{
-		dir:         dir,
-		dbc:         db.Config{},
-		sourceID:    sourceID,
-		dataSources: dataSources,
-		transformer: transformer,
+}
+
+// WithBucketNameFunc sets a custom bucket naming strategy.
+func WithBucketNameFunc(f BucketNameFunc) Option {
+	return func(o *OSV) {
+		o.bucketNameFunc = f
 	}
+}
+
+func New(dir string, sourceID types.SourceID, dataSources map[types.Ecosystem]types.DataSource, opts ...Option) OSV {
+	o := OSV{
+		dir:            dir,
+		dbc:            db.Config{},
+		sourceID:       sourceID,
+		dataSources:    dataSources,
+		bucketNameFunc: defaultBucketName,
+		transformer:    &defaultTransformer{},
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&o)
+		}
+	}
+
+	return o
 }
 
 func (o OSV) Name() types.SourceID {
@@ -166,7 +189,7 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 		if !ok {
 			continue
 		}
-		bktName := o.transformer.AdvisoryBucketName(adv.Ecosystem.Name, dataSource.Name)
+		bktName := o.bucketNameFunc(adv.Ecosystem, dataSource.Name)
 		if err = o.dbc.PutDataSource(tx, bktName, dataSource); err != nil {
 			return oops.Wrapf(err, "failed to put data source")
 		}
@@ -333,7 +356,7 @@ func parseAffectedVersions(ecosystem Ecosystem, affected Affected) ([]string, []
 		ok, err := versionContains(affectedRanges, v)
 		if err != nil {
 			log.WithPrefix("osv").Error("Version comparison error",
-				log.String("ecosystem", string(affected.Package.Ecosystem)),
+				log.String("ecosystem", affected.Package.Ecosystem),
 				log.String("package", affected.Package.Name),
 				log.Err(err),
 			)

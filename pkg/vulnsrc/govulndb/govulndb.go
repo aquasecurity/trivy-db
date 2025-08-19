@@ -8,7 +8,6 @@ import (
 	"github.com/samber/oops"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
@@ -40,7 +39,7 @@ func (VulnDB) Update(root string) error {
 		},
 	}
 
-	return osv.New(osvDir, sourceID, dataSources, &transformer{}).Update(root)
+	return osv.New(osvDir, sourceID, dataSources, osv.WithTransformer(&transformer{})).Update(root)
 }
 
 type transformer struct{}
@@ -80,8 +79,4 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 	}
 
 	return filtered, nil
-}
-
-func (t *transformer) AdvisoryBucketName(ecosystem types.Ecosystem, dataSourceName string) string {
-	return bucket.Name(ecosystem, dataSourceName)
 }

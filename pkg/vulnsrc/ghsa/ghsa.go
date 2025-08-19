@@ -10,7 +10,6 @@ import (
 	"golang.org/x/tools/go/packages"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
@@ -85,7 +84,7 @@ func (GHSA) Update(root string) error {
 		return eb.Wrapf(err, "transformer error")
 	}
 
-	return osv.New(ghsaDir, sourceID, dataSources, t).Update(root)
+	return osv.New(ghsaDir, sourceID, dataSources, osv.WithTransformer(t)).Update(root)
 }
 
 type transformer struct {
@@ -140,10 +139,6 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 	}
 
 	return advisories, nil
-}
-
-func (t *transformer) AdvisoryBucketName(ecosystem types.Ecosystem, dataSourceName string) string {
-	return bucket.Name(ecosystem, dataSourceName)
 }
 
 // parseDatabaseSpecific adds a version from the last_known_affected_version_range field
