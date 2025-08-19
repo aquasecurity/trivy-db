@@ -408,6 +408,7 @@ func parseSeverity(severities []Severity) (string, float64, error) {
 	return "", 0, nil
 }
 
+//nolint:gocyclo
 func convertEcosystem(eco string) Ecosystem {
 	name := strings.ToLower(eco)
 	ecosystem := Ecosystem{
