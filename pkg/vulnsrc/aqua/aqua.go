@@ -34,5 +34,5 @@ func (VulnSrc) Update(root string) error {
 		}
 	}
 
-	return osv.New(vulnsDir, sourceID, dataSources, nil).Update(root)
+	return osv.New(vulnsDir, sourceID, dataSources).Update(root)
 }

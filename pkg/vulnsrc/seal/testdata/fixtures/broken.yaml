@@ -1,0 +1,11 @@
+- bucket: seal debian 12
+  pairs:
+    - bucket: seal-wget
+      pairs:
+        - key: CVE-2024-10524
+          value:
+            VulnerableVersions:
+              - foo
+              - bar
+            PatchedVersions:
+              - invalid: format

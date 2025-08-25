@@ -23,7 +23,7 @@ func NewVulnSrc() osv.OSV {
 		},
 	}
 
-	return osv.New(bitnamiDir, vulnerability.BitnamiVulndb, sources, &transformer{})
+	return osv.New(bitnamiDir, vulnerability.BitnamiVulndb, sources, osv.WithTransformer(&transformer{}))
 }
 
 type transformer struct{}

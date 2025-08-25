@@ -3,27 +3,23 @@ package osv
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/aquasecurity/trivy-db/pkg/types"
 )
 
 const (
 	RangeTypeGit RangeType = "GIT"
-
-	EcosystemGo        Ecosystem = "Go"
-	EcosystemNpm       Ecosystem = "npm"
-	EcosystemPyPI      Ecosystem = "PyPI"
-	EcosystemRubygems  Ecosystem = "RubyGems"
-	EcosystemCrates    Ecosystem = "crates.io"
-	EcosystemPackagist Ecosystem = "Packagist"
-	EcosystemMaven     Ecosystem = "Maven"
-	EcosystemNuGet     Ecosystem = "NuGet"
 )
 
-type Ecosystem string
+type Ecosystem struct {
+	Name    types.Ecosystem `json:"name"`
+	Version string          `json:"version"`
+}
 type RangeType string
 
 type Package struct {
-	Name      string    `json:"name"`
-	Ecosystem Ecosystem `json:"ecosystem"`
+	Name      string `json:"name"`
+	Ecosystem string `json:"ecosystem"`
 }
 
 type RangeEvent struct {

@@ -23,7 +23,7 @@ import (
 )
 
 type Advisory struct {
-	Ecosystem       types.Ecosystem
+	Ecosystem       Ecosystem
 	PkgName         string
 	VulnerabilityID string
 	Aliases         []string
@@ -46,11 +46,12 @@ type Advisory struct {
 }
 
 type OSV struct {
-	dir         string
-	dbc         db.Operation
-	sourceID    types.SourceID
-	dataSources map[types.Ecosystem]types.DataSource
-	transformer Transformer
+	dir            string
+	dbc            db.Operation
+	sourceID       types.SourceID
+	dataSources    map[types.Ecosystem]types.DataSource
+	bucketNameFunc BucketNameFunc
+	transformer    Transformer
 }
 
 type Transformer interface {
@@ -71,17 +72,46 @@ func (t *defaultTransformer) TransformAdvisories(advs []Advisory, _ Entry) ([]Ad
 	return advs, nil
 }
 
-func New(dir string, sourceID types.SourceID, dataSources map[types.Ecosystem]types.DataSource, transformer Transformer) OSV {
-	if transformer == nil {
-		transformer = &defaultTransformer{}
+type BucketNameFunc func(Ecosystem, string) string
+
+func defaultBucketName(ecosystem Ecosystem, dataSourceName string) string {
+	return bucket.Name(ecosystem.Name, dataSourceName)
+}
+
+// Option applies configuration to OSV using the functional options pattern.
+type Option func(*OSV)
+
+// WithTransformer sets a custom transformer.
+func WithTransformer(t Transformer) Option {
+	return func(o *OSV) {
+		o.transformer = t
 	}
-	return OSV{
-		dir:         dir,
-		dbc:         db.Config{},
-		sourceID:    sourceID,
-		dataSources: dataSources,
-		transformer: transformer,
+}
+
+// WithBucketNameFunc sets a custom bucket naming strategy.
+func WithBucketNameFunc(f BucketNameFunc) Option {
+	return func(o *OSV) {
+		o.bucketNameFunc = f
 	}
+}
+
+func New(dir string, sourceID types.SourceID, dataSources map[types.Ecosystem]types.DataSource, opts ...Option) OSV {
+	o := OSV{
+		dir:            dir,
+		dbc:            db.Config{},
+		sourceID:       sourceID,
+		dataSources:    dataSources,
+		bucketNameFunc: defaultBucketName,
+		transformer:    &defaultTransformer{},
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&o)
+		}
+	}
+
+	return o
 }
 
 func (o OSV) Name() types.SourceID {
@@ -155,11 +185,11 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 	}
 
 	for _, adv := range advisories {
-		dataSource, ok := o.dataSources[adv.Ecosystem]
+		dataSource, ok := o.dataSources[adv.Ecosystem.Name]
 		if !ok {
 			continue
 		}
-		bktName := bucket.Name(adv.Ecosystem, dataSource.Name)
+		bktName := o.bucketNameFunc(adv.Ecosystem, dataSource.Name)
 		if err = o.dbc.PutDataSource(tx, bktName, dataSource); err != nil {
 			return oops.Wrapf(err, "failed to put data source")
 		}
@@ -213,13 +243,13 @@ func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) (
 	uniqAdvisories := map[string]Advisory{}
 	for _, affected := range entry.Affected {
 		ecosystem := convertEcosystem(affected.Package.Ecosystem)
-		if ecosystem == vulnerability.Unknown {
+		if ecosystem.Name == vulnerability.Unknown {
 			continue
 		}
-		pkgName := vulnerability.NormalizePkgName(ecosystem, affected.Package.Name)
+		pkgName := vulnerability.NormalizePkgName(ecosystem.Name, affected.Package.Name)
 		eb := eb.With("ecosystem", ecosystem).With("package_name", pkgName)
 
-		vulnerableVersions, patchedVersions, err := parseAffectedVersions(affected)
+		vulnerableVersions, patchedVersions, err := parseAffectedVersions(ecosystem, affected)
 		if err != nil {
 			return nil, eb.Wrapf(err, "failed to parse affected")
 		}
@@ -290,7 +320,7 @@ func groupVulnIDs(id string, aliases []string) ([]string, []string) {
 // cf.
 // - https://ossf.github.io/osv-schema/#affectedversions-field
 // - https://ossf.github.io/osv-schema/#affectedranges-field
-func parseAffectedVersions(affected Affected) ([]string, []string, error) {
+func parseAffectedVersions(ecosystem Ecosystem, affected Affected) ([]string, []string, error) {
 	var patchedVersions, vulnerableVersions []string
 	var affectedRanges []VersionRange
 	for _, affects := range affected.Ranges {
@@ -304,7 +334,7 @@ func parseAffectedVersions(affected Affected) ([]string, []string, error) {
 			// Each "introduced" event implies a new version range
 			// e.g. {"introduced": "1.2.0"}, {"introduced": "2.2.0"}
 			case event.Introduced != "":
-				affectedRanges = append(affectedRanges, NewVersionRange(affected.Package.Ecosystem, event.Introduced))
+				affectedRanges = append(affectedRanges, NewVersionRange(ecosystem.Name, event.Introduced))
 				index = len(affectedRanges) - 1
 			// e.g. {"introduced": "1.2.0"}, {"fixed": "1.2.5"}
 			case event.Fixed != "":
@@ -326,7 +356,7 @@ func parseAffectedVersions(affected Affected) ([]string, []string, error) {
 		ok, err := versionContains(affectedRanges, v)
 		if err != nil {
 			log.WithPrefix("osv").Error("Version comparison error",
-				log.String("ecosystem", string(affected.Package.Ecosystem)),
+				log.String("ecosystem", affected.Package.Ecosystem),
 				log.String("package", affected.Package.Name),
 				log.Err(err),
 			)
@@ -378,40 +408,65 @@ func parseSeverity(severities []Severity) (string, float64, error) {
 	return "", 0, nil
 }
 
-func convertEcosystem(eco Ecosystem) types.Ecosystem {
+//nolint:gocyclo
+func convertEcosystem(eco string) Ecosystem {
+	name := strings.ToLower(eco)
+	ecosystem := Ecosystem{
+		Name: vulnerability.Unknown,
+	}
+
+	// Trim Ecosystem field to name and version/releas/etc (e.g. "alpine:3.12" => "alpine" + "3.12")
+	if n, v, ok := strings.Cut(strings.ToLower(eco), ":"); ok && n != "purl-type" { // GHSA may use a non-standard format for the "ecosystem" field with the "purl-types" prefix.
+		name = n
+		ecosystem.Version = v
+	}
+
 	// cf. https://ossf.github.io/osv-schema/#affectedpackage-field
-	switch strings.ToLower(string(eco)) {
+	switch name {
 	case "go":
-		return vulnerability.Go
+		ecosystem.Name = vulnerability.Go
 	case "npm":
-		return vulnerability.Npm
+		ecosystem.Name = vulnerability.Npm
 	case "pypi":
-		return vulnerability.Pip
+		ecosystem.Name = vulnerability.Pip
 	case "rubygems":
-		return vulnerability.RubyGems
+		ecosystem.Name = vulnerability.RubyGems
 	case "crates.io":
-		return vulnerability.Cargo
+		ecosystem.Name = vulnerability.Cargo
 	case "packagist":
-		return vulnerability.Composer
+		ecosystem.Name = vulnerability.Composer
 	case "maven":
-		return vulnerability.Maven
+		ecosystem.Name = vulnerability.Maven
 	case "nuget":
-		return vulnerability.NuGet
+		ecosystem.Name = vulnerability.NuGet
 	case "hex":
-		return vulnerability.Erlang
+		ecosystem.Name = vulnerability.Erlang
 	case "pub":
-		return vulnerability.Pub
+		ecosystem.Name = vulnerability.Pub
 	case "swifturl", "purl-type:swift":
 		// GHSA still uses "purl-type:swift" for Swift advisories.
 		// cf. https://github.com/github/advisory-database/blob/db1cdfb553e48f18aa27d7e929d200563451391a/advisories/github-reviewed/2023/07/GHSA-jq43-q8mx-r7mq/GHSA-jq43-q8mx-r7mq.json#L20
-		return vulnerability.Swift
+		ecosystem.Name = vulnerability.Swift
 	case "bitnami":
-		return vulnerability.Bitnami
+		ecosystem.Name = vulnerability.Bitnami
 	case "kubernetes":
-		return vulnerability.Kubernetes
-	default:
-		return vulnerability.Unknown
+		ecosystem.Name = vulnerability.Kubernetes
+	case "alpine":
+		ecosystem.Name = vulnerability.AlpineEcosystem
+	case "centos":
+		ecosystem.Name = vulnerability.CentOSEcosystem
+	case "cbl-mariner":
+		ecosystem.Name = vulnerability.CBLMarinerEcosystem
+	case "debian":
+		ecosystem.Name = vulnerability.DebianEcosystem
+	case "oracle linux":
+		ecosystem.Name = vulnerability.OracleLinuxEcosystem
+	case "redhat": // TODO change to "red hat"
+		ecosystem.Name = vulnerability.RedHatEcosystem
+	case "ubuntu":
+		ecosystem.Name = vulnerability.UbuntuEcosystem
 	}
+	return ecosystem
 }
 
 func versionContains(ranges []VersionRange, version string) (bool, error) {
