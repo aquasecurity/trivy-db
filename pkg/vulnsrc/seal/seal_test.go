@@ -30,9 +30,10 @@ func TestVulnSrc_Update(t *testing.T) {
 						"seal redhat 9",
 					},
 					Value: types.DataSource{
-						ID:   vulnerability.Seal,
-						Name: "Seal Security Database",
-						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+						ID:     vulnerability.Seal,
+						Name:   "Seal Security Database",
+						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+						BaseID: "redhat",
 					},
 				},
 				{
@@ -57,9 +58,10 @@ func TestVulnSrc_Update(t *testing.T) {
 						"seal debian 12",
 					},
 					Value: types.DataSource{
-						ID:   vulnerability.Seal,
-						Name: "Seal Security Database",
-						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+						ID:     vulnerability.Seal,
+						Name:   "Seal Security Database",
+						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+						BaseID: "debian",
 					},
 				},
 				{
@@ -84,9 +86,10 @@ func TestVulnSrc_Update(t *testing.T) {
 						"seal ubuntu 22.04",
 					},
 					Value: types.DataSource{
-						ID:   vulnerability.Seal,
-						Name: "Seal Security Database",
-						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+						ID:     vulnerability.Seal,
+						Name:   "Seal Security Database",
+						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+						BaseID: "ubuntu",
 					},
 				},
 				{
@@ -111,9 +114,10 @@ func TestVulnSrc_Update(t *testing.T) {
 						"seal oracle-linux 8",
 					},
 					Value: types.DataSource{
-						ID:   vulnerability.Seal,
-						Name: "Seal Security Database",
-						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+						ID:     vulnerability.Seal,
+						Name:   "Seal Security Database",
+						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+						BaseID: "oracle-oval",
 					},
 				},
 				{
@@ -138,9 +142,10 @@ func TestVulnSrc_Update(t *testing.T) {
 						"seal centos 8",
 					},
 					Value: types.DataSource{
-						ID:   vulnerability.Seal,
-						Name: "Seal Security Database",
-						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+						ID:     vulnerability.Seal,
+						Name:   "Seal Security Database",
+						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+						BaseID: "centos",
 					},
 				},
 				{
@@ -165,9 +170,10 @@ func TestVulnSrc_Update(t *testing.T) {
 						"seal cbl-mariner 2.0",
 					},
 					Value: types.DataSource{
-						ID:   vulnerability.Seal,
-						Name: "Seal Security Database",
-						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+						ID:     vulnerability.Seal,
+						Name:   "Seal Security Database",
+						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+						BaseID: "cbl-mariner",
 					},
 				},
 				{
@@ -210,9 +216,10 @@ func TestVulnSrc_Update(t *testing.T) {
 						"seal alpine 3.21",
 					},
 					Value: types.DataSource{
-						ID:   vulnerability.Seal,
-						Name: "Seal Security Database",
-						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+						ID:     vulnerability.Seal,
+						Name:   "Seal Security Database",
+						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+						BaseID: "alpine",
 					},
 				},
 				{

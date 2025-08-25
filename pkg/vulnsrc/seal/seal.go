@@ -26,19 +26,19 @@ var (
 		URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
 	}
 
-	supportedEcosystems = []types.Ecosystem{
-		vulnerability.AlpineEcosystem,
-		vulnerability.CBLMarinerEcosystem,
-		vulnerability.CentOSEcosystem,
-		vulnerability.DebianEcosystem,
-		vulnerability.OracleLinuxEcosystem,
-		vulnerability.RedHatEcosystem,
-		vulnerability.UbuntuEcosystem,
+	supportedEcosystems = map[types.Ecosystem]types.SourceID{
+		vulnerability.AlpineEcosystem:      vulnerability.Alpine,
+		vulnerability.CBLMarinerEcosystem:  vulnerability.CBLMariner,
+		vulnerability.CentOSEcosystem:      vulnerability.CentOS,
+		vulnerability.DebianEcosystem:      vulnerability.Debian,
+		vulnerability.OracleLinuxEcosystem: vulnerability.OracleOVAL,
+		vulnerability.RedHatEcosystem:      vulnerability.RedHat,
+		vulnerability.UbuntuEcosystem:      vulnerability.Ubuntu,
 	}
 )
 
 type VulnSrc struct {
-	supportedEcosystems []types.Ecosystem
+	supportedEcosystems map[types.Ecosystem]types.SourceID
 }
 
 func NewVulnSrc() VulnSrc {
@@ -54,8 +54,10 @@ func (VulnSrc) Name() types.SourceID {
 func (vs VulnSrc) Update(root string) error {
 	eb := oops.In("seal").With("file_path", root)
 	dataSources := map[types.Ecosystem]types.DataSource{}
-	for _, ecosystem := range vs.supportedEcosystems {
-		dataSources[ecosystem] = source
+	for ecosystem, baseOS := range vs.supportedEcosystems {
+		s := source
+		s.BaseID = baseOS
+		dataSources[ecosystem] = s
 	}
 
 	if err := osv.New(vulnsDir, source.ID, dataSources, osv.WithBucketNameFunc(bucketName)).Update(root); err != nil {
