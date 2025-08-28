@@ -1,0 +1,105 @@
+---
+name: Trivy DB
+on:
+  schedule:
+    - cron: "0 */1 * * *"
+  workflow_dispatch:
+env:
+  REPO_OWNER: ${{ github.repository_owner }} # used in 'make db-build'
+  GH_USER: aqua-bot
+  VERSION: 2
+jobs:
+  build:
+    name: Build DB
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 32768 # vuln-list dirs + language repositories use more than 12GB of storage
+          remove-android: "true"
+          remove-docker-images: "true"
+          remove-dotnet: "true"
+          remove-haskell: "true"
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
+        with:
+          ref: trixie-temp
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Install bbolt
+        run: go install go.etcd.io/bbolt/cmd/bbolt@v1.3.5
+
+      - name: Download vuln-list and advisories
+        run: make db-fetch-langs db-fetch-vuln-list
+
+      - name: Build the binary
+        run: make build
+
+      - name: Build database
+        run: make db-build
+
+      - name: Compact DB
+        run: make db-compact
+
+      - name: Compress assets
+        run: make db-compress
+
+      - name: Move DB
+        run: mv assets/db.tar.gz .
+
+      - name: Login to GitHub Packages Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ env.GH_USER }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install oras
+        run: |
+          curl -LO https://github.com/oras-project/oras/releases/download/v1.2.0/oras_1.2.0_linux_amd64.tar.gz
+          tar -xvf ./oras_1.2.0_linux_amd64.tar.gz
+
+      - name: Upload assets to registries
+        run: |
+          lowercase_repo=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "Starting artifact upload process..."
+
+          # Define an array of registry base URLs and their corresponding repository names
+          declare -A registries=(
+            ["ghcr.io"]="${lowercase_repo}-trixie"
+          )
+
+          # Special case for docker.io if the organization is 'aquasecurity'
+          if [[ "${lowercase_repo}" == "aquasecurity/"* ]]; then
+            registries["docker.io"]="aquasec/${lowercase_repo#aquasecurity/}"
+            echo "Docker Hub repository adjusted for aquasecurity: ${registries["docker.io"]}"
+          fi
+
+          # Loop through each registry and push the artifact
+          for registry in "${!registries[@]}"; do
+            repo_name=${registries[$registry]}
+            full_registry_url="${registry}/${repo_name}"
+            echo "Processing registry: ${full_registry_url}"
+
+            tags=(latest ${{ env.VERSION }})
+            for tag in "${tags[@]}"; do
+              echo "Pushing artifact with tag: ${tag}"
+
+              if ./oras push --artifact-type application/vnd.aquasec.trivy.config.v1+json \
+                "${full_registry_url}:${tag}" \
+                db.tar.gz:application/vnd.aquasec.trivy.db.layer.v1.tar+gzip; then
+                echo "Successfully pushed to ${full_registry_url}:${tag}"
+              else
+                echo "Failed to push to ${full_registry_url}:${tag}"
+                exit 1
+              fi
+            done
+          done
+            
+          echo "Artifact upload process completed."
