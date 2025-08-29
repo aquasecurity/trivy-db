@@ -231,10 +231,10 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: types.Advisory{
 						PatchedVersions: []string{
-							"1.2.8-r2+sp999",
+							"1.2.8-r25341999",
 						},
 						VulnerableVersions: []string{
-							">=1.2.8-r2, <1.2.8-r2+sp999",
+							">=1.2.8-r2, <1.2.8-r25341999",
 						},
 					},
 				},
