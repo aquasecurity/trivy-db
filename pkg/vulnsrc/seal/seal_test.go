@@ -27,7 +27,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"data-source",
-						"seal redhat 9",
+						"seal redhat 6",
 					},
 					Value: types.DataSource{
 						ID:     vulnerability.Seal,
@@ -40,7 +40,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{
 						"advisory-detail",
 						"CVE-2024-10524",
-						"seal redhat 9",
+						"seal redhat 6",
 						"seal-wget",
 					},
 					Value: types.Advisory{
@@ -55,7 +55,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"data-source",
-						"seal debian 12",
+						"seal debian",
 					},
 					Value: types.DataSource{
 						ID:     vulnerability.Seal,
@@ -68,7 +68,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{
 						"advisory-detail",
 						"CVE-2024-10524",
-						"seal debian 12",
+						"seal debian",
 						"seal-wget",
 					},
 					Value: types.Advisory{
@@ -77,118 +77,6 @@ func TestVulnSrc_Update(t *testing.T) {
 						},
 						VulnerableVersions: []string{
 							">=1.21-1+deb11u1, <1.21-1+deb11u1+sp999",
-						},
-					},
-				},
-				{
-					Key: []string{
-						"data-source",
-						"seal ubuntu 22.04",
-					},
-					Value: types.DataSource{
-						ID:     vulnerability.Seal,
-						Name:   "Seal Security Database",
-						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
-						BaseID: "ubuntu",
-					},
-				},
-				{
-					Key: []string{
-						"advisory-detail",
-						"CVE-2024-10524",
-						"seal ubuntu 22.04",
-						"seal-wget",
-					},
-					Value: types.Advisory{
-						PatchedVersions: []string{
-							"1.21-1+deb11u1+sp999",
-						},
-						VulnerableVersions: []string{
-							">=1.21-1+deb11u1, <1.21-1+deb11u1+sp999",
-						},
-					},
-				},
-				{
-					Key: []string{
-						"data-source",
-						"seal oracle-linux 8",
-					},
-					Value: types.DataSource{
-						ID:     vulnerability.Seal,
-						Name:   "Seal Security Database",
-						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
-						BaseID: "oracle-oval",
-					},
-				},
-				{
-					Key: []string{
-						"advisory-detail",
-						"CVE-2024-10524",
-						"seal oracle-linux 8",
-						"seal-wget",
-					},
-					Value: types.Advisory{
-						PatchedVersions: []string{
-							"1.12-10.el6+sp999",
-						},
-						VulnerableVersions: []string{
-							">=1.12-10.el6, <1.12-10.el6+sp999",
-						},
-					},
-				},
-				{
-					Key: []string{
-						"data-source",
-						"seal centos 8",
-					},
-					Value: types.DataSource{
-						ID:     vulnerability.Seal,
-						Name:   "Seal Security Database",
-						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
-						BaseID: "centos",
-					},
-				},
-				{
-					Key: []string{
-						"advisory-detail",
-						"CVE-2024-10524",
-						"seal centos 8",
-						"seal-wget",
-					},
-					Value: types.Advisory{
-						PatchedVersions: []string{
-							"1.12-10.el6+sp999",
-						},
-						VulnerableVersions: []string{
-							">=1.12-10.el6, <1.12-10.el6+sp999",
-						},
-					},
-				},
-				{
-					Key: []string{
-						"data-source",
-						"seal cbl-mariner 2.0",
-					},
-					Value: types.DataSource{
-						ID:     vulnerability.Seal,
-						Name:   "Seal Security Database",
-						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
-						BaseID: "cbl-mariner",
-					},
-				},
-				{
-					Key: []string{
-						"advisory-detail",
-						"CVE-2024-10524",
-						"seal cbl-mariner 2.0",
-						"seal-wget",
-					},
-					Value: types.Advisory{
-						PatchedVersions: []string{
-							"1.12-10.el6+sp999",
-						},
-						VulnerableVersions: []string{
-							">=1.12-10.el6, <1.12-10.el6+sp999",
 						},
 					},
 				},
@@ -199,7 +87,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"seal",
 					},
 					Value: types.VulnerabilityDetail{
-						LastModifiedDate: utils.MustTimeParse("2024-12-29T13:51:52.847037Z"),
+						LastModifiedDate: utils.MustTimeParse("2024-12-05T19:12:21.203740Z"),
 						PublishedDate:    utils.MustTimeParse("2024-11-19T00:00:00Z"),
 					},
 				},
@@ -213,7 +101,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"data-source",
-						"seal alpine 3.21",
+						"seal alpine",
 					},
 					Value: types.DataSource{
 						ID:     vulnerability.Seal,
@@ -226,7 +114,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{
 						"advisory-detail",
 						"CVE-2023-6992",
-						"seal alpine 3.21",
+						"seal alpine",
 						"seal-zlib",
 					},
 					Value: types.Advisory{
@@ -357,8 +245,8 @@ func TestVulnSrc_Get(t *testing.T) {
 			want: []types.Advisory{
 				{
 					VulnerabilityID:    "CVE-2023-6992",
-					VulnerableVersions: []string{">=1.2.8-r2, <1.2.8-r2+sp999"},
-					PatchedVersions:    []string{"1.2.8-r2+sp999"},
+					VulnerableVersions: []string{">=1.2.8-r2, <1.2.8-r25341999"},
+					PatchedVersions:    []string{"1.2.8-r25341999"},
 					DataSource: &types.DataSource{
 						ID:   vulnerability.Seal,
 						Name: "Seal Security Database",

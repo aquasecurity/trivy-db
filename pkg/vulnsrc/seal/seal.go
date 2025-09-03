@@ -3,6 +3,7 @@ package seal
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/samber/oops"
 
@@ -14,7 +15,7 @@ import (
 )
 
 const (
-	platformFormat = "seal %s %s" // "seal {baseOS} {version}"
+	platformFormat = "seal %s" // "seal {baseOS}" e.g. "seal redhat 9" or "seal alpine"
 )
 
 var (
@@ -26,24 +27,23 @@ var (
 		URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
 	}
 
-	supportedEcosystems = map[types.Ecosystem]types.SourceID{
-		vulnerability.AlpineEcosystem:      vulnerability.Alpine,
-		vulnerability.CBLMarinerEcosystem:  vulnerability.CBLMariner,
-		vulnerability.CentOSEcosystem:      vulnerability.CentOS,
-		vulnerability.DebianEcosystem:      vulnerability.Debian,
-		vulnerability.OracleLinuxEcosystem: vulnerability.OracleOVAL,
-		vulnerability.RedHatEcosystem:      vulnerability.RedHat,
-		vulnerability.UbuntuEcosystem:      vulnerability.Ubuntu,
+	supportedOSes = map[string]types.SourceID{
+		"alpine":    vulnerability.Alpine,
+		"debian":    vulnerability.Debian,
+		"red hat:6": vulnerability.RedHat,
+		"red hat:7": vulnerability.RedHat,
+		"red hat:8": vulnerability.RedHat,
+		"red hat:9": vulnerability.RedHat,
 	}
 )
 
 type VulnSrc struct {
-	supportedEcosystems map[types.Ecosystem]types.SourceID
+	supportedOSes map[string]types.SourceID
 }
 
 func NewVulnSrc() VulnSrc {
 	return VulnSrc{
-		supportedEcosystems: supportedEcosystems,
+		supportedOSes: supportedOSes,
 	}
 }
 
@@ -53,22 +53,39 @@ func (VulnSrc) Name() types.SourceID {
 
 func (vs VulnSrc) Update(root string) error {
 	eb := oops.In("seal").With("file_path", root)
-	dataSources := map[types.Ecosystem]types.DataSource{}
-	for ecosystem, baseOS := range vs.supportedEcosystems {
+	dataSources := map[osv.Ecosystem]types.DataSource{}
+	for suffix, baseOS := range vs.supportedOSes {
 		s := source
 		s.BaseID = baseOS
-		dataSources[ecosystem] = s
+
+		osvEcosystem := osv.Ecosystem{
+			Name:   vulnerability.SealEcosystemName,
+			Suffix: suffix,
+		}
+		dataSources[osvEcosystem] = s
 	}
 
-	if err := osv.New(vulnsDir, source.ID, dataSources, osv.WithBucketNameFunc(bucketName)).Update(root); err != nil {
+	if err := osv.New(vulnsDir, source.ID, dataSources, osv.WithBucketNameFunc(vs.bucketName)).Update(root); err != nil {
 		return eb.Wrapf(err, "failed to update Seal vulnerability data")
 	}
 
 	return nil
 }
 
-func bucketName(ecosystem osv.Ecosystem, _ string) string {
-	return fmt.Sprintf(platformFormat, ecosystem.Name, ecosystem.Version)
+func (VulnSrc) bucketName(ecosystem osv.Ecosystem, _ string) string {
+	return bucketName(ecosystem.Suffix)
+}
+
+// bucketName removes extra spaces and change `:` to space
+// - "Alpine" -> "seal alpine"
+// - "Red Hat:9" -> "seal redhat 9"
+func bucketName(suffix string) string {
+	suffix = strings.ReplaceAll(strings.ToLower(suffix), " ", "")
+	baseOS, version, ok := strings.Cut(suffix, ":")
+	if ok {
+		baseOS = baseOS + " " + version
+	}
+	return fmt.Sprintf(platformFormat, baseOS)
 }
 
 type VulnSrcGetter struct {
@@ -88,7 +105,7 @@ func NewVulnSrcGetter(baseOS types.SourceID) VulnSrcGetter {
 func (vs VulnSrcGetter) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In("seal").With("base_os", vs.baseOS).With("os_version", params.Release).With("package_name", params.PkgName)
 
-	sealOSVer := fmt.Sprintf(platformFormat, vs.baseOS, params.Release)
+	sealOSVer := bucketName(string(vs.baseOS))
 	advs, err := vs.dbc.GetAdvisories(sealOSVer, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories for base OS")
