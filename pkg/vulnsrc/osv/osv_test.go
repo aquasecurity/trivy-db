@@ -126,8 +126,10 @@ func TestVulnSrc_Update(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dataSources := map[types.Ecosystem]types.DataSource{
-				vulnerability.Pip: {
+			dataSources := map[osv.Ecosystem]types.DataSource{
+				osv.Ecosystem{
+					Name: vulnerability.Pip,
+				}: {
 					ID:   vulnerability.OSV,
 					Name: "Python Packaging Advisory Database",
 					URL:  "https://github.com/pypa/advisory-db",
