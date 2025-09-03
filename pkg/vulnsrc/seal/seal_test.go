@@ -184,14 +184,13 @@ func TestVulnSrc_Get(t *testing.T) {
 		wantErr  string
 	}{
 		{
-			name:   "only Seal debian advisories",
+			name:   "Seal debian advisories",
 			baseOS: vulnerability.Debian,
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/data-source.yaml",
 			},
 			args: args{
-				osVer:   "12",
 				pkgName: "seal-wget",
 			},
 			want: []types.Advisory{
@@ -200,46 +199,22 @@ func TestVulnSrc_Get(t *testing.T) {
 					VulnerableVersions: []string{">=1.21-1+deb11u1, <1.21-1+deb11u1+sp999"},
 					PatchedVersions:    []string{"1.21-1+deb11u1+sp999"},
 					DataSource: &types.DataSource{
-						ID:   vulnerability.Seal,
-						Name: "Seal Security Database",
-						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+						ID:     vulnerability.Seal,
+						BaseID: vulnerability.Debian,
+						Name:   "Seal Security Database",
+						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
 					},
 				},
 			},
 		},
 		{
-			name:   "only Seal ubuntu advisories",
-			baseOS: vulnerability.Ubuntu,
-			fixtures: []string{
-				"testdata/fixtures/happy.yaml",
-				"testdata/fixtures/data-source.yaml",
-			},
-			args: args{
-				osVer:   "22.04",
-				pkgName: "seal-wget",
-			},
-			want: []types.Advisory{
-				{
-					VulnerabilityID:    "CVE-2024-10524",
-					VulnerableVersions: []string{">=1.21-1+deb11u1, <1.21-1+deb11u1+sp999"},
-					PatchedVersions:    []string{"1.21-1+deb11u1+sp999"},
-					DataSource: &types.DataSource{
-						ID:   vulnerability.Seal,
-						Name: "Seal Security Database",
-						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
-					},
-				},
-			},
-		},
-		{
-			name:   "only Seal alpine advisories",
+			name:   "Seal alpine advisories",
 			baseOS: vulnerability.Alpine,
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/data-source.yaml",
 			},
 			args: args{
-				osVer:   "3.21",
 				pkgName: "seal-zlib",
 			},
 			want: []types.Advisory{
@@ -248,22 +223,23 @@ func TestVulnSrc_Get(t *testing.T) {
 					VulnerableVersions: []string{">=1.2.8-r2, <1.2.8-r25341999"},
 					PatchedVersions:    []string{"1.2.8-r25341999"},
 					DataSource: &types.DataSource{
-						ID:   vulnerability.Seal,
-						Name: "Seal Security Database",
-						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+						ID:     vulnerability.Seal,
+						BaseID: vulnerability.Alpine,
+						Name:   "Seal Security Database",
+						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
 					},
 				},
 			},
 		},
 		{
-			name:   "only Seal redhat advisories",
+			name:   "Seal redhat advisories",
 			baseOS: vulnerability.RedHat,
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/data-source.yaml",
 			},
 			args: args{
-				osVer:   "9",
+				osVer:   "6",
 				pkgName: "seal-wget",
 			},
 			want: []types.Advisory{
@@ -272,81 +248,10 @@ func TestVulnSrc_Get(t *testing.T) {
 					VulnerableVersions: []string{">=1.12-10.el6, <1.12-10.el6+sp999"},
 					PatchedVersions:    []string{"1.12-10.el6+sp999"},
 					DataSource: &types.DataSource{
-						ID:   vulnerability.Seal,
-						Name: "Seal Security Database",
-						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
-					},
-				},
-			},
-		},
-		{
-			name:   "only Seal centos advisories",
-			baseOS: vulnerability.CentOS,
-			fixtures: []string{
-				"testdata/fixtures/happy.yaml",
-				"testdata/fixtures/data-source.yaml",
-			},
-			args: args{
-				osVer:   "8",
-				pkgName: "seal-wget",
-			},
-			want: []types.Advisory{
-				{
-					VulnerabilityID:    "CVE-2024-10524",
-					VulnerableVersions: []string{">=1.12-10.el6, <1.12-10.el6+sp999"},
-					PatchedVersions:    []string{"1.12-10.el6+sp999"},
-					DataSource: &types.DataSource{
-						ID:   vulnerability.Seal,
-						Name: "Seal Security Database",
-						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
-					},
-				},
-			},
-		},
-		{
-			name:   "only Seal oracle linux advisories",
-			baseOS: types.SourceID("oracle-linux"),
-			fixtures: []string{
-				"testdata/fixtures/happy.yaml",
-				"testdata/fixtures/data-source.yaml",
-			},
-			args: args{
-				osVer:   "8",
-				pkgName: "seal-wget",
-			},
-			want: []types.Advisory{
-				{
-					VulnerabilityID:    "CVE-2024-10524",
-					VulnerableVersions: []string{">=1.12-10.el6, <1.12-10.el6+sp999"},
-					PatchedVersions:    []string{"1.12-10.el6+sp999"},
-					DataSource: &types.DataSource{
-						ID:   vulnerability.Seal,
-						Name: "Seal Security Database",
-						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
-					},
-				},
-			},
-		},
-		{
-			name:   "only Seal cbl-mariner advisories",
-			baseOS: vulnerability.CBLMariner,
-			fixtures: []string{
-				"testdata/fixtures/happy.yaml",
-				"testdata/fixtures/data-source.yaml",
-			},
-			args: args{
-				osVer:   "2.0",
-				pkgName: "seal-wget",
-			},
-			want: []types.Advisory{
-				{
-					VulnerabilityID:    "CVE-2024-10524",
-					VulnerableVersions: []string{">=1.12-10.el6, <1.12-10.el6+sp999"},
-					PatchedVersions:    []string{"1.12-10.el6+sp999"},
-					DataSource: &types.DataSource{
-						ID:   vulnerability.Seal,
-						Name: "Seal Security Database",
-						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+						ID:     vulnerability.Seal,
+						BaseID: vulnerability.RedHat,
+						Name:   "Seal Security Database",
+						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
 					},
 				},
 			},
@@ -368,7 +273,6 @@ func TestVulnSrc_Get(t *testing.T) {
 			baseOS:   vulnerability.Debian,
 			fixtures: []string{"testdata/fixtures/broken.yaml"},
 			args: args{
-				osVer:   "12",
 				pkgName: "seal-wget",
 			},
 			wantErr: "failed to get advisories for base OS",

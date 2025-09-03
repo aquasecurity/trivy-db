@@ -73,16 +73,13 @@ func (vs VulnSrc) Update(root string) error {
 }
 
 func (VulnSrc) bucketName(ecosystem osv.Ecosystem, _ string) string {
-	return bucketName(ecosystem.Suffix)
+	suffix := strings.ReplaceAll(strings.ToLower(ecosystem.Suffix), " ", "")
+	baseOS, version, _ := strings.Cut(suffix, ":")
+	return bucketName(baseOS, version)
 }
 
-// bucketName removes extra spaces and change `:` to space
-// - "Alpine" -> "seal alpine"
-// - "Red Hat:9" -> "seal redhat 9"
-func bucketName(suffix string) string {
-	suffix = strings.ReplaceAll(strings.ToLower(suffix), " ", "")
-	baseOS, version, ok := strings.Cut(suffix, ":")
-	if ok {
+func bucketName(baseOS, version string) string {
+	if version != "" {
 		baseOS = baseOS + " " + version
 	}
 	return fmt.Sprintf(platformFormat, baseOS)
@@ -105,7 +102,7 @@ func NewVulnSrcGetter(baseOS types.SourceID) VulnSrcGetter {
 func (vs VulnSrcGetter) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In("seal").With("base_os", vs.baseOS).With("os_version", params.Release).With("package_name", params.PkgName)
 
-	sealOSVer := bucketName(string(vs.baseOS))
+	sealOSVer := bucketName(string(vs.baseOS), params.Release)
 	advs, err := vs.dbc.GetAdvisories(sealOSVer, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories for base OS")

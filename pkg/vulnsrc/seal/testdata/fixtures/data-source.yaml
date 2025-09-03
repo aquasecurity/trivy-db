@@ -1,37 +1,20 @@
 - bucket: data-source
   pairs:
-    - key: seal debian 12
+    - key: seal debian
       value:
         ID: "seal"
+        BaseID: "debian"
         Name: "Seal Security Database"
         URL: "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip"
-    - key: seal ubuntu 22.04
+    - key: seal alpine
       value:
         ID: "seal"
+        BaseID: "alpine"
         Name: "Seal Security Database"
         URL: "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip"
-    - key: seal alpine 3.21
+    - key: seal redhat 6
       value:
         ID: "seal"
-        Name: "Seal Security Database"
-        URL: "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip"
-    - key: seal redhat 9
-      value:
-        ID: "seal"
-        Name: "Seal Security Database"
-        URL: "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip"
-    - key: seal centos 8
-      value:
-        ID: "seal"
-        Name: "Seal Security Database"
-        URL: "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip"
-    - key: seal oracle-linux 8
-      value:
-        ID: "seal"
-        Name: "Seal Security Database"
-        URL: "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip"
-    - key: seal cbl-mariner 2.0
-      value:
-        ID: "seal"
+        BaseID: "redhat"
         Name: "Seal Security Database"
         URL: "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip"
