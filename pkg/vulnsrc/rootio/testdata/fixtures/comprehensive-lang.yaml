@@ -1,0 +1,36 @@
+- bucket: data-source
+  pairs:
+    - key: root.io pip
+      value:
+        ID: rootio
+        Name: Root.io Security Patches (pip)
+        URL: https://api.root.io/external/patch_feed
+    - key: root.io go
+      value:
+        ID: rootio
+        Name: Root.io Security Patches (go)
+        URL: https://api.root.io/external/patch_feed
+
+- bucket: root.io pip
+  pairs:
+    - bucket: cryptography
+      pairs:
+        - key: CVE-2024-CRYPTO-001
+          value:
+            VulnerableVersions:
+              - ">=41.0.0,<41.0.5"
+              - ">=40.0.0,<40.0.2"
+            PatchedVersions:
+              - "41.0.5.root.io"
+              - "40.0.2.root.io"
+
+- bucket: root.io go
+  pairs:
+    - bucket: golang.org/x/crypto/ssh
+      pairs:
+        - key: CVE-2024-SSH-001
+          value:
+            VulnerableVersions:
+              - "<0.17.0"
+            PatchedVersions:
+              - "0.17.0.root.io"

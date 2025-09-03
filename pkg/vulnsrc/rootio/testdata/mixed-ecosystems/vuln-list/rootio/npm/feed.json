@@ -1,0 +1,14 @@
+{
+  "ecosystem": "npm",
+  "packages": [
+    {
+      "name": "react",
+      "cves": {
+        "CVE-2024-VALID-001": {
+          "vulnerable_ranges": ["<18.2.0"],
+          "fixed_versions": ["18.2.0.root.io"]
+        }
+      }
+    }
+  ]
+}

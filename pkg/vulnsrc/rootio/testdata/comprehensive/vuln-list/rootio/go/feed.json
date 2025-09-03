@@ -1,0 +1,14 @@
+{
+  "ecosystem": "go",
+  "packages": [
+    {
+      "name": "github.com/gin-gonic/gin",
+      "cves": {
+        "CVE-2024-GO-001": {
+          "vulnerable_ranges": ["<1.9.1"],
+          "fixed_versions": ["1.9.1.root.io"]
+        }
+      }
+    }
+  ]
+}

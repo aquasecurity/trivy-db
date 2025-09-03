@@ -1,0 +1,14 @@
+{
+  "ecosystem": "pip",
+  "packages": [
+    {
+      "name": "requests",
+      "cves": {
+        "CVE-2024-PY-001": {
+          "vulnerable_ranges": ["<2.31.0"],
+          "fixed_versions": ["2.31.0.root.io"]
+        }
+      }
+    }
+  ]
+}
