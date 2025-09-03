@@ -1,0 +1,34 @@
+- bucket: data-source
+  pairs:
+    - key: root.io npm
+      value:
+        ID: rootio
+        Name: Root.io Security Patches (npm)
+        URL: https://api.root.io/external/patch_feed
+    - key: root.io pip
+      value:
+        ID: rootio
+        Name: Root.io Security Patches (pip)
+        URL: https://api.root.io/external/patch_feed
+
+- bucket: root.io npm
+  pairs:
+    - bucket: lodash
+      pairs:
+        - key: CVE-2024-NPM-LODASH
+          value:
+            VulnerableVersions:
+              - "<4.17.21"
+            PatchedVersions:
+              - "4.17.21.root.io"
+
+- bucket: root.io pip
+  pairs:
+    - bucket: lodash
+      pairs:
+        - key: CVE-2024-PY-LODASH
+          value:
+            VulnerableVersions:
+              - "<1.0.0"
+            PatchedVersions:
+              - "1.0.0.root.io"

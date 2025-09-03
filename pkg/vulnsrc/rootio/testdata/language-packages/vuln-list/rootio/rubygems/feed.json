@@ -1,0 +1,14 @@
+{
+  "ecosystem": "rubygems",
+  "packages": [
+    {
+      "name": "rails",
+      "cves": {
+        "CVE-2024-9999": {
+          "vulnerable_ranges": ["<7.0.0"],
+          "fixed_versions": ["7.0.0.root.io"]
+        }
+      }
+    }
+  ]
+}

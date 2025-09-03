@@ -1,0 +1,14 @@
+{
+  "ecosystem": "npm",
+  "packages": [
+    {
+      "name": "express",
+      "cves": {
+        "CVE-2024-5678": {
+          "vulnerable_ranges": ["<4.18.0"],
+          "fixed_versions": ["4.18.0.root.io"]
+        }
+      }
+    }
+  ]
+}

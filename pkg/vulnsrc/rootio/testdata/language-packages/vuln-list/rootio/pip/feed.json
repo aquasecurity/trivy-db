@@ -1,0 +1,14 @@
+{
+  "ecosystem": "pip",
+  "packages": [
+    {
+      "name": "django",
+      "cves": {
+        "CVE-2024-1234": {
+          "vulnerable_ranges": ["<4.0.2"],
+          "fixed_versions": ["4.0.2.root.io"]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+- bucket: data-source
+  pairs:
+    - key: root.io pip
+      value:
+        ID: rootio
+        Name: Root.io Security Patches (pip)
+        URL: https://api.root.io/external/patch_feed
+    - key: root.io npm
+      value:
+        ID: rootio
+        Name: Root.io Security Patches (npm)
+        URL: https://api.root.io/external/patch_feed
+    - key: root.io rubygems
+      value:
+        ID: rootio
+        Name: Root.io Security Patches (rubygems)
+        URL: https://api.root.io/external/patch_feed
+
+- bucket: root.io pip
+  pairs:
+    - bucket: django
+      pairs:
+        - key: CVE-2024-1234
+          value:
+            VulnerableVersions:
+              - "<4.0.2"
+            PatchedVersions:
+              - "4.0.2.root.io"
+
+- bucket: root.io npm
+  pairs:
+    - bucket: express
+      pairs:
+        - key: CVE-2024-5678
+          value:
+            VulnerableVersions:
+              - "<4.18.0"
+            PatchedVersions:
+              - "4.18.0.root.io"
+
+- bucket: root.io rubygems
+  pairs:
+    - bucket: rails
+      pairs:
+        - key: CVE-2024-9999
+          value:
+            VulnerableVersions:
+              - "<7.0.0"
+            PatchedVersions:
+              - "7.0.0.root.io"
