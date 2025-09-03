@@ -12,9 +12,10 @@ const (
 )
 
 type Ecosystem struct {
-	Name    types.Ecosystem `json:"name"`
-	Version string          `json:"version"`
+	Name   types.Ecosystem `json:"name"`
+	Suffix string          `json:"suffix,omitempty"` // Any ecosystems may have a suffix, e.g. "Seal:Red Hat:6"/"Seal:Debian"
 }
+
 type RangeType string
 
 type Package struct {
