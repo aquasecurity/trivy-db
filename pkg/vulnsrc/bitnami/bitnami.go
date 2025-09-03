@@ -15,8 +15,10 @@ import (
 var bitnamiDir = filepath.Join("bitnami-vulndb", "data")
 
 func NewVulnSrc() osv.OSV {
-	sources := map[types.Ecosystem]types.DataSource{
-		vulnerability.Bitnami: {
+	sources := map[osv.Ecosystem]types.DataSource{
+		osv.Ecosystem{
+			Name: vulnerability.Bitnami,
+		}: {
 			ID:   vulnerability.BitnamiVulndb,
 			Name: "Bitnami Vulnerability Database",
 			URL:  "https://github.com/bitnami/vulndb",

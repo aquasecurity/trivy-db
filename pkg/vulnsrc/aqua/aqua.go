@@ -25,9 +25,12 @@ func (VulnSrc) Name() types.SourceID {
 }
 
 func (VulnSrc) Update(root string) error {
-	dataSources := map[types.Ecosystem]types.DataSource{}
+	dataSources := map[osv.Ecosystem]types.DataSource{}
 	for _, ecosystem := range vulnerability.Ecosystems {
-		dataSources[ecosystem] = types.DataSource{
+		osvEcosystem := osv.Ecosystem{
+			Name: ecosystem,
+		}
+		dataSources[osvEcosystem] = types.DataSource{
 			ID:   sourceID,
 			Name: "The Aqua Security Vulnerability Database",
 			URL:  "https://github.com/aquasecurity/vuln-list-aqua",

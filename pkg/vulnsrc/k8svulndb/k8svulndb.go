@@ -13,8 +13,10 @@ var (
 )
 
 func NewVulnSrc() osv.OSV {
-	sources := map[types.Ecosystem]types.DataSource{
-		vulnerability.Kubernetes: {
+	sources := map[osv.Ecosystem]types.DataSource{
+		osv.Ecosystem{
+			Name: vulnerability.Kubernetes,
+		}: {
 			ID:   vulnerability.K8sVulnDB,
 			Name: "Official Kubernetes CVE Feed",
 			URL:  "https://kubernetes.io/docs/reference/issues-security/official-cve-feed/index.json",

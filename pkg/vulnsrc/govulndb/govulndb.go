@@ -31,8 +31,10 @@ func (VulnDB) Name() types.SourceID {
 }
 
 func (VulnDB) Update(root string) error {
-	dataSources := map[types.Ecosystem]types.DataSource{
-		vulnerability.Go: {
+	dataSources := map[osv.Ecosystem]types.DataSource{
+		osv.Ecosystem{
+			Name: vulnerability.Go,
+		}: {
 			ID:   sourceID,
 			Name: "The Go Vulnerability Database",
 			URL:  "https://pkg.go.dev/vuln/",

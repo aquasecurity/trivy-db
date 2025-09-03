@@ -49,7 +49,7 @@ type OSV struct {
 	dir            string
 	dbc            db.Operation
 	sourceID       types.SourceID
-	dataSources    map[types.Ecosystem]types.DataSource
+	dataSources    map[Ecosystem]types.DataSource
 	bucketNameFunc BucketNameFunc
 	transformer    Transformer
 }
@@ -95,7 +95,7 @@ func WithBucketNameFunc(f BucketNameFunc) Option {
 	}
 }
 
-func New(dir string, sourceID types.SourceID, dataSources map[types.Ecosystem]types.DataSource, opts ...Option) OSV {
+func New(dir string, sourceID types.SourceID, dataSources map[Ecosystem]types.DataSource, opts ...Option) OSV {
 	o := OSV{
 		dir:            dir,
 		dbc:            db.Config{},
@@ -185,7 +185,7 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 	}
 
 	for _, adv := range advisories {
-		dataSource, ok := o.dataSources[adv.Ecosystem.Name]
+		dataSource, ok := o.dataSources[adv.Ecosystem]
 		if !ok {
 			continue
 		}
@@ -415,10 +415,10 @@ func convertEcosystem(eco string) Ecosystem {
 		Name: vulnerability.Unknown,
 	}
 
-	// Trim Ecosystem field to name and version/releas/etc (e.g. "alpine:3.12" => "alpine" + "3.12")
+	// Trim Ecosystem field to name and suffix (e.g. "alpine:3.12" => "alpine" + "3.12")
 	if n, v, ok := strings.Cut(strings.ToLower(eco), ":"); ok && n != "purl-type" { // GHSA may use a non-standard format for the "ecosystem" field with the "purl-types" prefix.
 		name = n
-		ecosystem.Version = v
+		ecosystem.Suffix = v
 	}
 
 	// cf. https://ossf.github.io/osv-schema/#affectedpackage-field
@@ -451,20 +451,8 @@ func convertEcosystem(eco string) Ecosystem {
 		ecosystem.Name = vulnerability.Bitnami
 	case "kubernetes":
 		ecosystem.Name = vulnerability.Kubernetes
-	case "alpine":
-		ecosystem.Name = vulnerability.AlpineEcosystem
-	case "centos":
-		ecosystem.Name = vulnerability.CentOSEcosystem
-	case "cbl-mariner":
-		ecosystem.Name = vulnerability.CBLMarinerEcosystem
-	case "debian":
-		ecosystem.Name = vulnerability.DebianEcosystem
-	case "oracle linux":
-		ecosystem.Name = vulnerability.OracleLinuxEcosystem
-	case "redhat": // TODO change to "red hat"
-		ecosystem.Name = vulnerability.RedHatEcosystem
-	case "ubuntu":
-		ecosystem.Name = vulnerability.UbuntuEcosystem
+	case "seal":
+		ecosystem.Name = vulnerability.SealEcosystemName
 	}
 	return ecosystem
 }

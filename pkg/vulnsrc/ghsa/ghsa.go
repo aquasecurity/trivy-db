@@ -69,14 +69,17 @@ func (GHSA) Name() types.SourceID {
 
 func (GHSA) Update(root string) error {
 	eb := oops.In("ghsa").With("root_dir", root)
-	dataSources := map[types.Ecosystem]types.DataSource{}
+	dataSources := map[osv.Ecosystem]types.DataSource{}
 	for ecosystem, ghsaEcosystem := range ecosystems {
 		src := types.DataSource{
 			ID:   sourceID,
 			Name: fmt.Sprintf(platformFormat, ghsaEcosystem),
 			URL:  fmt.Sprintf(urlFormat, strings.ToLower(ghsaEcosystem)),
 		}
-		dataSources[ecosystem] = src
+		osvEcosystem := osv.Ecosystem{
+			Name: ecosystem,
+		}
+		dataSources[osvEcosystem] = src
 	}
 
 	t, err := newTransformer(root)
