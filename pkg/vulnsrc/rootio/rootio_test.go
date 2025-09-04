@@ -132,7 +132,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad path - invalid JSON",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "json decode error",
+			wantErr: "failed to read feed file",
 		},
 		{
 			name: "happy path with language packages",
