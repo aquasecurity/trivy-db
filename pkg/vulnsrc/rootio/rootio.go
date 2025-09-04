@@ -24,10 +24,11 @@ import (
 )
 
 const (
-	rootioDir       = "rootio"
-	feedFileName    = "cve_feed.json"
-	platformFormat  = "root.io %s %s" // "root.io {baseOS} {version}"
-	ecosystemFormat = "root.io %s"    // "root.io {ecosystem}"
+	rootioDir        = "rootio"
+	feedFileName     = "cve_feed.json"
+	langFeedFileName = "feed.json"
+	platformFormat   = "root.io %s %s" // "root.io {baseOS} {version}"
+	ecosystemFormat  = "root.io %s"    // "root.io {ecosystem}"
 )
 
 var (
@@ -90,19 +91,24 @@ func (vs VulnSrc) Update(dir string) error {
 	return vs.updateLanguagePackages(dir)
 }
 
+// openAndParseJSON opens a JSON file and decodes it into the provided target
+func (vs VulnSrc) openAndParseJSON(filePath string, target any) error {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	return json.NewDecoder(file).Decode(target)
+}
+
 func (vs VulnSrc) updateOSPackages(dir string) error {
 	feedFilePath := filepath.Join(dir, "vuln-list", rootioDir, feedFileName)
 	eb := oops.In("rootio").With("file_path", feedFilePath)
 
-	feedFile, err := os.Open(feedFilePath)
-	if err != nil {
-		return eb.Wrapf(err, "failed to open feed file %s", feedFilePath)
-	}
-	defer feedFile.Close()
-
 	var rawFeed RawFeed
-	if err = json.NewDecoder(feedFile).Decode(&rawFeed); err != nil {
-		return eb.With("file_path", feedFilePath).Wrapf(err, "json decode error")
+	if err := vs.openAndParseJSON(feedFilePath, &rawFeed); err != nil {
+		return eb.Wrapf(err, "failed to read feed file %s", feedFilePath)
 	}
 
 	// Take rawDistroData for each base OS
@@ -159,7 +165,7 @@ func (vs VulnSrc) updateOSPackages(dir string) error {
 		}
 
 		// Save feeds for the current base OS
-		if err = vs.save(baseOS, feeds); err != nil {
+		if err := vs.save(baseOS, feeds, types.SourceID(baseOS)); err != nil {
 			return eb.Wrapf(err, "save error")
 		}
 	}
@@ -170,25 +176,18 @@ func (vs VulnSrc) updateOSPackages(dir string) error {
 func (vs VulnSrc) updateLanguagePackages(dir string) error {
 	// Process each supported ecosystem
 	for _, ecosystem := range vs.supportedEcosystems {
-		feedFilePath := filepath.Join(dir, "vuln-list", rootioDir, string(ecosystem), "feed.json")
+		feedFilePath := filepath.Join(dir, "vuln-list", rootioDir, string(ecosystem), langFeedFileName)
 		eb := oops.In("rootio").With("ecosystem", ecosystem).With("file_path", feedFilePath)
 
-		feedFile, err := os.Open(feedFilePath)
-		if err != nil {
+		var rawLangFeed RawLanguageFeed
+		if err := vs.openAndParseJSON(feedFilePath, &rawLangFeed); err != nil {
 			// Language feeds might not exist yet, skip if file not found
 			if os.IsNotExist(err) {
 				vs.logger.Debug("Language feed not found", "ecosystem", ecosystem)
 				continue
 			}
-			return eb.Wrapf(err, "failed to open feed file %s", feedFilePath)
+			return eb.Wrapf(err, "failed to read feed file %s", feedFilePath)
 		}
-
-		var rawLangFeed RawLanguageFeed
-		if err = json.NewDecoder(feedFile).Decode(&rawLangFeed); err != nil {
-			feedFile.Close()
-			return eb.With("file_path", feedFilePath).Wrapf(err, "json decode error")
-		}
-		feedFile.Close()
 
 		// Convert to internal format
 		platformName := fmt.Sprintf(ecosystemFormat, ecosystem)
@@ -209,7 +208,7 @@ func (vs VulnSrc) updateLanguagePackages(dir string) error {
 		}
 
 		// Save feeds for the current ecosystem
-		if err = vs.saveEcosystem(ecosystem, feeds); err != nil {
+		if err := vs.save(string(ecosystem), feeds, ""); err != nil {
 			return eb.Wrapf(err, "save error")
 		}
 	}
@@ -217,39 +216,20 @@ func (vs VulnSrc) updateLanguagePackages(dir string) error {
 	return nil
 }
 
-func (vs VulnSrc) save(baseOS string, feeds map[string][]Feed) error {
-	vs.logger.Info("Saving Root.io DB", "base_os", baseOS)
+func (vs VulnSrc) save(name string, feeds map[string][]Feed, baseID types.SourceID) error {
+	if baseID != "" {
+		vs.logger.Info("Saving Root.io DB", "base_os", name)
+	} else {
+		vs.logger.Info("Saving Root.io Language DB", "ecosystem", name)
+	}
+
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for platform, platformFeeds := range feeds {
 			dataSource := types.DataSource{
 				ID:     source.ID,
-				Name:   source.Name + fmt.Sprintf(" (%s)", baseOS),
+				Name:   source.Name + fmt.Sprintf(" (%s)", name),
 				URL:    source.URL,
-				BaseID: types.SourceID(baseOS),
-			}
-			if err := vs.dbc.PutDataSource(tx, platform, dataSource); err != nil {
-				return oops.Wrapf(err, "failed to put data source")
-			}
-			if err := vs.commit(tx, platform, platformFeeds); err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		return oops.Wrapf(err, "batch update error")
-	}
-	return nil
-}
-
-func (vs VulnSrc) saveEcosystem(ecosystem types.Ecosystem, feeds map[string][]Feed) error {
-	vs.logger.Info("Saving Root.io Language DB", "ecosystem", ecosystem)
-	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		for platform, platformFeeds := range feeds {
-			dataSource := types.DataSource{
-				ID:   source.ID,
-				Name: source.Name + fmt.Sprintf(" (%s)", ecosystem),
-				URL:  source.URL,
+				BaseID: baseID,
 			}
 			if err := vs.dbc.PutDataSource(tx, platform, dataSource); err != nil {
 				return oops.Wrapf(err, "failed to put data source")
