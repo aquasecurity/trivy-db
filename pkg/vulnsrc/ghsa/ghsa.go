@@ -138,6 +138,19 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 				advisories[i].Ecosystem = "" // An empty ecosystem is skipped later
 			}
 		}
+
+		// For NuGet, additionally store the advisory with a lowercased package name
+		// to support case-insensitive lookups while keeping the original case too.
+		// cf. https://github.com/aquasecurity/trivy/issues/9451
+		// This is for backward compatibility with consumers that use old Trivy.
+		// TODO: drop storing the original-case entry and keep only the lowercase key once downstream users have migrated.
+		if adv.Ecosystem == vulnerability.NuGet {
+			if lower := strings.ToLower(adv.PkgName); lower != adv.PkgName {
+				dup := advisories[i]
+				dup.PkgName = lower
+				advisories = append(advisories, dup)
+			}
+		}
 	}
 
 	return advisories, nil
