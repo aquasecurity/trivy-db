@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/samber/lo"
 	"github.com/samber/oops"
 	"golang.org/x/tools/go/packages"
 
@@ -116,6 +117,10 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 		return nil, oops.Wrapf(err, "json unmarshal error")
 	}
 
+	originPkgNames := lo.SliceToMap(entry.Affected, func(affected osv.Affected) (string, string) {
+		return strings.ToLower(affected.Package.Name), affected.Package.Name
+	})
+
 	severity := convertSeverity(specific.Severity)
 	for i, adv := range advisories {
 		// Fill severity from GHSA
@@ -139,15 +144,13 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 			}
 		}
 
-		// For NuGet, additionally store the advisory with a lowercased package name
-		// to support case-insensitive lookups while keeping the original case too.
-		// cf. https://github.com/aquasecurity/trivy/issues/9451
-		// This is for backward compatibility with consumers that use old Trivy.
+		// NuGet is case-insensitive, so we store advisories in lowercase.
+		// However, for backward compatibility, we also keep advisories with the original package name.
 		// TODO: drop storing the original-case entry and keep only the lowercase key once downstream users have migrated.
 		if adv.Ecosystem == vulnerability.NuGet {
-			if lower := strings.ToLower(adv.PkgName); lower != adv.PkgName {
+			if originPkgName, ok := originPkgNames[adv.PkgName]; ok && originPkgName != adv.PkgName {
 				dup := advisories[i]
-				dup.PkgName = lower
+				dup.PkgName = originPkgName
 				advisories = append(advisories, dup)
 			}
 		}
