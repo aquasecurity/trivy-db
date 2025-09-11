@@ -55,7 +55,10 @@ func (l langBucket) DataSource() types.DataSource {
 
 // newOS creates a bucket for OS ecosystems
 func newOS(ecoType ecosystem.Type, version string) Bucket {
-	return osBucket{ecosystem: ecoType, version: version}
+	return osBucket{
+		ecosystem: ecoType,
+		version:   version,
+	}
 }
 
 // NewAlpine creates a bucket for Alpine Linux
@@ -66,7 +69,13 @@ func NewRedHat(version string) Bucket { return newOS(ecosystem.RedHat, version) 
 
 // newLang creates a bucket for language ecosystems
 func newLang(ecoType ecosystem.Type, dataSource types.DataSource) Bucket {
-	return langBucket{ecosystem: ecoType, dataSource: dataSource}
+	if dataSource.ID == "" {
+		return nil
+	}
+	return langBucket{
+		ecosystem:  ecoType,
+		dataSource: dataSource,
+	}
 }
 
 // NewGo creates a bucket for Go ecosystem with data source
@@ -106,11 +115,14 @@ func NewPub(dataSource types.DataSource) Bucket { return newLang(ecosystem.Pub, 
 func NewSwift(dataSource types.DataSource) Bucket { return newLang(ecosystem.Swift, dataSource) }
 
 // NewCocoapods creates a bucket for Cocoapods ecosystem with data source
-func NewCocoapods(dataSource types.DataSource) Bucket { return newLang(ecosystem.Cocoapods, dataSource) }
+func NewCocoapods(dataSource types.DataSource) Bucket {
+	return newLang(ecosystem.Cocoapods, dataSource)
+}
 
 // NewBitnami creates a bucket for Bitnami ecosystem with data source
 func NewBitnami(dataSource types.DataSource) Bucket { return newLang(ecosystem.Bitnami, dataSource) }
 
 // NewKubernetes creates a bucket for Kubernetes ecosystem with data source
-func NewKubernetes(dataSource types.DataSource) Bucket { return newLang(ecosystem.Kubernetes, dataSource) }
-
+func NewKubernetes(dataSource types.DataSource) Bucket {
+	return newLang(ecosystem.Kubernetes, dataSource)
+}

@@ -214,8 +214,8 @@ func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) (
 
 	uniqAdvisories := map[string]Advisory{}
 	for _, affected := range entry.Affected {
-		bkt, ecoType := o.convertEcosystem(affected.Package.Ecosystem)
-		if ecoType == ecosystem.Unknown || bkt == nil {
+		bkt := o.convertEcosystem(affected.Package.Ecosystem)
+		if lo.IsNil(bkt) { // `bkt == nil` does not work here because of the interface type
 			continue
 		}
 		pkgName := vulnerability.NormalizePkgName(bkt.Ecosystem(), affected.Package.Name)
@@ -380,102 +380,38 @@ func parseSeverity(severities []Severity) (string, float64, error) {
 	return "", 0, nil
 }
 
-func (o OSV) convertEcosystem(raw Ecosystem) (bucket.Bucket, ecosystem.Type) {
-	rawStr := strings.ToLower(string(raw))
-
-	// OS ecosystems (version suffix handling)
-	if strings.HasPrefix(rawStr, "alpine") {
-		parts := strings.Split(string(raw), ":")
-		version := ""
-		if len(parts) > 1 {
-			version = parts[1]
-		}
-		return bucket.NewAlpine(version), ecosystem.Alpine
-	}
-	if strings.HasPrefix(rawStr, "debian") {
-		parts := strings.Split(string(raw), ":")
-		version := ""
-		if len(parts) > 1 {
-			version = parts[1]
-		}
-		return bucket.NewRedHat(version), ecosystem.Debian // TODO: Add NewDebian
-	}
-	if strings.HasPrefix(rawStr, "ubuntu") {
-		parts := strings.Split(string(raw), ":")
-		version := ""
-		if len(parts) > 1 {
-			version = parts[1]
-		}
-		return bucket.NewRedHat(version), ecosystem.Ubuntu // TODO: Add NewUbuntu
-	}
-
-	// Language ecosystems (require dataSource)
-	var ecoID ecosystem.Type
-	switch rawStr {
-	case "go":
-		ecoID = ecosystem.Go
-	case "npm":
-		ecoID = ecosystem.Npm
-	case "pypi":
-		ecoID = ecosystem.Pip
-	case "rubygems":
-		ecoID = ecosystem.RubyGems
-	case "crates.io":
-		ecoID = ecosystem.Cargo
-	case "packagist":
-		ecoID = ecosystem.Composer
-	case "maven":
-		ecoID = ecosystem.Maven
-	case "nuget":
-		ecoID = ecosystem.NuGet
-	case "hex":
-		ecoID = ecosystem.Erlang
-	case "pub":
-		ecoID = ecosystem.Pub
-	case "swifturl", "purl-type:swift":
-		// GHSA still uses "purl-type:swift" for Swift advisories.
-		ecoID = ecosystem.Swift
-	case "bitnami":
-		ecoID = ecosystem.Bitnami
-	case "kubernetes":
-		ecoID = ecosystem.Kubernetes
+func (o OSV) convertEcosystem(raw Ecosystem) bucket.Bucket {
+	eco, _, _ := strings.Cut(string(raw), ":")
+	switch strings.ToLower(eco) {
+	case ecosystemGo:
+		return bucket.NewGo(o.dataSources[ecosystem.Go])
+	case ecosystemNpm:
+		return bucket.NewNpm(o.dataSources[ecosystem.Npm])
+	case ecosystemPyPI:
+		return bucket.NewPyPI(o.dataSources[ecosystem.Pip])
+	case ecosystemRubygems:
+		return bucket.NewRubyGems(o.dataSources[ecosystem.RubyGems])
+	case ecosystemCrates:
+		return bucket.NewCargo(o.dataSources[ecosystem.Cargo])
+	case ecosystemPackagist:
+		return bucket.NewComposer(o.dataSources[ecosystem.Composer])
+	case ecosystemMaven:
+		return bucket.NewMaven(o.dataSources[ecosystem.Maven])
+	case ecosystemNuGet:
+		return bucket.NewNuGet(o.dataSources[ecosystem.NuGet])
+	case ecosystemHex:
+		return bucket.NewErlang(o.dataSources[ecosystem.Erlang])
+	case ecosystemPub:
+		return bucket.NewPub(o.dataSources[ecosystem.Pub])
+	case ecosystemSwiftURL, ecosystemSwiftPURL:
+		return bucket.NewSwift(o.dataSources[ecosystem.Swift])
+	case ecosystemBitnami:
+		return bucket.NewBitnami(o.dataSources[ecosystem.Bitnami])
+	case ecosystemKubernetes:
+		return bucket.NewKubernetes(o.dataSources[ecosystem.Kubernetes])
 	default:
-		return nil, ecosystem.Unknown // Return nil bucket for unknown ecosystems
+		return nil
 	}
-
-	// For language ecosystems, find dataSource and create appropriate bucket
-	if dataSource, ok := o.dataSources[ecoID]; ok {
-		switch ecoID {
-		case ecosystem.Go:
-			return bucket.NewGo(dataSource), ecosystem.Go
-		case ecosystem.Npm:
-			return bucket.NewNpm(dataSource), ecosystem.Npm
-		case ecosystem.Pip:
-			return bucket.NewPyPI(dataSource), ecosystem.Pip
-		case ecosystem.RubyGems:
-			return bucket.NewRubyGems(dataSource), ecosystem.RubyGems
-		case ecosystem.Cargo:
-			return bucket.NewCargo(dataSource), ecosystem.Cargo
-		case ecosystem.Composer:
-			return bucket.NewComposer(dataSource), ecosystem.Composer
-		case ecosystem.Maven:
-			return bucket.NewMaven(dataSource), ecosystem.Maven
-		case ecosystem.NuGet:
-			return bucket.NewNuGet(dataSource), ecosystem.NuGet
-		case ecosystem.Erlang:
-			return bucket.NewErlang(dataSource), ecosystem.Erlang
-		case ecosystem.Pub:
-			return bucket.NewPub(dataSource), ecosystem.Pub
-		case ecosystem.Swift:
-			return bucket.NewSwift(dataSource), ecosystem.Swift
-		case ecosystem.Bitnami:
-			return bucket.NewBitnami(dataSource), ecosystem.Bitnami
-		case ecosystem.Kubernetes:
-			return bucket.NewKubernetes(dataSource), ecosystem.Kubernetes
-		}
-	}
-
-	return nil, ecosystem.Unknown
 }
 
 func versionContains(ranges []VersionRange, version string) (bool, error) {
