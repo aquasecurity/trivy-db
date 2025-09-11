@@ -403,7 +403,7 @@ func (o OSV) convertEcosystem(raw Ecosystem) bucket.Bucket {
 		return bucket.NewErlang(o.dataSources[ecosystem.Erlang])
 	case ecosystemPub:
 		return bucket.NewPub(o.dataSources[ecosystem.Pub])
-	case ecosystemSwiftURL, ecosystemSwiftPURL:
+	case ecosystemSwiftURL:
 		return bucket.NewSwift(o.dataSources[ecosystem.Swift])
 	case ecosystemBitnami:
 		return bucket.NewBitnami(o.dataSources[ecosystem.Bitnami])

@@ -22,11 +22,6 @@ const (
 	ecosystemSwiftURL   = "swifturl"
 	ecosystemBitnami    = "bitnami"
 	ecosystemKubernetes = "kubernetes"
-
-	// TODO: Remove this alias once all Swift advisories are migrated to "SwiftURL".
-	// GHSA still uses "purl-type:swift" for Swift advisories.
-	// cf. https://github.com/github/advisory-database/blob/db1cdfb553e48f18aa27d7e929d200563451391a/advisories/github-reviewed/2023/07/GHSA-jq43-q8mx-r7mq/GHSA-jq43-q8mx-r7mq.json#L20
-	ecosystemSwiftPURL = "purl-type:swift"
 )
 
 type Ecosystem string
