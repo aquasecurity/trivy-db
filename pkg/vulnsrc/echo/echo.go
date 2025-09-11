@@ -11,6 +11,7 @@ import (
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -21,12 +22,11 @@ type VulnInfo struct {
 
 type Advisories map[string]VulnInfo
 
-const (
-	distroName = "echo"
-)
+const echoDir = "echo"
 
 var (
-	source = types.DataSource{
+	platformName = bucket.NewEcho("").Name()
+	source       = types.DataSource{
 		ID:   vulnerability.Echo,
 		Name: "Echo",
 		URL:  "https://advisory.echohq.com/data.json",
@@ -48,7 +48,7 @@ func (vs VulnSrc) Name() types.SourceID {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	rootDir := filepath.Join(dir, "vuln-list", distroName)
+	rootDir := filepath.Join(dir, "vuln-list", echoDir)
 	eb := oops.In(string(source.ID)).With("root_dir", rootDir)
 
 	entries, err := os.ReadDir(rootDir)
@@ -79,7 +79,7 @@ func (vs VulnSrc) Update(dir string) error {
 
 func (vs VulnSrc) save(advisoryMap map[string]Advisories) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		if err := vs.dbc.PutDataSource(tx, distroName, source); err != nil {
+		if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
 			return oops.Wrapf(err, "failed to put data source")
 		}
 		for pkgName, advisories := range advisoryMap {
@@ -108,7 +108,7 @@ func (vs VulnSrc) saveAdvisories(tx *bolt.Tx, pkgName string, advisories Advisor
 			}
 		}
 
-		if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkgName, []string{distroName}, adv); err != nil {
+		if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkgName, []string{platformName}, adv); err != nil {
 			return oops.Wrapf(err, "failed to save advisory detail")
 		}
 
@@ -122,9 +122,9 @@ func (vs VulnSrc) saveAdvisories(tx *bolt.Tx, pkgName string, advisories Advisor
 func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In(string(source.ID))
 
-	advisories, err := vs.dbc.GetAdvisories(distroName, params.PkgName)
+	advisories, err := vs.dbc.GetAdvisories(platformName, params.PkgName)
 	if err != nil {
-		return nil, eb.With("bucket", distroName).Wrapf(err, "failed to get advisories")
+		return nil, eb.With("bucket", platformName).Wrapf(err, "failed to get advisories")
 	}
 
 	return advisories, nil

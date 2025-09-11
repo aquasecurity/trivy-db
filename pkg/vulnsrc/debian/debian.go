@@ -2,7 +2,6 @@ package debian
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -17,6 +16,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -34,9 +34,6 @@ const (
 	cveDir            = "CVE"
 	dlaDir            = "DLA"
 	dsaDir            = "DSA"
-
-	// e.g. debian 8
-	platformFormat = "debian %s"
 )
 
 var (
@@ -77,20 +74,20 @@ type VulnSrc struct {
 
 	// Hold the latest versions of each codename in Sources.json
 	// e.g. {"buster", "bash"} => "5.0-4"
-	pkgVersions map[bucket]string
+	pkgVersions map[Bucket]string
 
 	// Hold the fixed versions of vulnerabilities in sid
 	// e.g. {"putty", "CVE-2021-36367"} => "0.75-3" // fixed vulnerability
 	//      {"ndpi",  "CVE-2021-36082"} => ""       // unfixed vulnerability
-	sidFixedVersions map[bucket]string
+	sidFixedVersions map[Bucket]string
 
 	// Hold debian advisories
 	// e.g. {"buster", "connman", "CVE-2021-33833"} => {"FixedVersion": 1.36-2.1~deb10u2, ...}
-	bktAdvisories map[bucket]Advisory
+	bktAdvisories map[Bucket]Advisory
 
 	// Hold not-affected versions
 	// e.g. {"buster", "linux", "CVE-2021-3739"} => {}
-	notAffected map[bucket]struct{}
+	notAffected map[Bucket]struct{}
 }
 
 func NewVulnSrc(opts ...Option) VulnSrc {
@@ -100,10 +97,10 @@ func NewVulnSrc(opts ...Option) VulnSrc {
 		logger:           log.WithPrefix("debian"),
 		distributions:    map[string]string{},
 		details:          map[string]VulnerabilityDetail{},
-		pkgVersions:      map[bucket]string{},
-		sidFixedVersions: map[bucket]string{},
-		bktAdvisories:    map[bucket]Advisory{},
-		notAffected:      map[bucket]struct{}{},
+		pkgVersions:      map[Bucket]string{},
+		sidFixedVersions: map[Bucket]string{},
+		bktAdvisories:    map[Bucket]Advisory{},
+		notAffected:      map[Bucket]struct{}{},
 	}
 
 	for _, opt := range opts {
@@ -203,7 +200,7 @@ func (vs VulnSrc) parseCVE(dir string) error {
 				continue
 			}
 
-			bkt := bucket{
+			bkt := Bucket{
 				codeName: ann.Release, // It will be empty in the case of sid.
 				pkgName:  ann.Package,
 				vulnID:   cveID,
@@ -217,7 +214,7 @@ func (vs VulnSrc) parseCVE(dir string) error {
 
 			// For sid
 			if ann.Release == "" {
-				sidBkt := bucket{
+				sidBkt := Bucket{
 					pkgName: ann.Package,
 					vulnID:  cveID,
 				}
@@ -233,7 +230,10 @@ func (vs VulnSrc) parseCVE(dir string) error {
 
 			fixedVersion := ann.Version
 			kind := ann.Kind
-			if latestVersion, ok := vs.pkgVersions[bucket{codeName: ann.Release, pkgName: ann.Package}]; ok {
+			if latestVersion, ok := vs.pkgVersions[Bucket{
+				codeName: ann.Release,
+				pkgName:  ann.Package,
+			}]; ok {
 				// If the fixed version has not yet been released, then set the state to "unfixed".
 				if comp, err := compareVersions(latestVersion, fixedVersion); err == nil && comp < 0 {
 					fixedVersion = ""
@@ -309,7 +309,7 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 			}
 
 			for _, vulnID := range vulnIDs {
-				bkt := bucket{
+				bkt := Bucket{
 					codeName: ann.Release,
 					pkgName:  ann.Package,
 					vulnID:   vulnID,
@@ -369,7 +369,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 		cveID := sidBkt.vulnID
 
 		// Skip if the advisory is stated as "not-affected" for all distributions.
-		if _, ok := vs.notAffected[bucket{
+		if _, ok := vs.notAffected[Bucket{
 			pkgName: pkgName,
 			vulnID:  cveID,
 		}]; ok {
@@ -378,7 +378,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 
 		// Iterate all codenames, e.g. buster
 		for code := range vs.distributions {
-			bkt := bucket{
+			bkt := Bucket{
 				codeName: code,
 				pkgName:  pkgName,
 				vulnID:   cveID,
@@ -402,7 +402,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 			}
 
 			// If no, the fixed version needs to be determined by comparing with the fixed version in sid.
-			pkgBkt := bucket{
+			pkgBkt := Bucket{
 				codeName: code,
 				pkgName:  pkgName,
 			}
@@ -445,7 +445,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 	return nil
 }
 
-func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt bucket, advisory Advisory) error {
+func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt Bucket, advisory Advisory) error {
 	// Convert codename to major version
 	// e.g. "buster" => "10"
 	majorVersion, ok := vs.distributions[bkt.codeName]
@@ -457,7 +457,7 @@ func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt bucket, advisory Advisory) error 
 	// Fill information for the buckets.
 	advisory.VulnerabilityID = bkt.vulnID
 	advisory.PkgName = bkt.pkgName
-	advisory.Platform = fmt.Sprintf(platformFormat, majorVersion)
+	advisory.Platform = bucket.NewDebian(majorVersion).Name()
 	advisory.Title = vs.details[bkt.vulnID].Description // The Debian description is short, so we'll use it as a title.
 
 	eb := oops.With("vuln_id", advisory.VulnerabilityID).With("package_name", advisory.PkgName).With("platform", advisory.Platform)
@@ -507,7 +507,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory any) error {
 
 func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In("debian").With("release", params.Release).With("package_name", params.PkgName)
-	bkt := fmt.Sprintf(platformFormat, params.Release)
+	bkt := bucket.NewDebian(params.Release).Name()
 	advisories, err := vs.dbc.GetAdvisories(bkt, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories")
@@ -589,7 +589,7 @@ func (vs VulnSrc) parseSources(dir string) error {
 				return nil
 			}
 
-			bkt := bucket{
+			bkt := Bucket{
 				codeName: code,
 				pkgName:  pkg.Package[0],
 			}

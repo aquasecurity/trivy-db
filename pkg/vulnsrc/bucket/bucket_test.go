@@ -28,9 +28,24 @@ func TestBucket_Name(t *testing.T) {
 			want:   "alpine",
 		},
 		{
-			name:   "RedHat with version",
-			bucket: bucket.NewRedHat("8"),
-			want:   "redhat 8",
+			name:   "RedHat",
+			bucket: bucket.NewRedHat(),
+			want:   "Red Hat",
+		},
+		{
+			name:   "ArchLinux without version",
+			bucket: bucket.NewArchLinux(""),
+			want:   "archlinux",
+		},
+		{
+			name:   "Azure Linux with version",
+			bucket: bucket.NewAzureLinux("3.0"),
+			want:   "Azure Linux 3.0",
+		},
+		{
+			name:   "CBL-Mariner with version",
+			bucket: bucket.NewMariner("2.0"),
+			want:   "CBL-Mariner 2.0",
 		},
 		// Language ecosystems
 		{
@@ -110,7 +125,7 @@ func TestBucket_DataSource(t *testing.T) {
 		},
 		{
 			name:   "RedHat OS bucket returns empty DataSource",
-			bucket: bucket.NewRedHat("8"),
+			bucket: bucket.NewRedHat(),
 			want:   types.DataSource{},
 		},
 		{
@@ -148,4 +163,3 @@ func TestBucket_DataSource(t *testing.T) {
 		})
 	}
 }
-

@@ -133,11 +133,8 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 			// Replace a git URL with a CocoaPods package name in a Swift vulnerability
 			// and store it as a CocoaPods vulnerability.
 			adv.Severity = severity
-			adv.Bucket = bucket.NewCocoapods(types.DataSource{
-				ID:   sourceID,
-				Name: fmt.Sprintf(platformFormat, "Swift"),
-				URL:  fmt.Sprintf(urlFormat, strings.ToLower("Swift")),
-			})
+			adv.Bucket = bucket.NewCocoapods(adv.Bucket.DataSource())
+
 			for _, pkgName := range t.cocoaPodsSpecs[adv.PkgName] {
 				adv.PkgName = pkgName
 				advisories = append(advisories, adv)

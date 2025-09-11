@@ -17,9 +17,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-const (
-	nodeDir = "nodejs-security-wg"
-)
+const nodeDir = "nodejs-security-wg"
 
 var (
 	source = types.DataSource{

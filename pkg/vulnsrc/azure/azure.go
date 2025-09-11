@@ -1,7 +1,6 @@
 package azure
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,6 +12,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/azure/oval"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -22,11 +22,8 @@ const (
 	Azure Distribution = iota
 	Mariner
 
-	azureDir            = "azure"
-	azurePlatformFormat = "Azure Linux %s"
-
-	marinerDir            = "mariner"
-	marinerPlatformFormat = "CBL-Mariner %s"
+	azureDir   = "azure"
+	marinerDir = "mariner"
 )
 
 var (
@@ -52,11 +49,11 @@ type resolvedTest struct {
 }
 
 type VulnSrc struct {
-	dbc            db.Operation
-	logger         *log.Logger
-	azureDir       string
-	source         types.DataSource
-	platformFormat string
+	dbc      db.Operation
+	logger   *log.Logger
+	azureDir string
+	source   types.DataSource
+	bucketFn func(string) bucket.Bucket
 }
 
 func NewVulnSrc(dist Distribution) VulnSrc {
@@ -69,21 +66,21 @@ func NewVulnSrc(dist Distribution) VulnSrc {
 
 func azureVulnSrc() VulnSrc {
 	return VulnSrc{
-		dbc:            db.Config{},
-		logger:         log.WithPrefix("azure"),
-		azureDir:       azureDir,
-		source:         azureSource,
-		platformFormat: azurePlatformFormat,
+		dbc:      db.Config{},
+		logger:   log.WithPrefix("azure"),
+		azureDir: azureDir,
+		source:   azureSource,
+		bucketFn: bucket.NewAzureLinux,
 	}
 }
 
 func marinerVulnSrc() VulnSrc {
 	return VulnSrc{
-		dbc:            db.Config{},
-		logger:         log.WithPrefix("mariner"),
-		azureDir:       marinerDir,
-		source:         marinerSource,
-		platformFormat: marinerPlatformFormat,
+		dbc:      db.Config{},
+		logger:   log.WithPrefix("mariner"),
+		azureDir: marinerDir,
+		source:   marinerSource,
+		bucketFn: bucket.NewMariner,
 	}
 }
 
@@ -249,7 +246,7 @@ func (vs VulnSrc) save(majorVer string, entries []Entry) error {
 	eb := oops.With("major_version", majorVer)
 
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		platformName := fmt.Sprintf(vs.platformFormat, majorVer)
+		platformName := vs.bucketFn(majorVer).Name()
 		if err := vs.dbc.PutDataSource(tx, platformName, vs.source); err != nil {
 			return eb.Wrapf(err, "failed to put data source")
 		}
@@ -302,8 +299,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platformName string, entries []Entry) erro
 
 func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In(string(vs.source.ID)).With("release", params.Release).With("package_name", params.PkgName)
-	bucket := fmt.Sprintf(vs.platformFormat, params.Release)
-	advisories, err := vs.dbc.GetAdvisories(bucket, params.PkgName)
+	platformName := vs.bucketFn(params.Release).Name()
+	advisories, err := vs.dbc.GetAdvisories(platformName, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories")
 	}

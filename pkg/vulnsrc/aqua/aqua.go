@@ -9,9 +9,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-const (
-	sourceID = vulnerability.Aqua
-)
+const sourceID = vulnerability.Aqua
 
 var vulnsDir = filepath.Join("vuln-list-aqua", "vulns")
 

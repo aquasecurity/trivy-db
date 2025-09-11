@@ -9,9 +9,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-var (
-	k8sDir = filepath.Join("k8s-cve-feed", "vulns")
-)
+var k8sDir = filepath.Join("k8s-cve-feed", "vulns")
 
 func NewVulnSrc() osv.OSV {
 	sources := map[ecosystem.Type]types.DataSource{

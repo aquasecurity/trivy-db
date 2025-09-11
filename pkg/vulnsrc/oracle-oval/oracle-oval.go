@@ -2,7 +2,6 @@ package oracleoval
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"maps"
 	"path/filepath"
@@ -19,12 +18,11 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 var (
-	// cat /etc/os-release ORACLE_BUGZILLA_PRODUCT="Oracle Linux 8"
-	platformFormat  = "Oracle Linux %s"
 	targetPlatforms = []string{"Oracle Linux 5", "Oracle Linux 6", "Oracle Linux 7", "Oracle Linux 8", "Oracle Linux 9"}
 	oracleDir       = filepath.Join("oval", "oracle")
 
@@ -382,8 +380,8 @@ func removeVendorIDs(advs types.Advisories) types.Advisories {
 
 func (o *Oracle) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In("oracle").Tags("oval").With("release", params.Release).With("package_name", params.PkgName).With("arch", params.Arch)
-	bucket := fmt.Sprintf(platformFormat, params.Release)
-	rawAdvisories, err := o.ForEachAdvisory([]string{bucket}, params.PkgName)
+	bucketName := bucket.NewOracle(params.Release).Name()
+	rawAdvisories, err := o.ForEachAdvisory([]string{bucketName}, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "unable to iterate advisories")
 	}

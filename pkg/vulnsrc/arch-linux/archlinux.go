@@ -12,16 +12,15 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-const (
-	archLinuxDir = "arch-linux"
-	platformName = "archlinux"
-)
+const archLinuxDir = "arch-linux"
 
 var (
-	source = types.DataSource{
+	platformName = bucket.NewArchLinux("").Name()
+	source       = types.DataSource{
 		ID:   vulnerability.ArchLinux,
 		Name: "Arch Linux Vulnerable issues",
 		URL:  "https://security.archlinux.org/",

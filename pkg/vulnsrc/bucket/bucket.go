@@ -54,18 +54,12 @@ func (l langBucket) DataSource() types.DataSource {
 }
 
 // newOS creates a bucket for OS ecosystems
-func newOS(ecoType ecosystem.Type, version string) Bucket {
+func newOS(ecoType ecosystem.Type, version string) osBucket {
 	return osBucket{
 		ecosystem: ecoType,
 		version:   version,
 	}
 }
-
-// NewAlpine creates a bucket for Alpine Linux
-func NewAlpine(version string) Bucket { return newOS(ecosystem.Alpine, version) }
-
-// NewRedHat creates a bucket for Red Hat
-func NewRedHat(version string) Bucket { return newOS(ecosystem.RedHat, version) }
 
 // newLang creates a bucket for language ecosystems
 func newLang(ecoType ecosystem.Type, dataSource types.DataSource) Bucket {
@@ -78,51 +72,242 @@ func newLang(ecoType ecosystem.Type, dataSource types.DataSource) Bucket {
 	}
 }
 
-// NewGo creates a bucket for Go ecosystem with data source
-func NewGo(dataSource types.DataSource) Bucket { return newLang(ecosystem.Go, dataSource) }
+/////////////////////////
+// Standard OS buckets //
+/////////////////////////
 
-// NewNpm creates a bucket for npm ecosystem with data source
-func NewNpm(dataSource types.DataSource) Bucket { return newLang(ecosystem.Npm, dataSource) }
+// NewAlma creates a bucket for Alma Linux
+func NewAlma(version string) Bucket { return newOS(ecosystem.AlmaLinux, version) }
 
-// NewPyPI creates a bucket for PyPI ecosystem with data source
-func NewPyPI(dataSource types.DataSource) Bucket { return newLang(ecosystem.Pip, dataSource) }
+// NewAlpine creates a bucket for Alpine Linux
+func NewAlpine(version string) Bucket { return newOS(ecosystem.Alpine, version) }
 
-// NewComposer creates a bucket for Composer ecosystem with data source
-func NewComposer(dataSource types.DataSource) Bucket { return newLang(ecosystem.Composer, dataSource) }
+// NewArchLinux creates a bucket for Arch Linux
+func NewArchLinux(version string) Bucket { return newOS(ecosystem.ArchLinux, version) }
 
-// NewRubyGems creates a bucket for RubyGems ecosystem with data source
-func NewRubyGems(dataSource types.DataSource) Bucket { return newLang(ecosystem.RubyGems, dataSource) }
+// NewChainguard creates a bucket for Chainguard
+func NewChainguard(version string) Bucket { return newOS(ecosystem.Chainguard, version) }
+
+// NewDebian creates a bucket for Debian
+func NewDebian(version string) Bucket { return newOS(ecosystem.Debian, version) }
+
+// NewEcho creates a bucket for Echo
+func NewEcho(version string) Bucket { return newOS(ecosystem.Echo, version) }
+
+// NewMinimOS creates a bucket for MinimOS
+func NewMinimOS(version string) Bucket { return newOS(ecosystem.MinimOS, version) }
+
+// NewRocky creates a bucket for Rocky Linux
+func NewRocky(version string) Bucket { return newOS(ecosystem.Rocky, version) }
+
+// NewUbuntu creates a bucket for Ubuntu
+func NewUbuntu(version string) Bucket { return newOS(ecosystem.Ubuntu, version) }
+
+// NewWolfi creates a bucket for Wolfi
+func NewWolfi(version string) Bucket { return newOS(ecosystem.Wolfi, version) }
+
+//////////////////////////////////////////////////////////////////////
+// OS buckets with special naming conventions (alphabetical order)  //
+//////////////////////////////////////////////////////////////////////
+
+// amazonBucket for Amazon Linux with special naming convention
+type amazonBucket struct {
+	osBucket
+}
+
+func (a amazonBucket) Name() string {
+	return "amazon linux " + a.version
+}
+
+// NewAmazon creates a bucket for Amazon Linux
+func NewAmazon(version string) Bucket {
+	return amazonBucket{newOS(ecosystem.AmazonLinux, version)}
+}
+
+// azureLinuxBucket for Azure Linux with special naming convention
+type azureLinuxBucket struct {
+	osBucket
+}
+
+func (a azureLinuxBucket) Name() string {
+	return "Azure Linux " + a.version
+}
+
+// NewAzureLinux creates a bucket for Azure Linux
+func NewAzureLinux(version string) Bucket {
+	return azureLinuxBucket{newOS(ecosystem.AzureLinux, version)}
+}
+
+// marinerBucket for CBL-Mariner with special naming convention
+type marinerBucket struct {
+	osBucket
+}
+
+func (m marinerBucket) Name() string {
+	return "CBL-Mariner " + m.version
+}
+
+// NewMariner creates a bucket for CBL-Mariner
+func NewMariner(version string) Bucket {
+	return marinerBucket{newOS(ecosystem.CBLMariner, version)}
+}
+
+// oracleBucket for Oracle Linux with special naming convention
+type oracleBucket struct {
+	osBucket
+}
+
+func (o oracleBucket) Name() string {
+	// cat /etc/os-release ORACLE_BUGZILLA_PRODUCT="Oracle Linux 8"
+	return "Oracle Linux " + o.version
+}
+
+// NewOracle creates a bucket for Oracle Linux
+func NewOracle(version string) Bucket { return oracleBucket{newOS(ecosystem.OracleLinux, version)} }
+
+// redHatBucket for Red Hat with special naming convention
+type redHatBucket struct {
+	osBucket
+}
+
+func (r redHatBucket) Name() string {
+	return "Red Hat"
+}
+
+// NewRedHat creates a bucket for Red Hat
+func NewRedHat() Bucket { return redHatBucket{newOS(ecosystem.RedHat, "")} }
+
+// photonBucket for PhotonOS OS with special naming convention
+type photonBucket struct {
+	osBucket
+}
+
+func (p photonBucket) Name() string {
+	return "Photon OS " + p.version
+}
+
+// NewPhoton creates a bucket for PhotonOS OS
+func NewPhoton(version string) Bucket { return photonBucket{newOS(ecosystem.PhotonOS, version)} }
+
+// openSUSEBucket for openSUSE with special naming convention
+type openSUSEBucket struct {
+	osBucket
+}
+
+func (o openSUSEBucket) Name() string {
+	return "openSUSE Leap " + o.version
+}
+
+// openSUSETumbleweedBucket for openSUSE Tumbleweed with special naming convention
+type openSUSETumbleweedBucket struct {
+	osBucket
+}
+
+func (o openSUSETumbleweedBucket) Name() string {
+	return "openSUSE Tumbleweed"
+}
+
+// openSUSELeapMicroBucket for openSUSE Leap Micro with special naming convention
+type openSUSELeapMicroBucket struct {
+	osBucket
+}
+
+func (o openSUSELeapMicroBucket) Name() string {
+	return "openSUSE Leap Micro " + o.version
+}
+
+// suseLinuxEnterpriseBucket for SUSE Linux Enterprise with special naming convention
+type suseLinuxEnterpriseBucket struct {
+	osBucket
+}
+
+func (s suseLinuxEnterpriseBucket) Name() string {
+	return "SUSE Linux Enterprise " + s.version
+}
+
+// suseLinuxEnterpriseMicroBucket for SUSE Linux Enterprise Micro with special naming convention
+type suseLinuxEnterpriseMicroBucket struct {
+	osBucket
+}
+
+func (s suseLinuxEnterpriseMicroBucket) Name() string {
+	return "SUSE Linux Enterprise Micro " + s.version
+}
+
+// NewOpenSUSE creates a bucket for openSUSE Leap
+func NewOpenSUSE(version string) Bucket {
+	return openSUSEBucket{newOS(ecosystem.SUSE, version)}
+}
+
+// NewOpenSUSETumbleweed creates a bucket for openSUSE Tumbleweed
+func NewOpenSUSETumbleweed() Bucket {
+	return openSUSETumbleweedBucket{newOS(ecosystem.SUSE, "")}
+}
+
+// NewOpenSUSELeapMicro creates a bucket for openSUSE Leap Micro
+func NewOpenSUSELeapMicro(version string) Bucket {
+	return openSUSELeapMicroBucket{newOS(ecosystem.SUSE, version)}
+}
+
+// NewSUSELinuxEnterprise creates a bucket for SUSE Linux Enterprise
+func NewSUSELinuxEnterprise(version string) Bucket {
+	return suseLinuxEnterpriseBucket{newOS(ecosystem.SUSE, version)}
+}
+
+// NewSUSELinuxEnterpriseMicro creates a bucket for SUSE Linux Enterprise Micro
+func NewSUSELinuxEnterpriseMicro(version string) Bucket {
+	return suseLinuxEnterpriseMicroBucket{newOS(ecosystem.SUSE, version)}
+}
+
+////////////////////////////////
+// Language ecosystem buckets //
+////////////////////////////////
+
+// NewBitnami creates a bucket for Bitnami ecosystem with data source
+func NewBitnami(dataSource types.DataSource) Bucket { return newLang(ecosystem.Bitnami, dataSource) }
 
 // NewCargo creates a bucket for Cargo ecosystem with data source
 func NewCargo(dataSource types.DataSource) Bucket { return newLang(ecosystem.Cargo, dataSource) }
-
-// NewNuGet creates a bucket for NuGet ecosystem with data source
-func NewNuGet(dataSource types.DataSource) Bucket { return newLang(ecosystem.NuGet, dataSource) }
-
-// NewMaven creates a bucket for Maven ecosystem with data source
-func NewMaven(dataSource types.DataSource) Bucket { return newLang(ecosystem.Maven, dataSource) }
-
-// NewConan creates a bucket for Conan ecosystem with data source
-func NewConan(dataSource types.DataSource) Bucket { return newLang(ecosystem.Conan, dataSource) }
-
-// NewErlang creates a bucket for Erlang ecosystem with data source
-func NewErlang(dataSource types.DataSource) Bucket { return newLang(ecosystem.Erlang, dataSource) }
-
-// NewPub creates a bucket for Pub ecosystem with data source
-func NewPub(dataSource types.DataSource) Bucket { return newLang(ecosystem.Pub, dataSource) }
-
-// NewSwift creates a bucket for Swift ecosystem with data source
-func NewSwift(dataSource types.DataSource) Bucket { return newLang(ecosystem.Swift, dataSource) }
 
 // NewCocoapods creates a bucket for Cocoapods ecosystem with data source
 func NewCocoapods(dataSource types.DataSource) Bucket {
 	return newLang(ecosystem.Cocoapods, dataSource)
 }
 
-// NewBitnami creates a bucket for Bitnami ecosystem with data source
-func NewBitnami(dataSource types.DataSource) Bucket { return newLang(ecosystem.Bitnami, dataSource) }
+// NewConan creates a bucket for Conan ecosystem with data source
+func NewConan(dataSource types.DataSource) Bucket { return newLang(ecosystem.Conan, dataSource) }
+
+// NewComposer creates a bucket for Composer ecosystem with data source
+func NewComposer(dataSource types.DataSource) Bucket { return newLang(ecosystem.Composer, dataSource) }
+
+// NewErlang creates a bucket for Erlang ecosystem with data source
+func NewErlang(dataSource types.DataSource) Bucket { return newLang(ecosystem.Erlang, dataSource) }
+
+// NewGo creates a bucket for Go ecosystem with data source
+func NewGo(dataSource types.DataSource) Bucket { return newLang(ecosystem.Go, dataSource) }
 
 // NewKubernetes creates a bucket for Kubernetes ecosystem with data source
 func NewKubernetes(dataSource types.DataSource) Bucket {
 	return newLang(ecosystem.Kubernetes, dataSource)
 }
+
+// NewMaven creates a bucket for Maven ecosystem with data source
+func NewMaven(dataSource types.DataSource) Bucket { return newLang(ecosystem.Maven, dataSource) }
+
+// NewNpm creates a bucket for npm ecosystem with data source
+func NewNpm(dataSource types.DataSource) Bucket { return newLang(ecosystem.Npm, dataSource) }
+
+// NewNuGet creates a bucket for NuGet ecosystem with data source
+func NewNuGet(dataSource types.DataSource) Bucket { return newLang(ecosystem.NuGet, dataSource) }
+
+// NewPub creates a bucket for Pub ecosystem with data source
+func NewPub(dataSource types.DataSource) Bucket { return newLang(ecosystem.Pub, dataSource) }
+
+// NewPyPI creates a bucket for PyPI ecosystem with data source
+func NewPyPI(dataSource types.DataSource) Bucket { return newLang(ecosystem.Pip, dataSource) }
+
+// NewRubyGems creates a bucket for RubyGems ecosystem with data source
+func NewRubyGems(dataSource types.DataSource) Bucket { return newLang(ecosystem.RubyGems, dataSource) }
+
+// NewSwift creates a bucket for Swift ecosystem with data source
+func NewSwift(dataSource types.DataSource) Bucket { return newLang(ecosystem.Swift, dataSource) }
