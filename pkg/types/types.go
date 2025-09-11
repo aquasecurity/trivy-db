@@ -195,5 +195,3 @@ type Vulnerability struct {
 	Custom any `json:",omitempty"`
 }
 
-// Ecosystem represents language-specific ecosystem
-type Ecosystem string

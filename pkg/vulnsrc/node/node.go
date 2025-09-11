@@ -28,7 +28,7 @@ var (
 		URL:  "https://github.com/nodejs/security-wg",
 	}
 
-	bucketName = bucket.Name(vulnerability.Npm, source.Name)
+	bucketName = bucket.NewNpm(source).Name()
 )
 
 type Number struct {

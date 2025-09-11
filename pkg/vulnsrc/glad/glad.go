@@ -12,6 +12,7 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
@@ -35,8 +36,8 @@ var (
 	}
 
 	// Mapping between GLAD slug and Trivy ecosystem
-	ecosystems = map[packageType]types.Ecosystem{
-		Conan: vulnerability.Conan,
+	ecosystems = map[packageType]ecosystem.Type{
+		Conan: ecosystem.Conan,
 	}
 
 	source = types.DataSource{
@@ -133,12 +134,12 @@ func (vs VulnSrc) commit(tx *bolt.Tx, pkgType packageType, glads []Advisory) err
 		}
 
 		pkgName := ss[1]
-		ecosystem, ok := ecosystems[pkgType]
+		eco, ok := ecosystems[pkgType]
 		if !ok {
 			return eb.Errorf("failed to get ecosystem: %s", pkgType)
 		}
-		bucketName := bucket.Name(ecosystem, source.Name)
-		eb = eb.With("ecosystem", ecosystem)
+		bucketName := bucket.NewConan(source).Name() // GLAD only supports Conan for now
+		eb = eb.With("ecosystem", eco)
 
 		if err := vs.dbc.PutDataSource(tx, bucketName, source); err != nil {
 			return eb.Wrapf(err, "failed to put data source")

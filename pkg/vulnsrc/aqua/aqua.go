@@ -3,6 +3,7 @@ package aqua
 import (
 	"path/filepath"
 
+	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -25,9 +26,9 @@ func (VulnSrc) Name() types.SourceID {
 }
 
 func (VulnSrc) Update(root string) error {
-	dataSources := map[types.Ecosystem]types.DataSource{}
-	for _, ecosystem := range vulnerability.Ecosystems {
-		dataSources[ecosystem] = types.DataSource{
+	dataSources := map[ecosystem.Type]types.DataSource{}
+	for _, eco := range ecosystem.All {
+		dataSources[eco] = types.DataSource{
 			ID:   sourceID,
 			Name: "The Aqua Security Vulnerability Database",
 			URL:  "https://github.com/aquasecurity/vuln-list-aqua",

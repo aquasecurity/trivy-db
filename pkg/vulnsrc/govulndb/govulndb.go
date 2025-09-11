@@ -7,6 +7,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/samber/oops"
 
+	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -31,8 +32,8 @@ func (VulnDB) Name() types.SourceID {
 }
 
 func (VulnDB) Update(root string) error {
-	dataSources := map[types.Ecosystem]types.DataSource{
-		vulnerability.Go: {
+	dataSources := map[ecosystem.Type]types.DataSource{
+		ecosystem.Go: {
 			ID:   sourceID,
 			Name: "The Go Vulnerability Database",
 			URL:  "https://pkg.go.dev/vuln/",
