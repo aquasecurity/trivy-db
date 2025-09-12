@@ -157,7 +157,7 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 
 	for _, adv := range advisories {
 		// Skip advisories with nil bucket
-		if adv.Bucket == nil {
+		if lo.IsNil(adv.Bucket) {
 			continue
 		}
 
