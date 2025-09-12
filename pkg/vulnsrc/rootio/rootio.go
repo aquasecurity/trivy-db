@@ -24,11 +24,12 @@ import (
 )
 
 const (
-	rootioDir        = "rootio"
-	feedFileName     = "cve_feed.json"
-	langFeedFileName = "feed.json"
-	platformFormat   = "root.io %s %s" // "root.io {baseOS} {version}"
-	ecosystemFormat  = "root.io %s"    // "root.io {ecosystem}"
+	rootioDir       = "rootio"
+	osFeedFileName  = "os_feed.json"  // OS vulnerability data
+	appFeedFileName = "app_feed.json" // Language ecosystem vulnerability data
+	feedFileName    = "cve_feed.json" // Legacy OS feed filename for backward compatibility
+	platformFormat  = "root.io %s %s" // "root.io {baseOS} {version}"
+	ecosystemFormat = "root.io %s"    // "root.io {ecosystem}"
 )
 
 var (
@@ -103,7 +104,21 @@ func (vs VulnSrc) openAndParseJSON(filePath string, target any) error {
 }
 
 func (vs VulnSrc) updateOSPackages(dir string) error {
-	feedFilePath := filepath.Join(dir, "vuln-list", rootioDir, feedFileName)
+	// Try new os_feed.json first, fall back to cve_feed.json for backward compatibility
+	osFeedPath := filepath.Join(dir, "vuln-list", rootioDir, osFeedFileName)
+	legacyFeedPath := filepath.Join(dir, "vuln-list", rootioDir, feedFileName)
+
+	var feedFilePath string
+	if _, err := os.Stat(osFeedPath); err == nil {
+		feedFilePath = osFeedPath
+	} else if _, err := os.Stat(legacyFeedPath); err == nil {
+		feedFilePath = legacyFeedPath
+		vs.logger.Info("Using legacy cve_feed.json, please update vuln-list-update")
+	} else {
+		// Neither file exists, try the new one and let it fail with proper error
+		feedFilePath = osFeedPath
+	}
+
 	eb := oops.In("rootio").With("file_path", feedFilePath)
 
 	var rawFeed RawFeed
@@ -174,26 +189,35 @@ func (vs VulnSrc) updateOSPackages(dir string) error {
 }
 
 func (vs VulnSrc) updateLanguagePackages(dir string) error {
-	// Process each supported ecosystem
-	for _, ecosystem := range vs.supportedEcosystems {
-		feedFilePath := filepath.Join(dir, "vuln-list", rootioDir, string(ecosystem), langFeedFileName)
-		eb := oops.In("rootio").With("ecosystem", ecosystem).With("file_path", feedFilePath)
+	// Read from app_feed.json
+	appFeedPath := filepath.Join(dir, "vuln-list", rootioDir, appFeedFileName)
+	eb := oops.In("rootio").With("file_path", appFeedPath)
 
-		var rawLangFeed RawLanguageFeed
-		if err := vs.openAndParseJSON(feedFilePath, &rawLangFeed); err != nil {
-			// Language feeds might not exist yet, skip if file not found
-			if os.IsNotExist(err) {
-				vs.logger.Debug("Language feed not found", "ecosystem", ecosystem)
-				continue
-			}
-			return eb.Wrapf(err, "failed to read feed file %s", feedFilePath)
+	var rawAppFeed RawAppFeed
+	if err := vs.openAndParseJSON(appFeedPath, &rawAppFeed); err != nil {
+		// App feed might not exist yet, skip if file not found
+		if os.IsNotExist(err) {
+			vs.logger.Debug("App feed not found")
+			return nil
+		}
+		return eb.Wrapf(err, "failed to read app feed file %s", appFeedPath)
+	}
+
+	// Process each ecosystem in the combined feed
+	for ecosystemStr, packages := range rawAppFeed {
+		ecosystem := types.Ecosystem(ecosystemStr)
+
+		// Check if this ecosystem is supported
+		if !slices.Contains(vs.supportedEcosystems, ecosystem) {
+			vs.logger.Warn("Unsupported ecosystem in app feed", "ecosystem", ecosystem)
+			continue
 		}
 
 		// Convert to internal format
 		platformName := fmt.Sprintf(ecosystemFormat, ecosystem)
 		feeds := make(map[string][]Feed)
 
-		for _, pkg := range rawLangFeed.Packages {
+		for _, pkg := range packages {
 			for cveID, cveInfo := range pkg.CVEs {
 				feed := Feed{
 					VulnerabilityID: cveID,
@@ -209,7 +233,7 @@ func (vs VulnSrc) updateLanguagePackages(dir string) error {
 
 		// Save feeds for the current ecosystem
 		if err := vs.save(string(ecosystem), feeds, ""); err != nil {
-			return eb.Wrapf(err, "save error")
+			return eb.Wrapf(err, "save error for ecosystem %s", ecosystem)
 		}
 	}
 

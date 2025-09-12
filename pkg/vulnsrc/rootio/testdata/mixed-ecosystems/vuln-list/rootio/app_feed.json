@@ -1,6 +1,5 @@
 {
-  "ecosystem": "npm",
-  "packages": [
+  "npm": [
     {
       "name": "react",
       "cves": {
