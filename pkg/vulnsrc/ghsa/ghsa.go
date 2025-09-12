@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/samber/lo"
 	"github.com/samber/oops"
 	"golang.org/x/tools/go/packages"
 
@@ -116,26 +117,38 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 		return nil, oops.Wrapf(err, "json unmarshal error")
 	}
 
+	originPkgNames := lo.SliceToMap(entry.Affected, func(affected osv.Affected) (string, string) {
+		return strings.ToLower(affected.Package.Name), affected.Package.Name
+	})
+
 	severity := convertSeverity(specific.Severity)
 	for i, adv := range advisories {
 		// Fill severity from GHSA
 		advisories[i].Severity = severity
 
-		// Replace a git URL with a CocoaPods package name in a Swift vulnerability
-		// and store it as a CocoaPods vulnerability.
-		if adv.Ecosystem == vulnerability.Swift {
+		switch adv.Ecosystem {
+		case vulnerability.Swift:
+			// Replace a git URL with a CocoaPods package name in a Swift vulnerability
+			// and store it as a CocoaPods vulnerability.
 			adv.Severity = severity
 			adv.Ecosystem = vulnerability.Cocoapods
 			for _, pkgName := range t.cocoaPodsSpecs[adv.PkgName] {
 				adv.PkgName = pkgName
 				advisories = append(advisories, adv)
 			}
-		}
-
-		// Skip a standard Go package as we use the Go Vulnerability Database (govulndb) for standard packages.
-		if adv.Ecosystem == vulnerability.Go {
+		case vulnerability.Go:
+			// Skip a standard Go package as we use the Go Vulnerability Database (govulndb) for standard packages.
 			if isStandardGoPackage(adv.PkgName) {
 				advisories[i].Ecosystem = "" // An empty ecosystem is skipped later
+			}
+		case vulnerability.NuGet:
+			// NuGet is case-insensitive, so we store advisories in lowercase.
+			// However, for backward compatibility, we also keep advisories with the original package name.
+			// TODO: drop storing the original-case entry and keep only the lowercase key once downstream users have migrated.
+			if originPkgName, ok := originPkgNames[adv.PkgName]; ok && originPkgName != adv.PkgName {
+				dup := advisories[i]
+				dup.PkgName = originPkgName
+				advisories = append(advisories, dup)
 			}
 		}
 	}

@@ -443,6 +443,55 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: map[string]any{},
 				},
+				// NuGet: store original and lowercased package names
+				{
+					Key: []string{
+						"data-source",
+						"nuget::GitHub Security Advisory NuGet",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.GHSA,
+						Name: "GitHub Security Advisory NuGet",
+						URL:  "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anuget",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2025-30399",
+						"nuget::GitHub Security Advisory NuGet",
+						"Microsoft.NetCore.App.Runtime.linux-arm",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-266m-wp2v-x7mq",
+						},
+						PatchedVersions:    []string{"9.0.6"},
+						VulnerableVersions: []string{">=9.0.0, <9.0.6"},
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2025-30399",
+						"nuget::GitHub Security Advisory NuGet",
+						"microsoft.netcore.app.runtime.linux-arm",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-266m-wp2v-x7mq",
+						},
+						PatchedVersions:    []string{"9.0.6"},
+						VulnerableVersions: []string{">=9.0.0, <9.0.6"},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2025-30399",
+					},
+					Value: map[string]any{},
+				},
 			},
 			noBuckets: [][]string{
 				// We shouldn't save Go runtime vulnerabilities
