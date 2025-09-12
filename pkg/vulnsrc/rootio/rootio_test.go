@@ -135,6 +135,85 @@ func TestVulnSrc_Update(t *testing.T) {
 			wantErr: "failed to read feed file",
 		},
 		{
+			name: "new format with os_feed.json and app_feed.json",
+			dir:  filepath.Join("testdata", "new-format"),
+			wantValues: []vulnsrctest.WantValues{
+				// OS feed expectations
+				{
+					Key: []string{
+						"data-source",
+						"root.io debian 12",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RootIO,
+						Name:   "Root.io Security Patches (debian)",
+						URL:    "https://api.root.io/external/patch_feed",
+						BaseID: vulnerability.Debian,
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2025-29088",
+						"root.io debian 12",
+						"sqlite3",
+					},
+					Value: types.Advisory{
+						VulnerableVersions: []string{"<3.40.1-2+deb12u1.root.io.2"},
+						PatchedVersions:    []string{"3.40.1-2+deb12u1.root.io.2"},
+					},
+				},
+				// App feed expectations - npm
+				{
+					Key: []string{
+						"data-source",
+						"root.io npm",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.RootIO,
+						Name: "Root.io Security Patches (npm)",
+						URL:  "https://api.root.io/external/patch_feed",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2024-REACT-001",
+						"root.io npm",
+						"react",
+					},
+					Value: types.Advisory{
+						VulnerableVersions: []string{"<18.2.0"},
+						PatchedVersions:    []string{"18.2.0.root.io"},
+					},
+				},
+				// App feed expectations - pip
+				{
+					Key: []string{
+						"data-source",
+						"root.io pip",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.RootIO,
+						Name: "Root.io Security Patches (pip)",
+						URL:  "https://api.root.io/external/patch_feed",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2024-DJANGO-001",
+						"root.io pip",
+						"django",
+					},
+					Value: types.Advisory{
+						VulnerableVersions: []string{"<4.2.0"},
+						PatchedVersions:    []string{"4.2.0.root.io"},
+					},
+				},
+			},
+		},
+		{
 			name: "happy path with language packages",
 			dir:  filepath.Join("testdata", "language-packages"),
 			wantValues: []vulnsrctest.WantValues{
