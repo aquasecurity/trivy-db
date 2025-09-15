@@ -21,9 +21,9 @@ type VersionRange interface {
 	SetLastAffected(lastAffected string)
 }
 
-func NewVersionRange(ecosystem Ecosystem, from string) VersionRange {
+func NewVersionRange(ecosystem, from string) VersionRange {
 	vr := &versionRange{from: from}
-	ecoStr := strings.ToLower(string(ecosystem))
+	ecoStr := strings.ToLower(ecosystem)
 	switch ecoStr {
 	case ecosystemNpm:
 		return &NpmVersionRange{versionRange: vr}

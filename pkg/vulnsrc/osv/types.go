@@ -24,12 +24,11 @@ const (
 	ecosystemKubernetes = "kubernetes"
 )
 
-type Ecosystem string
 type RangeType string
 
 type Package struct {
-	Name      string    `json:"name"`
-	Ecosystem Ecosystem `json:"ecosystem"`
+	Name      string `json:"name"`
+	Ecosystem string `json:"ecosystem"`
 }
 
 type RangeEvent struct {

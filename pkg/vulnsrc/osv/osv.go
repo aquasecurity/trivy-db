@@ -332,7 +332,7 @@ func parseAffectedVersions(affected Affected) ([]string, []string, error) {
 		ok, err := versionContains(affectedRanges, v)
 		if err != nil {
 			log.WithPrefix("osv").Error("Version comparison error",
-				log.String("ecosystem", string(affected.Package.Ecosystem)),
+				log.String("ecosystem", affected.Package.Ecosystem),
 				log.String("package", affected.Package.Name),
 				log.Err(err),
 			)
@@ -384,8 +384,8 @@ func parseSeverity(severities []Severity) (string, float64, error) {
 	return "", 0, nil
 }
 
-func (o OSV) convertEcosystem(raw Ecosystem) (bucket.Bucket, error) {
-	eco, _, _ := strings.Cut(string(raw), ":")
+func (o OSV) convertEcosystem(raw string) (bucket.Bucket, error) {
+	eco, _, _ := strings.Cut(raw, ":")
 	switch strings.ToLower(eco) {
 	case ecosystemGo:
 		return bucket.NewGo(o.dataSources[ecosystem.Go])
