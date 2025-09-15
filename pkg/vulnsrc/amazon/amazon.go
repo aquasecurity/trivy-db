@@ -2,7 +2,6 @@ package amazon
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"path/filepath"
 	"slices"
@@ -15,16 +14,19 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-const (
-	amazonDir      = "amazon"
-	platformFormat = "amazon linux %s"
-)
+const amazonDir = "amazon"
 
 var (
-	targetVersions = []string{"1", "2", "2022", "2023"}
+	targetVersions = []string{
+		"1",
+		"2",
+		"2022",
+		"2023",
+	}
 
 	source = types.DataSource{
 		ID:   vulnerability.Amazon,
@@ -123,7 +125,7 @@ func (vs VulnSrc) save() error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx) error {
 	for majorVersion, alasList := range vs.advisories {
-		platformName := fmt.Sprintf(platformFormat, majorVersion)
+		platformName := bucket.NewAmazon(majorVersion).Name()
 
 		if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
 			return oops.Wrapf(err, "failed to put data source")
@@ -167,8 +169,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 // Get returns a security advisory
 func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In("amazon").With("release", params.Release)
-	bucket := fmt.Sprintf(platformFormat, params.Release)
-	advisories, err := vs.dbc.GetAdvisories(bucket, params.PkgName)
+	platformName := bucket.NewAmazon(params.Release).Name()
+	advisories, err := vs.dbc.GetAdvisories(platformName, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories")
 	}

@@ -12,15 +12,15 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-const (
-	distroName = "minimos"
-)
+const minimosDir = "minimos"
 
 var (
-	source = types.DataSource{
+	platformName = bucket.NewMinimOS("").Name()
+	source       = types.DataSource{
 		ID:   vulnerability.MinimOS,
 		Name: "MinimOS Security Data",
 		URL:  "https://packages.mini.dev/advisories/secdb/security.json",
@@ -47,7 +47,7 @@ func (vs VulnSrc) Name() types.SourceID {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	rootDir := filepath.Join(dir, "vuln-list", distroName)
+	rootDir := filepath.Join(dir, "vuln-list", minimosDir)
 	eb := oops.In(string(source.ID)).With("root_dir", rootDir)
 
 	var advisories []advisory
@@ -72,11 +72,11 @@ func (vs VulnSrc) Update(dir string) error {
 
 func (vs VulnSrc) save(advisories []advisory) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		if err := vs.dbc.PutDataSource(tx, distroName, source); err != nil {
+		if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
 			return oops.Wrapf(err, "failed to put data source")
 		}
 		for _, adv := range advisories {
-			if err := vs.saveSecFixes(tx, distroName, adv.PkgName, adv.Secfixes); err != nil {
+			if err := vs.saveSecFixes(tx, platformName, adv.PkgName, adv.Secfixes); err != nil {
 				return oops.Wrapf(err, "failed to save sec fixes")
 			}
 		}
@@ -119,8 +119,7 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 
 func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In(string(source.ID))
-	bucket := distroName
-	advisories, err := vs.dbc.GetAdvisories(bucket, params.PkgName)
+	advisories, err := vs.dbc.GetAdvisories(platformName, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories")
 	}

@@ -7,6 +7,7 @@ import (
 
 	"github.com/samber/oops"
 
+	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -15,17 +16,15 @@ import (
 var bitnamiDir = filepath.Join("bitnami-vulndb", "data")
 
 func NewVulnSrc() osv.OSV {
-	sources := map[osv.Ecosystem]types.DataSource{
-		osv.Ecosystem{
-			Name: vulnerability.Bitnami,
-		}: {
+	sources := map[ecosystem.Type]types.DataSource{
+		ecosystem.Bitnami: {
 			ID:   vulnerability.BitnamiVulndb,
 			Name: "Bitnami Vulnerability Database",
 			URL:  "https://github.com/bitnami/vulndb",
 		},
 	}
 
-	return osv.New(bitnamiDir, vulnerability.BitnamiVulndb, sources, osv.WithTransformer(&transformer{}))
+	return osv.New(bitnamiDir, vulnerability.BitnamiVulndb, sources, &transformer{})
 }
 
 type transformer struct{}

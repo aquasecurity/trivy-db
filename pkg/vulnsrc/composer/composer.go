@@ -5,11 +5,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/samber/lo"
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
 	"gopkg.in/yaml.v2"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -24,7 +26,7 @@ var (
 		URL:  "https://github.com/FriendsOfPHP/security-advisories",
 	}
 
-	bucketName = bucket.Name(vulnerability.Composer, source.Name)
+	bucketName = lo.Must(bucket.NewComposer(source)).Name()
 )
 
 type RawAdvisory struct {
@@ -119,7 +121,7 @@ func (vs VulnSrc) walk(tx *bolt.Tx, root string) error {
 		}
 
 		pkgName := strings.TrimPrefix(advisory.Reference, "composer://")
-		pkgName = vulnerability.NormalizePkgName(vulnerability.Composer, pkgName)
+		pkgName = vulnerability.NormalizePkgName(ecosystem.Composer, pkgName)
 
 		if err = vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{bucketName}, a); err != nil {
 			return eb.Wrapf(err, "failed to save advisory")

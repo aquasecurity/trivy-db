@@ -1,6 +1,6 @@
 package oracleoval
 
-import "fmt"
+import "github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 
 type OracleOVAL struct {
 	Title       string
@@ -51,5 +51,5 @@ type Date struct {
 }
 
 func (p *Package) PlatformName() string {
-	return fmt.Sprintf(platformFormat, p.OSVer)
+	return bucket.NewOracle(p.OSVer).Name()
 }

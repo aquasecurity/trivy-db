@@ -2,6 +2,7 @@ package osv
 
 import (
 	"fmt"
+	"strings"
 
 	mvn "github.com/masahiro331/go-mvn-version"
 	"github.com/samber/oops"
@@ -11,8 +12,6 @@ import (
 	pep440 "github.com/aquasecurity/go-pep440-version"
 	"github.com/aquasecurity/go-version/pkg/semver"
 	"github.com/aquasecurity/go-version/pkg/version"
-	"github.com/aquasecurity/trivy-db/pkg/types"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 type VersionRange interface {
@@ -22,20 +21,21 @@ type VersionRange interface {
 	SetLastAffected(lastAffected string)
 }
 
-func NewVersionRange(ecosystem types.Ecosystem, from string) VersionRange {
+func NewVersionRange(ecosystem, from string) VersionRange {
 	vr := &versionRange{from: from}
-	switch ecosystem {
-	case vulnerability.Npm:
+	ecoStr := strings.ToLower(ecosystem)
+	switch ecoStr {
+	case ecosystemNpm:
 		return &NpmVersionRange{versionRange: vr}
-	case vulnerability.RubyGems:
+	case ecosystemRubygems:
 		return &RubyGemsVersionRange{versionRange: vr}
-	case vulnerability.Pip:
+	case ecosystemPyPI:
 		return &PyPIVersionRange{versionRange: vr}
-	case vulnerability.Maven:
+	case ecosystemMaven:
 		return &MavenVersionRange{versionRange: vr}
-	case vulnerability.Go, vulnerability.Cargo, vulnerability.NuGet:
+	case ecosystemGo, ecosystemCrates, ecosystemNuGet:
 		return &SemVerRange{versionRange: vr}
-	case vulnerability.Composer:
+	case ecosystemPackagist:
 		return &DefaultVersionRange{versionRange: vr}
 	default:
 		return &DefaultVersionRange{versionRange: vr}

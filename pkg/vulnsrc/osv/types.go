@@ -3,18 +3,26 @@ package osv
 import (
 	"encoding/json"
 	"time"
-
-	"github.com/aquasecurity/trivy-db/pkg/types"
 )
 
 const (
 	RangeTypeGit RangeType = "GIT"
-)
 
-type Ecosystem struct {
-	Name   types.Ecosystem `json:"name"`
-	Suffix string          `json:"suffix,omitempty"` // Any ecosystems may have a suffix, e.g. "Seal:Red Hat:6"/"Seal:Debian"
-}
+	// Ecosystem constants in lowercase for case-insensitive comparison
+	ecosystemGo         = "go"
+	ecosystemNpm        = "npm"
+	ecosystemPyPI       = "pypi"
+	ecosystemRubygems   = "rubygems"
+	ecosystemCrates     = "crates.io"
+	ecosystemPackagist  = "packagist"
+	ecosystemMaven      = "maven"
+	ecosystemNuGet      = "nuget"
+	ecosystemHex        = "hex"
+	ecosystemPub        = "pub"
+	ecosystemSwiftURL   = "swifturl"
+	ecosystemBitnami    = "bitnami"
+	ecosystemKubernetes = "kubernetes"
+)
 
 type RangeType string
 

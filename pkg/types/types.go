@@ -194,6 +194,3 @@ type Vulnerability struct {
 	// Custom is basically for extensibility and is not supposed to be used in OSS
 	Custom any `json:",omitempty"`
 }
-
-// Ecosystem represents language-specific ecosystem
-type Ecosystem string
