@@ -133,8 +133,13 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 			// Replace a git URL with a CocoaPods package name in a Swift vulnerability
 			// and store it as a CocoaPods vulnerability.
 			adv.Severity = severity
+			dsb, ok := adv.Bucket.(bucket.DataSourceBucket)
+			if !ok {
+				return nil, oops.With("package_name", adv.PkgName).With("bucket_type", fmt.Sprintf("%T", adv.Bucket)).
+					With("source_ecosystem", ecosystem.Swift).Errorf("Swift bucket does not implement DataSourceBucket interface")
+			}
 			var err error
-			if adv.Bucket, err = bucket.NewCocoapods(adv.Bucket.DataSource()); err != nil {
+			if adv.Bucket, err = bucket.NewCocoapods(dsb.DataSource()); err != nil {
 				return nil, oops.With("package_name", adv.PkgName).With("source_ecosystem", ecosystem.Swift).
 					With("target_ecosystem", ecosystem.Cocoapods).Wrapf(err, "failed to create Cocoapods bucket")
 			}

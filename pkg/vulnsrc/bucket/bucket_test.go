@@ -113,22 +113,12 @@ func TestBucket_Name(t *testing.T) {
 	}
 }
 
-func TestBucket_DataSource(t *testing.T) {
+func TestDataSourceBucket_DataSource(t *testing.T) {
 	tests := []struct {
 		name   string
-		bucket bucket.Bucket
+		bucket bucket.DataSourceBucket
 		want   types.DataSource
 	}{
-		{
-			name:   "Alpine OS bucket returns empty DataSource",
-			bucket: bucket.NewAlpine("3.11"),
-			want:   types.DataSource{},
-		},
-		{
-			name:   "RedHat OS bucket returns empty DataSource",
-			bucket: bucket.NewRedHat(),
-			want:   types.DataSource{},
-		},
 		{
 			name: "Go language bucket returns DataSource",
 			bucket: lo.Must(bucket.NewGo(types.DataSource{

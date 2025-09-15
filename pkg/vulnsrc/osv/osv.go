@@ -162,7 +162,11 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 		}
 
 		bktName := adv.Bucket.Name()
-		if err = o.dbc.PutDataSource(tx, bktName, adv.Bucket.DataSource()); err != nil {
+		dsb, ok := adv.Bucket.(bucket.DataSourceBucket)
+		if !ok {
+			return oops.With("bucket_name", bktName).With("bucket_type", fmt.Sprintf("%T", adv.Bucket)).Errorf("bucket does not implement DataSourceBucket interface")
+		}
+		if err = o.dbc.PutDataSource(tx, bktName, dsb.DataSource()); err != nil {
 			return oops.Wrapf(err, "failed to put data source")
 		}
 
