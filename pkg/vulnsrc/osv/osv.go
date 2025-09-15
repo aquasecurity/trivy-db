@@ -223,9 +223,6 @@ func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) (
 			// Skip unsupported ecosystems
 			continue
 		}
-		if lo.IsNil(bkt) { // `bkt == nil` does not work here because of the interface type
-			continue
-		}
 		pkgName := vulnerability.NormalizePkgName(bkt.Ecosystem(), affected.Package.Name)
 		eb := eb.With("ecosystem", bkt.Ecosystem()).With("package_name", pkgName)
 
