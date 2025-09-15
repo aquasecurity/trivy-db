@@ -3,6 +3,7 @@ package bucket_test
 import (
 	"testing"
 
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
@@ -50,56 +51,56 @@ func TestBucket_Name(t *testing.T) {
 		// Language ecosystems
 		{
 			name: "Go with GHSA",
-			bucket: bucket.NewGo(types.DataSource{
+			bucket: lo.Must(bucket.NewGo(types.DataSource{
 				ID:   vulnerability.GHSA,
 				Name: "GitHub Security Advisory",
 				URL:  "https://github.com/advisories",
-			}),
+			})),
 			want: "go::GitHub Security Advisory",
 		},
 		{
 			name: "npm with GitLab",
-			bucket: bucket.NewNpm(types.DataSource{
+			bucket: lo.Must(bucket.NewNpm(types.DataSource{
 				ID:   vulnerability.GLAD,
 				Name: "GitLab Advisory Database",
 				URL:  "https://gitlab.com/advisories",
-			}),
+			})),
 			want: "npm::GitLab Advisory Database",
 		},
 		{
 			name: "PyPI with GHSA",
-			bucket: bucket.NewPyPI(types.DataSource{
+			bucket: lo.Must(bucket.NewPyPI(types.DataSource{
 				ID:   vulnerability.GHSA,
 				Name: "GitHub Security Advisory PyPI",
 				URL:  "https://github.com/advisories",
-			}),
+			})),
 			want: "pip::GitHub Security Advisory PyPI",
 		},
 		{
 			name: "Composer with GHSA",
-			bucket: bucket.NewComposer(types.DataSource{
+			bucket: lo.Must(bucket.NewComposer(types.DataSource{
 				ID:   vulnerability.GHSA,
 				Name: "GitHub Security Advisory Composer",
 				URL:  "https://github.com/advisories",
-			}),
+			})),
 			want: "composer::GitHub Security Advisory Composer",
 		},
 		{
 			name: "RubyGems with GHSA",
-			bucket: bucket.NewRubyGems(types.DataSource{
+			bucket: lo.Must(bucket.NewRubyGems(types.DataSource{
 				ID:   vulnerability.GHSA,
 				Name: "GitHub Security Advisory RubyGems",
 				URL:  "https://github.com/advisories",
-			}),
+			})),
 			want: "rubygems::GitHub Security Advisory RubyGems",
 		},
 		{
 			name: "Cargo with GHSA",
-			bucket: bucket.NewCargo(types.DataSource{
+			bucket: lo.Must(bucket.NewCargo(types.DataSource{
 				ID:   vulnerability.GHSA,
 				Name: "GitHub Security Advisory Cargo",
 				URL:  "https://github.com/advisories",
-			}),
+			})),
 			want: "cargo::GitHub Security Advisory Cargo",
 		},
 	}
@@ -130,11 +131,11 @@ func TestBucket_DataSource(t *testing.T) {
 		},
 		{
 			name: "Go language bucket returns DataSource",
-			bucket: bucket.NewGo(types.DataSource{
+			bucket: lo.Must(bucket.NewGo(types.DataSource{
 				ID:   vulnerability.GHSA,
 				Name: "GitHub Security Advisory",
 				URL:  "https://github.com/advisories",
-			}),
+			})),
 			want: types.DataSource{
 				ID:   vulnerability.GHSA,
 				Name: "GitHub Security Advisory",
@@ -143,11 +144,11 @@ func TestBucket_DataSource(t *testing.T) {
 		},
 		{
 			name: "npm language bucket returns DataSource",
-			bucket: bucket.NewNpm(types.DataSource{
+			bucket: lo.Must(bucket.NewNpm(types.DataSource{
 				ID:   vulnerability.GLAD,
 				Name: "GitLab Advisory Database",
 				URL:  "https://gitlab.com/advisories",
-			}),
+			})),
 			want: types.DataSource{
 				ID:   vulnerability.GLAD,
 				Name: "GitLab Advisory Database",

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/samber/lo"
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
 	"gopkg.in/yaml.v2"
@@ -25,7 +26,7 @@ var (
 		URL:  "https://github.com/rubysec/ruby-advisory-db",
 	}
 
-	bucketName = bucket.NewRubyGems(source).Name()
+	bucketName = lo.Must(bucket.NewRubyGems(source)).Name()
 )
 
 type RawAdvisory struct {

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/samber/lo"
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/text/cases"
@@ -138,7 +139,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, pkgType packageType, glads []Advisory) err
 		if !ok {
 			return eb.Errorf("failed to get ecosystem: %s", pkgType)
 		}
-		bucketName := bucket.NewConan(source).Name() // GLAD only supports Conan for now
+		bucketName := lo.Must(bucket.NewConan(source)).Name() // GLAD only supports Conan for now
 		eb = eb.With("ecosystem", eco)
 
 		if err := vs.dbc.PutDataSource(tx, bucketName, source); err != nil {

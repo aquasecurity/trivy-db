@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/samber/lo"
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
 	"gopkg.in/yaml.v2"
@@ -25,7 +26,7 @@ var (
 		URL:  "https://github.com/FriendsOfPHP/security-advisories",
 	}
 
-	bucketName = bucket.NewComposer(source).Name()
+	bucketName = lo.Must(bucket.NewComposer(source)).Name()
 )
 
 type RawAdvisory struct {

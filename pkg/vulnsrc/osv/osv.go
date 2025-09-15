@@ -214,7 +214,11 @@ func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) (
 
 	uniqAdvisories := map[string]Advisory{}
 	for _, affected := range entry.Affected {
-		bkt := o.convertEcosystem(affected.Package.Ecosystem)
+		bkt, err := o.convertEcosystem(affected.Package.Ecosystem)
+		if err != nil {
+			// Skip unsupported ecosystems
+			continue
+		}
 		if lo.IsNil(bkt) { // `bkt == nil` does not work here because of the interface type
 			continue
 		}
@@ -380,7 +384,7 @@ func parseSeverity(severities []Severity) (string, float64, error) {
 	return "", 0, nil
 }
 
-func (o OSV) convertEcosystem(raw Ecosystem) bucket.Bucket {
+func (o OSV) convertEcosystem(raw Ecosystem) (bucket.Bucket, error) {
 	eco, _, _ := strings.Cut(string(raw), ":")
 	switch strings.ToLower(eco) {
 	case ecosystemGo:
@@ -410,7 +414,7 @@ func (o OSV) convertEcosystem(raw Ecosystem) bucket.Bucket {
 	case ecosystemKubernetes:
 		return bucket.NewKubernetes(o.dataSources[ecosystem.Kubernetes])
 	default:
-		return nil
+		return nil, oops.Errorf("unsupported ecosystem: %s", eco)
 	}
 }
 

@@ -1,6 +1,9 @@
 package bucket
 
 import (
+	"github.com/samber/lo"
+	"github.com/samber/oops"
+
 	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 )
@@ -62,14 +65,14 @@ func newOS(ecoType ecosystem.Type, version string) osBucket {
 }
 
 // newLang creates a bucket for language ecosystems
-func newLang(ecoType ecosystem.Type, dataSource types.DataSource) Bucket {
-	if dataSource.ID == "" {
-		return nil
+func newLang(ecoType ecosystem.Type, dataSource types.DataSource) (Bucket, error) {
+	if lo.IsEmpty(dataSource) {
+		return nil, oops.With("ecosystem", ecoType).Errorf("data source cannot be empty")
 	}
 	return langBucket{
 		ecosystem:  ecoType,
 		dataSource: dataSource,
-	}
+	}, nil
 }
 
 /////////////////////////
@@ -264,50 +267,68 @@ func NewSUSELinuxEnterpriseMicro(version string) Bucket {
 ////////////////////////////////
 
 // NewBitnami creates a bucket for Bitnami ecosystem with data source
-func NewBitnami(dataSource types.DataSource) Bucket { return newLang(ecosystem.Bitnami, dataSource) }
+func NewBitnami(dataSource types.DataSource) (Bucket, error) {
+	return newLang(ecosystem.Bitnami, dataSource)
+}
 
 // NewCargo creates a bucket for Cargo ecosystem with data source
-func NewCargo(dataSource types.DataSource) Bucket { return newLang(ecosystem.Cargo, dataSource) }
+func NewCargo(dataSource types.DataSource) (Bucket, error) {
+	return newLang(ecosystem.Cargo, dataSource)
+}
 
 // NewCocoapods creates a bucket for Cocoapods ecosystem with data source
-func NewCocoapods(dataSource types.DataSource) Bucket {
+func NewCocoapods(dataSource types.DataSource) (Bucket, error) {
 	return newLang(ecosystem.Cocoapods, dataSource)
 }
 
 // NewConan creates a bucket for Conan ecosystem with data source
-func NewConan(dataSource types.DataSource) Bucket { return newLang(ecosystem.Conan, dataSource) }
+func NewConan(dataSource types.DataSource) (Bucket, error) {
+	return newLang(ecosystem.Conan, dataSource)
+}
 
 // NewComposer creates a bucket for Composer ecosystem with data source
-func NewComposer(dataSource types.DataSource) Bucket { return newLang(ecosystem.Composer, dataSource) }
+func NewComposer(dataSource types.DataSource) (Bucket, error) {
+	return newLang(ecosystem.Composer, dataSource)
+}
 
 // NewErlang creates a bucket for Erlang ecosystem with data source
-func NewErlang(dataSource types.DataSource) Bucket { return newLang(ecosystem.Erlang, dataSource) }
+func NewErlang(dataSource types.DataSource) (Bucket, error) {
+	return newLang(ecosystem.Erlang, dataSource)
+}
 
 // NewGo creates a bucket for Go ecosystem with data source
-func NewGo(dataSource types.DataSource) Bucket { return newLang(ecosystem.Go, dataSource) }
+func NewGo(dataSource types.DataSource) (Bucket, error) { return newLang(ecosystem.Go, dataSource) }
 
 // NewKubernetes creates a bucket for Kubernetes ecosystem with data source
-func NewKubernetes(dataSource types.DataSource) Bucket {
+func NewKubernetes(dataSource types.DataSource) (Bucket, error) {
 	return newLang(ecosystem.Kubernetes, dataSource)
 }
 
 // NewMaven creates a bucket for Maven ecosystem with data source
-func NewMaven(dataSource types.DataSource) Bucket { return newLang(ecosystem.Maven, dataSource) }
+func NewMaven(dataSource types.DataSource) (Bucket, error) {
+	return newLang(ecosystem.Maven, dataSource)
+}
 
 // NewNpm creates a bucket for npm ecosystem with data source
-func NewNpm(dataSource types.DataSource) Bucket { return newLang(ecosystem.Npm, dataSource) }
+func NewNpm(dataSource types.DataSource) (Bucket, error) { return newLang(ecosystem.Npm, dataSource) }
 
 // NewNuGet creates a bucket for NuGet ecosystem with data source
-func NewNuGet(dataSource types.DataSource) Bucket { return newLang(ecosystem.NuGet, dataSource) }
+func NewNuGet(dataSource types.DataSource) (Bucket, error) {
+	return newLang(ecosystem.NuGet, dataSource)
+}
 
 // NewPub creates a bucket for Pub ecosystem with data source
-func NewPub(dataSource types.DataSource) Bucket { return newLang(ecosystem.Pub, dataSource) }
+func NewPub(dataSource types.DataSource) (Bucket, error) { return newLang(ecosystem.Pub, dataSource) }
 
 // NewPyPI creates a bucket for PyPI ecosystem with data source
-func NewPyPI(dataSource types.DataSource) Bucket { return newLang(ecosystem.Pip, dataSource) }
+func NewPyPI(dataSource types.DataSource) (Bucket, error) { return newLang(ecosystem.Pip, dataSource) }
 
 // NewRubyGems creates a bucket for RubyGems ecosystem with data source
-func NewRubyGems(dataSource types.DataSource) Bucket { return newLang(ecosystem.RubyGems, dataSource) }
+func NewRubyGems(dataSource types.DataSource) (Bucket, error) {
+	return newLang(ecosystem.RubyGems, dataSource)
+}
 
 // NewSwift creates a bucket for Swift ecosystem with data source
-func NewSwift(dataSource types.DataSource) Bucket { return newLang(ecosystem.Swift, dataSource) }
+func NewSwift(dataSource types.DataSource) (Bucket, error) {
+	return newLang(ecosystem.Swift, dataSource)
+}

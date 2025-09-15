@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/samber/lo"
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
 
@@ -26,7 +27,7 @@ var (
 		URL:  "https://github.com/nodejs/security-wg",
 	}
 
-	bucketName = bucket.NewNpm(source).Name()
+	bucketName = lo.Must(bucket.NewNpm(source)).Name()
 )
 
 type Number struct {
