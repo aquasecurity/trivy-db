@@ -15,16 +15,13 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-const (
-	almaDir = "alma"
-)
+const almaDir = "alma"
 
 var (
-	platformFormat = "alma %s"
-
 	source = types.DataSource{
 		ID:   vulnerability.Alma,
 		Name: "AlmaLinux Product Errata",
@@ -113,7 +110,7 @@ func (vs *VulnSrc) parse(rootDir string) (map[string][]Erratum, error) {
 func (vs *VulnSrc) put(errataVer map[string][]Erratum) error {
 	err := vs.BatchUpdate(func(tx *bolt.Tx) error {
 		for majorVer, errata := range errataVer {
-			platformName := fmt.Sprintf(platformFormat, majorVer)
+			platformName := bucket.NewAlma(majorVer).Name()
 			eb := oops.With("platform", platformName).With("major_version", majorVer)
 			if err := vs.PutDataSource(tx, platformName, source); err != nil {
 				return eb.Wrapf(err, "failed to put data source")
@@ -214,8 +211,8 @@ func (a *Alma) Put(tx *bolt.Tx, input PutInput) error {
 }
 
 func (a *Alma) Get(params db.GetParams) ([]types.Advisory, error) {
-	bucket := fmt.Sprintf(platformFormat, params.Release)
-	advisories, err := a.GetAdvisories(bucket, params.PkgName)
+	platformName := bucket.NewAlma(params.Release).Name()
+	advisories, err := a.GetAdvisories(platformName, params.PkgName)
 	if err != nil {
 		return nil, oops.With("release", params.Release).With("package_name", params.PkgName).Wrapf(err, "failed to get advisories")
 	}

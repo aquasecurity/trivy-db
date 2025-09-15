@@ -8,6 +8,7 @@ import (
 
 	"github.com/samber/oops"
 
+	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -43,7 +44,7 @@ func walkCocoaPodsSpecs(root string) (map[string][]string, error) {
 		}
 
 		// Trim `https://` prefix and `.git` suffix to fit the format
-		link := vulnerability.NormalizePkgName(vulnerability.Swift, spec.Source.Git)
+		link := vulnerability.NormalizePkgName(ecosystem.Swift, spec.Source.Git)
 		// some packages (or subpackages) can use same git url
 		// we need to save all packages
 		if names, ok := specs[link]; ok {

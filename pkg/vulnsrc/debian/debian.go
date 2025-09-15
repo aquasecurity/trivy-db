@@ -2,7 +2,6 @@ package debian
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -17,6 +16,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -34,9 +34,6 @@ const (
 	cveDir            = "CVE"
 	dlaDir            = "DLA"
 	dsaDir            = "DSA"
-
-	// e.g. debian 8
-	platformFormat = "debian %s"
 )
 
 var (
@@ -77,20 +74,20 @@ type VulnSrc struct {
 
 	// Hold the latest versions of each codename in Sources.json
 	// e.g. {"buster", "bash"} => "5.0-4"
-	pkgVersions map[bucket]string
+	pkgVersions map[advisoryKey]string
 
 	// Hold the fixed versions of vulnerabilities in sid
 	// e.g. {"putty", "CVE-2021-36367"} => "0.75-3" // fixed vulnerability
 	//      {"ndpi",  "CVE-2021-36082"} => ""       // unfixed vulnerability
-	sidFixedVersions map[bucket]string
+	sidFixedVersions map[advisoryKey]string
 
 	// Hold debian advisories
 	// e.g. {"buster", "connman", "CVE-2021-33833"} => {"FixedVersion": 1.36-2.1~deb10u2, ...}
-	bktAdvisories map[bucket]Advisory
+	advisories map[advisoryKey]Advisory
 
 	// Hold not-affected versions
 	// e.g. {"buster", "linux", "CVE-2021-3739"} => {}
-	notAffected map[bucket]struct{}
+	notAffected map[advisoryKey]struct{}
 }
 
 func NewVulnSrc(opts ...Option) VulnSrc {
@@ -100,10 +97,10 @@ func NewVulnSrc(opts ...Option) VulnSrc {
 		logger:           log.WithPrefix("debian"),
 		distributions:    map[string]string{},
 		details:          map[string]VulnerabilityDetail{},
-		pkgVersions:      map[bucket]string{},
-		sidFixedVersions: map[bucket]string{},
-		bktAdvisories:    map[bucket]Advisory{},
-		notAffected:      map[bucket]struct{}{},
+		pkgVersions:      map[advisoryKey]string{},
+		sidFixedVersions: map[advisoryKey]string{},
+		advisories:       map[advisoryKey]Advisory{},
+		notAffected:      map[advisoryKey]struct{}{},
 	}
 
 	for _, opt := range opts {
@@ -203,7 +200,7 @@ func (vs VulnSrc) parseCVE(dir string) error {
 				continue
 			}
 
-			bkt := bucket{
+			key := advisoryKey{
 				codeName: ann.Release, // It will be empty in the case of sid.
 				pkgName:  ann.Package,
 				vulnID:   cveID,
@@ -211,29 +208,32 @@ func (vs VulnSrc) parseCVE(dir string) error {
 
 			// Skip not-affected, removed or undetermined advisories
 			if slices.Contains(skipStatuses, ann.Kind) {
-				vs.notAffected[bkt] = struct{}{}
+				vs.notAffected[key] = struct{}{}
 				continue
 			}
 
 			// For sid
 			if ann.Release == "" {
-				sidBkt := bucket{
+				sidKey := advisoryKey{
 					pkgName: ann.Package,
 					vulnID:  cveID,
 				}
 				if ann.Severity != "" {
 					severities[ann.Package] = ann.Severity
-					sidBkt.severity = ann.Severity
+					sidKey.severity = ann.Severity
 				}
 
-				vs.sidFixedVersions[sidBkt] = ann.Version // it may be empty for unfixed vulnerabilities
+				vs.sidFixedVersions[sidKey] = ann.Version // it may be empty for unfixed vulnerabilities
 
 				continue
 			}
 
 			fixedVersion := ann.Version
 			kind := ann.Kind
-			if latestVersion, ok := vs.pkgVersions[bucket{codeName: ann.Release, pkgName: ann.Package}]; ok {
+			if latestVersion, ok := vs.pkgVersions[advisoryKey{
+				codeName: ann.Release,
+				pkgName:  ann.Package,
+			}]; ok {
 				// If the fixed version has not yet been released, then set the state to "unfixed".
 				if comp, err := compareVersions(latestVersion, fixedVersion); err == nil && comp < 0 {
 					fixedVersion = ""
@@ -255,7 +255,7 @@ func (vs VulnSrc) parseCVE(dir string) error {
 			}
 
 			// This advisory might be overwritten by DLA/DSA.
-			vs.bktAdvisories[bkt] = advisory
+			vs.advisories[key] = advisory
 		}
 
 		return nil
@@ -309,7 +309,7 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 			}
 
 			for _, vulnID := range vulnIDs {
-				bkt := bucket{
+				key := advisoryKey{
 					codeName: ann.Release,
 					pkgName:  ann.Package,
 					vulnID:   vulnID,
@@ -318,11 +318,11 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 
 				// Skip not-affected, removed or undetermined advisories
 				if slices.Contains(skipStatuses, ann.Kind) {
-					vs.notAffected[bkt] = struct{}{}
+					vs.notAffected[key] = struct{}{}
 					continue
 				}
 
-				adv, ok := vs.bktAdvisories[bkt]
+				adv, ok := vs.advisories[key]
 				if ok {
 					// If some advisories fix the same CVE-ID, the latest version will be taken.
 					// We assume that the first fix was insufficient and the next advisory fixed it correctly.
@@ -344,7 +344,7 @@ func (vs VulnSrc) parseAdvisory(dir string) error {
 					}
 				}
 
-				vs.bktAdvisories[bkt] = adv
+				vs.advisories[key] = adv
 			}
 		}
 
@@ -364,12 +364,12 @@ func (vs VulnSrc) save() error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx) error {
 	// Iterate all pairs of package name and CVE-ID in sid
-	for sidBkt, sidVer := range vs.sidFixedVersions {
-		pkgName := sidBkt.pkgName
-		cveID := sidBkt.vulnID
+	for sidKey, sidVer := range vs.sidFixedVersions {
+		pkgName := sidKey.pkgName
+		cveID := sidKey.vulnID
 
 		// Skip if the advisory is stated as "not-affected" for all distributions.
-		if _, ok := vs.notAffected[bucket{
+		if _, ok := vs.notAffected[advisoryKey{
 			pkgName: pkgName,
 			vulnID:  cveID,
 		}]; ok {
@@ -378,7 +378,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 
 		// Iterate all codenames, e.g. buster
 		for code := range vs.distributions {
-			bkt := bucket{
+			key := advisoryKey{
 				codeName: code,
 				pkgName:  pkgName,
 				vulnID:   cveID,
@@ -386,13 +386,13 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 			eb := oops.With("sid", sidVer).With("package_name", pkgName).With("vuln_id", cveID).With("code_name", code)
 
 			// Skip if the advisory is stated as "not-affected" for the specific distribution.
-			if _, ok := vs.notAffected[bkt]; ok {
+			if _, ok := vs.notAffected[key]; ok {
 				continue
 			}
 
 			// Check if the advisory already exists for the codename
 			// If yes, it will be inserted into DB later.
-			adv, ok := vs.bktAdvisories[bkt]
+			adv, ok := vs.advisories[key]
 			if ok && adv.State == "" {
 				// "no-dsa" or "postponed" might be wrong, and it may have a fixed version.
 				// e.g.
@@ -402,14 +402,14 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 			}
 
 			// If no, the fixed version needs to be determined by comparing with the fixed version in sid.
-			pkgBkt := bucket{
+			pkgKey := advisoryKey{
 				codeName: code,
 				pkgName:  pkgName,
 			}
 
 			// Get the latest version in the release
 			// e.g. {"buster", "bash"} => "5.0-4"
-			codeVer, ok := vs.pkgVersions[pkgBkt]
+			codeVer, ok := vs.pkgVersions[pkgKey]
 			if !ok {
 				continue
 			}
@@ -423,42 +423,42 @@ func (vs VulnSrc) commit(tx *bolt.Tx) error {
 			if fixed {
 				adv.FixedVersion = sidVer
 				adv.State = "" // Overwrite state such as "no-dsa" and "postponed" because it is wrong.
-				delete(vs.bktAdvisories, bkt)
+				delete(vs.advisories, key)
 			}
 
 			// Add severity
-			adv.Severity = sidBkt.severity
+			adv.Severity = sidKey.severity
 
-			bkt.vulnID = cveID
-			if err = vs.putAdvisory(tx, bkt, adv); err != nil {
+			key.vulnID = cveID
+			if err = vs.putAdvisory(tx, key, adv); err != nil {
 				return eb.Wrapf(err, "put advisory error")
 			}
 		}
 	}
 
 	// All advisories with codename and fixed version are inserted into DB here.
-	for bkt, advisory := range vs.bktAdvisories {
-		if err := vs.putAdvisory(tx, bkt, advisory); err != nil {
+	for key, advisory := range vs.advisories {
+		if err := vs.putAdvisory(tx, key, advisory); err != nil {
 			return oops.Wrapf(err, "put advisory error")
 		}
 	}
 	return nil
 }
 
-func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt bucket, advisory Advisory) error {
+func (vs VulnSrc) putAdvisory(tx *bolt.Tx, key advisoryKey, advisory Advisory) error {
 	// Convert codename to major version
 	// e.g. "buster" => "10"
-	majorVersion, ok := vs.distributions[bkt.codeName]
+	majorVersion, ok := vs.distributions[key.codeName]
 	if !ok {
 		// Stale codename such as squeeze and sarge
 		return nil
 	}
 
 	// Fill information for the buckets.
-	advisory.VulnerabilityID = bkt.vulnID
-	advisory.PkgName = bkt.pkgName
-	advisory.Platform = fmt.Sprintf(platformFormat, majorVersion)
-	advisory.Title = vs.details[bkt.vulnID].Description // The Debian description is short, so we'll use it as a title.
+	advisory.VulnerabilityID = key.vulnID
+	advisory.PkgName = key.pkgName
+	advisory.Platform = bucket.NewDebian(majorVersion).Name()
+	advisory.Title = vs.details[key.vulnID].Description // The Debian description is short, so we'll use it as a title.
 
 	eb := oops.With("vuln_id", advisory.VulnerabilityID).With("package_name", advisory.PkgName).With("platform", advisory.Platform)
 	if err := vs.put(vs.dbc, tx, advisory); err != nil {
@@ -507,7 +507,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory any) error {
 
 func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In("debian").With("release", params.Release).With("package_name", params.PkgName)
-	bkt := fmt.Sprintf(platformFormat, params.Release)
+	bkt := bucket.NewDebian(params.Release).Name()
 	advisories, err := vs.dbc.GetAdvisories(bkt, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories")
@@ -589,16 +589,16 @@ func (vs VulnSrc) parseSources(dir string) error {
 				return nil
 			}
 
-			bkt := bucket{
+			key := advisoryKey{
 				codeName: code,
 				pkgName:  pkg.Package[0],
 			}
 
 			version := pkg.Version[0]
-			eb = eb.With("pkg_name", bkt.pkgName).With("version", version)
+			eb = eb.With("pkg_name", key.pkgName).With("version", version)
 
 			// Skip the update when the stored version is greater than the processing version.
-			if v, ok := vs.pkgVersions[bkt]; ok {
+			if v, ok := vs.pkgVersions[key]; ok {
 				res, err := compareVersions(v, version)
 				if err != nil {
 					return eb.Wrapf(err, "version comparison error")
@@ -610,7 +610,7 @@ func (vs VulnSrc) parseSources(dir string) error {
 			}
 
 			// Store package name and version per codename
-			vs.pkgVersions[bkt] = version
+			vs.pkgVersions[key] = version
 
 			return nil
 		})

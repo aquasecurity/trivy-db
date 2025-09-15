@@ -20,11 +20,8 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/utils/ints"
 	ustrings "github.com/aquasecurity/trivy-db/pkg/utils/strings"
+	bucketpkg "github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
-)
-
-const (
-	rootBucket = "Red Hat"
 )
 
 var (
@@ -184,7 +181,7 @@ func (vs VulnSrc) mergeAdvisories(advisories map[bucket]Advisory, defs map[bucke
 func (vs VulnSrc) save(repoToCpe, nvrToCpe map[string][]string, advisories map[bucket]Advisory, uniqCPEs CPEMap) error {
 	cpeList := uniqCPEs.List()
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		if err := vs.dbc.PutDataSource(tx, rootBucket, source); err != nil {
+		if err := vs.dbc.PutDataSource(tx, bucketpkg.NewRedHat().Name(), source); err != nil {
 			return oops.Wrapf(err, "failed to put data source")
 		}
 
@@ -209,7 +206,7 @@ func (vs VulnSrc) save(repoToCpe, nvrToCpe map[string][]string, advisories map[b
 				advisory.Entries[i].AffectedCPEIndices = cpeList.Indices(advisory.Entries[i].AffectedCPEList)
 			}
 
-			if err := vs.dbc.PutAdvisoryDetail(tx, bkt.vulnID, bkt.pkgName, []string{rootBucket}, advisory); err != nil {
+			if err := vs.dbc.PutAdvisoryDetail(tx, bkt.vulnID, bkt.pkgName, []string{bucketpkg.NewRedHat().Name()}, advisory); err != nil {
 				return oops.Wrapf(err, "failed to save Red Hat OVAL advisory")
 			}
 
@@ -265,7 +262,7 @@ func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advi
 		return nil, eb.Errorf("unable to find CPE indices. See https://github.com/aquasecurity/trivy-db/issues/435 for details")
 	}
 
-	rawAdvisories, err := vs.dbc.ForEachAdvisory([]string{rootBucket}, pkgName)
+	rawAdvisories, err := vs.dbc.ForEachAdvisory([]string{bucketpkg.NewRedHat().Name()}, pkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "unable to iterate advisories")
 	}

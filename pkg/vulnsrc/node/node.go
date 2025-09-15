@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/samber/lo"
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
 
@@ -17,9 +18,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-const (
-	nodeDir = "nodejs-security-wg"
-)
+const nodeDir = "nodejs-security-wg"
 
 var (
 	source = types.DataSource{
@@ -28,7 +27,7 @@ var (
 		URL:  "https://github.com/nodejs/security-wg",
 	}
 
-	bucketName = bucket.Name(vulnerability.Npm, source.Name)
+	bucketName = lo.Must(bucket.NewNpm(source)).Name()
 )
 
 type Number struct {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/samber/oops"
 
+	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -15,8 +16,8 @@ import (
 var bitnamiDir = filepath.Join("bitnami-vulndb", "data")
 
 func NewVulnSrc() osv.OSV {
-	sources := map[types.Ecosystem]types.DataSource{
-		vulnerability.Bitnami: {
+	sources := map[ecosystem.Type]types.DataSource{
+		ecosystem.Bitnami: {
 			ID:   vulnerability.BitnamiVulndb,
 			Name: "Bitnami Vulnerability Database",
 			URL:  "https://github.com/bitnami/vulndb",

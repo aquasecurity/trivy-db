@@ -2,7 +2,6 @@ package photon
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"path/filepath"
 
@@ -13,13 +12,11 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-const (
-	photonDir      = "photon"
-	platformFormat = "Photon OS %s"
-)
+const photonDir = "photon"
 
 var source = types.DataSource{
 	ID:   vulnerability.Photon,
@@ -81,7 +78,7 @@ func (vs VulnSrc) save(cves []PhotonCVE) error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx, cves []PhotonCVE) error {
 	for _, cve := range cves {
-		platformName := fmt.Sprintf(platformFormat, cve.OSVersion)
+		platformName := bucket.NewPhoton(cve.OSVersion).Name()
 		if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
 			return oops.Wrapf(err, "failed to put data source")
 		}
@@ -111,8 +108,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []PhotonCVE) error {
 
 func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In("photon").With("release", params.Release)
-	bucket := fmt.Sprintf(platformFormat, params.Release)
-	advisories, err := vs.dbc.GetAdvisories(bucket, params.PkgName)
+	platformName := bucket.NewPhoton(params.Release).Name()
+	advisories, err := vs.dbc.GetAdvisories(platformName, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories")
 	}

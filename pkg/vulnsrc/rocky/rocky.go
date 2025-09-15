@@ -2,7 +2,6 @@ package rocky
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"path/filepath"
 	"slices"
@@ -17,13 +16,11 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-const (
-	rockyDir       = "rocky"
-	platformFormat = "rocky %s"
-)
+const rockyDir = "rocky"
 
 var (
 	targetRepos = []string{
@@ -137,7 +134,7 @@ func (vs *VulnSrc) parse(rootDir string) (map[string][]RLSA, error) {
 func (vs *VulnSrc) put(errataVer map[string][]RLSA) error {
 	err := vs.BatchUpdate(func(tx *bolt.Tx) error {
 		for majorVer, errata := range errataVer {
-			platformName := fmt.Sprintf(platformFormat, majorVer)
+			platformName := bucket.NewRocky(majorVer).Name()
 			eb := oops.With("major_version", majorVer)
 			if err := vs.PutDataSource(tx, platformName, source); err != nil {
 				return eb.Wrapf(err, "failed to put data source")
@@ -267,8 +264,8 @@ func (r *Rocky) Put(tx *bolt.Tx, input PutInput) error {
 
 func (r *Rocky) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In("rocky").With("release", params.Release).With("package_name", params.PkgName).With("arch", params.Arch)
-	bucket := fmt.Sprintf(platformFormat, params.Release)
-	rawAdvisories, err := r.ForEachAdvisory([]string{bucket}, params.PkgName)
+	platformName := bucket.NewRocky(params.Release).Name()
+	rawAdvisories, err := r.ForEachAdvisory([]string{platformName}, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "unable to iterate advisories")
 	}

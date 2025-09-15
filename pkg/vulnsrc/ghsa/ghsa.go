@@ -10,7 +10,9 @@ import (
 	"github.com/samber/oops"
 	"golang.org/x/tools/go/packages"
 
+	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
@@ -25,19 +27,19 @@ var (
 	ghsaDir = filepath.Join("ghsa", "advisories", "github-reviewed")
 
 	// Mapping between Trivy ecosystem and GHSA ecosystem
-	ecosystems = map[types.Ecosystem]string{
-		vulnerability.Composer:  "Composer",
-		vulnerability.Go:        "Go",
-		vulnerability.Maven:     "Maven",
-		vulnerability.Npm:       "npm",
-		vulnerability.NuGet:     "NuGet",
-		vulnerability.Pip:       "pip",
-		vulnerability.RubyGems:  "RubyGems",
-		vulnerability.Cargo:     "Rust", // different name
-		vulnerability.Erlang:    "Erlang",
-		vulnerability.Pub:       "Pub",
-		vulnerability.Swift:     "Swift",
-		vulnerability.Cocoapods: "Swift", // Use Swift advisories for CocoaPods
+	ecosystems = map[ecosystem.Type]string{
+		ecosystem.Composer:  "Composer",
+		ecosystem.Go:        "Go",
+		ecosystem.Maven:     "Maven",
+		ecosystem.Npm:       "npm",
+		ecosystem.NuGet:     "NuGet",
+		ecosystem.Pip:       "pip",
+		ecosystem.RubyGems:  "RubyGems",
+		ecosystem.Cargo:     "Rust", // different name
+		ecosystem.Erlang:    "Erlang",
+		ecosystem.Pub:       "Pub",
+		ecosystem.Swift:     "Swift",
+		ecosystem.Cocoapods: "Swift", // Use Swift advisories for CocoaPods
 	}
 	standardGoPackages = make(map[string]struct{})
 )
@@ -70,14 +72,14 @@ func (GHSA) Name() types.SourceID {
 
 func (GHSA) Update(root string) error {
 	eb := oops.In("ghsa").With("root_dir", root)
-	dataSources := map[types.Ecosystem]types.DataSource{}
-	for ecosystem, ghsaEcosystem := range ecosystems {
+	dataSources := map[ecosystem.Type]types.DataSource{}
+	for eco, ghsaEcosystem := range ecosystems {
 		src := types.DataSource{
 			ID:   sourceID,
 			Name: fmt.Sprintf(platformFormat, ghsaEcosystem),
 			URL:  fmt.Sprintf(urlFormat, strings.ToLower(ghsaEcosystem)),
 		}
-		dataSources[ecosystem] = src
+		dataSources[eco] = src
 	}
 
 	t, err := newTransformer(root)
@@ -104,7 +106,7 @@ func newTransformer(root string) (*transformer, error) {
 }
 
 func (t *transformer) PostParseAffected(adv osv.Advisory, affected osv.Affected) (osv.Advisory, error) {
-	eb := oops.With("ecosystem", adv.Ecosystem).With("package_name", adv.PkgName).With("vuln_id", adv.VulnerabilityID).With("aliases", adv.Aliases)
+	eb := oops.With("ecosystem", adv.Bucket.Ecosystem()).With("package_name", adv.PkgName).With("vuln_id", adv.VulnerabilityID).With("aliases", adv.Aliases)
 	if err := parseDatabaseSpecific(adv, affected.DatabaseSpecific); err != nil {
 		return osv.Advisory{}, eb.Wrapf(err, "failed to parse database specific")
 	}
@@ -126,22 +128,32 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 		// Fill severity from GHSA
 		advisories[i].Severity = severity
 
-		switch adv.Ecosystem {
-		case vulnerability.Swift:
+		switch adv.Bucket.Ecosystem() {
+		case ecosystem.Swift:
 			// Replace a git URL with a CocoaPods package name in a Swift vulnerability
 			// and store it as a CocoaPods vulnerability.
 			adv.Severity = severity
-			adv.Ecosystem = vulnerability.Cocoapods
+			dsb, ok := adv.Bucket.(bucket.DataSourceBucket)
+			if !ok {
+				return nil, oops.With("package_name", adv.PkgName).With("bucket_type", fmt.Sprintf("%T", adv.Bucket)).
+					With("source_ecosystem", ecosystem.Swift).Errorf("Swift bucket does not implement DataSourceBucket interface")
+			}
+			var err error
+			if adv.Bucket, err = bucket.NewCocoapods(dsb.DataSource()); err != nil {
+				return nil, oops.With("package_name", adv.PkgName).With("source_ecosystem", ecosystem.Swift).
+					With("target_ecosystem", ecosystem.Cocoapods).Wrapf(err, "failed to create Cocoapods bucket")
+			}
+
 			for _, pkgName := range t.cocoaPodsSpecs[adv.PkgName] {
 				adv.PkgName = pkgName
 				advisories = append(advisories, adv)
 			}
-		case vulnerability.Go:
+		case ecosystem.Go:
 			// Skip a standard Go package as we use the Go Vulnerability Database (govulndb) for standard packages.
 			if isStandardGoPackage(adv.PkgName) {
-				advisories[i].Ecosystem = "" // An empty ecosystem is skipped later
+				advisories[i].Bucket = nil // Set nil bucket to skip later
 			}
-		case vulnerability.NuGet:
+		case ecosystem.NuGet:
 			// NuGet is case-insensitive, so we store advisories in lowercase.
 			// However, for backward compatibility, we also keep advisories with the original package name.
 			// TODO: drop storing the original-case entry and keep only the lowercase key once downstream users have migrated.

@@ -2,7 +2,6 @@ package ubuntu
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"path/filepath"
 	"slices"
@@ -14,13 +13,11 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-const (
-	ubuntuDir      = "ubuntu"
-	platformFormat = "ubuntu %s"
-)
+const ubuntuDir = "ubuntu"
 
 var (
 	targetStatuses        = []string{"needed", "deferred", "released"}
@@ -154,8 +151,8 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []UbuntuCVE) error {
 
 func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In("ubuntu").With("release", params.Release).With("package_name", params.PkgName)
-	bucket := fmt.Sprintf(platformFormat, params.Release)
-	advisories, err := vs.dbc.GetAdvisories(bucket, params.PkgName)
+	bucketName := bucket.NewUbuntu(params.Release).Name()
+	advisories, err := vs.dbc.GetAdvisories(bucketName, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories")
 	}
@@ -178,7 +175,7 @@ func defaultPut(dbc db.Operation, tx *bolt.Tx, advisory any) error {
 			if !ok {
 				continue
 			}
-			platformName := fmt.Sprintf(platformFormat, osVersion)
+			platformName := bucket.NewUbuntu(osVersion).Name()
 			if err := dbc.PutDataSource(tx, platformName, source); err != nil {
 				return oops.Wrapf(err, "failed to put data source")
 			}

@@ -16,6 +16,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -26,12 +27,6 @@ const (
 	SUSEEnterpriseLinuxMicro
 	OpenSUSE
 	OpenSUSETumbleweed
-
-	platformOpenSUSELeapFormat             = "openSUSE Leap %s"
-	platformOpenSUSELeapMicroFormat        = "openSUSE Leap Micro %s"
-	platformOpenSUSETumbleweedFormat       = "openSUSE Tumbleweed"
-	platformSUSELinuxFormat                = "SUSE Linux Enterprise %s"
-	platformSUSELinuxEnterpriseMicroFormat = "SUSE Linux Enterprise Micro %s"
 )
 
 var (
@@ -232,7 +227,7 @@ func (vs VulnSrc) getOSVersion(platformName string) string {
 	}
 	if strings.HasPrefix(platformName, "openSUSE Tumbleweed") {
 		// Tumbleweed has no version, it is a rolling release
-		return platformOpenSUSETumbleweedFormat
+		return bucket.NewOpenSUSETumbleweed().Name()
 	}
 	if strings.HasPrefix(platformName, "openSUSE Leap Micro") {
 		ss := strings.Fields(platformName)
@@ -246,7 +241,7 @@ func (vs VulnSrc) getOSVersion(platformName string) string {
 			return ""
 		}
 
-		return fmt.Sprintf(platformOpenSUSELeapMicroFormat, ss[3])
+		return bucket.NewOpenSUSELeapMicro(ss[3]).Name()
 	}
 	if strings.HasPrefix(platformName, "openSUSE Leap") {
 		// openSUSE Leap 15.0
@@ -261,7 +256,7 @@ func (vs VulnSrc) getOSVersion(platformName string) string {
 				log.Err(err))
 			return ""
 		}
-		return fmt.Sprintf(platformOpenSUSELeapFormat, ss[2])
+		return bucket.NewOpenSUSE(ss[2]).Name()
 	}
 	if strings.HasPrefix(platformName, "SUSE Linux Enterprise Micro") {
 		// SUSE Linux Enterprise Micro 5.3
@@ -276,7 +271,7 @@ func (vs VulnSrc) getOSVersion(platformName string) string {
 				log.Err(err))
 			return ""
 		}
-		return fmt.Sprintf(platformSUSELinuxEnterpriseMicroFormat, ss[4])
+		return bucket.NewSUSELinuxEnterpriseMicro(ss[4]).Name()
 	}
 	if strings.Contains(platformName, "SUSE Linux Enterprise") {
 		// e.g. SUSE Linux Enterprise Storage 7
@@ -301,9 +296,9 @@ func (vs VulnSrc) getOSVersion(platformName string) string {
 			vs.logger.Warn("Failed to detect version", log.String("platform", platformName))
 			return ""
 		case 1:
-			return fmt.Sprintf(platformSUSELinuxFormat, versions[0])
+			return bucket.NewSUSELinuxEnterprise(versions[0]).Name()
 		case 2:
-			return fmt.Sprintf(platformSUSELinuxFormat, fmt.Sprintf("%s.%s", versions[1], versions[0]))
+			return bucket.NewSUSELinuxEnterprise(fmt.Sprintf("%s.%s", versions[1], versions[0])).Name()
 		}
 	}
 
@@ -352,21 +347,21 @@ func splitPkgName(pkgName string) (string, string) {
 
 func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In("suse").Tags("cvrf").With("release", params.Release).With("package_name", params.PkgName)
-	var bucket string
+	var bkt bucket.Bucket
 	switch vs.dist {
 	case SUSEEnterpriseLinuxMicro:
-		bucket = fmt.Sprintf(platformSUSELinuxEnterpriseMicroFormat, params.Release)
+		bkt = bucket.NewSUSELinuxEnterpriseMicro(params.Release)
 	case SUSEEnterpriseLinux:
-		bucket = fmt.Sprintf(platformSUSELinuxFormat, params.Release)
+		bkt = bucket.NewSUSELinuxEnterprise(params.Release)
 	case OpenSUSE:
-		bucket = fmt.Sprintf(platformOpenSUSELeapFormat, params.Release)
+		bkt = bucket.NewOpenSUSE(params.Release)
 	case OpenSUSETumbleweed:
-		bucket = platformOpenSUSETumbleweedFormat
+		bkt = bucket.NewOpenSUSETumbleweed()
 	default:
 		return nil, eb.Errorf("unknown distribution")
 	}
 
-	advisories, err := vs.GetAdvisories(bucket, params.PkgName)
+	advisories, err := vs.GetAdvisories(bkt.Name(), params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories")
 	}

@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
@@ -126,8 +127,8 @@ func TestVulnSrc_Update(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dataSources := map[types.Ecosystem]types.DataSource{
-				vulnerability.Pip: {
+			dataSources := map[ecosystem.Type]types.DataSource{
+				ecosystem.Pip: {
 					ID:   vulnerability.OSV,
 					Name: "Python Packaging Advisory Database",
 					URL:  "https://github.com/pypa/advisory-db",

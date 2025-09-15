@@ -2,6 +2,7 @@ package osv
 
 import (
 	"fmt"
+	"strings"
 
 	mvn "github.com/masahiro331/go-mvn-version"
 	"github.com/samber/oops"
@@ -20,20 +21,21 @@ type VersionRange interface {
 	SetLastAffected(lastAffected string)
 }
 
-func NewVersionRange(ecosystem Ecosystem, from string) VersionRange {
+func NewVersionRange(ecosystem, from string) VersionRange {
 	vr := &versionRange{from: from}
-	switch ecosystem {
-	case EcosystemNpm:
+	ecoStr := strings.ToLower(ecosystem)
+	switch ecoStr {
+	case ecosystemNpm:
 		return &NpmVersionRange{versionRange: vr}
-	case EcosystemRubygems:
+	case ecosystemRubygems:
 		return &RubyGemsVersionRange{versionRange: vr}
-	case EcosystemPyPI:
+	case ecosystemPyPI:
 		return &PyPIVersionRange{versionRange: vr}
-	case EcosystemMaven:
+	case ecosystemMaven:
 		return &MavenVersionRange{versionRange: vr}
-	case EcosystemGo, EcosystemCrates, EcosystemNuGet:
+	case ecosystemGo, ecosystemCrates, ecosystemNuGet:
 		return &SemVerRange{versionRange: vr}
-	case EcosystemPackagist:
+	case ecosystemPackagist:
 		return &DefaultVersionRange{versionRange: vr}
 	default:
 		return &DefaultVersionRange{versionRange: vr}

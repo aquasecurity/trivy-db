@@ -2,7 +2,6 @@ package alpine
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"path/filepath"
 	"strings"
@@ -13,16 +12,13 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-const (
-	alpineDir = "alpine"
-)
+const alpineDir = "alpine"
 
 var (
-	platformFormat = "alpine %s"
-
 	source = types.DataSource{
 		ID:   vulnerability.Alpine,
 		Name: "Alpine Secdb",
@@ -72,7 +68,7 @@ func (vs VulnSrc) save(advisories []advisory) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for _, adv := range advisories {
 			version := strings.TrimPrefix(adv.Distroversion, "v")
-			platformName := fmt.Sprintf(platformFormat, version)
+			platformName := bucket.NewAlpine(version).Name()
 			eb := oops.With("version", version).With("platform", platformName)
 			if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
 				return eb.Wrapf(err, "failed to put data source")
@@ -131,8 +127,8 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 
 func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In("alpine").With("release", params.Release)
-	bucket := fmt.Sprintf(platformFormat, params.Release)
-	advisories, err := vs.dbc.GetAdvisories(bucket, params.PkgName)
+	platformName := bucket.NewAlpine(params.Release).Name()
+	advisories, err := vs.dbc.GetAdvisories(platformName, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get Alpine advisories")
 	}
