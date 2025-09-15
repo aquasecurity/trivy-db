@@ -49,22 +49,3 @@ const (
 func (t Type) String() string {
 	return string(t)
 }
-
-// All contains all supported ecosystems (for backward compatibility)
-var All = []Type{
-	Npm,
-	Composer,
-	Pip,
-	RubyGems,
-	Cargo,
-	NuGet,
-	Maven,
-	Go,
-	Conan,
-	Erlang,
-	Pub,
-	Swift,
-	Cocoapods,
-	Bitnami,
-	Kubernetes,
-}

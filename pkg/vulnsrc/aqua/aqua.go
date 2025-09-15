@@ -13,6 +13,25 @@ const sourceID = vulnerability.Aqua
 
 var vulnsDir = filepath.Join("vuln-list-aqua", "vulns")
 
+// all contains all supported ecosystems for Aqua Security database
+var all = []ecosystem.Type{
+	ecosystem.Npm,
+	ecosystem.Composer,
+	ecosystem.Pip,
+	ecosystem.RubyGems,
+	ecosystem.Cargo,
+	ecosystem.NuGet,
+	ecosystem.Maven,
+	ecosystem.Go,
+	ecosystem.Conan,
+	ecosystem.Erlang,
+	ecosystem.Pub,
+	ecosystem.Swift,
+	ecosystem.Cocoapods,
+	ecosystem.Bitnami,
+	ecosystem.Kubernetes,
+}
+
 type VulnSrc struct{}
 
 func NewVulnSrc() VulnSrc {
@@ -25,7 +44,7 @@ func (VulnSrc) Name() types.SourceID {
 
 func (VulnSrc) Update(root string) error {
 	dataSources := map[ecosystem.Type]types.DataSource{}
-	for _, eco := range ecosystem.All {
+	for _, eco := range all {
 		dataSources[eco] = types.DataSource{
 			ID:   sourceID,
 			Name: "The Aqua Security Vulnerability Database",
