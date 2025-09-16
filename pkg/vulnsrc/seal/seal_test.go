@@ -28,7 +28,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"data-source",
-						"seal redhat 6",
+						"seal Red Hat 6",
 					},
 					Value: types.DataSource{
 						ID:     vulnerability.Seal,
@@ -41,7 +41,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{
 						"advisory-detail",
 						"CVE-2024-10524",
-						"seal redhat 6",
+						"seal Red Hat 6",
 						"seal-wget",
 					},
 					Value: types.Advisory{
@@ -266,7 +266,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 			args: args{
 				osVer:   "10",
-				pkgName: "seal-wget",
+				pkgName: "seal-unknown",
 			},
 		},
 		{

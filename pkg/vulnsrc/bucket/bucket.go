@@ -177,11 +177,15 @@ type redHatBucket struct {
 }
 
 func (r redHatBucket) Name() string {
-	return "Red Hat"
+	name := "Red Hat"
+	if r.version == "" {
+		return name
+	}
+	return name + " " + r.version
 }
 
 // NewRedHat creates a bucket for Red Hat
-func NewRedHat() Bucket { return redHatBucket{newOS(ecosystem.RedHat, "")} }
+func NewRedHat(version string) Bucket { return redHatBucket{newOS(ecosystem.RedHat, version)} }
 
 // photonBucket for PhotonOS OS with special naming convention
 type photonBucket struct {
@@ -267,35 +271,37 @@ func NewSUSELinuxEnterpriseMicro(version string) Bucket {
 
 // sealBucket for Seal ecosystem with special naming convention
 type sealBucket struct {
-	baseEcosystem    ecosystem.Type
-	baseEcosystemVer string
-	datasource       types.DataSource
+	base       Bucket
+	dataSource types.DataSource
 }
 
 func (p sealBucket) Name() string {
-	if p.baseEcosystemVer == "" {
-		return fmt.Sprintf("seal %s", p.baseEcosystem)
-	}
-	return fmt.Sprintf("seal %s %s", p.baseEcosystem, p.baseEcosystemVer)
+	return fmt.Sprintf("seal %s", p.base.Name())
 }
-
 func (p sealBucket) Ecosystem() ecosystem.Type {
-	// The OSV package uses the ecosystem to avoid duplicates.
-	// So we use the base ecosystem here.
-	return p.baseEcosystem
+	return p.base.Ecosystem()
 }
-
 func (p sealBucket) DataSource() types.DataSource {
-	return p.datasource
+	return p.dataSource
 }
 
 // NewSeal creates a bucket for Seal ecosystem
-func NewSeal(baseEco ecosystem.Type, baseEcoVer string, dataSource types.DataSource) (DataSourceBucket, error) {
-	return sealBucket{
-		baseEcosystem:    baseEco,
-		baseEcosystemVer: baseEcoVer,
-		datasource:       dataSource,
-	}, nil
+func NewSeal(baseEco ecosystem.Type, baseEcoVer string, dataSource types.DataSource) (Bucket, error) {
+	bkt := sealBucket{
+		dataSource: dataSource,
+	}
+	switch baseEco {
+	case ecosystem.Alpine:
+		bkt.base = NewAlpine("")
+	case ecosystem.Debian:
+		bkt.base = NewDebian("")
+	case ecosystem.RedHat:
+		bkt.base = NewRedHat(baseEcoVer)
+	default:
+		return nil, oops.With("base_ecosystem", baseEco).Errorf("unsupported base ecosystem for Seal bucket")
+	}
+
+	return bkt, nil
 }
 
 ////////////////////////////////

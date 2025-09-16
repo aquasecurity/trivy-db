@@ -29,9 +29,14 @@ func TestBucket_Name(t *testing.T) {
 			want:   "alpine",
 		},
 		{
-			name:   "RedHat",
-			bucket: bucket.NewRedHat(),
+			name:   "RedHat without version",
+			bucket: bucket.NewRedHat(""),
 			want:   "Red Hat",
+		},
+		{
+			name:   "RedHat with version",
+			bucket: bucket.NewRedHat("8"),
+			want:   "Red Hat 8",
 		},
 		{
 			name:   "ArchLinux without version",

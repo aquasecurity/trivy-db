@@ -12,7 +12,7 @@
         BaseID: "alpine"
         Name: "Seal Security Database"
         URL: "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip"
-    - key: seal redhat 6
+    - key: seal Red Hat 6
       value:
         ID: "seal"
         BaseID: "redhat"
