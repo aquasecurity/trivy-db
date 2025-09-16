@@ -386,8 +386,9 @@ func parseSeverity(severities []Severity) (string, float64, error) {
 }
 
 func (o OSV) convertEcosystem(raw string) (bucket.Bucket, error) {
-	eco, _, _ := strings.Cut(raw, ":")
-	switch strings.ToLower(eco) {
+	raw = strings.ToLower(raw)
+	eco, baseEco, _ := strings.Cut(raw, ":")
+	switch eco {
 	case ecosystemGo:
 		return bucket.NewGo(o.dataSources[ecosystem.Go])
 	case ecosystemNpm:
@@ -414,9 +415,38 @@ func (o OSV) convertEcosystem(raw string) (bucket.Bucket, error) {
 		return bucket.NewBitnami(o.dataSources[ecosystem.Bitnami])
 	case ecosystemKubernetes:
 		return bucket.NewKubernetes(o.dataSources[ecosystem.Kubernetes])
+	case ecosystemSeal:
+		return o.sealBucket(baseEco)
 	default:
 		return nil, oops.Errorf("unsupported ecosystem: %s", eco)
 	}
+}
+
+func (o OSV) sealBucket(baseEcosystem string) (bucket.Bucket, error) {
+	ds, ok := o.dataSources[ecosystem.Seal]
+	if !ok {
+		return nil, oops.With("ecosystem", "seal").With("base ecosystem", baseEcosystem).Errorf("data source cannot be empty")
+	}
+
+	var eco ecosystem.Type
+	// Separate base ecosystem and version (if exists)
+	// e.g. "Alpine", "Red Hat:8", "Debian"
+	ecoStr, ver, _ := strings.Cut(baseEcosystem, ":")
+	switch ecoStr {
+	case "alpine":
+		eco = ecosystem.Alpine
+		ds.BaseID = vulnerability.Alpine
+	case "debian":
+		eco = ecosystem.Debian
+		ds.BaseID = vulnerability.Debian
+	case "red hat":
+		eco = ecosystem.RedHat
+		ds.BaseID = vulnerability.RedHat
+	default:
+		return nil, oops.With("ecosystem", "seal").With("base ecosystem", baseEcosystem).Errorf("unsupported base ecosystem")
+	}
+
+	return bucket.NewSeal(eco, ver, ds)
 }
 
 func versionContains(ranges []VersionRange, version string) (bool, error) {
