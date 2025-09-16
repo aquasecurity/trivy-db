@@ -1,6 +1,8 @@
 package bucket
 
 import (
+	"fmt"
+
 	"github.com/samber/lo"
 	"github.com/samber/oops"
 
@@ -261,6 +263,39 @@ func NewSUSELinuxEnterprise(version string) Bucket {
 // NewSUSELinuxEnterpriseMicro creates a bucket for SUSE Linux Enterprise Micro
 func NewSUSELinuxEnterpriseMicro(version string) Bucket {
 	return suseLinuxEnterpriseMicroBucket{newOS(ecosystem.SUSE, version)}
+}
+
+// sealBucket for Seal ecosystem with special naming convention
+type sealBucket struct {
+	baseEcosystem    ecosystem.Type
+	baseEcosystemVer string
+	datasource       types.DataSource
+}
+
+func (p sealBucket) Name() string {
+	if p.baseEcosystemVer == "" {
+		return fmt.Sprintf("seal %s", p.baseEcosystem)
+	}
+	return fmt.Sprintf("seal %s %s", p.baseEcosystem, p.baseEcosystemVer)
+}
+
+func (p sealBucket) Ecosystem() ecosystem.Type {
+	// The OSV package uses the ecosystem to avoid duplicates.
+	// So we use the base ecosystem here.
+	return p.baseEcosystem
+}
+
+func (p sealBucket) DataSource() types.DataSource {
+	return p.datasource
+}
+
+// NewSeal creates a bucket for Seal ecosystem
+func NewSeal(baseEco ecosystem.Type, baseEcoVer string, dataSource types.DataSource) (Bucket, error) {
+	return sealBucket{
+		baseEcosystem:    baseEco,
+		baseEcosystemVer: baseEcoVer,
+		datasource:       dataSource,
+	}, nil
 }
 
 ////////////////////////////////
