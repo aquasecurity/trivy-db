@@ -67,7 +67,7 @@ func NewVulnSrcGetter(baseEcosystem ecosystem.Type) VulnSrcGetter {
 func (vs VulnSrcGetter) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In("seal").With("base_ecosystem", vs.baseEcosystem).With("os_version", params.Release).With("package_name", params.PkgName)
 
-	bkt, err := bucket.NewSeal(vs.baseEcosystem, params.Release, source)
+	bkt, err := bucket.NewSeal(vs.baseEcosystem, params.Release, types.DataSource{})
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to create a bucket name")
 	}

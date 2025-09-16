@@ -290,7 +290,7 @@ func (p sealBucket) DataSource() types.DataSource {
 }
 
 // NewSeal creates a bucket for Seal ecosystem
-func NewSeal(baseEco ecosystem.Type, baseEcoVer string, dataSource types.DataSource) (Bucket, error) {
+func NewSeal(baseEco ecosystem.Type, baseEcoVer string, dataSource types.DataSource) (DataSourceBucket, error) {
 	return sealBucket{
 		baseEcosystem:    baseEco,
 		baseEcosystemVer: baseEcoVer,
