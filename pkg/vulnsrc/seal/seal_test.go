@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/seal"
@@ -33,7 +34,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						ID:     vulnerability.Seal,
 						Name:   "Seal Security Database",
 						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
-						BaseID: "redhat",
+						BaseID: vulnerability.RedHat,
 					},
 				},
 				{
@@ -61,7 +62,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						ID:     vulnerability.Seal,
 						Name:   "Seal Security Database",
 						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
-						BaseID: "debian",
+						BaseID: vulnerability.Debian,
 					},
 				},
 				{
@@ -107,7 +108,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						ID:     vulnerability.Seal,
 						Name:   "Seal Security Database",
 						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
-						BaseID: "alpine",
+						BaseID: vulnerability.Alpine,
 					},
 				},
 				{
@@ -177,7 +178,7 @@ func TestVulnSrc_Get(t *testing.T) {
 	}
 	tests := []struct {
 		name     string
-		baseOS   types.SourceID
+		baseOS   ecosystem.Type
 		fixtures []string
 		args     args
 		want     []types.Advisory
@@ -185,7 +186,7 @@ func TestVulnSrc_Get(t *testing.T) {
 	}{
 		{
 			name:   "Seal debian advisories",
-			baseOS: vulnerability.Debian,
+			baseOS: ecosystem.Debian,
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/data-source.yaml",
@@ -209,7 +210,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:   "Seal alpine advisories",
-			baseOS: vulnerability.Alpine,
+			baseOS: ecosystem.Alpine,
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/data-source.yaml",
@@ -233,7 +234,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:   "Seal redhat advisories",
-			baseOS: vulnerability.RedHat,
+			baseOS: ecosystem.RedHat,
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/data-source.yaml",
@@ -258,7 +259,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:   "no advisories",
-			baseOS: vulnerability.Debian,
+			baseOS: ecosystem.Debian,
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/data-source.yaml",
@@ -270,7 +271,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:     "broken Seal bucket",
-			baseOS:   vulnerability.Debian,
+			baseOS:   ecosystem.Debian,
 			fixtures: []string{"testdata/fixtures/broken.yaml"},
 			args: args{
 				pkgName: "seal-wget",
