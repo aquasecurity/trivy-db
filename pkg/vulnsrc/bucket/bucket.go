@@ -1,8 +1,6 @@
 package bucket
 
 import (
-	"fmt"
-
 	"github.com/samber/lo"
 	"github.com/samber/oops"
 
@@ -267,41 +265,6 @@ func NewSUSELinuxEnterprise(version string) Bucket {
 // NewSUSELinuxEnterpriseMicro creates a bucket for SUSE Linux Enterprise Micro
 func NewSUSELinuxEnterpriseMicro(version string) Bucket {
 	return suseLinuxEnterpriseMicroBucket{newOS(ecosystem.SUSE, version)}
-}
-
-// sealBucket for Seal ecosystem with special naming convention
-type sealBucket struct {
-	base       Bucket
-	dataSource types.DataSource
-}
-
-func (p sealBucket) Name() string {
-	return fmt.Sprintf("seal %s", p.base.Name())
-}
-func (p sealBucket) Ecosystem() ecosystem.Type {
-	return p.base.Ecosystem()
-}
-func (p sealBucket) DataSource() types.DataSource {
-	return p.dataSource
-}
-
-// NewSeal creates a bucket for Seal ecosystem
-func NewSeal(baseEco ecosystem.Type, baseEcoVer string, dataSource types.DataSource) (Bucket, error) {
-	bkt := sealBucket{
-		dataSource: dataSource,
-	}
-	switch baseEco {
-	case ecosystem.Alpine:
-		bkt.base = NewAlpine("")
-	case ecosystem.Debian:
-		bkt.base = NewDebian("")
-	case ecosystem.RedHat:
-		bkt.base = NewRedHat(baseEcoVer)
-	default:
-		return nil, oops.With("base_ecosystem", baseEco).Errorf("unsupported base ecosystem for Seal bucket")
-	}
-
-	return bkt, nil
 }
 
 ////////////////////////////////

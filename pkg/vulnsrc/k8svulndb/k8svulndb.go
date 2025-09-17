@@ -19,5 +19,5 @@ func NewVulnSrc() osv.OSV {
 			URL:  "https://kubernetes.io/docs/reference/issues-security/official-cve-feed/index.json",
 		},
 	}
-	return osv.New(k8sDir, vulnerability.K8sVulnDB, sources, nil)
+	return osv.New(k8sDir, vulnerability.K8sVulnDB, sources)
 }

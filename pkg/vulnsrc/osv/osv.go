@@ -46,12 +46,16 @@ type Advisory struct {
 	Published    time.Time
 }
 
+// BucketResolver resolves an ecosystem string to a bucket
+type BucketResolver func(ecosystem string) (bucket.Bucket, error)
+
 type OSV struct {
-	dir         string
-	dbc         db.Operation
-	sourceID    types.SourceID
-	dataSources map[ecosystem.Type]types.DataSource
-	transformer Transformer
+	dir             string
+	dbc             db.Operation
+	sourceID        types.SourceID
+	dataSources     map[ecosystem.Type]types.DataSource
+	transformer     Transformer
+	bucketResolvers map[string]BucketResolver
 }
 
 type Transformer interface {
@@ -72,17 +76,35 @@ func (t *defaultTransformer) TransformAdvisories(advs []Advisory, _ Entry) ([]Ad
 	return advs, nil
 }
 
-func New(dir string, sourceID types.SourceID, dataSources map[ecosystem.Type]types.DataSource, transformer Transformer) OSV {
-	if transformer == nil {
-		transformer = &defaultTransformer{}
+// WithBucketResolver sets a custom resolver for a specific ecosystem
+func WithBucketResolver(ecosystem string, resolver BucketResolver) func(*OSV) {
+	return func(o *OSV) {
+		o.bucketResolvers[ecosystem] = resolver
 	}
-	return OSV{
-		dir:         dir,
-		dbc:         db.Config{},
-		sourceID:    sourceID,
-		dataSources: dataSources,
-		transformer: transformer,
+}
+
+// WithTransformer sets a custom transformer
+func WithTransformer(transformer Transformer) func(*OSV) {
+	return func(o *OSV) {
+		o.transformer = transformer
 	}
+}
+
+func New(dir string, sourceID types.SourceID, dataSources map[ecosystem.Type]types.DataSource, options ...func(*OSV)) OSV {
+	osv := OSV{
+		dir:             dir,
+		dbc:             db.Config{},
+		sourceID:        sourceID,
+		dataSources:     dataSources,
+		transformer:     &defaultTransformer{},
+		bucketResolvers: make(map[string]BucketResolver),
+	}
+
+	for _, opt := range options {
+		opt(&osv)
+	}
+
+	return osv
 }
 
 func (o OSV) Name() types.SourceID {
@@ -218,7 +240,7 @@ func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) (
 
 	uniqAdvisories := map[string]Advisory{}
 	for _, affected := range entry.Affected {
-		bkt, err := o.convertEcosystem(affected.Package.Ecosystem)
+		bkt, err := o.resolveBucket(affected.Package.Ecosystem)
 		if err != nil {
 			// Skip unsupported ecosystems
 			continue
@@ -385,9 +407,16 @@ func parseSeverity(severities []Severity) (string, float64, error) {
 	return "", 0, nil
 }
 
-func (o OSV) convertEcosystem(raw string) (bucket.Bucket, error) {
+func (o OSV) resolveBucket(raw string) (bucket.Bucket, error) {
 	raw = strings.ToLower(raw)
-	eco, baseEco, _ := strings.Cut(raw, ":")
+	eco, suffix, _ := strings.Cut(raw, ":")
+
+	// Check if custom resolver exists for this ecosystem type
+	if resolver, ok := o.bucketResolvers[eco]; ok {
+		return resolver(suffix)
+	}
+
+	// Fall back to default resolution if no custom resolver exists
 	switch eco {
 	case ecosystemGo:
 		return bucket.NewGo(o.dataSources[ecosystem.Go])
@@ -415,38 +444,9 @@ func (o OSV) convertEcosystem(raw string) (bucket.Bucket, error) {
 		return bucket.NewBitnami(o.dataSources[ecosystem.Bitnami])
 	case ecosystemKubernetes:
 		return bucket.NewKubernetes(o.dataSources[ecosystem.Kubernetes])
-	case ecosystemSeal:
-		return o.sealBucket(baseEco)
 	default:
 		return nil, oops.Errorf("unsupported ecosystem: %s", eco)
 	}
-}
-
-func (o OSV) sealBucket(baseEcosystem string) (bucket.Bucket, error) {
-	ds, ok := o.dataSources[ecosystem.Seal]
-	if !ok {
-		return nil, oops.With("ecosystem", "seal").With("base ecosystem", baseEcosystem).Errorf("data source cannot be empty")
-	}
-
-	var eco ecosystem.Type
-	// Separate base ecosystem and version (if exists)
-	// e.g. "Alpine", "Red Hat:8", "Debian"
-	ecoStr, ver, _ := strings.Cut(baseEcosystem, ":")
-	switch ecoStr {
-	case "alpine":
-		eco = ecosystem.Alpine
-		ds.BaseID = vulnerability.Alpine
-	case "debian":
-		eco = ecosystem.Debian
-		ds.BaseID = vulnerability.Debian
-	case "red hat":
-		eco = ecosystem.RedHat
-		ds.BaseID = vulnerability.RedHat
-	default:
-		return nil, oops.With("ecosystem", "seal").With("base ecosystem", baseEcosystem).Errorf("unsupported base ecosystem")
-	}
-
-	return bucket.NewSeal(eco, ver, ds)
 }
 
 func versionContains(ranges []VersionRange, version string) (bool, error) {

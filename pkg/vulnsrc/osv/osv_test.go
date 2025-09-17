@@ -134,7 +134,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					URL:  "https://github.com/pypa/advisory-db",
 				},
 			}
-			o := osv.New(".", vulnerability.OSV, dataSources, nil)
+			o := osv.New(".", vulnerability.OSV, dataSources)
 			vulnsrctest.TestUpdate(t, o, vulnsrctest.TestUpdateArgs{
 				Dir:        tt.dir,
 				WantValues: tt.wantValues,

@@ -87,7 +87,7 @@ func (GHSA) Update(root string) error {
 		return eb.Wrapf(err, "transformer error")
 	}
 
-	return osv.New(ghsaDir, sourceID, dataSources, t).Update(root)
+	return osv.New(ghsaDir, sourceID, dataSources, osv.WithTransformer(t)).Update(root)
 }
 
 type transformer struct {
