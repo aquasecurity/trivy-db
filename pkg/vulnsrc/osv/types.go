@@ -22,6 +22,7 @@ const (
 	ecosystemSwiftURL   = "swifturl"
 	ecosystemBitnami    = "bitnami"
 	ecosystemKubernetes = "kubernetes"
+	ecosystemSeal       = "seal"
 )
 
 type RangeType string

@@ -175,11 +175,15 @@ type redHatBucket struct {
 }
 
 func (r redHatBucket) Name() string {
-	return "Red Hat"
+	name := "Red Hat"
+	if r.version == "" {
+		return name
+	}
+	return name + " " + r.version
 }
 
 // NewRedHat creates a bucket for Red Hat
-func NewRedHat() Bucket { return redHatBucket{newOS(ecosystem.RedHat, "")} }
+func NewRedHat(version string) Bucket { return redHatBucket{newOS(ecosystem.RedHat, version)} }
 
 // photonBucket for PhotonOS OS with special naming convention
 type photonBucket struct {

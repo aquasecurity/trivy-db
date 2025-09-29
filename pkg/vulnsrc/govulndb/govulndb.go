@@ -40,7 +40,7 @@ func (VulnDB) Update(root string) error {
 		},
 	}
 
-	return osv.New(osvDir, sourceID, dataSources, &transformer{}).Update(root)
+	return osv.New(osvDir, sourceID, dataSources, osv.WithTransformer(&transformer{})).Update(root)
 }
 
 type transformer struct{}

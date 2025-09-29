@@ -43,6 +43,7 @@ const (
 	Chainguard  Type = "chainguard"
 	Echo        Type = "echo"
 	MinimOS     Type = "minimos"
+	Seal        Type = "seal"
 )
 
 // String returns the string representation of the ecosystem type
