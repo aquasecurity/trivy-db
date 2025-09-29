@@ -1,0 +1,35 @@
+{
+  "pip": [
+    {
+      "name": "requests",
+      "cves": {
+        "CVE-2024-PY-001": {
+          "vulnerable_ranges": ["<2.31.0"],
+          "fixed_versions": ["2.31.0.root.io"]
+        }
+      }
+    }
+  ],
+  "maven": [
+    {
+      "name": "org.springframework.boot:spring-boot",
+      "cves": {
+        "CVE-2024-JAVA-001": {
+          "vulnerable_ranges": ["<3.2.0"],
+          "fixed_versions": ["3.2.0.root.io"]
+        }
+      }
+    }
+  ],
+  "go": [
+    {
+      "name": "github.com/gin-gonic/gin",
+      "cves": {
+        "CVE-2024-GO-001": {
+          "vulnerable_ranges": ["<1.9.1"],
+          "fixed_versions": ["1.9.1.root.io"]
+        }
+      }
+    }
+  ]
+}

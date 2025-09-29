@@ -24,9 +24,12 @@ import (
 )
 
 const (
-	rootioDir      = "rootio"
-	feedFileName   = "cve_feed.json"
-	platformFormat = "root.io %s %s" // "root.io {baseOS} {version}"
+	rootioDir       = "rootio"
+	osFeedFileName  = "os_feed.json"  // OS vulnerability data
+	appFeedFileName = "app_feed.json" // Language ecosystem vulnerability data
+	feedFileName    = "cve_feed.json" // Legacy OS feed filename for backward compatibility
+	platformFormat  = "root.io %s %s" // "root.io {baseOS} {version}"
+	ecosystemFormat = "root.io %s"    // "root.io {ecosystem}"
 )
 
 var (
@@ -41,6 +44,16 @@ var (
 		vulnerability.Debian,
 		vulnerability.Ubuntu,
 	}
+
+	supportedEcosystems = []types.Ecosystem{
+		vulnerability.Pip,
+		vulnerability.Npm,
+		vulnerability.RubyGems,
+		vulnerability.Maven,
+		vulnerability.Go,
+		vulnerability.NuGet,
+		vulnerability.Cargo,
+	}
 )
 
 type config struct {
@@ -49,13 +62,15 @@ type config struct {
 }
 
 type VulnSrc struct {
-	supportedOSes []types.SourceID
+	supportedOSes       []types.SourceID
+	supportedEcosystems []types.Ecosystem
 	config
 }
 
 func NewVulnSrc() VulnSrc {
 	return VulnSrc{
-		supportedOSes: supportedOSes,
+		supportedOSes:       supportedOSes,
+		supportedEcosystems: supportedEcosystems,
 		config: config{
 			dbc:    db.Config{},
 			logger: log.WithPrefix("rootio"),
@@ -68,18 +83,47 @@ func (vs VulnSrc) Name() types.SourceID {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	feedFilePath := filepath.Join(dir, "vuln-list", rootioDir, feedFileName)
+	// Process OS package feeds
+	if err := vs.updateOSPackages(dir); err != nil {
+		return err
+	}
+
+	// Process language ecosystem feeds
+	return vs.updateLanguagePackages(dir)
+}
+
+// openAndParseJSON opens a JSON file and decodes it into the provided target
+func (vs VulnSrc) openAndParseJSON(filePath string, target any) error {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	return json.NewDecoder(file).Decode(target)
+}
+
+func (vs VulnSrc) updateOSPackages(dir string) error {
+	// Try new os_feed.json first, fall back to cve_feed.json for backward compatibility
+	osFeedPath := filepath.Join(dir, "vuln-list", rootioDir, osFeedFileName)
+	legacyFeedPath := filepath.Join(dir, "vuln-list", rootioDir, feedFileName)
+
+	var feedFilePath string
+	if _, err := os.Stat(osFeedPath); err == nil {
+		feedFilePath = osFeedPath
+	} else if _, err := os.Stat(legacyFeedPath); err == nil {
+		feedFilePath = legacyFeedPath
+		vs.logger.Info("Using legacy cve_feed.json, please update vuln-list-update")
+	} else {
+		// Neither file exists, try the new one and let it fail with proper error
+		feedFilePath = osFeedPath
+	}
+
 	eb := oops.In("rootio").With("file_path", feedFilePath)
 
-	feedFile, err := os.Open(feedFilePath)
-	if err != nil {
-		return eb.Wrapf(err, "failed to open feed file %s", feedFilePath)
-	}
-	defer feedFile.Close()
-
 	var rawFeed RawFeed
-	if err = json.NewDecoder(feedFile).Decode(&rawFeed); err != nil {
-		return eb.With("file_path", feedFilePath).Wrapf(err, "json decode error")
+	if err := vs.openAndParseJSON(feedFilePath, &rawFeed); err != nil {
+		return eb.Wrapf(err, "failed to read feed file %s", feedFilePath)
 	}
 
 	// Take rawDistroData for each base OS
@@ -94,14 +138,37 @@ func (vs VulnSrc) Update(dir string) error {
 		feeds := make(map[string][]Feed)
 		// Convert each distro version to our internal Feed format
 		for _, distro := range rawDistroData {
-			platformName := fmt.Sprintf(platformFormat, strings.ToLower(baseOS), distro.DistroVersion)
+			// Determine distro version from either format
+			var distroVersion string
+			if distro.DistroVersion != "" {
+				// Old format
+				distroVersion = distro.DistroVersion
+			} else if distro.Distro != nil {
+				// New format
+				distroVersion = distro.Distro.Latest
+			}
+			platformName := fmt.Sprintf(platformFormat, strings.ToLower(baseOS), distroVersion)
 
 			// Convert packages to patches
 			for _, pkg := range distro.Packages {
-				for cveID, cveInfo := range pkg.Pkg.CVEs {
+				// Get package data from either format
+				var pkgName string
+				var cvesMap map[string]RawCVEInfo
+
+				if pkg.Pkg != nil {
+					// Old format
+					pkgName = pkg.Pkg.Name
+					cvesMap = pkg.Pkg.CVEs
+				} else {
+					// New format
+					pkgName = pkg.Name
+					cvesMap = pkg.CVEs
+				}
+
+				for cveID, cveInfo := range cvesMap {
 					feed := Feed{
 						VulnerabilityID: cveID,
-						PkgName:         pkg.Pkg.Name,
+						PkgName:         pkgName,
 						Patch: types.Advisory{
 							VulnerableVersions: cveInfo.VulnerableRanges,
 							PatchedVersions:    cveInfo.FixedVersions,
@@ -113,7 +180,7 @@ func (vs VulnSrc) Update(dir string) error {
 		}
 
 		// Save feeds for the current base OS
-		if err = vs.save(baseOS, feeds); err != nil {
+		if err := vs.save(baseOS, feeds, types.SourceID(baseOS)); err != nil {
 			return eb.Wrapf(err, "save error")
 		}
 	}
@@ -121,15 +188,72 @@ func (vs VulnSrc) Update(dir string) error {
 	return nil
 }
 
-func (vs VulnSrc) save(baseOS string, feeds map[string][]Feed) error {
-	vs.logger.Info("Saving Root.io DB", "base_os", baseOS)
+func (vs VulnSrc) updateLanguagePackages(dir string) error {
+	// Read from app_feed.json
+	appFeedPath := filepath.Join(dir, "vuln-list", rootioDir, appFeedFileName)
+	eb := oops.In("rootio").With("file_path", appFeedPath)
+
+	var rawAppFeed RawAppFeed
+	if err := vs.openAndParseJSON(appFeedPath, &rawAppFeed); err != nil {
+		// App feed might not exist yet, skip if file not found
+		if os.IsNotExist(err) {
+			vs.logger.Debug("App feed not found")
+			return nil
+		}
+		return eb.Wrapf(err, "failed to read app feed file %s", appFeedPath)
+	}
+
+	// Process each ecosystem in the combined feed
+	for ecosystemStr, packages := range rawAppFeed {
+		ecosystem := types.Ecosystem(ecosystemStr)
+
+		// Check if this ecosystem is supported
+		if !slices.Contains(vs.supportedEcosystems, ecosystem) {
+			vs.logger.Warn("Unsupported ecosystem in app feed", "ecosystem", ecosystem)
+			continue
+		}
+
+		// Convert to internal format
+		platformName := fmt.Sprintf(ecosystemFormat, ecosystem)
+		feeds := make(map[string][]Feed)
+
+		for _, pkg := range packages {
+			for cveID, cveInfo := range pkg.CVEs {
+				feed := Feed{
+					VulnerabilityID: cveID,
+					PkgName:         pkg.Name,
+					Patch: types.Advisory{
+						VulnerableVersions: cveInfo.VulnerableRanges,
+						PatchedVersions:    cveInfo.FixedVersions,
+					},
+				}
+				feeds[platformName] = append(feeds[platformName], feed)
+			}
+		}
+
+		// Save feeds for the current ecosystem
+		if err := vs.save(string(ecosystem), feeds, ""); err != nil {
+			return eb.Wrapf(err, "save error for ecosystem %s", ecosystem)
+		}
+	}
+
+	return nil
+}
+
+func (vs VulnSrc) save(name string, feeds map[string][]Feed, baseID types.SourceID) error {
+	if baseID != "" {
+		vs.logger.Info("Saving Root.io DB", "base_os", name)
+	} else {
+		vs.logger.Info("Saving Root.io Language DB", "ecosystem", name)
+	}
+
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for platform, platformFeeds := range feeds {
 			dataSource := types.DataSource{
 				ID:     source.ID,
-				Name:   source.Name + fmt.Sprintf(" (%s)", baseOS),
+				Name:   source.Name + fmt.Sprintf(" (%s)", name),
 				URL:    source.URL,
-				BaseID: types.SourceID(baseOS),
+				BaseID: baseID,
 			}
 			if err := vs.dbc.PutDataSource(tx, platform, dataSource); err != nil {
 				return oops.Wrapf(err, "failed to put data source")
@@ -158,6 +282,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, platform string, feeds []Feed) error {
 func (vs VulnSrc) put(tx *bolt.Tx, platform string, feed Feed) error {
 	eb := oops.With("platform", platform).With("package", feed.PkgName).With("cve", feed.VulnerabilityID)
 
+	// Both OS and language packages use PutAdvisoryDetail
 	if err := vs.dbc.PutAdvisoryDetail(tx, feed.VulnerabilityID, feed.PkgName, []string{platform}, feed.Patch); err != nil {
 		return eb.Wrapf(err, "failed to save advisory")
 	}
@@ -171,10 +296,12 @@ func (vs VulnSrc) put(tx *bolt.Tx, platform string, feed Feed) error {
 }
 
 type VulnSrcGetter struct {
-	baseOS types.SourceID
+	baseOS    types.SourceID
+	ecosystem types.Ecosystem
 	config
 }
 
+// NewVulnSrcGetter creates a getter for OS packages
 func NewVulnSrcGetter(baseOS types.SourceID) VulnSrcGetter {
 	return VulnSrcGetter{
 		baseOS: baseOS,
@@ -185,7 +312,26 @@ func NewVulnSrcGetter(baseOS types.SourceID) VulnSrcGetter {
 	}
 }
 
+// NewEcosystemVulnSrcGetter creates a getter for language ecosystem packages
+func NewEcosystemVulnSrcGetter(ecosystem types.Ecosystem) VulnSrcGetter {
+	return VulnSrcGetter{
+		ecosystem: ecosystem,
+		config: config{
+			dbc:    db.Config{},
+			logger: log.WithPrefix(fmt.Sprintf("rootio-%s", ecosystem)),
+		},
+	}
+}
+
 func (vs VulnSrcGetter) Get(params db.GetParams) ([]types.Advisory, error) {
+	// Check if this is for language packages (ecosystem) or OS packages
+	if vs.ecosystem != "" {
+		return vs.getEcosystemAdvisories(params)
+	}
+	return vs.getOSAdvisories(params)
+}
+
+func (vs VulnSrcGetter) getOSAdvisories(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In("rootio").With("base_os", vs.baseOS).With("os_version", params.Release).With("package_name", params.PkgName)
 	// Get advisories from the original distributors, like Debian or Alpine
 	advs, err := vs.baseOSGetter().Get(params)
@@ -231,6 +377,27 @@ func (vs VulnSrcGetter) Get(params db.GetParams) ([]types.Advisory, error) {
 	})
 
 	return allAdvsSlice, nil
+}
+
+func (vs VulnSrcGetter) getEcosystemAdvisories(params db.GetParams) ([]types.Advisory, error) {
+	eb := oops.In("rootio").With("ecosystem", vs.ecosystem).With("package_name", params.PkgName)
+
+	// For language packages, we get advisories directly from Root.io
+	platformName := fmt.Sprintf(ecosystemFormat, vs.ecosystem)
+	advs, err := vs.dbc.GetAdvisories(platformName, params.PkgName)
+	if err != nil {
+		return nil, eb.Wrapf(err, "failed to get advisories")
+	}
+
+	if len(advs) == 0 {
+		return nil, nil
+	}
+
+	sort.Slice(advs, func(i, j int) bool {
+		return advs[i].VulnerabilityID < advs[j].VulnerabilityID
+	})
+
+	return advs, nil
 }
 
 func (vs VulnSrcGetter) baseOSGetter() db.Getter {
