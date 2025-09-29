@@ -97,8 +97,49 @@ func (vs VulnSrcGetter) Get(params db.GetParams) ([]types.Advisory, error) {
 		return nil, eb.Wrapf(err, "failed to create a bucket name")
 	}
 	advs, err := vs.dbc.GetAdvisories(bkt.Name(), params.PkgName)
+
+	var splitAdvs []types.Advisory
+	for _, adv := range advs {
+		sadvs, err := splitAdvisoriesByRanges(adv)
+		if err != nil {
+			return nil, eb.Wrapf(err, "failed to split advisories by ranges")
+		}
+		splitAdvs = append(splitAdvs, sadvs...)
+	}
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories for base OS")
 	}
+	return splitAdvs, nil
+}
+
+// splitAdvisoriesByRanges splits advisories if there are multiple vulnerable version ranges
+// e.g. VulnerableVersions: [">=1.0, <1.5", ">=2.0, <2.5"], PatchedVersions: ["1.5", "2.5"]
+// will be split into two advisories:
+// 1. VulnerableVersions: [">=1.0, <1.5"], PatchedVersions: ["1.5"]
+// 2. VulnerableVersions: [">=2.0, <2.5"], PatchedVersions: ["2.5"]
+func splitAdvisoriesByRanges(advisory types.Advisory) ([]types.Advisory, error) {
+	if len(advisory.VulnerableVersions) == 1 {
+		return []types.Advisory{
+			advisory,
+		}, nil
+	}
+
+	var advs []types.Advisory
+	for i, vr := range advisory.VulnerableVersions {
+		pv := advisory.PatchedVersions[i]
+
+		// In the `osv` package, we populate vulnerable and fixed versions when a `fixed` event is detected
+		// Therefore, the order of versions in these slices must be the same
+		if !strings.Contains(vr, pv) {
+			return nil, oops.With("vulnerable version", vr).With("patched version", pv).
+				Errorf("vulnerable version range should contain the patched version")
+		}
+
+		adv := advisory
+		adv.VulnerableVersions = []string{vr}
+		adv.PatchedVersions = []string{pv}
+		advs = append(advs, adv)
+	}
+
 	return advs, nil
 }

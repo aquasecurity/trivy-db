@@ -206,6 +206,17 @@ func TestVulnSrc_Get(t *testing.T) {
 						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
 					},
 				},
+				{
+					VulnerabilityID:    "CVE-2024-10524",
+					VulnerableVersions: []string{">=1.22-2+deb12u1, <1.22-2+deb12u1+sp999"},
+					PatchedVersions:    []string{"1.22-2+deb12u1+sp999"},
+					DataSource: &types.DataSource{
+						ID:     vulnerability.Seal,
+						BaseID: vulnerability.Debian,
+						Name:   "Seal Security Database",
+						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+					},
+				},
 			},
 		},
 		{
@@ -277,6 +288,15 @@ func TestVulnSrc_Get(t *testing.T) {
 				pkgName: "seal-wget",
 			},
 			wantErr: "failed to get advisories for base OS",
+		},
+		{
+			name:     "broken orders for VulnerableVersions and PatchedVersions",
+			baseOS:   ecosystem.Debian,
+			fixtures: []string{"testdata/fixtures/broken-vers-order.yaml"},
+			args: args{
+				pkgName: "seal-wget",
+			},
+			wantErr: "failed to split advisories by ranges: vulnerable version range should contain the patched version",
 		},
 	}
 

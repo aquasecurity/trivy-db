@@ -6,8 +6,10 @@
           value:
             VulnerableVersions:
               - ">=1.21-1+deb11u1, <1.21-1+deb11u1+sp999"
+              - ">=1.22-2+deb12u1, <1.22-2+deb12u1+sp999"
             PatchedVersions:
               - "1.21-1+deb11u1+sp999"
+              - "1.22-2+deb12u1+sp999"
 - bucket: seal alpine
   pairs:
     - bucket: seal-zlib
