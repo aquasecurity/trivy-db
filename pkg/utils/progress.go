@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/briandowns/spinner"
-	pb "gopkg.in/cheggaaa/pb.v1"
+	pb "github.com/cheggaaa/pb/v3"
 )
 
 var (
