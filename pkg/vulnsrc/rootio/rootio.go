@@ -15,21 +15,21 @@ import (
 	bolt "go.etcd.io/bbolt"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 const (
-	rootioDir       = "rootio"
-	osFeedFileName  = "os_feed.json"  // OS vulnerability data
-	appFeedFileName = "app_feed.json" // Language ecosystem vulnerability data
-	feedFileName    = "cve_feed.json" // Legacy OS feed filename for backward compatibility
-	platformFormat  = "root.io %s %s" // "root.io {baseOS} {version}"
-	ecosystemFormat = "root.io %s"    // "root.io {ecosystem}"
+	rootioDir      = "rootio"
+	feedFileName   = "cve_feed.json" // Feed filename for both OS and app feeds
+	appSubDir      = "app"           // Subdirectory for app feed
+	platformFormat = "root.io %s %s" // "root.io {baseOS} {version}"
 )
 
 var (
@@ -45,14 +45,14 @@ var (
 		vulnerability.Ubuntu,
 	}
 
-	supportedEcosystems = []types.Ecosystem{
-		vulnerability.Pip,
-		vulnerability.Npm,
-		vulnerability.RubyGems,
-		vulnerability.Maven,
-		vulnerability.Go,
-		vulnerability.NuGet,
-		vulnerability.Cargo,
+	supportedEcosystems = []ecosystem.Type{
+		ecosystem.Pip,
+		ecosystem.Npm,
+		ecosystem.RubyGems,
+		ecosystem.Maven,
+		ecosystem.Go,
+		ecosystem.NuGet,
+		ecosystem.Cargo,
 	}
 )
 
@@ -63,7 +63,7 @@ type config struct {
 
 type VulnSrc struct {
 	supportedOSes       []types.SourceID
-	supportedEcosystems []types.Ecosystem
+	supportedEcosystems []ecosystem.Type
 	config
 }
 
@@ -75,6 +75,28 @@ func NewVulnSrc() VulnSrc {
 			dbc:    db.Config{},
 			logger: log.WithPrefix("rootio"),
 		},
+	}
+}
+
+// createBucketForEcosystem creates the appropriate bucket for the given ecosystem
+func (vs VulnSrc) createBucketForEcosystem(eco ecosystem.Type, source types.DataSource) (bucket.DataSourceBucket, error) {
+	switch eco {
+	case ecosystem.Pip:
+		return bucket.NewPyPI(source)
+	case ecosystem.Npm:
+		return bucket.NewNpm(source)
+	case ecosystem.RubyGems:
+		return bucket.NewRubyGems(source)
+	case ecosystem.Maven:
+		return bucket.NewMaven(source)
+	case ecosystem.Go:
+		return bucket.NewGo(source)
+	case ecosystem.NuGet:
+		return bucket.NewNuGet(source)
+	case ecosystem.Cargo:
+		return bucket.NewCargo(source)
+	default:
+		return nil, fmt.Errorf("unsupported ecosystem: %s", eco)
 	}
 }
 
@@ -104,21 +126,7 @@ func (vs VulnSrc) openAndParseJSON(filePath string, target any) error {
 }
 
 func (vs VulnSrc) updateOSPackages(dir string) error {
-	// Try new os_feed.json first, fall back to cve_feed.json for backward compatibility
-	osFeedPath := filepath.Join(dir, "vuln-list", rootioDir, osFeedFileName)
-	legacyFeedPath := filepath.Join(dir, "vuln-list", rootioDir, feedFileName)
-
-	var feedFilePath string
-	if _, err := os.Stat(osFeedPath); err == nil {
-		feedFilePath = osFeedPath
-	} else if _, err := os.Stat(legacyFeedPath); err == nil {
-		feedFilePath = legacyFeedPath
-		vs.logger.Info("Using legacy cve_feed.json, please update vuln-list-update")
-	} else {
-		// Neither file exists, try the new one and let it fail with proper error
-		feedFilePath = osFeedPath
-	}
-
+	feedFilePath := filepath.Join(dir, "vuln-list", rootioDir, feedFileName)
 	eb := oops.In("rootio").With("file_path", feedFilePath)
 
 	var rawFeed RawFeed
@@ -138,32 +146,13 @@ func (vs VulnSrc) updateOSPackages(dir string) error {
 		feeds := make(map[string][]Feed)
 		// Convert each distro version to our internal Feed format
 		for _, distro := range rawDistroData {
-			// Determine distro version from either format
-			var distroVersion string
-			if distro.DistroVersion != "" {
-				// Old format
-				distroVersion = distro.DistroVersion
-			} else if distro.Distro != nil {
-				// New format
-				distroVersion = distro.Distro.Latest
-			}
+			distroVersion := distro.DistroVersion
 			platformName := fmt.Sprintf(platformFormat, strings.ToLower(baseOS), distroVersion)
 
 			// Convert packages to patches
 			for _, pkg := range distro.Packages {
-				// Get package data from either format
-				var pkgName string
-				var cvesMap map[string]RawCVEInfo
-
-				if pkg.Pkg != nil {
-					// Old format
-					pkgName = pkg.Pkg.Name
-					cvesMap = pkg.Pkg.CVEs
-				} else {
-					// New format
-					pkgName = pkg.Name
-					cvesMap = pkg.CVEs
-				}
+				pkgName := pkg.Pkg.Name
+				cvesMap := pkg.Pkg.CVEs
 
 				for cveID, cveInfo := range cvesMap {
 					feed := Feed{
@@ -189,8 +178,7 @@ func (vs VulnSrc) updateOSPackages(dir string) error {
 }
 
 func (vs VulnSrc) updateLanguagePackages(dir string) error {
-	// Read from app_feed.json
-	appFeedPath := filepath.Join(dir, "vuln-list", rootioDir, appFeedFileName)
+	appFeedPath := filepath.Join(dir, "vuln-list", rootioDir, appSubDir, feedFileName)
 	eb := oops.In("rootio").With("file_path", appFeedPath)
 
 	var rawAppFeed RawAppFeed
@@ -204,36 +192,46 @@ func (vs VulnSrc) updateLanguagePackages(dir string) error {
 	}
 
 	// Process each ecosystem in the combined feed
-	for ecosystemStr, packages := range rawAppFeed {
-		ecosystem := types.Ecosystem(ecosystemStr)
+	for ecosystemStr, distroDataList := range rawAppFeed {
+		eco := ecosystem.Type(ecosystemStr)
 
 		// Check if this ecosystem is supported
-		if !slices.Contains(vs.supportedEcosystems, ecosystem) {
-			vs.logger.Warn("Unsupported ecosystem in app feed", "ecosystem", ecosystem)
+		if !slices.Contains(vs.supportedEcosystems, eco) {
+			vs.logger.Warn("Unsupported ecosystem in app feed", "ecosystem", eco)
 			continue
 		}
 
-		// Convert to internal format
-		platformName := fmt.Sprintf(ecosystemFormat, ecosystem)
+		// Create the appropriate bucket for the ecosystem
+		bkt, err := vs.createBucketForEcosystem(eco, source)
+		if err != nil {
+			vs.logger.Warn("Failed to create bucket for ecosystem", "ecosystem", eco, "error", err)
+			continue
+		}
+		bucketName := bkt.Name()
 		feeds := make(map[string][]Feed)
 
-		for _, pkg := range packages {
-			for cveID, cveInfo := range pkg.CVEs {
-				feed := Feed{
-					VulnerabilityID: cveID,
-					PkgName:         pkg.Name,
-					Patch: types.Advisory{
-						VulnerableVersions: cveInfo.VulnerableRanges,
-						PatchedVersions:    cveInfo.FixedVersions,
-					},
+		for _, distroData := range distroDataList {
+			for _, pkg := range distroData.Packages {
+				pkgName := pkg.Pkg.Name
+				cvesMap := pkg.Pkg.CVEs
+
+				for cveID, cveInfo := range cvesMap {
+					feed := Feed{
+						VulnerabilityID: cveID,
+						PkgName:         pkgName,
+						Patch: types.Advisory{
+							VulnerableVersions: cveInfo.VulnerableRanges,
+							PatchedVersions:    cveInfo.FixedVersions,
+						},
+					}
+					feeds[bucketName] = append(feeds[bucketName], feed)
 				}
-				feeds[platformName] = append(feeds[platformName], feed)
 			}
 		}
 
 		// Save feeds for the current ecosystem
-		if err := vs.save(string(ecosystem), feeds, ""); err != nil {
-			return eb.Wrapf(err, "save error for ecosystem %s", ecosystem)
+		if err := vs.save(string(eco), feeds, ""); err != nil {
+			return eb.Wrapf(err, "save error for ecosystem %s", eco)
 		}
 	}
 
@@ -248,17 +246,17 @@ func (vs VulnSrc) save(name string, feeds map[string][]Feed, baseID types.Source
 	}
 
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		for platform, platformFeeds := range feeds {
+		for bucketOrPlatform, platformFeeds := range feeds {
 			dataSource := types.DataSource{
 				ID:     source.ID,
-				Name:   source.Name + fmt.Sprintf(" (%s)", name),
+				Name:   source.Name,
 				URL:    source.URL,
 				BaseID: baseID,
 			}
-			if err := vs.dbc.PutDataSource(tx, platform, dataSource); err != nil {
+			if err := vs.dbc.PutDataSource(tx, bucketOrPlatform, dataSource); err != nil {
 				return oops.Wrapf(err, "failed to put data source")
 			}
-			if err := vs.commit(tx, platform, platformFeeds); err != nil {
+			if err := vs.commit(tx, bucketOrPlatform, platformFeeds); err != nil {
 				return err
 			}
 		}
@@ -270,20 +268,20 @@ func (vs VulnSrc) save(name string, feeds map[string][]Feed, baseID types.Source
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, platform string, feeds []Feed) error {
+func (vs VulnSrc) commit(tx *bolt.Tx, bucketOrPlatform string, feeds []Feed) error {
 	for _, feed := range feeds {
-		if err := vs.put(tx, platform, feed); err != nil {
+		if err := vs.put(tx, bucketOrPlatform, feed); err != nil {
 			return oops.Wrapf(err, "put error")
 		}
 	}
 	return nil
 }
 
-func (vs VulnSrc) put(tx *bolt.Tx, platform string, feed Feed) error {
-	eb := oops.With("platform", platform).With("package", feed.PkgName).With("cve", feed.VulnerabilityID)
+func (vs VulnSrc) put(tx *bolt.Tx, bucketOrPlatform string, feed Feed) error {
+	eb := oops.With("bucket_or_platform", bucketOrPlatform).With("package", feed.PkgName).With("cve", feed.VulnerabilityID)
 
 	// Both OS and language packages use PutAdvisoryDetail
-	if err := vs.dbc.PutAdvisoryDetail(tx, feed.VulnerabilityID, feed.PkgName, []string{platform}, feed.Patch); err != nil {
+	if err := vs.dbc.PutAdvisoryDetail(tx, feed.VulnerabilityID, feed.PkgName, []string{bucketOrPlatform}, feed.Patch); err != nil {
 		return eb.Wrapf(err, "failed to save advisory")
 	}
 
@@ -296,8 +294,7 @@ func (vs VulnSrc) put(tx *bolt.Tx, platform string, feed Feed) error {
 }
 
 type VulnSrcGetter struct {
-	baseOS    types.SourceID
-	ecosystem types.Ecosystem
+	baseOS types.SourceID
 	config
 }
 
@@ -312,22 +309,7 @@ func NewVulnSrcGetter(baseOS types.SourceID) VulnSrcGetter {
 	}
 }
 
-// NewEcosystemVulnSrcGetter creates a getter for language ecosystem packages
-func NewEcosystemVulnSrcGetter(ecosystem types.Ecosystem) VulnSrcGetter {
-	return VulnSrcGetter{
-		ecosystem: ecosystem,
-		config: config{
-			dbc:    db.Config{},
-			logger: log.WithPrefix(fmt.Sprintf("rootio-%s", ecosystem)),
-		},
-	}
-}
-
 func (vs VulnSrcGetter) Get(params db.GetParams) ([]types.Advisory, error) {
-	// Check if this is for language packages (ecosystem) or OS packages
-	if vs.ecosystem != "" {
-		return vs.getEcosystemAdvisories(params)
-	}
 	return vs.getOSAdvisories(params)
 }
 
@@ -377,27 +359,6 @@ func (vs VulnSrcGetter) getOSAdvisories(params db.GetParams) ([]types.Advisory, 
 	})
 
 	return allAdvsSlice, nil
-}
-
-func (vs VulnSrcGetter) getEcosystemAdvisories(params db.GetParams) ([]types.Advisory, error) {
-	eb := oops.In("rootio").With("ecosystem", vs.ecosystem).With("package_name", params.PkgName)
-
-	// For language packages, we get advisories directly from Root.io
-	platformName := fmt.Sprintf(ecosystemFormat, vs.ecosystem)
-	advs, err := vs.dbc.GetAdvisories(platformName, params.PkgName)
-	if err != nil {
-		return nil, eb.Wrapf(err, "failed to get advisories")
-	}
-
-	if len(advs) == 0 {
-		return nil, nil
-	}
-
-	sort.Slice(advs, func(i, j int) bool {
-		return advs[i].VulnerabilityID < advs[j].VulnerabilityID
-	})
-
-	return advs, nil
 }
 
 func (vs VulnSrcGetter) baseOSGetter() db.Getter {

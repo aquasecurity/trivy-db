@@ -1,17 +1,17 @@
 - bucket: data-source
   pairs:
-    - key: root.io pip
+    - key: pip::Root.io Security Patches
       value:
         ID: rootio
-        Name: Root.io Security Patches (pip)
+        Name: Root.io Security Patches
         URL: https://api.root.io/external/patch_feed
-    - key: root.io go
+    - key: go::Root.io Security Patches
       value:
         ID: rootio
-        Name: Root.io Security Patches (go)
+        Name: Root.io Security Patches
         URL: https://api.root.io/external/patch_feed
 
-- bucket: root.io pip
+- bucket: pip::Root.io Security Patches
   pairs:
     - bucket: cryptography
       pairs:
@@ -24,7 +24,7 @@
               - "41.0.5.root.io"
               - "40.0.2.root.io"
 
-- bucket: root.io go
+- bucket: go::Root.io Security Patches
   pairs:
     - bucket: golang.org/x/crypto/ssh
       pairs:

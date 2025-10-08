@@ -3,7 +3,7 @@
     - key: root.io debian 12
       value:
         ID: rootio
-        Name: Root.io Security Patches (debian)
+        Name: Root.io Security Patches
         URL: https://api.root.io/external/patch_feed
         BaseID: debian
 

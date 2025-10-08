@@ -1,23 +1,16 @@
 {
   "debian": [
     {
-      "distro": {
-        "name": "debian",
-        "latest": "12",
-        "min_fixed_version": "12",
-        "max_fixed_version": "12",
-        "min_unfixed_version": "",
-        "max_unfixed_version": ""
-      },
+      "distroversion": "12",
       "packages": [
         {
-          "name": "nginx",
-          "min_version": "",
-          "max_version": "",
-          "cves": {
-            "CVE-2024-OS-001": {
-              "vulnerable_ranges": ["<1.24.0"],
-              "fixed_versions": ["1.24.0.root.io"]
+          "pkg": {
+            "name": "nginx",
+            "cves": {
+              "CVE-2024-OS-001": {
+                "vulnerable_ranges": ["<1.24.0"],
+                "fixed_versions": ["1.24.0.root.io"]
+              }
             }
           }
         }

@@ -1,22 +1,22 @@
 - bucket: data-source
   pairs:
-    - key: root.io pip
+    - key: pip::Root.io Security Patches
       value:
         ID: rootio
-        Name: Root.io Security Patches (pip)
+        Name: Root.io Security Patches
         URL: https://api.root.io/external/patch_feed
-    - key: root.io npm
+    - key: npm::Root.io Security Patches
       value:
         ID: rootio
-        Name: Root.io Security Patches (npm)
+        Name: Root.io Security Patches
         URL: https://api.root.io/external/patch_feed
-    - key: root.io rubygems
+    - key: rubygems::Root.io Security Patches
       value:
         ID: rootio
-        Name: Root.io Security Patches (rubygems)
+        Name: Root.io Security Patches
         URL: https://api.root.io/external/patch_feed
 
-- bucket: root.io pip
+- bucket: pip::Root.io Security Patches
   pairs:
     - bucket: django
       pairs:
@@ -25,9 +25,9 @@
             VulnerableVersions:
               - "<4.0.2"
             PatchedVersions:
-              - "4.0.2.root.io"
+              - "4.0.2+root.io.1"
 
-- bucket: root.io npm
+- bucket: npm::Root.io Security Patches
   pairs:
     - bucket: express
       pairs:
@@ -36,9 +36,9 @@
             VulnerableVersions:
               - "<4.18.0"
             PatchedVersions:
-              - "4.18.0.root.io"
+              - "4.18.0+root.io.2"
 
-- bucket: root.io rubygems
+- bucket: rubygems::Root.io Security Patches
   pairs:
     - bucket: rails
       pairs:
@@ -47,4 +47,4 @@
             VulnerableVersions:
               - "<7.0.0"
             PatchedVersions:
-              - "7.0.0.root.io"
+              - "7.0.0+root.io.3"

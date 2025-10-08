@@ -1,17 +1,17 @@
 - bucket: data-source
   pairs:
-    - key: root.io npm
+    - key: npm::Root.io Security Patches
       value:
         ID: rootio
-        Name: Root.io Security Patches (npm)
+        Name: Root.io Security Patches
         URL: https://api.root.io/external/patch_feed
-    - key: root.io pip
+    - key: pip::Root.io Security Patches
       value:
         ID: rootio
-        Name: Root.io Security Patches (pip)
+        Name: Root.io Security Patches
         URL: https://api.root.io/external/patch_feed
 
-- bucket: root.io npm
+- bucket: npm::Root.io Security Patches
   pairs:
     - bucket: lodash
       pairs:
@@ -22,7 +22,7 @@
             PatchedVersions:
               - "4.17.21.root.io"
 
-- bucket: root.io pip
+- bucket: pip::Root.io Security Patches
   pairs:
     - bucket: lodash
       pairs:
