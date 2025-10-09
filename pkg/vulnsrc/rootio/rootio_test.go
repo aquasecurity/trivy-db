@@ -132,7 +132,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad path - invalid JSON",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "failed to read feed file",
+			wantErr: "failed to parse feed file",
 		},
 		{
 			name: "new format with os_feed.json and app_feed.json",
@@ -167,7 +167,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"data-source",
-						"root.io npm",
+						"npm::Root.io Security Patches",
 					},
 					Value: types.DataSource{
 						ID:   vulnerability.RootIO,
@@ -179,7 +179,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{
 						"advisory-detail",
 						"CVE-2024-REACT-001",
-						"root.io npm",
+						"npm::Root.io Security Patches",
 						"react",
 					},
 					Value: types.Advisory{
@@ -191,7 +191,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"data-source",
-						"root.io pip",
+						"pip::Root.io Security Patches",
 					},
 					Value: types.DataSource{
 						ID:   vulnerability.RootIO,
@@ -203,7 +203,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{
 						"advisory-detail",
 						"CVE-2024-DJANGO-001",
-						"root.io pip",
+						"pip::Root.io Security Patches",
 						"django",
 					},
 					Value: types.Advisory{
@@ -220,7 +220,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"data-source",
-						"root.io pip",
+						"pip::Root.io Security Patches",
 					},
 					Value: types.DataSource{
 						ID:   vulnerability.RootIO,
@@ -232,7 +232,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{
 						"advisory-detail",
 						"CVE-2024-1234",
-						"root.io pip",
+						"pip::Root.io Security Patches",
 						"django",
 					},
 					Value: types.Advisory{
@@ -250,7 +250,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"data-source",
-						"root.io npm",
+						"npm::Root.io Security Patches",
 					},
 					Value: types.DataSource{
 						ID:   vulnerability.RootIO,
@@ -262,7 +262,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{
 						"advisory-detail",
 						"CVE-2024-5678",
-						"root.io npm",
+						"npm::Root.io Security Patches",
 						"express",
 					},
 					Value: types.Advisory{
@@ -557,7 +557,7 @@ func TestVulnSrc_Update_Comprehensive(t *testing.T) {
 					Key: []string{
 						"advisory-detail",
 						"CVE-2024-PY-001",
-						"root.io pip",
+						"pip::Root.io Security Patches",
 						"requests",
 					},
 					Value: types.Advisory{
@@ -601,7 +601,7 @@ func TestVulnSrc_Update_Comprehensive(t *testing.T) {
 					Key: []string{
 						"advisory-detail",
 						"CVE-2024-VALID-001",
-						"root.io npm",
+						"npm::Root.io Security Patches",
 						"react",
 					},
 					Value: types.Advisory{

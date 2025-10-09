@@ -29,13 +29,7 @@ const (
 	platformFormat = "root.io %s %s" // "root.io {baseOS} {version}"
 )
 
-var (
-	source = types.DataSource{
-		ID:   vulnerability.RootIO,
-		Name: "Root.io Security Patches",
-		URL:  "https://api.root.io/external/patch_feed",
-	}
-)
+// source is defined in bucket.go as rootioDataSource
 
 type config struct {
 	dbc    db.Operation
@@ -56,7 +50,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return source.ID
+	return rootioDataSource.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -127,11 +121,13 @@ func (vs VulnSrc) save(feeds map[string][]Feed, baseID types.SourceID) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for bucketOrPlatform, platformFeeds := range feeds {
 			dataSource := types.DataSource{
-				ID:   source.ID,
-				Name: source.Name,
-				URL:  source.URL,
-				// For OS advisories only
-				BaseID: baseID,
+				ID:   rootioDataSource.ID,
+				Name: rootioDataSource.Name,
+				URL:  rootioDataSource.URL,
+			}
+			// Only add BaseID for OS advisories
+			if baseID != "" {
+				dataSource.BaseID = baseID
 			}
 			if err := vs.dbc.PutDataSource(tx, bucketOrPlatform, dataSource); err != nil {
 				return oops.Wrapf(err, "failed to put data source")
@@ -191,7 +187,9 @@ type VulnSrcGetter struct {
 	config
 }
 
-// NewVulnSrcGetter creates a getter for OS packages
+// NewVulnSrcGetter creates a getter for OS packages.
+// Note: Language packages don't need a separate getter as they are retrieved
+// directly using the standard ecosystem bucket format (e.g., "npm::Root.io Security Patches").
 func NewVulnSrcGetter(baseOS types.SourceID) VulnSrcGetter {
 	return VulnSrcGetter{
 		baseOS: baseOS,
@@ -202,6 +200,9 @@ func NewVulnSrcGetter(baseOS types.SourceID) VulnSrcGetter {
 	}
 }
 
+// Get retrieves OS advisories for Root.io.
+// Language package advisories are retrieved directly via their ecosystem bucket names
+// and don't use this getter.
 func (vs VulnSrcGetter) Get(params db.GetParams) ([]types.Advisory, error) {
 	return vs.getOSAdvisories(params)
 }
