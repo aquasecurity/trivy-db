@@ -1,0 +1,38 @@
+{
+  "npm": [
+    {
+      "distroversion": "",
+      "packages": [
+        {
+          "pkg": {
+            "name": "react",
+            "cves": {
+              "CVE-2024-VALID-001": {
+                "vulnerable_ranges": ["<18.2.0"],
+                "fixed_versions": ["18.2.0+root.io.1"]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "cocoapods": [
+    {
+      "distroversion": "",
+      "packages": [
+        {
+          "pkg": {
+            "name": "invalid-pod",
+            "cves": {
+              "CVE-2024-INVALID-001": {
+                "vulnerable_ranges": ["<1.0.0"],
+                "fixed_versions": ["1.0.0"]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
