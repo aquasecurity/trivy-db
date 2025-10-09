@@ -35,13 +35,14 @@ func (s rootioBucket) Ecosystem() ecosystem.Type {
 func newBucket(baseEco ecosystem.Type, baseEcoVer string) (bucket.Bucket, error) {
 	bkt := rootioBucket{}
 	switch baseEco {
-	// OS ecosystems
+	// Supported OS ecosystems
 	case ecosystem.Alpine:
 		bkt.baseOSBucket = bucket.NewAlpine(baseEcoVer)
 	case ecosystem.Debian:
 		bkt.baseOSBucket = bucket.NewDebian(baseEcoVer)
 	case ecosystem.Ubuntu:
 		bkt.baseOSBucket = bucket.NewUbuntu(baseEcoVer)
+		// Supported language ecosystems
 	case ecosystem.Pip, ecosystem.Npm, ecosystem.RubyGems, ecosystem.Maven, ecosystem.Go, ecosystem.NuGet, ecosystem.Cargo:
 		bkt.languageEcosystem = baseEco
 	default:

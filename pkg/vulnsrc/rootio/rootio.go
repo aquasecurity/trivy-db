@@ -127,9 +127,10 @@ func (vs VulnSrc) save(feeds map[string][]Feed, baseID types.SourceID) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		for bucketOrPlatform, platformFeeds := range feeds {
 			dataSource := types.DataSource{
-				ID:     source.ID,
-				Name:   source.Name,
-				URL:    source.URL,
+				ID:   source.ID,
+				Name: source.Name,
+				URL:  source.URL,
+				// For OS advisories only
 				BaseID: baseID,
 			}
 			if err := vs.dbc.PutDataSource(tx, bucketOrPlatform, dataSource); err != nil {
@@ -172,6 +173,7 @@ func (vs VulnSrc) put(tx *bolt.Tx, bucketOrPlatform string, feed Feed) error {
 	return nil
 }
 
+// baseID returns the base source ID for the OS ecosystem only.
 func baseID(eco ecosystem.Type) types.SourceID {
 	switch eco {
 	case ecosystem.Alpine:
