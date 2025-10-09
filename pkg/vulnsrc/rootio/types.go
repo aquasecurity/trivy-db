@@ -34,7 +34,3 @@ type RawCVEInfo struct {
 	VulnerableRanges []string `json:"vulnerable_ranges"`
 	FixedVersions    []string `json:"fixed_versions"`
 }
-
-// RawAppFeed represents the combined app feed format containing all language ecosystems
-// Uses the same unified structure as OS feeds
-type RawAppFeed map[string][]RawDistroData
