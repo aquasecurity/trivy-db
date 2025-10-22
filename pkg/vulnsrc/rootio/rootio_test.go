@@ -279,6 +279,15 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:       "language packages without root.io versions - should skip",
+			dir:        "testdata/language-packages-no-rootio",
+			wantValues: []vulnsrctest.WantValues{},
+			noBuckets: [][]string{
+				{"npm::Root.io Security Patches"},
+				{"pip::Root.io Security Patches"},
+			},
+		},
 	}
 
 	for _, tt := range tests {

@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/samber/lo"
 	"github.com/samber/oops"
@@ -86,6 +87,12 @@ func (vs VulnSrc) updatePackages(dir string, appFeed bool) error {
 		feeds := make(map[string][]Feed)
 		eco := ecosystem.Type(e)
 		for _, distro := range distroDataList {
+			// For language packages, only create Root.io buckets if versions contain "root.io"
+			if isLanguageEcosystem(eco) && !hasRootioVersions(distro.Packages) {
+				vs.logger.Debug("Skipping Root.io bucket creation for language ecosystem without root.io versions", "ecosystem", eco)
+				continue
+			}
+
 			bkt, err := newBucket(eco, distro.DistroVersion)
 			// We check unsupported OS/ecosystem here
 			if err != nil {
@@ -180,6 +187,30 @@ func baseID(eco ecosystem.Type) types.SourceID {
 		return vulnerability.Ubuntu
 	}
 	return ""
+}
+
+// hasRootioVersions checks if any package has versions with "root.io" suffix
+func hasRootioVersions(packages []RawPackageData) bool {
+	for _, pkg := range packages {
+		for _, cveInfo := range pkg.Pkg.CVEs {
+			for _, version := range cveInfo.FixedVersions {
+				if strings.Contains(version, "root.io") {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+// isLanguageEcosystem checks if the ecosystem is a language ecosystem
+func isLanguageEcosystem(eco ecosystem.Type) bool {
+	switch eco {
+	case ecosystem.Pip, ecosystem.Npm, ecosystem.RubyGems, ecosystem.Maven, ecosystem.Go, ecosystem.NuGet, ecosystem.Cargo:
+		return true
+	default:
+		return false
+	}
 }
 
 type VulnSrcGetter struct {
