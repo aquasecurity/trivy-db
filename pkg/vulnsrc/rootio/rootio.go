@@ -23,10 +23,9 @@ import (
 )
 
 const (
-	rootioDir      = "rootio"
-	feedFileName   = "cve_feed.json" // Feed filename for both OS and app feeds
-	appSubDir      = "app"           // Subdirectory for app feed
-	platformFormat = "root.io %s %s" // "root.io {baseOS} {version}"
+	rootioDir    = "rootio"
+	feedFileName = "cve_feed.json" // Feed filename for both OS and app feeds
+	appSubDir    = "app"           // Subdirectory for app feed
 )
 
 var (
@@ -61,19 +60,14 @@ func (vs VulnSrc) Name() types.SourceID {
 
 func (vs VulnSrc) Update(dir string) error {
 	// By default, update OS feeds first, then app feeds
-	if err := vs.updatePackages(dir, false); err != nil { // OS feeds
+	if err := vs.updatePackages(filepath.Join(dir, "vuln-list", rootioDir, feedFileName)); err != nil { // OS feeds
 		return err
 	}
-	return vs.updatePackages(dir, true) // App feeds
+	return vs.updatePackages(filepath.Join(dir, "vuln-list", rootioDir, appSubDir, feedFileName)) // App feeds
 }
 
 // updatePackages ingests Root.io feeds for either OS (appFeed=false) or language ecosystems (appFeed=true).
-func (vs VulnSrc) updatePackages(dir string, appFeed bool) error {
-	feedPath := filepath.Join(dir, "vuln-list", rootioDir, feedFileName) // OS feed path
-	if appFeed {
-		feedPath = filepath.Join(dir, "vuln-list", rootioDir, appSubDir, feedFileName) // App feed path
-	}
-
+func (vs VulnSrc) updatePackages(feedPath string) error {
 	eb := oops.In("rootio").With("file_path", feedPath)
 
 	// Both OS and app feeds have the same shape: map[string][]RawDistroData
@@ -187,31 +181,31 @@ func baseID(eco ecosystem.Type) types.SourceID {
 }
 
 type VulnSrcGetter struct {
-	baseOS types.SourceID
+	baseEco ecosystem.Type
 	config
 }
 
 // NewVulnSrcGetter creates a getter for OS packages
-func NewVulnSrcGetter(baseOS types.SourceID) VulnSrcGetter {
+func NewVulnSrcGetter(baseEco ecosystem.Type) VulnSrcGetter {
 	return VulnSrcGetter{
-		baseOS: baseOS,
+		baseEco: baseEco,
 		config: config{
 			dbc:    db.Config{},
-			logger: log.WithPrefix(fmt.Sprintf("rootio-%s", baseOS)),
+			logger: log.WithPrefix(fmt.Sprintf("rootio-%s", baseEco)),
 		},
 	}
 }
 
 func (vs VulnSrcGetter) Get(params db.GetParams) ([]types.Advisory, error) {
-	return vs.getOSAdvisories(params)
-}
-
-func (vs VulnSrcGetter) getOSAdvisories(params db.GetParams) ([]types.Advisory, error) {
-	eb := oops.In("rootio").With("base_os", vs.baseOS).With("os_version", params.Release).With("package_name", params.PkgName)
-	// Get advisories from the original distributors, like Debian or Alpine
-	advs, err := vs.baseOSGetter().Get(params)
+	eb := oops.In("rootio").With("base_ecosystem", vs.baseEco).With("os_version", params.Release).With("package_name", params.PkgName)
+	bkt, err := newBucket(vs.baseEco, params.Release)
 	if err != nil {
-		return nil, eb.Wrapf(err, "failed to get advisories for base OS")
+		return nil, eb.Wrapf(err, "failed to create bucket")
+	}
+
+	advs, err := vs.baseEcoAdvisories(params)
+	if err != nil {
+		return nil, eb.Wrapf(err, "failed to get base ecosystem advisories")
 	}
 
 	// Simulate the advisories with Root.io's version constraints
@@ -225,8 +219,7 @@ func (vs VulnSrcGetter) getOSAdvisories(params db.GetParams) ([]types.Advisory, 
 		allAdvs[adv.VulnerabilityID] = adv
 	}
 
-	rootioOSVer := fmt.Sprintf(platformFormat, vs.baseOS, params.Release)
-	advs, err = vs.dbc.GetAdvisories(rootioOSVer, params.PkgName)
+	advs, err = vs.dbc.GetAdvisories(bkt.Name(), params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories")
 	}
@@ -254,14 +247,35 @@ func (vs VulnSrcGetter) getOSAdvisories(params db.GetParams) ([]types.Advisory, 
 	return allAdvsSlice, nil
 }
 
+func (vs VulnSrcGetter) baseEcoAdvisories(params db.GetParams) ([]types.Advisory, error) {
+	getter := vs.baseOSGetter()
+	if getter != nil {
+		// Get advisories from the original distributors, like Debian or Alpine
+		advs, err := vs.baseOSGetter().Get(params)
+		if err != nil {
+			return nil, oops.Wrapf(err, "failed to get advisories for base ecosystem")
+		}
+		return advs, nil
+	}
+
+	// Take advisories for language package
+	bktPrefix := fmt.Sprintf("%s::", vs.baseEco)
+	advs, err := vs.config.dbc.GetAdvisories(bktPrefix, params.PkgName)
+	if err != nil {
+		return nil, oops.Wrapf(err, "failed to get advisories for base ecoststem")
+	}
+	return advs, nil
+}
+
 func (vs VulnSrcGetter) baseOSGetter() db.Getter {
-	switch vs.baseOS {
-	case vulnerability.Debian:
+	switch vs.baseEco {
+	case ecosystem.Debian:
 		return debian.NewVulnSrc()
-	case vulnerability.Ubuntu:
+	case ecosystem.Ubuntu:
 		return ubuntu.NewVulnSrc()
-	case vulnerability.Alpine:
+	case ecosystem.Alpine:
 		return alpine.NewVulnSrc()
+
 	}
 	return nil
 }
