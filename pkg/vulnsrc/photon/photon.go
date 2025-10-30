@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"path/filepath"
+	"strings"
 
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
@@ -78,6 +79,14 @@ func (vs VulnSrc) save(cves []PhotonCVE) error {
 
 func (vs VulnSrc) commit(tx *bolt.Tx, cves []PhotonCVE) error {
 	for _, cve := range cves {
+		cve.ResVer = normalizeNA(cve.ResVer)
+		cve.AffVer = normalizeNA(cve.AffVer)
+
+		// skip advisories with no fixed and affected version
+		if cve.ResVer == "" && cve.AffVer == "" {
+			continue
+		}
+
 		platformName := bucket.NewPhoton(cve.OSVersion).Name()
 		if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
 			return oops.Wrapf(err, "failed to put data source")
@@ -104,6 +113,16 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []PhotonCVE) error {
 		}
 	}
 	return nil
+}
+
+// normalizeNA normalizes "NA" string to empty string.
+// Photon uses "NA" to indicate "not available" versions
+// But we should use empty string to avoid using "NA" as version in the DB
+func normalizeNA(s string) string {
+	if strings.EqualFold(s, "NA") {
+		return ""
+	}
+	return s
 }
 
 func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
