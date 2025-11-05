@@ -81,6 +81,15 @@ func WithBoltOptions(boltOpts *bolt.Options) Option {
 	}
 }
 
+func WithReadOnly() Option {
+	return func(opts *Options) {
+		if opts.boltOptions == nil {
+			opts.boltOptions = &bolt.Options{}
+		}
+		opts.boltOptions.ReadOnly = true
+	}
+}
+
 func Init(dbDir string, opts ...Option) (err error) {
 	dbOptions := &Options{
 		boltOptions: &bolt.Options{
