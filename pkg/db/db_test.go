@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	bolt "go.etcd.io/bbolt"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 )
@@ -34,7 +35,7 @@ func TestInit(t *testing.T) {
 		{
 			name:   "read-only mode with existing db",
 			dbPath: "testdata/normal.db",
-			opts:   []db.Option{db.WithReadOnly()},
+			opts:   []db.Option{db.WithBoltOptions(&bolt.Options{ReadOnly: true})},
 		},
 	}
 	for _, tt := range tests {
@@ -78,7 +79,7 @@ func TestMultipleInit(t *testing.T) {
 		},
 		{
 			name:       "with read-only option should succeed",
-			opts:       []db.Option{db.WithReadOnly()},
+			opts:       []db.Option{db.WithBoltOptions(&bolt.Options{ReadOnly: true})},
 			assertFunc: require.NoError,
 		},
 	}
