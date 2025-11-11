@@ -279,7 +279,8 @@ func (vs VulnSrc) getOSVersion(platformName string) string {
 			return ""
 		}
 
-		ss := strings.Fields(strings.ReplaceAll(platformName, "-", " "))
+		// Handle both 15-SP7 and 16.0
+		ss := strings.Fields(strings.ReplaceAll(strings.ReplaceAll(platformName, "-", " "), ".", " "))
 		versions := make([]string, 0, 2)
 		for i := len(ss) - 1; i > 0; i-- {
 			v, err := strconv.Atoi(strings.TrimPrefix(ss[i], "SP"))
