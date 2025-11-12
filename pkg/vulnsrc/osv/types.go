@@ -14,6 +14,7 @@ const (
 	ecosystemPyPI       = "pypi"
 	ecosystemRubygems   = "rubygems"
 	ecosystemCrates     = "crates.io"
+	ecosystemJulia      = "julia"
 	ecosystemPackagist  = "packagist"
 	ecosystemMaven      = "maven"
 	ecosystemNuGet      = "nuget"

@@ -306,6 +306,11 @@ func NewGo(dataSource types.DataSource) (DataSourceBucket, error) {
 	return newLang(ecosystem.Go, dataSource)
 }
 
+// NewJulia creates a bucket for Julia ecosystem with data source
+func NewJulia(dataSource types.DataSource) (DataSourceBucket, error) {
+	return newLang(ecosystem.Julia, dataSource)
+}
+
 // NewKubernetes creates a bucket for Kubernetes ecosystem with data source
 func NewKubernetes(dataSource types.DataSource) (DataSourceBucket, error) {
 	return newLang(ecosystem.Kubernetes, dataSource)
