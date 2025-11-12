@@ -673,6 +673,10 @@ func TestGetOSVersion(t *testing.T) {
 			inputPlatformName:    "SUSE Linux Enterprise Micro 5.1",
 			expectedPlatformName: "SUSE Linux Enterprise Micro 5.1",
 		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server 16.0",
+			expectedPlatformName: "SUSE Linux Enterprise 16.0",
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.inputPlatformName, func(t *testing.T) {
