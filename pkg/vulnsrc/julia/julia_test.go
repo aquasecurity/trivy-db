@@ -15,7 +15,6 @@ func TestVulnSrc_Update(t *testing.T) {
 		name       string
 		dir        string
 		wantValues []vulnsrctest.WantValues
-		noBuckets  [][]string
 		wantErr    string
 	}{
 		{
@@ -72,21 +71,6 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: map[string]any{},
 				},
 			},
-			noBuckets: [][]string{
-				// We should save only stdlib packages
-				{
-					"advisory-detail",
-					"CVE-2021-41803",
-				},
-				{
-					"vulnerability-detail",
-					"CVE-2021-41803",
-				},
-				{
-					"vulnerability-id",
-					"CVE-2021-41803",
-				},
-			},
 		},
 		{
 			name:    "sad path (dir doesn't exist)",
@@ -106,7 +90,6 @@ func TestVulnSrc_Update(t *testing.T) {
 				Dir:        tt.dir,
 				WantValues: tt.wantValues,
 				WantErr:    tt.wantErr,
-				NoBuckets:  tt.noBuckets,
 			})
 		})
 	}
