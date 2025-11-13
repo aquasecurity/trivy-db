@@ -428,6 +428,8 @@ func (o OSV) resolveBucket(raw string) (bucket.Bucket, error) {
 		return bucket.NewRubyGems(o.dataSources[ecosystem.RubyGems])
 	case ecosystemCrates:
 		return bucket.NewCargo(o.dataSources[ecosystem.Cargo])
+	case ecosystemJulia:
+		return bucket.NewJulia(o.dataSources[ecosystem.Julia])
 	case ecosystemPackagist:
 		return bucket.NewComposer(o.dataSources[ecosystem.Composer])
 	case ecosystemMaven:
