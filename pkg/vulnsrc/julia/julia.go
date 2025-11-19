@@ -13,10 +13,6 @@ const sourceID = vulnerability.Julia
 
 var osvDir = filepath.Join("vuln-list", "osv", "julia")
 
-type DatabaseSpecific struct {
-	URL string `json:"url"`
-}
-
 type VulnDB struct{}
 
 func NewVulnSrc() VulnDB {
