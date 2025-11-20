@@ -20,6 +20,7 @@ var all = []ecosystem.Type{
 	ecosystem.Pip,
 	ecosystem.RubyGems,
 	ecosystem.Cargo,
+	ecosystem.Julia,
 	ecosystem.NuGet,
 	ecosystem.Maven,
 	ecosystem.Go,

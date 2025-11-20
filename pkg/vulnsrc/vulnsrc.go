@@ -16,6 +16,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/glad"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/govulndb"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/julia"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/k8svulndb"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/minimos"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
@@ -76,6 +77,7 @@ var (
 		ghsa.NewVulnSrc(),
 		glad.NewVulnSrc(),
 		govulndb.NewVulnSrc(), // For Go stdlib packages
+		julia.NewVulnSrc(),
 
 		aqua.NewVulnSrc(),
 	}
