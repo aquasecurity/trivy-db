@@ -180,6 +180,30 @@ func baseID(eco ecosystem.Type) types.SourceID {
 	return ""
 }
 
+// hasRootioVersions checks if any package has versions with "root.io" suffix
+func hasRootioVersions(packages []RawPackageData) bool {
+	for _, pkg := range packages {
+		for _, cveInfo := range pkg.Pkg.CVEs {
+			for _, version := range cveInfo.FixedVersions {
+				if strings.Contains(version, "root.io") {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+// isLanguageEcosystem checks if the ecosystem is a language ecosystem
+func isLanguageEcosystem(eco ecosystem.Type) bool {
+	switch eco {
+	case ecosystem.Pip, ecosystem.Maven:
+		return true
+	default:
+		return false
+	}
+}
+
 type VulnSrcGetter struct {
 	baseEco ecosystem.Type
 	config
