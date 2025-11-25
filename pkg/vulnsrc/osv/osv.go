@@ -158,8 +158,10 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 		return nil
 	}
 
+	// Upstream IDs are also considered as aliases
+	entryAliases := lo.Uniq(append(entry.Aliases, entry.Upstream...))
 	// Group IDs into primary vulnerability IDs and aliases.
-	vulnIDs, aliases := groupVulnIDs(entry.ID, entry.Aliases)
+	vulnIDs, aliases := groupVulnIDs(entry.ID, entryAliases)
 
 	references := lo.Map(entry.References, func(ref Reference, _ int) string {
 		return ref.URL
