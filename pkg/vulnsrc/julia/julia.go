@@ -1,17 +1,16 @@
 package julia
 
 import (
-	"path/filepath"
-
 	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-const sourceID = vulnerability.Julia
-
-var osvDir = filepath.Join("vuln-list", "osv", "julia")
+const (
+	sourceID = vulnerability.Julia
+	juliaDir = "julia"
+)
 
 type VulnDB struct{}
 
@@ -32,5 +31,5 @@ func (VulnDB) Update(root string) error {
 		},
 	}
 
-	return osv.New(osvDir, sourceID, dataSources).Update(root)
+	return osv.New(juliaDir, sourceID, dataSources).Update(root)
 }
