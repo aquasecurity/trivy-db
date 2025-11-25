@@ -119,7 +119,7 @@ func (vs VulnSrc) updatePackages(feedPath string) error {
 
 func (vs VulnSrc) save(feeds map[string][]Feed, baseID types.SourceID) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		for bucketOrPlatform, platformFeeds := range feeds {
+		for bktName, platformFeeds := range feeds {
 			dataSource := types.DataSource{
 				ID:   source.ID,
 				Name: source.Name,
@@ -127,10 +127,10 @@ func (vs VulnSrc) save(feeds map[string][]Feed, baseID types.SourceID) error {
 				// For OS advisories only
 				BaseID: baseID,
 			}
-			if err := vs.dbc.PutDataSource(tx, bucketOrPlatform, dataSource); err != nil {
+			if err := vs.dbc.PutDataSource(tx, bktName, dataSource); err != nil {
 				return oops.Wrapf(err, "failed to put data source")
 			}
-			if err := vs.commit(tx, bucketOrPlatform, platformFeeds); err != nil {
+			if err := vs.commit(tx, bktName, platformFeeds); err != nil {
 				return err
 			}
 		}
@@ -142,20 +142,20 @@ func (vs VulnSrc) save(feeds map[string][]Feed, baseID types.SourceID) error {
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, bucketOrPlatform string, feeds []Feed) error {
+func (vs VulnSrc) commit(tx *bolt.Tx, bktName string, feeds []Feed) error {
 	for _, feed := range feeds {
-		if err := vs.put(tx, bucketOrPlatform, feed); err != nil {
+		if err := vs.put(tx, bktName, feed); err != nil {
 			return oops.Wrapf(err, "put error")
 		}
 	}
 	return nil
 }
 
-func (vs VulnSrc) put(tx *bolt.Tx, bucketOrPlatform string, feed Feed) error {
-	eb := oops.With("bucket_or_platform", bucketOrPlatform).With("package", feed.PkgName).With("cve", feed.VulnerabilityID)
+func (vs VulnSrc) put(tx *bolt.Tx, bktName string, feed Feed) error {
+	eb := oops.With("bucket name", bktName).With("package", feed.PkgName).With("cve", feed.VulnerabilityID)
 
 	// Both OS and language packages use PutAdvisoryDetail
-	if err := vs.dbc.PutAdvisoryDetail(tx, feed.VulnerabilityID, feed.PkgName, []string{bucketOrPlatform}, feed.Patch); err != nil {
+	if err := vs.dbc.PutAdvisoryDetail(tx, feed.VulnerabilityID, feed.PkgName, []string{bktName}, feed.Patch); err != nil {
 		return eb.Wrapf(err, "failed to save advisory")
 	}
 
@@ -178,30 +178,6 @@ func baseID(eco ecosystem.Type) types.SourceID {
 		return vulnerability.Ubuntu
 	}
 	return ""
-}
-
-// hasRootioVersions checks if any package has versions with "root.io" suffix
-func hasRootioVersions(packages []RawPackageData) bool {
-	for _, pkg := range packages {
-		for _, cveInfo := range pkg.Pkg.CVEs {
-			for _, version := range cveInfo.FixedVersions {
-				if strings.Contains(version, "root.io") {
-					return true
-				}
-			}
-		}
-	}
-	return false
-}
-
-// isLanguageEcosystem checks if the ecosystem is a language ecosystem
-func isLanguageEcosystem(eco ecosystem.Type) bool {
-	switch eco {
-	case ecosystem.Pip, ecosystem.Maven:
-		return true
-	default:
-		return false
-	}
 }
 
 type VulnSrcGetter struct {

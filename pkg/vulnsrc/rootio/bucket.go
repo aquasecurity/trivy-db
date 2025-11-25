@@ -43,7 +43,7 @@ func newBucket(baseEco ecosystem.Type, baseEcoVer string) (bucket.Bucket, error)
 	case ecosystem.Ubuntu:
 		bkt.baseOSBucket = bucket.NewUbuntu(baseEcoVer)
 		// Supported language ecosystems
-	case ecosystem.Pip, ecosystem.Npm, ecosystem.RubyGems, ecosystem.Maven, ecosystem.Go, ecosystem.NuGet, ecosystem.Cargo:
+	case ecosystem.Pip, ecosystem.Maven:
 		bkt.languageEcosystem = baseEco
 	default:
 		return nil, oops.With("base", baseEco).Errorf("unsupported base ecosystem for Root.io bucket")
