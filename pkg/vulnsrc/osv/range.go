@@ -33,7 +33,7 @@ func NewVersionRange(ecosystem, from string) VersionRange {
 		return &PyPIVersionRange{versionRange: vr}
 	case ecosystemMaven:
 		return &MavenVersionRange{versionRange: vr}
-	case ecosystemGo, ecosystemCrates, ecosystemNuGet:
+	case ecosystemGo, ecosystemCrates, ecosystemNuGet, ecosystemJulia:
 		return &SemVerRange{versionRange: vr}
 	case ecosystemPackagist:
 		return &DefaultVersionRange{versionRange: vr}
