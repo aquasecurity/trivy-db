@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/julia"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
@@ -41,7 +42,6 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: types.Advisory{
 						VendorIDs: []string{
-							"GHSA-4g68-4pxg-mw93",
 							"JLSEC-2025-1",
 						},
 						PatchedVersions: []string{
@@ -67,6 +67,48 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{
 						"vulnerability-id",
 						"CVE-2025-52479",
+					},
+					Value: map[string]any{},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2016-3189",
+						"julia::Julia Ecosystem Security Advisories",
+						"Bzip2_jll",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"JLSEC-2025-10",
+						},
+						PatchedVersions: []string{
+							"1.0.7+0",
+						},
+						VulnerableVersions: []string{
+							"<1.0.7+0",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2016-3189",
+						"julia",
+					},
+					Value: types.VulnerabilityDetail{
+						Title:       "Use-after-free vulnerability in bzip2recover in bzip2 1.0.6 allows remote attackers to cause a denia...",
+						Description: "Use-after-free vulnerability in bzip2recover in bzip2 1.0.6 allows remote attackers to cause a denial of service (crash) via a crafted bzip2 file, related to block ends set to before the start of the block.",
+						References: []string{
+							"http://packetstormsecurity.com/files/153644/Slackware-Security-Advisory-bzip2-Updates.html",
+						},
+						LastModifiedDate: utils.MustTimeParse("2025-10-31T18:41:21.318Z"),
+						PublishedDate:    utils.MustTimeParse("2025-10-09T21:46:55.585Z"),
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2016-3189",
 					},
 					Value: map[string]any{},
 				},
