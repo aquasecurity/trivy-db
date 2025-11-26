@@ -133,18 +133,18 @@ func TestVulnSrc_Update(t *testing.T) {
 						"advisory-detail",
 						"CVE-2024-11111", // Use CVE ID instead of RHSA ID for unpatched vulnerabilities
 						"Red Hat",
-						"affected-package",
+						"affected-package-bin",
 					},
 					Value: redhatcsaf.Advisory{
 						Entries: []redhatcsaf.Entry{
 							{
-								FixedVersion: "", // unpatched vulnerability
+								FixedVersion: "", // unpatched vulnerability has no fixed version
 								CVEs: []redhatcsaf.CVEEntry{
 									{
 										Severity: types.SeverityHigh,
 									},
 								},
-								Arches:             nil, // Arches is empty for source packages
+								Arches:             nil, // no arch in PURL for unpatched vulnerabilities
 								AffectedCPEIndices: []int{2},
 							},
 						},
@@ -155,18 +155,18 @@ func TestVulnSrc_Update(t *testing.T) {
 						"advisory-detail",
 						"CVE-2024-22222", // Use CVE ID instead of RHSA ID for unpatched vulnerabilities
 						"Red Hat",
-						"affected-package",
+						"affected-package-bin",
 					},
 					Value: redhatcsaf.Advisory{
 						Entries: []redhatcsaf.Entry{
 							{
-								FixedVersion: "", // unpatched vulnerability
+								FixedVersion: "", // unpatched vulnerability has no fixed version
 								CVEs: []redhatcsaf.CVEEntry{
 									{
 										Severity: types.SeverityCritical,
 									},
 								},
-								Arches:             nil, // Arches is empty for source packages
+								Arches:             nil, // no arch in PURL for unpatched vulnerabilities
 								AffectedCPEIndices: []int{2},
 							},
 						},

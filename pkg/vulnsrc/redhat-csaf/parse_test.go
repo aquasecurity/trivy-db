@@ -30,19 +30,6 @@ func TestParser_Parse(t *testing.T) {
 			wantAdvisories: map[Bucket]RawEntries{
 				{
 					Package: Package{
-						Name: "affected-package",
-					},
-					VulnerabilityID: "CVE-2024-9999", // unpatched
-				}: {
-					{
-						FixedVersion: "1.0.0",
-						Arch:         "", // src package
-						Severity:     types.SeverityHigh,
-						CPE:          csaf.CPE("cpe:/o:redhat:enterprise_linux:9::baseos"),
-					},
-				},
-				{
-					Package: Package{
 						Name: "pam",
 					},
 					VulnerabilityID: "RHSA-2024:9941",

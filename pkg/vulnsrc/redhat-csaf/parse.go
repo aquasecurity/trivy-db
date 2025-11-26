@@ -260,11 +260,16 @@ func (p *Parser) parseVulnerability(adv CSAFAdvisory, vuln *csaf.Vulnerability) 
 
 			arch := product.Package.Qualifiers.Map()["arch"]
 			if arch == "src" {
-				// If arch is "src", treat it as empty.
-				// Normally src packages should be skipped, but for unpatched vulnerabilities
-				// only source packages are included (see https://issues.redhat.com/browse/SECDATA-856),
-				// so we include src packages in this case.
-				arch = ""
+				// Skip source packages to maintain backward compatibility with OVALv2,
+				// which only included binary package names.
+				// Now that SECDATA-1097 has been resolved, binary package names are also
+				// included for unpatched vulnerabilities, so we can safely skip source packages.
+				// cf. https://issues.redhat.com/browse/SECDATA-1097
+				//
+				// TODO(v3): In Trivy DB v3, consider storing only source package names instead
+				// of binary package names for better storage efficiency, as one source package
+				// typically produces multiple binary packages.
+				continue
 			}
 
 			pkgName := product.Package.Name
