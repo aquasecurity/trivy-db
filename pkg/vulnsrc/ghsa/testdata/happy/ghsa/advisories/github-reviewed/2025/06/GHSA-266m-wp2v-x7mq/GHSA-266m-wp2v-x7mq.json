@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.4.0",
+  "id": "GHSA-266m-wp2v-x7mq",
+  "modified": "2025-06-17T20:41:41Z",
+  "published": "2025-06-11T14:48:29Z",
+  "aliases": [
+    "CVE-2025-30399"
+  ],
+  "summary": "Microsoft Security Advisory CVE-2025-30399 | .NET Remote Code Vulnerability",
+  "details": "# Microsoft Security Advisory CVE-2025-30399 | .NET Remote Code Vulnerability\n\n## <a name=\"executive-summary\"></a>Executive summary\n\nMicrosoft is releasing this security advisory to provide information about a vulnerability in .NET 8.0 and .NET 9.0. This advisory also provides guidance on what developers can do to update their applications to remove this vulnerability.\n\nAn attacker could exploit this vulnerability by placing files in particular locations, leading to unintended code execution.\n\n## Announcement\n\nAnnouncement for this issue can be found at https://github.com/dotnet/announcements/issues/362\n\n## <a name=\"mitigation-factors\"></a>Mitigation factors\n\nMicrosoft has not identified any mitigating factors for this vulnerability.\n\n## <a name=\"affected-software\"></a>Affected software\n\n* Any .NET 8.0 application running on .NET 8.0.16 or earlier.\n* Any .NET 9.0 application running on .NET 9.0.5 or earlier.\n\n## <a name=\"affected-packages\"></a>Affected Packages\nThe vulnerability affects any Microsoft .NET project if it uses any of affected packages versions listed below\n\n### <a name=\".NET 9\"></a>.NET 9\nPackage name | Affected version | Patched version\n------------ | ---------------- | -------------------------\n[Microsoft.NetCore.App.Runtime.linux-arm](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.linux-arm)               | >= 9.0.0, <= 9.0.5 | 9.0.6\n[Microsoft.NetCore.App.Runtime.linux-arm64](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.linux-arm64)           | >= 9.0.0, <= 9.0.5 | 9.0.6\n[Microsoft.NetCore.App.Runtime.linux-musl-arm](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.linux-musl-arm)     | >= 9.0.0, <= 9.0.5 | 9.0.6\n[Microsoft.NetCore.App.Runtime.linux-musl-arm64](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.linux-musl-arm64) | >= 9.0.0, < =9.0.5 | 9.0.6\n[Microsoft.NetCore.App.Runtime.linux-musl-x64](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.linux-musl-x64)     | >= 9.0.0, <= 9.0.5 | 9.0.6\n[Microsoft.NetCore.App.Runtime.linux-x64](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.linux-x64)               | >= 9.0.0, < =9.0.5 | 9.0.6\n[Microsoft.NetCore.App.Runtime.osx-arm64](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.osx-arm64)               | >= 9.0.0, < =9.0.5 | 9.0.6\n[Microsoft.NetCore.App.Runtime.osx-x64](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.osx-x64)                   | >= 9.0.0, <= 9.0.5 | 9.0.6\n[Microsoft.NetCore.App.Runtime.win-arm](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.win-arm)                   | >= 9.0.0, <= 9.0.5 | 9.0.6\n[Microsoft.NetCore.App.Runtime.win-arm64](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.win-arm64)               | >= 9.0.0, <= 9.0.5 | 9.0.6\n[Microsoft.NetCore.App.Runtime.win-x64](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.win-x64)                   | >= 9.0.0, <= 9.0.5 | 9.0.6\n[Microsoft.NetCore.App.Runtime.win-x86](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.win-x86)                   | >= 9.0.0, <= 9.0.5 | 9.0.6\n\n### <a name=\".NET 8\"></a>.NET 8\nPackage name | Affected version | Patched version\n------------ | ---------------- | -------------------------\n[Microsoft.NetCore.App.Runtime.linux-arm](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.linux-arm)               | >= 8.0.0, <= 8.0.16 | 8.0.17\n[Microsoft.NetCore.App.Runtime.linux-arm64](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.linux-arm64)           | >= 8.0.0, <= 8.0.16 | 8.0.17\n[Microsoft.NetCore.App.Runtime.linux-musl-arm](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.linux-musl-arm)     | >= 8.0.0, <= 8.0.16 | 8.0.17\n[Microsoft.NetCore.App.Runtime.linux-musl-arm64](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.linux-musl-arm64) | >= 8.0.0, <= 8.0.16 | 8.0.17\n[Microsoft.NetCore.App.Runtime.linux-musl-x64](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.linux-musl-x64)     | >= 8.0.0, <= 8.0.16 | 8.0.17\n[Microsoft.NetCore.App.Runtime.linux-x64](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.linux-x64)               | >= 8.0.0, <= 8.0.16 | 8.0.17\n[Microsoft.NetCore.App.Runtime.osx-arm64](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.osx-arm64)               | >= 8.0.0, <= 8.0.16 | 8.0.17\n[Microsoft.NetCore.App.Runtime.osx-x64](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.osx-x64)                   | >= 8.0.0, <= 8.0.16 | 8.0.17\n[Microsoft.NetCore.App.Runtime.win-arm](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.win-arm)                   | >= 8.0.0, <= 8.0.16 | 8.0.17\n[Microsoft.NetCore.App.Runtime.win-arm64](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.win-arm64)               | >= 8.0.0, <= 8.0.16 | 8.0.17\n[Microsoft.NetCore.App.Runtime.win-x64](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.win-x64)                   | >= 8.0.0, <= 8.0.16 | 8.0.17\n[Microsoft.NetCore.App.Runtime.win-x86](https://www.nuget.org/packages/Microsoft.NetCore.App.Runtime.win-x86)                   | >= 8.0.0, <= 8.0.16 | 8.0.17\n\n## Advisory FAQ\n\n### <a name=\"how-affected\"></a>How do I know if I am affected?\n\nIf you have a runtime with a version listed, or an affected package listed in [affected software](#affected-packages) or [affected packages](#affected-software), you're exposed to the vulnerability.\n\n### <a name=\"how-fix\"></a>How do I fix the issue?\n\n1. To fix the issue please install the latest version of .NET 9.0 or .NET 8.0, as appropriate. If you have installed one or more .NET SDKs through Visual Studio, Visual Studio will prompt you to update Visual Studio, which will also update your .NET  SDKs.\n2. If your application references the vulnerable package, update the package reference to the patched version.\n\n* You can list the versions you have installed by running the `dotnet --info` command. You will see output like the following;\n\n```\n.NET SDK:\n Version:           9.0.100\n Commit:            59db016f11\n Workload version:  9.0.100-manifests.3068a692\n MSBuild version:   17.12.7+5b8665660\n\nRuntime Environment:\n OS Name:     Mac OS X\n OS Version:  15.2\n OS Platform: Darwin\n RID:         osx-arm64\n Base Path:   /usr/local/share/dotnet/sdk/9.0.100/\n\n.NET workloads installed:\nThere are no installed workloads to display.\nConfigured to use loose manifests when installing new manifests.\n\nHost:\n  Version:      9.0.0\n  Architecture: arm64\n  Commit:       9d5a6a9aa4\n\n.NET SDKs installed:\n  9.0.100 [/usr/local/share/dotnet/sdk]\n\n.NET runtimes installed:\n  Microsoft.AspNetCore.App 9.0.0 [/usr/local/share/dotnet/shared/Microsoft.AspNetCore.App]\n  Microsoft.NETCore.App 9.0.0 [/usr/local/share/dotnet/shared/Microsoft.NETCore.App]\n\nOther architectures found:\n  x64   [/usr/local/share/dotnet]\n    registered at [/etc/dotnet/install_location_x64]\n\nEnvironment variables:\n  Not set\n\nglobal.json file:\n  Not found\n\nLearn more:\n  https://aka.ms/dotnet/info\n\nDownload .NET:\n  https://aka.ms/dotnet/download\n```\n\n* If you're using .NET 8.0, you should download and install .NET 8.0.17  Runtime or .NET 8.0.314 SDK (for Visual Studio 2022 v17.10 latest Preview) from https://dotnet.microsoft.com/download/dotnet-core/8.0.\n* If you're using .NET 9.0, you should download and install .NET 9.0.6  Runtime or .NET 9.0.107 SDK (for Visual Studio 2022 v17.12 latest Preview) from https://dotnet.microsoft.com/download/dotnet-core/9.0.\n\nOnce you have installed the updated runtime or SDK, restart your apps for the update to take effect.\n\nAdditionally, if you've deployed [self-contained applications](https://docs.microsoft.com/dotnet/core/deploying/#self-contained-deployments-scd) targeting any of the impacted versions, these applications are also vulnerable and must be recompiled and redeployed.\n\n## Other Information\n\n### Reporting Security Issues\n\nIf you have found a potential security issue in .NET 9.0 or .NET 8.0, please email details to secure@microsoft.com. Reports may qualify for the Microsoft .NET Core & .NET 5 Bounty. Details of the Microsoft .NET Bounty Program including terms and conditions are at <https://aka.ms/corebounty>.\n\n### Support\n\nYou can ask questions about this issue on GitHub in the .NET GitHub organization. The main repos are located at https://github.com/dotnet/runtime. The Announcements repo (https://github.com/dotnet/Announcements) will contain this bulletin as an issue and will include a link to a discussion issue. You can ask questions in the linked discussion issue.\n\n### Disclaimer\n\nThe information provided in this advisory is provided \"as is\" without warranty of any kind. Microsoft disclaims all warranties, either express or implied, including the warranties of merchantability and fitness for a particular purpose. In no event shall Microsoft Corporation or its suppliers be liable for any damages whatsoever including direct, indirect, incidental, consequential, loss of business profits or special damages, even if Microsoft Corporation or its suppliers have been advised of the possibility of such damages. Some states do not allow the exclusion or limitation of liability for consequential or incidental damages so the foregoing limitation may not apply.\n\n### External Links\n\n[CVE-2025-30399]( https://www.cve.org/CVERecord?id=CVE-2025-30399)\n\n### Revisions\n\nV1.0 (June 10, 2025): Advisory published.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "NuGet",
+        "name": "Microsoft.NetCore.App.Runtime.linux-arm"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "9.0.0"
+            },
+            {
+              "fixed": "9.0.6"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "last_known_affected_version_range": "<= 9.0.5"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/dotnet/runtime/security/advisories/GHSA-266m-wp2v-x7mq"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-30399"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/dotnet/runtime/issues/116495"
+    },
+    {
+      "type": "PACKAGE",
+      "url": "https://github.com/dotnet/runtime"
+    },
+    {
+      "type": "WEB",
+      "url": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-30399"
+    },
+    {
+      "type": "WEB",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2025-30399"
+    }
+  ],
+  "database_specific": {
+    "cwe_ids": [
+      "CWE-426"
+    ],
+    "severity": "HIGH",
+    "github_reviewed": true,
+    "github_reviewed_at": "2025-06-11T14:48:29Z",
+    "nvd_published_at": "2025-06-13T02:15:23Z"
+  }
+}

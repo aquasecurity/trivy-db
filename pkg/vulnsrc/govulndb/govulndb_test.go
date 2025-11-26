@@ -53,6 +53,13 @@ func TestVulnSrc_Update(t *testing.T) {
 							"<1.21.9",
 							">=1.22.0-0, <1.22.2",
 						},
+						OSes: []string{
+							"windows",
+						},
+						Arches: []string{
+							"amd64",
+							"ppc64le",
+						},
 					},
 				},
 				{
@@ -77,7 +84,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"vulnerability-id",
 						"CVE-2023-45288",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 			noBuckets: [][]string{
@@ -104,7 +111,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad path (failed to decode)",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "JSON decode error",
+			wantErr: "json decode error",
 		},
 	}
 	for _, tt := range tests {

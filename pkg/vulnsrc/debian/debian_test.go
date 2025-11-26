@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -161,28 +162,28 @@ func TestVulnSrc_Update(t *testing.T) {
 						"vulnerability-id",
 						"CVE-2021-33560",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
 						"CVE-2021-29629",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
 						"DSA-3714-1",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
 						"CVE-2023-5981",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 			noBuckets: [][]string{
@@ -200,12 +201,12 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad broken distributions",
 			dir:     filepath.Join("testdata", "broken-distributions"),
-			wantErr: "failed to decode Debian distribution JSON",
+			wantErr: "distributions error",
 		},
 		{
 			name:    "sad broken packages",
 			dir:     filepath.Join("testdata", "broken-packages"),
-			wantErr: "failed to decode testdata/broken-packages/",
+			wantErr: "source parse error",
 		},
 		{
 			name:    "sad broken CVE",
@@ -263,7 +264,7 @@ func TestVulnSrc_Get(t *testing.T) {
 				release: "10",
 				pkgName: "alpine",
 			},
-			wantErr: "failed to get Debian advisories",
+			wantErr: "failed to get advisories",
 		},
 	}
 	for _, tt := range tests {
@@ -272,9 +273,11 @@ func TestVulnSrc_Get(t *testing.T) {
 			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
 				Fixtures:   tt.fixtures,
 				WantValues: tt.want,
-				Release:    tt.args.release,
-				PkgName:    tt.args.pkgName,
-				WantErr:    tt.wantErr,
+				GetParams: db.GetParams{
+					Release: tt.args.release,
+					PkgName: tt.args.pkgName,
+				},
+				WantErr: tt.wantErr,
 			})
 		})
 	}

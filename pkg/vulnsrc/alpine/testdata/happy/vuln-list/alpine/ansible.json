@@ -3,7 +3,11 @@
   "secfixes": {
     "2.9.3-r0": [
       "CVE-2019-14904",
-      "CVE-2019-14905"
+      "CVE-2019-14905",
+      "CVE-2024-22195 GHSA-h5c8-rqwp-cp95",
+      "CVE-2017-2616 (+ regression fix)",
+      "GHSA-f7r5-w49x-gxm3",
+      "GHSA-h6cc-rc6q-23j4 (+regression fix)"
     ],
     "2.9.6-r0": [
       "CVE-2020-1737"

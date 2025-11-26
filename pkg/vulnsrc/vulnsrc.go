@@ -12,16 +12,20 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/chainguard"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/composer"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/echo"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/glad"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/govulndb"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/k8svulndb"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/minimos"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/node"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/photon"
 	redhatcsaf "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-csaf"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rocky"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rootio"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/seal"
 	susecvrf "github.com/aquasecurity/trivy-db/pkg/vulnsrc/suse-cvrf"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/wolfi"
@@ -55,6 +59,11 @@ var (
 		wolfi.NewVulnSrc(),
 		chainguard.NewVulnSrc(),
 		bitnami.NewVulnSrc(),
+		echo.NewVulnSrc(),
+		minimos.NewVulnSrc(),
+
+		rootio.NewVulnSrc(),
+		seal.NewVulnSrc(),
 
 		k8svulndb.NewVulnSrc(),
 

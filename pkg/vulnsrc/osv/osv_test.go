@@ -4,7 +4,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
@@ -63,6 +65,8 @@ func TestVulnSrc_Update(t *testing.T) {
 							"http://www.openwall.com/lists/oss-security/2018/07/11/7",
 							"https://github.com/advisories/GHSA-wgmx-52ph-qqcw",
 						},
+						LastModifiedDate: utils.MustTimeParse("2021-06-10T06:51:37.378319Z"),
+						PublishedDate:    utils.MustTimeParse("2018-07-12T12:29:00Z"),
 					},
 				},
 				{
@@ -70,14 +74,14 @@ func TestVulnSrc_Update(t *testing.T) {
 						"vulnerability-id",
 						"CVE-2018-10895",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
 						"CVE-2013-4251",
 					},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key: []string{
@@ -117,20 +121,20 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad path",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "JSON decode error",
+			wantErr: "json decode error",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dataSources := map[types.Ecosystem]types.DataSource{
-				vulnerability.Pip: {
+			dataSources := map[ecosystem.Type]types.DataSource{
+				ecosystem.Pip: {
 					ID:   vulnerability.OSV,
 					Name: "Python Packaging Advisory Database",
 					URL:  "https://github.com/pypa/advisory-db",
 				},
 			}
-			o := osv.New(".", vulnerability.OSV, dataSources, nil)
+			o := osv.New(".", vulnerability.OSV, dataSources)
 			vulnsrctest.TestUpdate(t, o, vulnsrctest.TestUpdateArgs{
 				Dir:        tt.dir,
 				WantValues: tt.wantValues,

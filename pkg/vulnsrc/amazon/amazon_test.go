@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/amazon"
@@ -95,7 +96,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad path",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "failed to decode Amazon JSON",
+			wantErr: "json decode error",
 		},
 		{
 			name:    "no such directory",
@@ -142,7 +143,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			version:  "1",
 			pkgName:  "curl",
 			fixtures: []string{"testdata/fixtures/sad.yaml"},
-			wantErr:  "failed to unmarshal advisory JSON",
+			wantErr:  "json unmarshal error",
 		},
 	}
 
@@ -152,9 +153,11 @@ func TestVulnSrc_Get(t *testing.T) {
 			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
 				Fixtures:   tt.fixtures,
 				WantValues: tt.want,
-				Release:    tt.version,
-				PkgName:    tt.pkgName,
-				WantErr:    tt.wantErr,
+				GetParams: db.GetParams{
+					Release: tt.version,
+					PkgName: tt.pkgName,
+				},
+				WantErr: tt.wantErr,
 			})
 		})
 	}

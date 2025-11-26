@@ -6,12 +6,11 @@ import (
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bitnami"
-	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 )
 
-var bucketName = bucket.Name(vulnerability.Bitnami, "Bitnami Vulnerability Database")
+const bucketName = "bitnami::Bitnami Vulnerability Database"
 
 func TestVulnSrc_Update(t *testing.T) {
 	tests := []struct {
@@ -91,7 +90,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad path",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "JSON decode error",
+			wantErr: "json decode error",
 		},
 	}
 	for _, tt := range tests {

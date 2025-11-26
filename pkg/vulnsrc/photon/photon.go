@@ -2,24 +2,22 @@ package photon
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
-	"log"
 	"path/filepath"
+	"strings"
 
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-const (
-	photonDir      = "photon"
-	platformFormat = "Photon OS %s"
-)
+const photonDir = "photon"
 
 var source = types.DataSource{
 	ID:   vulnerability.Photon,
@@ -28,12 +26,14 @@ var source = types.DataSource{
 }
 
 type VulnSrc struct {
-	dbc db.Operation
+	dbc    db.Operation
+	logger *log.Logger
 }
 
 func NewVulnSrc() VulnSrc {
 	return VulnSrc{
-		dbc: db.Config{},
+		dbc:    db.Config{},
+		logger: log.WithPrefix("photon"),
 	}
 }
 
@@ -43,52 +43,60 @@ func (vs VulnSrc) Name() types.SourceID {
 
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", photonDir)
+	eb := oops.In("photon").With("root_dir", rootDir)
 
 	var cves []PhotonCVE
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		var cve PhotonCVE
 		if err := json.NewDecoder(r).Decode(&cve); err != nil {
-			return xerrors.Errorf("failed to decode Photon JSON: %w", err)
+			return eb.With("file_path", path).Wrapf(err, "json decode error")
 		}
 		cves = append(cves, cve)
 
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("error in Photon walk: %w", err)
+		return eb.Wrapf(err, "walk error")
 	}
 
 	if err = vs.save(cves); err != nil {
-		return xerrors.Errorf("unable to save Photon advisories: %w", err)
+		return eb.Wrapf(err, "save error")
 	}
 
 	return nil
 }
 
 func (vs VulnSrc) save(cves []PhotonCVE) error {
-	log.Println("Saving Photon DB")
+	vs.logger.Info("Saving DB")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, cves)
 	})
 	if err != nil {
-		return xerrors.Errorf("error in batch update: %w", err)
+		return oops.Wrapf(err, "batch update error")
 	}
-
 	return nil
 }
 
 func (vs VulnSrc) commit(tx *bolt.Tx, cves []PhotonCVE) error {
 	for _, cve := range cves {
-		platformName := fmt.Sprintf(platformFormat, cve.OSVersion)
+		cve.ResVer = normalizeNA(cve.ResVer)
+		cve.AffVer = normalizeNA(cve.AffVer)
+
+		// skip advisories with no fixed and affected version
+		if cve.ResVer == "" && cve.AffVer == "" {
+			continue
+		}
+
+		platformName := bucket.NewPhoton(cve.OSVersion).Name()
 		if err := vs.dbc.PutDataSource(tx, platformName, source); err != nil {
-			return xerrors.Errorf("failed to put data source: %w", err)
+			return oops.Wrapf(err, "failed to put data source")
 		}
 
 		advisory := types.Advisory{
 			FixedVersion: cve.ResVer,
 		}
 		if err := vs.dbc.PutAdvisoryDetail(tx, cve.CveID, cve.Pkg, []string{platformName}, advisory); err != nil {
-			return xerrors.Errorf("failed to save Photon advisory: %w", err)
+			return oops.Wrapf(err, "failed to save advisory")
 		}
 
 		vuln := types.VulnerabilityDetail{
@@ -96,22 +104,33 @@ func (vs VulnSrc) commit(tx *bolt.Tx, cves []PhotonCVE) error {
 			CvssScoreV3: cve.CveScore,
 		}
 		if err := vs.dbc.PutVulnerabilityDetail(tx, cve.CveID, source.ID, vuln); err != nil {
-			return xerrors.Errorf("failed to save Photon vulnerability detail: %w", err)
+			return oops.Wrapf(err, "failed to save vulnerability detail")
 		}
 
 		// for optimization
 		if err := vs.dbc.PutVulnerabilityID(tx, cve.CveID); err != nil {
-			return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+			return oops.Wrapf(err, "failed to save vulnerability ID")
 		}
 	}
 	return nil
 }
 
-func (vs VulnSrc) Get(release string, pkgName string) ([]types.Advisory, error) {
-	bucket := fmt.Sprintf(platformFormat, release)
-	advisories, err := vs.dbc.GetAdvisories(bucket, pkgName)
+// normalizeNA normalizes "NA" string to empty string.
+// Photon uses "NA" to indicate "not available" versions
+// But we should use empty string to avoid using "NA" as version in the DB
+func normalizeNA(s string) string {
+	if strings.EqualFold(s, "NA") {
+		return ""
+	}
+	return s
+}
+
+func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
+	eb := oops.In("photon").With("release", params.Release)
+	platformName := bucket.NewPhoton(params.Release).Name()
+	advisories, err := vs.dbc.GetAdvisories(platformName, params.PkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to get Photon advisories: %w", err)
+		return nil, eb.Wrapf(err, "failed to get advisories")
 	}
 	return advisories, nil
 }

@@ -34,7 +34,7 @@ func TestConfig_GetRedHatCPEs(t *testing.T) {
 			name:       "broken value",
 			fixtures:   []string{"testdata/fixtures/redhat-cpe.yaml"},
 			repository: "broken",
-			wantErr:    "JSON unmarshal error",
+			wantErr:    "json unmarshal error",
 		},
 	}
 	for _, tt := range tests {
@@ -47,7 +47,7 @@ func TestConfig_GetRedHatCPEs(t *testing.T) {
 			got, err := dbc.RedHatRepoToCPEs(tt.repository)
 
 			if tt.wantErr != "" {
-				require.NotNil(t, err)
+				require.Error(t, err)
 				assert.Contains(t, err.Error(), tt.wantErr)
 				return
 			}

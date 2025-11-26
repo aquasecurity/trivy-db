@@ -16,7 +16,7 @@ type VulnerabilityDetail struct {
 	Description string
 }
 
-type bucket struct {
+type advisoryKey struct {
 	codeName string
 	pkgName  string
 	vulnID   string // CVE-ID, DLA-ID or DSA-ID

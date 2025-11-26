@@ -2,12 +2,13 @@ package osv
 
 import (
 	"fmt"
+	"strings"
 
 	mvn "github.com/masahiro331/go-mvn-version"
-	"golang.org/x/xerrors"
+	"github.com/samber/oops"
 
 	"github.com/aquasecurity/go-gem-version"
-	"github.com/aquasecurity/go-npm-version/pkg"
+	npm "github.com/aquasecurity/go-npm-version/pkg"
 	pep440 "github.com/aquasecurity/go-pep440-version"
 	"github.com/aquasecurity/go-version/pkg/semver"
 	"github.com/aquasecurity/go-version/pkg/version"
@@ -20,20 +21,21 @@ type VersionRange interface {
 	SetLastAffected(lastAffected string)
 }
 
-func NewVersionRange(ecosystem Ecosystem, from string) VersionRange {
+func NewVersionRange(ecosystem, from string) VersionRange {
 	vr := &versionRange{from: from}
-	switch ecosystem {
-	case EcosystemNpm:
+	ecoStr := strings.ToLower(ecosystem)
+	switch ecoStr {
+	case ecosystemNpm:
 		return &NpmVersionRange{versionRange: vr}
-	case EcosystemRubygems:
+	case ecosystemRubygems:
 		return &RubyGemsVersionRange{versionRange: vr}
-	case EcosystemPyPI:
+	case ecosystemPyPI:
 		return &PyPIVersionRange{versionRange: vr}
-	case EcosystemMaven:
+	case ecosystemMaven:
 		return &MavenVersionRange{versionRange: vr}
-	case EcosystemGo, EcosystemCrates, EcosystemNuGet:
+	case ecosystemGo, ecosystemCrates, ecosystemNuGet:
 		return &SemVerRange{versionRange: vr}
-	case EcosystemPackagist:
+	case ecosystemPackagist:
 		return &DefaultVersionRange{versionRange: vr}
 	default:
 		return &DefaultVersionRange{versionRange: vr}
@@ -91,14 +93,16 @@ type DefaultVersionRange struct {
 }
 
 func (r *DefaultVersionRange) Contains(ver string) (bool, error) {
+	eb := oops.With("version_range", r.String()).With("version", ver)
+
 	c, err := version.NewConstraints(r.String())
 	if err != nil {
-		return false, xerrors.Errorf("failed to parse version constraint: %w", err)
+		return false, eb.Wrapf(err, "failed to parse version constraint")
 	}
 
 	v, err := version.Parse(ver)
 	if err != nil {
-		return false, xerrors.Errorf("failed to parse version: %w", err)
+		return false, eb.Wrapf(err, "failed to parse version")
 	}
 
 	return c.Check(v), nil
@@ -109,14 +113,16 @@ type SemVerRange struct {
 }
 
 func (r *SemVerRange) Contains(ver string) (bool, error) {
+	eb := oops.Tags("semver").With("version_range", r.String()).With("version", ver)
+
 	c, err := semver.NewConstraints(r.String())
 	if err != nil {
-		return false, xerrors.Errorf("failed to parse version constraint: %w", err)
+		return false, eb.Wrapf(err, "failed to parse version constraint")
 	}
 
 	v, err := semver.Parse(ver)
 	if err != nil {
-		return false, xerrors.Errorf("failed to parse version: %w", err)
+		return false, eb.Wrapf(err, "failed to parse version")
 	}
 
 	return c.Check(v), nil
@@ -127,14 +133,16 @@ type NpmVersionRange struct {
 }
 
 func (r *NpmVersionRange) Contains(ver string) (bool, error) {
+	eb := oops.Tags("npm").With("version_range", r.String()).With("version", ver)
+
 	c, err := npm.NewConstraints(r.String())
 	if err != nil {
-		return false, xerrors.Errorf("failed to parse version constraint: %w", err)
+		return false, eb.Wrapf(err, "failed to parse version constraint")
 	}
 
 	v, err := npm.NewVersion(ver)
 	if err != nil {
-		return false, xerrors.Errorf("failed to parse version: %w", err)
+		return false, eb.Wrapf(err, "failed to parse version")
 	}
 
 	return c.Check(v), nil
@@ -145,14 +153,16 @@ type RubyGemsVersionRange struct {
 }
 
 func (r *RubyGemsVersionRange) Contains(ver string) (bool, error) {
+	eb := oops.Tags("rubygems").With("version_range", r.String()).With("version", ver)
+
 	c, err := gem.NewConstraints(r.String())
 	if err != nil {
-		return false, xerrors.Errorf("failed to parse version constraint: %w", err)
+		return false, eb.Wrapf(err, "failed to parse version constraint")
 	}
 
 	v, err := gem.NewVersion(ver)
 	if err != nil {
-		return false, xerrors.Errorf("failed to parse version: %w", err)
+		return false, eb.Wrapf(err, "failed to parse version")
 	}
 
 	return c.Check(v), nil
@@ -163,14 +173,16 @@ type PyPIVersionRange struct {
 }
 
 func (r *PyPIVersionRange) Contains(ver string) (bool, error) {
+	eb := oops.Tags("pypi").With("version_range", r.String()).With("version", ver)
+
 	c, err := pep440.NewSpecifiers(r.String())
 	if err != nil {
-		return false, xerrors.Errorf("failed to parse version constraint: %w", err)
+		return false, eb.Wrapf(err, "failed to parse version constraint")
 	}
 
 	v, err := pep440.Parse(ver)
 	if err != nil {
-		return false, xerrors.Errorf("failed to parse version: %w", err)
+		return false, eb.Wrapf(err, "failed to parse version")
 	}
 
 	return c.Check(v), nil
@@ -181,14 +193,16 @@ type MavenVersionRange struct {
 }
 
 func (r *MavenVersionRange) Contains(ver string) (bool, error) {
+	eb := oops.Tags("maven").With("version_range", r.String()).With("version", ver)
+
 	c, err := mvn.NewConstraints(r.String())
 	if err != nil {
-		return false, xerrors.Errorf("failed to parse version constraint: %w", err)
+		return false, eb.Wrapf(err, "failed to parse version constraint")
 	}
 
 	v, err := mvn.NewVersion(ver)
 	if err != nil {
-		return false, xerrors.Errorf("failed to parse version: %w", err)
+		return false, eb.Wrapf(err, "failed to parse version")
 	}
 
 	return c.Check(v), nil

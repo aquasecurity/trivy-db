@@ -5,8 +5,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"golang.org/x/xerrors"
+	"github.com/samber/oops"
 
+	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -15,15 +16,15 @@ import (
 var bitnamiDir = filepath.Join("bitnami-vulndb", "data")
 
 func NewVulnSrc() osv.OSV {
-	sources := map[types.Ecosystem]types.DataSource{
-		vulnerability.Bitnami: {
+	sources := map[ecosystem.Type]types.DataSource{
+		ecosystem.Bitnami: {
 			ID:   vulnerability.BitnamiVulndb,
 			Name: "Bitnami Vulnerability Database",
 			URL:  "https://github.com/bitnami/vulndb",
 		},
 	}
 
-	return osv.New(bitnamiDir, vulnerability.BitnamiVulndb, sources, &transformer{})
+	return osv.New(bitnamiDir, vulnerability.BitnamiVulndb, sources, osv.WithTransformer(&transformer{}))
 }
 
 type transformer struct{}
@@ -32,10 +33,14 @@ type DatabaseSpecific struct {
 	Severity string `json:"severity"`
 }
 
+func (t *transformer) PostParseAffected(advisory osv.Advisory, _ osv.Affected) (osv.Advisory, error) {
+	return advisory, nil
+}
+
 func (t *transformer) TransformAdvisories(advs []osv.Advisory, entry osv.Entry) ([]osv.Advisory, error) {
 	var specific DatabaseSpecific
 	if err := json.Unmarshal(entry.DatabaseSpecific, &specific); err != nil {
-		return nil, xerrors.Errorf("JSON decode error: %w", err)
+		return nil, oops.Tags("bitnami").With("vuln_id", entry.ID).With("aliases", entry.Aliases).Wrapf(err, "json decode error")
 	}
 
 	severity := convertSeverity(specific.Severity)

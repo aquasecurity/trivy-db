@@ -8,22 +8,28 @@ import (
 const (
 	RangeTypeGit RangeType = "GIT"
 
-	EcosystemGo        Ecosystem = "Go"
-	EcosystemNpm       Ecosystem = "npm"
-	EcosystemPyPI      Ecosystem = "PyPI"
-	EcosystemRubygems  Ecosystem = "RubyGems"
-	EcosystemCrates    Ecosystem = "crates.io"
-	EcosystemPackagist Ecosystem = "Packagist"
-	EcosystemMaven     Ecosystem = "Maven"
-	EcosystemNuGet     Ecosystem = "NuGet"
+	// Ecosystem constants in lowercase for case-insensitive comparison
+	ecosystemGo         = "go"
+	ecosystemNpm        = "npm"
+	ecosystemPyPI       = "pypi"
+	ecosystemRubygems   = "rubygems"
+	ecosystemCrates     = "crates.io"
+	ecosystemPackagist  = "packagist"
+	ecosystemMaven      = "maven"
+	ecosystemNuGet      = "nuget"
+	ecosystemHex        = "hex"
+	ecosystemPub        = "pub"
+	ecosystemSwiftURL   = "swifturl"
+	ecosystemBitnami    = "bitnami"
+	ecosystemKubernetes = "kubernetes"
+	ecosystemSeal       = "seal"
 )
 
-type Ecosystem string
 type RangeType string
 
 type Package struct {
-	Name      string    `json:"name"`
-	Ecosystem Ecosystem `json:"ecosystem"`
+	Name      string `json:"name"`
+	Ecosystem string `json:"ecosystem"`
 }
 
 type RangeEvent struct {

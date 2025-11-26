@@ -5,10 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/aquasecurity/trivy-db/pkg/db"
-	"github.com/aquasecurity/trivy-db/pkg/dbtest"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
@@ -122,11 +119,11 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2007-0493"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2007-0494"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -288,11 +285,11 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2018-1094"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2018-19824"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -365,7 +362,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2021-20232"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -426,7 +423,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2021-23133"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -469,7 +466,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2016-10228"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -512,7 +509,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "ELSA-2007-0057"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -534,7 +531,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-0001-0001"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -546,7 +543,51 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad path (failed to decode)",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "failed to decode Oracle Linux OVAL JSON",
+			wantErr: "json decode error",
+		},
+		{
+			name: "same fix version with different ELSA ids and architectures",
+			dir:  filepath.Join("testdata", "multiple-elsa-ids-same-fix-version"),
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "Oracle Linux 8"},
+					Value: types.DataSource{
+						ID:   vulnerability.OracleOVAL,
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2016-10228", "Oracle Linux 8", "glibc"},
+					Value: types.Advisories{
+						FixedVersion: "2:2.28-151.0.1.ksplice1.el8",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "2:2.28-151.0.1.ksplice1.el8",
+								Arches: []string{
+									"i386",
+									"x86_64",
+								},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "CVE-2016-10228", "oracle-oval"},
+					Value: types.VulnerabilityDetail{
+						Title: "ELSA-2021-9344:  glibc security update (IMPORTANT)",
+						References: []string{
+							"https://linux.oracle.com/cve/CVE-2016-10228.html",
+							"https://linux.oracle.com/errata/ELSA-2021-9344.html",
+						},
+						Severity: types.SeverityHigh,
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-2016-10228"},
+					Value: map[string]any{},
+				},
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -693,24 +734,22 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 			version: "8",
 			pkgName: "bind",
-			wantErr: "failed to unmarshal advisory JSON",
+			wantErr: "json unmarshal error",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_ = dbtest.InitDB(t, tt.fixtures)
-			defer db.Close()
-
 			vs := oracleoval.NewVulnSrc()
-			got, err := vs.Get(tt.version, tt.pkgName, tt.arch)
-
-			if tt.wantErr != "" {
-				require.ErrorContains(t, err, tt.wantErr)
-				return
-			}
-
-			require.NoError(t, err)
-			require.Equal(t, tt.want, got)
+			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
+				Fixtures:   tt.fixtures,
+				WantValues: tt.want,
+				GetParams: db.GetParams{
+					Release: tt.version,
+					PkgName: tt.pkgName,
+					Arch:    tt.arch,
+				},
+				WantErr: tt.wantErr,
+			})
 		})
 	}
 }

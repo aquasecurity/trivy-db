@@ -6,10 +6,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/samber/lo"
+	"github.com/samber/oops"
 	"golang.org/x/tools/go/packages"
-	"golang.org/x/xerrors"
 
+	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
@@ -24,19 +27,19 @@ var (
 	ghsaDir = filepath.Join("ghsa", "advisories", "github-reviewed")
 
 	// Mapping between Trivy ecosystem and GHSA ecosystem
-	ecosystems = map[types.Ecosystem]string{
-		vulnerability.Composer:  "Composer",
-		vulnerability.Go:        "Go",
-		vulnerability.Maven:     "Maven",
-		vulnerability.Npm:       "npm",
-		vulnerability.NuGet:     "NuGet",
-		vulnerability.Pip:       "pip",
-		vulnerability.RubyGems:  "RubyGems",
-		vulnerability.Cargo:     "Rust", // different name
-		vulnerability.Erlang:    "Erlang",
-		vulnerability.Pub:       "Pub",
-		vulnerability.Swift:     "Swift",
-		vulnerability.Cocoapods: "Swift", // Use Swift advisories for CocoaPods
+	ecosystems = map[ecosystem.Type]string{
+		ecosystem.Composer:  "Composer",
+		ecosystem.Go:        "Go",
+		ecosystem.Maven:     "Maven",
+		ecosystem.Npm:       "npm",
+		ecosystem.NuGet:     "NuGet",
+		ecosystem.Pip:       "pip",
+		ecosystem.RubyGems:  "RubyGems",
+		ecosystem.Cargo:     "Rust", // different name
+		ecosystem.Erlang:    "Erlang",
+		ecosystem.Pub:       "Pub",
+		ecosystem.Swift:     "Swift",
+		ecosystem.Cocoapods: "Swift", // Use Swift advisories for CocoaPods
 	}
 	standardGoPackages = make(map[string]struct{})
 )
@@ -68,22 +71,23 @@ func (GHSA) Name() types.SourceID {
 }
 
 func (GHSA) Update(root string) error {
-	dataSources := map[types.Ecosystem]types.DataSource{}
-	for ecosystem, ghsaEcosystem := range ecosystems {
+	eb := oops.In("ghsa").With("root_dir", root)
+	dataSources := map[ecosystem.Type]types.DataSource{}
+	for eco, ghsaEcosystem := range ecosystems {
 		src := types.DataSource{
 			ID:   sourceID,
 			Name: fmt.Sprintf(platformFormat, ghsaEcosystem),
 			URL:  fmt.Sprintf(urlFormat, strings.ToLower(ghsaEcosystem)),
 		}
-		dataSources[ecosystem] = src
+		dataSources[eco] = src
 	}
 
 	t, err := newTransformer(root)
 	if err != nil {
-		return xerrors.Errorf("transformer error: %w", err)
+		return eb.Wrapf(err, "transformer error")
 	}
 
-	return osv.New(ghsaDir, sourceID, dataSources, t).Update(root)
+	return osv.New(ghsaDir, sourceID, dataSources, osv.WithTransformer(t)).Update(root)
 }
 
 type transformer struct {
@@ -94,44 +98,69 @@ type transformer struct {
 func newTransformer(root string) (*transformer, error) {
 	cocoaPodsSpecs, err := walkCocoaPodsSpecs(root)
 	if err != nil {
-		return nil, xerrors.Errorf("CocoaPods spec error: %w", err)
+		return nil, oops.Wrapf(err, "CocoaPods spec error")
 	}
 	return &transformer{
 		cocoaPodsSpecs: cocoaPodsSpecs,
 	}, nil
 }
 
+func (t *transformer) PostParseAffected(adv osv.Advisory, affected osv.Affected) (osv.Advisory, error) {
+	eb := oops.With("ecosystem", adv.Bucket.Ecosystem()).With("package_name", adv.PkgName).With("vuln_id", adv.VulnerabilityID).With("aliases", adv.Aliases)
+	if err := parseDatabaseSpecific(adv, affected.DatabaseSpecific); err != nil {
+		return osv.Advisory{}, eb.Wrapf(err, "failed to parse database specific")
+	}
+	return adv, nil
+}
+
 func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.Entry) ([]osv.Advisory, error) {
 	var specific DatabaseSpecific
 	if err := json.Unmarshal(entry.DatabaseSpecific, &specific); err != nil {
-		return nil, xerrors.Errorf("JSON decode error: %w", err)
+		return nil, oops.Wrapf(err, "json unmarshal error")
 	}
+
+	originPkgNames := lo.SliceToMap(entry.Affected, func(affected osv.Affected) (string, string) {
+		return strings.ToLower(affected.Package.Name), affected.Package.Name
+	})
 
 	severity := convertSeverity(specific.Severity)
 	for i, adv := range advisories {
-		// Parse database_specific
-		if err := parseDatabaseSpecific(adv); err != nil {
-			return nil, xerrors.Errorf("failed to parse database specific: %w", err)
-		}
-
 		// Fill severity from GHSA
 		advisories[i].Severity = severity
 
-		// Replace a git URL with a CocoaPods package name in a Swift vulnerability
-		// and store it as a CocoaPods vulnerability.
-		if adv.Ecosystem == vulnerability.Swift {
+		switch adv.Bucket.Ecosystem() {
+		case ecosystem.Swift:
+			// Replace a git URL with a CocoaPods package name in a Swift vulnerability
+			// and store it as a CocoaPods vulnerability.
 			adv.Severity = severity
-			adv.Ecosystem = vulnerability.Cocoapods
+			dsb, ok := adv.Bucket.(bucket.DataSourceBucket)
+			if !ok {
+				return nil, oops.With("package_name", adv.PkgName).With("bucket_type", fmt.Sprintf("%T", adv.Bucket)).
+					With("source_ecosystem", ecosystem.Swift).Errorf("Swift bucket does not implement DataSourceBucket interface")
+			}
+			var err error
+			if adv.Bucket, err = bucket.NewCocoapods(dsb.DataSource()); err != nil {
+				return nil, oops.With("package_name", adv.PkgName).With("source_ecosystem", ecosystem.Swift).
+					With("target_ecosystem", ecosystem.Cocoapods).Wrapf(err, "failed to create Cocoapods bucket")
+			}
+
 			for _, pkgName := range t.cocoaPodsSpecs[adv.PkgName] {
 				adv.PkgName = pkgName
 				advisories = append(advisories, adv)
 			}
-		}
-
-		// Skip a standard Go package as we use the Go Vulnerability Database (govulndb) for standard packages.
-		if adv.Ecosystem == vulnerability.Go {
+		case ecosystem.Go:
+			// Skip a standard Go package as we use the Go Vulnerability Database (govulndb) for standard packages.
 			if isStandardGoPackage(adv.PkgName) {
-				advisories[i].Ecosystem = "" // An empty ecosystem is skipped later
+				advisories[i].Bucket = nil // Set nil bucket to skip later
+			}
+		case ecosystem.NuGet:
+			// NuGet is case-insensitive, so we store advisories in lowercase.
+			// However, for backward compatibility, we also keep advisories with the original package name.
+			// TODO: drop storing the original-case entry and keep only the lowercase key once downstream users have migrated.
+			if originPkgName, ok := originPkgNames[adv.PkgName]; ok && originPkgName != adv.PkgName {
+				dup := advisories[i]
+				dup.PkgName = originPkgName
+				advisories = append(advisories, dup)
 			}
 		}
 	}
@@ -141,15 +170,15 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 
 // parseDatabaseSpecific adds a version from the last_known_affected_version_range field
 // cf. https://github.com/github/advisory-database/issues/470#issuecomment-1998604377
-func parseDatabaseSpecific(advisory osv.Advisory) error {
+func parseDatabaseSpecific(advisory osv.Advisory, databaseSpecific json.RawMessage) error {
 	// Skip if the `affected[].database_specific` field doesn't exist
-	if advisory.DatabaseSpecific == nil {
+	if databaseSpecific == nil {
 		return nil
 	}
 
 	var affectedSpecific DatabaseSpecific
-	if err := json.Unmarshal(advisory.DatabaseSpecific, &affectedSpecific); err != nil {
-		return xerrors.Errorf("JSON decode error: %w", err)
+	if err := json.Unmarshal(databaseSpecific, &affectedSpecific); err != nil {
+		return oops.Wrapf(err, "json unmarshal error")
 	}
 
 	for i, vulnVersion := range advisory.VulnerableVersions {

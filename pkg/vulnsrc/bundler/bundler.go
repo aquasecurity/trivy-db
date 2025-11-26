@@ -6,8 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/samber/lo"
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 	"gopkg.in/yaml.v2"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
@@ -25,7 +26,7 @@ var (
 		URL:  "https://github.com/rubysec/ruby-advisory-db",
 	}
 
-	bucketName = bucket.Name(vulnerability.RubyGems, source.Name)
+	bucketName = lo.Must(bucket.NewRubyGems(source)).Name()
 )
 
 type RawAdvisory struct {
@@ -70,8 +71,9 @@ func (vs VulnSrc) Name() types.SourceID {
 
 func (vs VulnSrc) Update(dir string) error {
 	repoPath := filepath.Join(dir, bundlerDir)
+	eb := oops.In("bundler").With("repo_path", repoPath)
 	if err := vs.update(repoPath); err != nil {
-		return xerrors.Errorf("failed to update bundler vulnerabilities: %w", err)
+		return eb.Wrapf(err, "update error")
 	}
 	return nil
 }
@@ -81,16 +83,16 @@ func (vs VulnSrc) update(repoPath string) error {
 
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		if err := vs.dbc.PutDataSource(tx, bucketName, source); err != nil {
-			return xerrors.Errorf("failed to put data source: %w", err)
+			return oops.Wrapf(err, "failed to put data source")
 		}
 
 		if err := vs.walk(tx, root); err != nil {
-			return xerrors.Errorf("failed to walk ruby advisories: %w", err)
+			return oops.Wrapf(err, "walk error")
 		}
 		return nil
 	})
 	if err != nil {
-		return xerrors.Errorf("batch update failed: %w", err)
+		return oops.Wrapf(err, "batch update failed")
 	}
 	return nil
 }
@@ -112,28 +114,33 @@ func (vs VulnSrc) walkFunc(err error, info os.FileInfo, path string, tx *bolt.Tx
 		return nil
 	}
 
+	eb := oops.With("file_path", path)
+
 	buf, err := os.ReadFile(path)
 	if err != nil {
-		return xerrors.Errorf("failed to read a file: %w", err)
+		return eb.Wrapf(err, "file read error")
 	}
 
 	advisory := RawAdvisory{}
 	err = yaml.Unmarshal(buf, &advisory)
 	if err != nil {
-		return xerrors.Errorf("failed to unmarshal YAML: %w", err)
+		return eb.Wrapf(err, "yaml unmarshal error")
 	}
 	if strings.Contains(strings.ToLower(advisory.Url), "osvdb.org") {
 		advisory.Url = ""
 	}
 
 	var vulnerabilityID string
-	if advisory.Cve != "" {
+	switch {
+	case advisory.Cve != "":
 		vulnerabilityID = fmt.Sprintf("CVE-%s", advisory.Cve)
-	} else if advisory.Ghsa != "" {
+	case advisory.Ghsa != "":
 		vulnerabilityID = fmt.Sprintf("GHSA-%s", advisory.Ghsa)
-	} else {
+	default:
 		return nil
 	}
+
+	eb = eb.With("vuln_id", vulnerabilityID)
 
 	// for detecting vulnerabilities
 	a := types.Advisory{
@@ -141,9 +148,8 @@ func (vs VulnSrc) walkFunc(err error, info os.FileInfo, path string, tx *bolt.Tx
 		UnaffectedVersions: advisory.UnaffectedVersions,
 	}
 
-	err = vs.dbc.PutAdvisoryDetail(tx, vulnerabilityID, advisory.Gem, []string{bucketName}, a)
-	if err != nil {
-		return xerrors.Errorf("failed to save ruby advisory: %w", err)
+	if err = vs.dbc.PutAdvisoryDetail(tx, vulnerabilityID, advisory.Gem, []string{bucketName}, a); err != nil {
+		return eb.With("package_name", advisory.Gem).With("bucket_name", bucketName).Wrapf(err, "failed to save advisory")
 	}
 
 	// for displaying vulnerability detail
@@ -156,12 +162,12 @@ func (vs VulnSrc) walkFunc(err error, info os.FileInfo, path string, tx *bolt.Tx
 	}
 
 	if err = vs.dbc.PutVulnerabilityDetail(tx, vulnerabilityID, source.ID, vuln); err != nil {
-		return xerrors.Errorf("failed to save ruby vulnerability detail: %w", err)
+		return eb.Wrapf(err, "failed to save vulnerability detail")
 	}
 
 	// for optimization
 	if err = vs.dbc.PutVulnerabilityID(tx, vulnerabilityID); err != nil {
-		return xerrors.Errorf("failed to save the vulnerability ID: %w", err)
+		return eb.Wrapf(err, "failed to save vulnerability ID")
 	}
 	return nil
 }

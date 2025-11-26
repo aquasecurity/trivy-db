@@ -1,0 +1,20 @@
+- bucket: data-source
+  pairs:
+    - key: seal debian
+      value:
+        ID: "seal"
+        BaseID: "debian"
+        Name: "Seal Security Database"
+        URL: "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip"
+    - key: seal alpine
+      value:
+        ID: "seal"
+        BaseID: "alpine"
+        Name: "Seal Security Database"
+        URL: "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip"
+    - key: seal Red Hat 6
+      value:
+        ID: "seal"
+        BaseID: "redhat"
+        Name: "Seal Security Database"
+        URL: "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip"

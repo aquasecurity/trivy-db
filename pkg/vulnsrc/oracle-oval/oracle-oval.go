@@ -2,9 +2,8 @@ package oracleoval
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
-	"log"
+	"maps"
 	"path/filepath"
 	"slices"
 	"sort"
@@ -12,19 +11,18 @@ import (
 
 	version "github.com/knqyf263/go-rpm-version"
 	"github.com/samber/lo"
+	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/exp/maps"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
 var (
-	// cat /etc/os-release ORACLE_BUGZILLA_PRODUCT="Oracle Linux 8"
-	platformFormat  = "Oracle Linux %s"
 	targetPlatforms = []string{"Oracle Linux 5", "Oracle Linux 6", "Oracle Linux 7", "Oracle Linux 8", "Oracle Linux 9"}
 	oracleDir       = filepath.Join("oval", "oracle")
 
@@ -44,12 +42,13 @@ type PutInput struct {
 
 type DB interface {
 	db.Operation
+	db.Getter
 	Put(*bolt.Tx, PutInput) error
-	Get(release, pkgName, arch string) ([]types.Advisory, error)
 }
 
 type VulnSrc struct {
-	DB // Those who want to customize Trivy DB can override put/get methods.
+	DB     // Those who want to customize Trivy DB can override put/get methods.
+	logger *log.Logger
 }
 
 type Oracle struct {
@@ -58,7 +57,8 @@ type Oracle struct {
 
 func NewVulnSrc() *VulnSrc {
 	return &VulnSrc{
-		DB: &Oracle{Operation: db.Config{}},
+		DB:     &Oracle{Operation: db.Config{}},
+		logger: log.WithPrefix("oracle-oval"),
 	}
 }
 
@@ -68,12 +68,14 @@ func (vs *VulnSrc) Name() types.SourceID {
 
 func (vs *VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", oracleDir)
+	eb := oops.In("oracle").Tags("oval").With("root_dir", rootDir)
+
 	ovals, err := vs.parse(rootDir)
 	if err != nil {
-		return err
+		return eb.Wrap(err)
 	}
 	if err = vs.put(ovals); err != nil {
-		return xerrors.Errorf("error in Oracle Linux OVAL save: %w", err)
+		return eb.Wrapf(err, "put error")
 	}
 
 	return nil
@@ -86,30 +88,29 @@ func (vs *VulnSrc) parse(rootDir string) ([]OracleOVAL, error) {
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		var oval OracleOVAL
 		if err := json.NewDecoder(r).Decode(&oval); err != nil {
-			return xerrors.Errorf("failed to decode Oracle Linux OVAL JSON: %w", err)
+			return oops.With("file_path", path).Wrapf(err, "json decode error")
 		}
 		ovals = append(ovals, oval)
 		return nil
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("error in Oracle Linux OVAL walk: %w", err)
+		return nil, oops.Wrapf(err, "walk error")
 	}
 
 	return ovals, nil
 }
 
 func (vs *VulnSrc) put(ovals []OracleOVAL) error {
-	log.Println("Saving Oracle Linux OVAL")
+	vs.logger.Info("Saving Oracle Linux OVAL")
 
 	err := vs.BatchUpdate(func(tx *bolt.Tx) error {
 		return vs.commit(tx, ovals)
 	})
 	if err != nil {
-		return xerrors.Errorf("error in batch update: %w", err)
+		return oops.Wrapf(err, "batch update error")
 	}
 
 	return nil
-
 }
 
 func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
@@ -144,14 +145,19 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			}
 
 			if err := vs.PutDataSource(tx, platformName, source); err != nil {
-				return xerrors.Errorf("failed to put data source: %w", err)
+				return oops.With("platform", platformName).Wrapf(err, "failed to put data source")
 			}
 
 			advs := types.Advisories{
 				Entries: []types.Advisory{
 					{
 						FixedVersion: affectedPkg.FixedVersion,
-						Arches:       []string{affectedPkg.Arch},
+						Arches: []string{
+							affectedPkg.Arch,
+						},
+						VendorIDs: []string{
+							elsaID,
+						},
 					},
 				},
 			}
@@ -159,7 +165,6 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 				advs.Entries = append(advs.Entries, savedAdvs.Entries...)
 			}
 			advisories[affectedPkg.Package] = advs
-
 		}
 
 		var references []string
@@ -202,9 +207,8 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, ovals []OracleOVAL) error {
 			input.Advisories[pkg] = mergeAdvisoriesEntries(advs)
 		}
 
-		err := vs.Put(tx, input)
-		if err != nil {
-			return xerrors.Errorf("db put error: %w", err)
+		if err := vs.Put(tx, input); err != nil {
+			return oops.Wrapf(err, "db put error")
 		}
 	}
 
@@ -216,7 +220,12 @@ type archFlavor struct {
 	Flavor PkgFlavor
 }
 
-// mergeAdvisoriesEntries merges advisories by picking the latest version for each arch+flavor.
+type versionVendorID struct {
+	Version  string
+	VendorID string
+}
+
+// mergeAdvisoriesEntries merges advisories by picking the latest version (with vendorID) for each arch+flavor.
 // There may be multiple advisories that fix the same vulnerability, possibly providing multiple fixed versions.
 // In this case, we need to determine the "latest" version, which is now defined as the highest (greatest) version number.
 //
@@ -226,18 +235,21 @@ func mergeAdvisoriesEntries(advisories types.Advisories) types.Advisories {
 	// Step 1: Select the latest version per (arch, flavor)
 	latestVersions := selectLatestVersions(advisories)
 
-	// Step 2: Aggregate arches by their chosen version
-	versionToArches := make(map[string][]string)
+	// Step 2: Aggregate arches by their chosen version + vendorID
+	versionToArches := make(map[versionVendorID][]string)
 	for k, v := range latestVersions {
 		versionToArches[v] = append(versionToArches[v], k.Arch)
 	}
 
 	// Step 3: Build final entries, sorted by version
-	entries := lo.MapToSlice(versionToArches, func(ver string, arches []string) types.Advisory {
+	entries := lo.MapToSlice(versionToArches, func(ver versionVendorID, arches []string) types.Advisory {
 		sort.Strings(arches)
 		return types.Advisory{
-			FixedVersion: ver,
+			FixedVersion: ver.Version,
 			Arches:       arches,
+			VendorIDs: []string{
+				ver.VendorID,
+			},
 		}
 	})
 	sort.Slice(entries, func(i, j int) bool {
@@ -251,13 +263,14 @@ func mergeAdvisoriesEntries(advisories types.Advisories) types.Advisories {
 }
 
 // selectLatestVersions selects the latest (highest) version per (arch, flavor)
-func selectLatestVersions(advisories types.Advisories) map[archFlavor]string {
-	latestVersions := make(map[archFlavor]string) // key: archFlavor -> highest fixedVersion
+func selectLatestVersions(advisories types.Advisories) map[archFlavor]versionVendorID {
+	latestVersions := make(map[archFlavor]versionVendorID) // key: archFlavor -> highest fixedVersion
 	for _, entry := range advisories.Entries {
 		if len(entry.Arches) == 0 || entry.FixedVersion == "" {
 			continue
 		}
-		arch := entry.Arches[0] // Before merging `arches`, it always contains only 1 arch
+		arch := entry.Arches[0]        // Before merging `arches`, it always contains only 1 arch
+		vendorID := entry.VendorIDs[0] // Before merging `VendorIDs`, it always contains only 1 elsaID
 		flavor := PackageFlavor(entry.FixedVersion)
 		key := archFlavor{
 			Arch:   arch,
@@ -265,9 +278,12 @@ func selectLatestVersions(advisories types.Advisories) map[archFlavor]string {
 		}
 
 		currentVer := version.NewVersion(entry.FixedVersion)
-		if existing, ok := latestVersions[key]; !ok || currentVer.GreaterThan(version.NewVersion(existing)) {
+		if existing, ok := latestVersions[key]; !ok || currentVer.GreaterThan(version.NewVersion(existing.Version)) {
 			// Keep the higher (latest) version
-			latestVersions[key] = entry.FixedVersion
+			latestVersions[key] = versionVendorID{
+				Version:  entry.FixedVersion,
+				VendorID: vendorID,
+			}
 		}
 	}
 	return latestVersions
@@ -276,15 +292,18 @@ func selectLatestVersions(advisories types.Advisories) map[archFlavor]string {
 // determinePrimaryFixedVersion determines primary fixed version for backward compatibility
 // It is chosen as the highest normal flavor version on x86_64 if any exist.
 // If no normal flavor version exists, the maximum version in lexical order is chosen.
-func determinePrimaryFixedVersion(latestVersions map[archFlavor]string) string {
+func determinePrimaryFixedVersion(latestVersions map[archFlavor]versionVendorID) string {
 	primaryFixedVersion := latestVersions[archFlavor{
 		Arch:   "x86_64",
 		Flavor: NormalPackageFlavor,
 	}]
-	if primaryFixedVersion == "" {
-		primaryFixedVersion = lo.Max(lo.Values(latestVersions)) // Chose the maximum value in lexical order for idempotency
+	if primaryFixedVersion.Version == "" {
+		vers := lo.MapToSlice(latestVersions, func(_ archFlavor, v versionVendorID) string {
+			return v.Version
+		})
+		primaryFixedVersion.Version = lo.Max(vers) // Chose the maximum value in lexical order for idempotency
 	}
-	return primaryFixedVersion
+	return primaryFixedVersion.Version
 }
 
 type PkgFlavor string
@@ -315,35 +334,62 @@ func PackageFlavor(version string) PkgFlavor {
 }
 
 func (o *Oracle) Put(tx *bolt.Tx, input PutInput) error {
+	eb := oops.With("vuln_id", input.VulnID)
 	if err := o.PutVulnerabilityDetail(tx, input.VulnID, source.ID, input.Vuln); err != nil {
-		return xerrors.Errorf("failed to save Oracle Linux OVAL vulnerability: %w", err)
+		return eb.Wrapf(err, "failed to save vulnerability detail")
 	}
 
 	// for optimization
 	if err := o.PutVulnerabilityID(tx, input.VulnID); err != nil {
-		return xerrors.Errorf("failed to save %s: %w", input.VulnID, err)
+		return eb.Wrapf(err, "failed to save vulnerability ID")
 	}
 
 	for pkg, advisory := range input.Advisories {
+		advisory = removeVendorIDs(advisory)
 		platformName := pkg.PlatformName()
 		if err := o.PutAdvisoryDetail(tx, input.VulnID, pkg.Name, []string{platformName}, advisory); err != nil {
-			return xerrors.Errorf("failed to save Oracle Linux advisory: %w", err)
+			return eb.With("package_name", pkg.Name).With("bucket_name", platformName).Wrapf(err, "failed to save advisory")
 		}
 	}
 	return nil
 }
 
-func (o *Oracle) Get(release, pkgName, arch string) ([]types.Advisory, error) {
-	bucket := fmt.Sprintf(platformFormat, release)
-	rawAdvisories, err := o.ForEachAdvisory([]string{bucket}, pkgName)
+// removeVendorIDs removes VendorID from advisories + merges arches for advisories (by fixedVersion).
+// This is needed to save space in OSS trivy-db.
+// But Aqua storage requires this information.
+func removeVendorIDs(advs types.Advisories) types.Advisories {
+	versionToArches := make(map[string][]string) // fixed version -> arches
+	for _, entry := range advs.Entries {
+		versionToArches[entry.FixedVersion] = append(versionToArches[entry.FixedVersion], entry.Arches...)
+	}
+
+	entries := lo.MapToSlice(versionToArches, func(ver string, arches []string) types.Advisory {
+		sort.Strings(arches)
+		return types.Advisory{
+			FixedVersion: ver,
+			Arches:       arches,
+		}
+	})
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].FixedVersion < entries[j].FixedVersion // Sorting lexicographically
+	})
+
+	advs.Entries = entries
+	return advs
+}
+
+func (o *Oracle) Get(params db.GetParams) ([]types.Advisory, error) {
+	eb := oops.In("oracle").Tags("oval").With("release", params.Release).With("package_name", params.PkgName).With("arch", params.Arch)
+	bucketName := bucket.NewOracle(params.Release).Name()
+	rawAdvisories, err := o.ForEachAdvisory([]string{bucketName}, params.PkgName)
 	if err != nil {
-		return nil, xerrors.Errorf("unable to iterate advisories: %w", err)
+		return nil, eb.Wrapf(err, "unable to iterate advisories")
 	}
 	var advisories []types.Advisory
 	for vulnID, v := range rawAdvisories {
 		var adv types.Advisories
 		if err = json.Unmarshal(v.Content, &adv); err != nil {
-			return nil, xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
+			return nil, eb.Wrapf(err, "json unmarshal error")
 		}
 
 		// For backward compatibility (This code can be deleted after Dec 19th, 2024)
@@ -359,7 +405,7 @@ func (o *Oracle) Get(release, pkgName, arch string) ([]types.Advisory, error) {
 		}
 
 		for _, entry := range adv.Entries {
-			if !slices.Contains(entry.Arches, arch) {
+			if !slices.Contains(entry.Arches, params.Arch) {
 				continue
 			}
 
@@ -396,13 +442,13 @@ func walkOracle(cri Criteria, osVer, arch string, pkgs []AffectedPackage) []Affe
 		})
 	}
 
-	for _, c := range cri.Criterias {
+	for _, c := range cri.Criterias { //nolint:misspell
 		pkgs = walkOracle(c, osVer, arch, pkgs)
 	}
 	return pkgs
 }
 
-func referencesFromContains(sources []string, matches []string) []string {
+func referencesFromContains(sources, matches []string) []string {
 	var references []string
 	for _, s := range sources {
 		for _, m := range matches {

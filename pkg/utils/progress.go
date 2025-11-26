@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/briandowns/spinner"
-	"github.com/cheggaaa/pb/v3"
+	pb "github.com/cheggaaa/pb/v3"
 )
 
 var (

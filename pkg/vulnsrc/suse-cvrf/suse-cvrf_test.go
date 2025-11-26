@@ -1,13 +1,13 @@
 package susecvrf
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
@@ -45,7 +45,9 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "openSUSE-SU-2019:2598-1", "openSUSE Leap 15.1", "strongswan-sqlite"},
+					Key: []string{
+						"advisory-detail", "openSUSE-SU-2019:2598-1", "openSUSE Leap 15.1", "strongswan-sqlite",
+					},
 					Value: types.Advisory{
 						FixedVersion: "5.6.0-lp151.4.3.1",
 					},
@@ -64,7 +66,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "openSUSE-SU-2019:2598-1"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -82,13 +84,17 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "openSUSE-SU-2024:10400-1", "openSUSE Tumbleweed", "python3-logilab-common"},
+					Key: []string{
+						"advisory-detail", "openSUSE-SU-2024:10400-1", "openSUSE Tumbleweed", "python3-logilab-common",
+					},
 					Value: types.Advisory{
 						FixedVersion: "1.2.2-1.2",
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "openSUSE-SU-2024:10400-1", "openSUSE Tumbleweed", "python-logilab-common"},
+					Key: []string{
+						"advisory-detail", "openSUSE-SU-2024:10400-1", "openSUSE Tumbleweed", "python-logilab-common",
+					},
 					Value: types.Advisory{
 						FixedVersion: "1.0.2-1.4",
 					},
@@ -108,7 +114,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "openSUSE-SU-2024:10400-1"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -126,7 +132,9 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "SUSE-SU-2019:0048-2", "SUSE Linux Enterprise 15.1", "helm-mirror"},
+					Key: []string{
+						"advisory-detail", "SUSE-SU-2019:0048-2", "SUSE Linux Enterprise 15.1", "helm-mirror",
+					},
 					Value: types.Advisory{
 						FixedVersion: "0.2.1-1.7.1",
 					},
@@ -146,7 +154,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "SUSE-SU-2019:0048-2"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -164,13 +172,18 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "openSUSE-SU-2019:0003-1", "SUSE Linux Enterprise 15", "GraphicsMagick"},
+					Key: []string{
+						"advisory-detail", "openSUSE-SU-2019:0003-1", "SUSE Linux Enterprise 15", "GraphicsMagick",
+					},
 					Value: types.Advisory{
 						FixedVersion: "1.3.29-bp150.2.12.1",
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "openSUSE-SU-2019:0003-1", "SUSE Linux Enterprise 15", "GraphicsMagick-devel"},
+					Key: []string{
+						"advisory-detail", "openSUSE-SU-2019:0003-1", "SUSE Linux Enterprise 15",
+						"GraphicsMagick-devel",
+					},
 					Value: types.Advisory{
 						FixedVersion: "1.3.29-bp150.2.12.1",
 					},
@@ -189,7 +202,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "openSUSE-SU-2019:0003-1"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -207,14 +220,18 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "SUSE-SU-2024:2546-1", "SUSE Linux Enterprise Micro 5.3", "gnutls"},
+					Key: []string{
+						"advisory-detail", "SUSE-SU-2024:2546-1", "SUSE Linux Enterprise Micro 5.3", "gnutls",
+					},
 
 					Value: types.Advisory{
 						FixedVersion: "3.7.3-150400.8.1",
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "SUSE-SU-2024:2546-1", "SUSE Linux Enterprise Micro 5.3", "libgnutls30"},
+					Key: []string{
+						"advisory-detail", "SUSE-SU-2024:2546-1", "SUSE Linux Enterprise Micro 5.3", "libgnutls30",
+					},
 					Value: types.Advisory{
 						FixedVersion: "3.7.3-150400.8.1",
 					},
@@ -239,7 +256,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "SUSE-SU-2024:2546-1"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
 				},
 			},
 		},
@@ -253,7 +270,7 @@ func TestVulnSrc_Update(t *testing.T) {
 			name:    "sad path (failed to decode)",
 			dir:     filepath.Join("testdata", "sad"),
 			dist:    OpenSUSE,
-			wantErr: "failed to decode SUSE CVRF JSON",
+			wantErr: "json decode error",
 		},
 	}
 	for _, tt := range tests {
@@ -305,7 +322,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			version:  "13.1",
 			pkgName:  "bind",
 			dist:     OpenSUSE,
-			wantErr:  "failed to unmarshal advisory JSON",
+			wantErr:  "json unmarshal error",
 		},
 	}
 	for _, tt := range tests {
@@ -314,9 +331,11 @@ func TestVulnSrc_Get(t *testing.T) {
 			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
 				Fixtures:   tt.fixtures,
 				WantValues: tt.want,
-				Release:    tt.version,
-				PkgName:    tt.pkgName,
-				WantErr:    tt.wantErr,
+				GetParams: db.GetParams{
+					Release: tt.version,
+					PkgName: tt.pkgName,
+				},
+				WantErr: tt.wantErr,
 			})
 		})
 	}
@@ -562,6 +581,14 @@ func TestGetOSVersion(t *testing.T) {
 			expectedPlatformName: "openSUSE Leap 15.1",
 		},
 		{
+			inputPlatformName:    "openSUSE Leap Micro 15.1 NonFree",
+			expectedPlatformName: "openSUSE Leap Micro 15.1",
+		},
+		{
+			inputPlatformName:    "openSUSE Leap Micro 15.1",
+			expectedPlatformName: "openSUSE Leap Micro 15.1",
+		},
+		{
 			inputPlatformName:    "openSUSE Tumbleweed",
 			expectedPlatformName: "openSUSE Tumbleweed",
 		},
@@ -646,11 +673,16 @@ func TestGetOSVersion(t *testing.T) {
 			inputPlatformName:    "SUSE Linux Enterprise Micro 5.1",
 			expectedPlatformName: "SUSE Linux Enterprise Micro 5.1",
 		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server 16.0",
+			expectedPlatformName: "SUSE Linux Enterprise 16.0",
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.inputPlatformName, func(t *testing.T) {
-			actual := getOSVersion(tc.inputPlatformName)
-			assert.Equal(t, tc.expectedPlatformName, actual, fmt.Sprintf("input data: %s", tc.inputPlatformName))
+			vs := NewVulnSrc(OpenSUSE)
+			actual := vs.getOSVersion(tc.inputPlatformName)
+			assert.Equal(t, tc.expectedPlatformName, actual, "input data: %s", tc.inputPlatformName)
 		})
 	}
 }

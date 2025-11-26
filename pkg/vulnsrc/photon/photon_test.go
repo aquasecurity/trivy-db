@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
@@ -14,6 +15,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		name       string
 		dir        string
 		wantValues []vulnsrctest.WantValues
+		noBuckets  [][]string
 		wantErr    string
 	}{
 		{
@@ -42,7 +44,22 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2019-0199"},
-					Value: map[string]interface{}{},
+					Value: map[string]any{},
+				},
+			},
+			noBuckets: [][]string{
+				// Skip advisories with no fixed and affected version
+				{
+					"advisory-detail",
+					"CVE-2025-0725",
+				},
+				{
+					"vulnerability-detail",
+					"CVE-2025-0725",
+				},
+				{
+					"vulnerability-id",
+					"CVE-2025-0725",
 				},
 			},
 		},
@@ -54,7 +71,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		{
 			name:    "sad path (failed to decode)",
 			dir:     filepath.Join("testdata", "sad"),
-			wantErr: "failed to decode Photon JSON",
+			wantErr: "json decode error",
 		},
 	}
 	for _, tt := range tests {
@@ -64,6 +81,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				Dir:        tt.dir,
 				WantValues: tt.wantValues,
 				WantErr:    tt.wantErr,
+				NoBuckets:  tt.noBuckets,
 			})
 		})
 	}
@@ -102,7 +120,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			fixtures: []string{"testdata/fixtures/sad.yaml"},
 			release:  "1.0",
 			pkgName:  "ansible",
-			wantErr:  "failed to unmarshal advisory JSON",
+			wantErr:  "json unmarshal error",
 		},
 	}
 	for _, tt := range tests {
@@ -111,9 +129,11 @@ func TestVulnSrc_Get(t *testing.T) {
 			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
 				Fixtures:   tt.fixtures,
 				WantValues: tt.want,
-				Release:    tt.release,
-				PkgName:    tt.pkgName,
-				WantErr:    tt.wantErr,
+				GetParams: db.GetParams{
+					Release: tt.release,
+					PkgName: tt.pkgName,
+				},
+				WantErr: tt.wantErr,
 			})
 		})
 	}
