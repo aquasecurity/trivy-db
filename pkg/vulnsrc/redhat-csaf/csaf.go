@@ -160,7 +160,7 @@ func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt Bucket, adv Advisory, cpeList CPE
 	return nil
 }
 
-//func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advisory, error) {
+// func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advisory, error) {
 //	var advisories []types.Advisory
 //
 //	err := vs.dbc.View(func(tx *bolt.Tx) error {
@@ -195,7 +195,7 @@ func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt Bucket, adv Advisory, cpeList CPE
 //}
 
 // Helper function to use ProductIdentificationHelpers
-//func (vs VulnSrc) getProductPURLs(adv csaf.Advisory, productID csaf.ProductID) []string {
+// func (vs VulnSrc) getProductPURLs(adv csaf.Advisory, productID csaf.ProductID) []string {
 //	helpers := adv.ProductTree.CollectProductIdentificationHelpers(productID)
 //	var purls []string
 //	for _, helper := range helpers {

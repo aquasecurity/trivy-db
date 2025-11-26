@@ -122,10 +122,6 @@ func (p *Parser) collectFilePaths(rootDir string) ([]string, error) {
 		} else if info.IsDir() || filepath.Ext(info.Name()) != ".json" {
 			return nil
 		}
-		// TODO(debug): delete
-		//if filepath.Base(path) != "cve-2023-39325.json" {
-		//	return nil
-		//}
 		filePaths = append(filePaths, path)
 		return nil
 	})
@@ -246,9 +242,11 @@ func (p *Parser) parseVulnerability(adv CSAFAdvisory, vuln *csaf.Vulnerability) 
 			product, err := adv.LookUpProduct(*productID)
 			if err != nil {
 				return eb.Wrap(err)
-			} else if product == nil {
+			}
+			if product == nil {
 				continue
-			} else if product.Package.Type != packageurl.TypeRPM {
+			}
+			if product.Package.Type != packageurl.TypeRPM {
 				// OCI images are not supported
 				// e.g.
 				//    Product: CERT-MANAGER-1.11-RHEL-9
@@ -359,8 +357,7 @@ func (p *Parser) parseThreats(threats csaf.Threats) map[csaf.ProductID]types.Sev
 		}
 
 		var severity types.Severity
-		switch lo.FromPtr(threat.Category) {
-		case csaf.CSAFThreatCategoryImpact:
+		if lo.FromPtr(threat.Category) == csaf.CSAFThreatCategoryImpact {
 			severity = convertSeverity(*threat.Details)
 		}
 		if severity == types.SeverityUnknown {

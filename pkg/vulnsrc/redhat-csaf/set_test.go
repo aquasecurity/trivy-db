@@ -15,7 +15,7 @@ func TestNewSet(t *testing.T) {
 func TestSet_Append(t *testing.T) {
 	s := NewSet[int]()
 	s.Append(1, 2, 3)
-	assert.Equal(t, 3, len(s.Values()))
+	assert.Len(t, s.Values(), 3)
 	assert.Contains(t, s.Values(), 1)
 	assert.Contains(t, s.Values(), 2)
 	assert.Contains(t, s.Values(), 3)
