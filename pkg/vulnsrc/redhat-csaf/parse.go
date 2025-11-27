@@ -258,6 +258,18 @@ func (p *Parser) parseVulnerability(adv CSAFAdvisory, vuln *csaf.Vulnerability) 
 			// Add CPEs to the set
 			p.cpeSet.Append(string(product.Stream))
 
+			// PURL format differs between patched and unpatched vulnerabilities:
+			//
+			// Patched (vendor_fix):
+			//   - Binary packages have version and arch: pkg:rpm/redhat/pam@1.5.1-21.el9_5?arch=x86_64
+			//   - Source packages have version and arch=src: pkg:rpm/redhat/pam@1.5.1-21.el9_5?arch=src
+			//
+			// Unpatched (none_available: "Affected"/"Fix deferred", no_fix_planned: "Out of support scope"/"Will not fix"):
+			//   - Binary packages have NO version and NO arch: pkg:rpm/redhat/vim-X11
+			//   - Source packages have arch=src only: pkg:rpm/redhat/vim?arch=src
+			//
+			// cf. https://security.access.redhat.com/data/csaf/v2/vex/2024/cve-2024-10041.json (patched)
+			// cf. https://security.access.redhat.com/data/csaf/v2/vex/2023/cve-2023-5344.json (unpatched)
 			arch := product.Package.Qualifiers.Map()["arch"]
 			if arch == "src" {
 				// Skip source packages to maintain backward compatibility with OVALv2,
@@ -270,6 +282,14 @@ func (p *Parser) parseVulnerability(adv CSAFAdvisory, vuln *csaf.Vulnerability) 
 				// of binary package names for better storage efficiency, as one source package
 				// typically produces multiple binary packages.
 				continue
+			}
+
+			// Log unexpected case: unpatched vulnerability with arch specified
+			// Based on investigation, unpatched binary packages should not have arch in PURL.
+			// If this happens, it may indicate a format change that needs attention.
+			if status != types.StatusFixed && arch != "" {
+				log.Printf("WARN: unexpected arch %q for unpatched vulnerability %s, package %s",
+					arch, cveID, product.Package.Name)
 			}
 
 			pkgName := product.Package.Name
