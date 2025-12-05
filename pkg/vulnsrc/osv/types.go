@@ -14,6 +14,7 @@ const (
 	ecosystemPyPI       = "pypi"
 	ecosystemRubygems   = "rubygems"
 	ecosystemCrates     = "crates.io"
+	ecosystemJulia      = "julia"
 	ecosystemPackagist  = "packagist"
 	ecosystemMaven      = "maven"
 	ecosystemNuGet      = "nuget"
@@ -83,6 +84,7 @@ type Entry struct {
 	Published        time.Time       `json:"published,omitempty"`
 	Withdrawn        *time.Time      `json:"withdrawn,omitempty"`
 	Aliases          []string        `json:"aliases,omitempty"`
+	Upstream         []string        `json:"upstream,omitempty"`
 	Summary          string          `json:"summary,omitempty"`
 	Details          string          `json:"details"`
 	Severities       []Severity      `json:"severity"`

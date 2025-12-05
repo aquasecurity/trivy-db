@@ -1,0 +1,57 @@
+{
+  "id": "JLSEC-2025-1",
+  "aliases": [
+    "CVE-2025-52479",
+    "GHSA-4g68-4pxg-mw93"
+  ],
+  "summary": "CR/LF injection in URIs.jl (also affects HTTP.jl)",
+  "details": "### Description\n\nThe URIs.jl and HTTP.jl packages allowed the construction of URIs containing CR/LF characters. If user input was not otherwise escaped or protected, this can lead to a CRLF injection attack.\n\nWith this simple Julia code, you can inject a custom header named `Foo` with the value `bar`:\n\n```julia\nimport HTTP\n\nHTTP.get(\"http://localhost:1337/ HTTP/1.1\\r\\nFoo: bar\\r\\nbaz:\")\n```\n\nThe server will receive the request like this:\n\n```\n➜ ncat -klp 1337\nGET / HTTP/1.1\nFoo: bar \u003c-- injected header!\nbaz: HTTP/1.1\nHost: locahost:1337\nAccept: */*\nUser-Agent: HTTP.jl/1.11.5\nContent-Length: 0\nAccept-Encoding: gzip\n```\n\n### Impact\n\nInject headers or inject data to the request body and cause “HTTP response splitting”.\n\n### Patches\n\nUsers of HTTP.jl should upgrade immediately to HTTP.jl v1.10.17. All prior versions are vulnerable.\n\nUsers of URIs.jl should upgrade immediately to URIs.jl v1.6.0. All prior versions are vulnerable.\n\nThe check for valid URIs is now in the URI.jl package, and the latest version of HTTP.jl incorporates that fix.\n\n### Workarounds\n\nManually validate any URIs before passing them on to functions in this package.\n\n### References\n\nFixed by: https://github.com/JuliaWeb/URIs.jl/pull/66 (which is available in URIs.jl v1.6.0).\n\n### Credits\n\nThanks to *splitline* from the DEVCORE Research Team for reporting this issue.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Julia",
+        "name": "HTTP",
+        "purl": "pkg:julia/HTTP?uuid=cd3eb016-35fb-5094-929b-558a96fad6f3"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.10.17"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source": "https://github.com/JuliaLang/SecurityAdvisories.jl/tree/generated/osv/2025/JLSEC-2025-1.json"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Julia",
+        "name": "URIs",
+        "purl": "pkg:julia/URIs?uuid=5c2747f8-b7ea-4ff2-ba2e-563bfd36b1d4"
+      },
+      "ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.6.0"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source": "https://github.com/JuliaLang/SecurityAdvisories.jl/tree/generated/osv/2025/JLSEC-2025-1.json"
+      }
+    }
+  ]
+}

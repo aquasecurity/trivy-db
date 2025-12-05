@@ -12,6 +12,7 @@ const (
 	Pip        Type = "pip"
 	RubyGems   Type = "rubygems"
 	Cargo      Type = "cargo"
+	Julia      Type = "julia"
 	NuGet      Type = "nuget"
 	Maven      Type = "maven"
 	Go         Type = "go"
