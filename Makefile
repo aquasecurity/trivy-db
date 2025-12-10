@@ -81,7 +81,7 @@ db-build: trivy-db
 	./trivy-db build --cache-dir ./$(CACHE_DIR) --output-dir ./$(OUT_DIR) --update-interval 24h
 
 .PHONY: db-compact
-db-compact: $(GOBIN)/bbolt out/trivy.db
+db-compact: $(GOBIN)/bbolt ./$(OUT_DIR)/trivy.db
 	mkdir -p ./$(ASSET_DIR)
 	$(GOBIN)/bbolt compact -o ./$(ASSET_DIR)/trivy.db ./$(OUT_DIR)/trivy.db
 	cp ./$(OUT_DIR)/metadata.json ./$(ASSET_DIR)/metadata.json
