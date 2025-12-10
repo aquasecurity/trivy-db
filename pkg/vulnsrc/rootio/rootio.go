@@ -99,12 +99,23 @@ func (vs VulnSrc) Update(dir string) error {
 			// Convert packages to patches
 			for _, pkg := range distro.Packages {
 				for cveID, cveInfo := range pkg.Pkg.CVEs {
+					// Parse severity from the feed
+					severity := types.SeverityUnknown
+					if cveInfo.Severity != "" {
+						if sev, err := types.NewSeverity(cveInfo.Severity); err == nil {
+							severity = sev
+						} else {
+							vs.logger.Warn("Invalid severity value", "cve", cveID, "severity", cveInfo.Severity, "error", err)
+						}
+					}
+
 					feed := Feed{
 						VulnerabilityID: cveID,
 						PkgName:         pkg.Pkg.Name,
 						Patch: types.Advisory{
 							VulnerableVersions: cveInfo.VulnerableRanges,
 							PatchedVersions:    cveInfo.FixedVersions,
+							Severity:           severity,
 						},
 					}
 					feeds[platformName] = append(feeds[platformName], feed)
@@ -211,9 +222,6 @@ func (vs VulnSrcGetter) Get(params db.GetParams) ([]types.Advisory, error) {
 	}
 
 	rootAdvs := lo.SliceToMap(advs, func(adv types.Advisory) (string, types.Advisory) {
-		// Debian may contain severity in the advisory.
-		// We need to save this severity for the Root.io advisory.
-		adv.Severity = allAdvs[adv.VulnerabilityID].Severity
 		return adv.VulnerabilityID, adv
 	})
 
