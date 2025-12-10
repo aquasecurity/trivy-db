@@ -40,6 +40,7 @@
               - "<1.5.2-6+deb12u1.root.io.3"
             PatchedVersions:
               - "1.5.2-6+deb12u1.root.io.3"
+            Severity: 2
         - key: CVE-2024-22365
           value:
             VulnerableVersions:
