@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"io/fs"
 	"os"
@@ -10,7 +12,23 @@ import (
 	"github.com/samber/oops"
 
 	"github.com/aquasecurity/trivy-db/pkg/log"
+	"github.com/aquasecurity/trivy-db/pkg/override"
 )
+
+var patches *override.Patches
+
+func init() {
+	// Look for overrides directory relative to current working directory
+	p, err := override.Load("overrides")
+	if err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			log.Warn("Failed to load overrides", log.Err(err))
+		}
+		return
+	}
+	patches = p
+	log.Info("Loaded override patches", log.Int("count", p.Count()))
+}
 
 func FileWalk(root string, walkFn func(r io.Reader, path string) error) error {
 	eb := oops.With("root_dir", root)
@@ -39,7 +57,32 @@ func FileWalk(root string, walkFn func(r io.Reader, path string) error) error {
 		}
 		defer f.Close()
 
-		if err = walkFn(f, path); err != nil {
+		var r io.Reader = f
+
+		// Apply patch if matching path suffix
+		if patch, ok, err := patches.Match(path); err != nil {
+			return eb.Wrapf(err, "patch match error")
+		} else if ok {
+			content, err := io.ReadAll(f)
+			if err != nil {
+				return eb.Wrapf(err, "file read error")
+			}
+
+			patched, err := patch.Apply(content)
+			if err != nil {
+				return eb.Wrapf(err, "patch apply error")
+			}
+
+			if len(patched) == 0 {
+				log.Debug("Skipping file due to override", log.FilePath(path))
+				return nil
+			}
+
+			r = bytes.NewReader(patched)
+			log.Debug("Applied override patch", log.FilePath(path))
+		}
+
+		if err = walkFn(r, path); err != nil {
 			return eb.Wrapf(err, "walk error")
 		}
 		return nil

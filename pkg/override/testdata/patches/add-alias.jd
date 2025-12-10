@@ -1,0 +1,3 @@
+@ ["aliases"]
+- []
++ ["GHSA-xxxx-yyyy-zzzz","CVE-2024-12345"]
