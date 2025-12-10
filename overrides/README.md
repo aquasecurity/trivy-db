@@ -49,7 +49,13 @@ patches:
 
 ## Creating Diff Files
 
-Install jd from https://github.com/josephburnett/jd?tab=readme-ov-file#installation
+Install jd v2.3.0 (this is the version used by the library):
+
+```bash
+go install github.com/josephburnett/jd/v2/jd@v2.3.0
+```
+
+**Note:** The Homebrew version may be outdated (v1.x), which generates incompatible diff formats.
 
 ### Generate diff from two files
 
@@ -59,15 +65,28 @@ jd original.json modified.json > patch.jd
 
 # Test applying the diff
 jd -p patch.jd original.json
+
+# For set semantics (prevents duplicates), use -set
+jd -set original.json modified.json > patch.jd
 ```
 
 ### Common patterns
 
-**Add element to array:**
+**Add element to array (as set - recommended for aliases):**
+```
+@ ["aliases",{}]
++ "CVE-2024-12345"
+```
+
+The `{}` indicates set semantics, which prevents duplicates if the element already exists.
+
+**Add element to array (append to end):**
 ```
 @ ["aliases",-1]
 + "CVE-2024-12345"
 ```
+
+Note: This will add duplicates if the element already exists. Use set semantics (`{}`) when possible.
 
 **Add new field:**
 ```
