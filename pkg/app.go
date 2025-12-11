@@ -44,11 +44,6 @@ func (ac *AppConfig) NewApp(version string) *cli.App {
 					Usage: "output directory path",
 					Value: "out",
 				},
-				cli.StringFlag{
-					Name:  "overrides",
-					Usage: "path to overrides directory containing config.yaml and patches",
-					Value: "overrides",
-				},
 				cli.DurationFlag{
 					Name:   "update-interval",
 					Usage:  "update interval",

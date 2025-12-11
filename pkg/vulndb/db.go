@@ -1,8 +1,6 @@
 package vulndb
 
 import (
-	"errors"
-	"os"
 	"time"
 
 	"github.com/samber/oops"
@@ -12,9 +10,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/metadata"
-	"github.com/aquasecurity/trivy-db/pkg/override"
 	"github.com/aquasecurity/trivy-db/pkg/types"
-	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
@@ -29,7 +25,6 @@ type TrivyDB struct {
 	vulnClient     vulnerability.Vulnerability
 	vulnSrcs       map[types.SourceID]vulnsrc.VulnSrc
 	cacheDir       string
-	overridesDir   string
 	updateInterval time.Duration
 	clock          clock.Clock
 }
@@ -45,12 +40,6 @@ func WithClock(clock clock.Clock) Option {
 func WithVulnSrcs(srcs map[types.SourceID]vulnsrc.VulnSrc) Option {
 	return func(core *TrivyDB) {
 		core.vulnSrcs = srcs
-	}
-}
-
-func WithOverrides(dir string) Option {
-	return func(core *TrivyDB) {
-		core.overridesDir = dir
 	}
 }
 
@@ -82,19 +71,6 @@ func New(cacheDir, outputDir string, updateInterval time.Duration, opts ...Optio
 func (t TrivyDB) Insert(targets []string) error {
 	log.Info("Updating vulnerability database...")
 	eb := oops.In("db")
-
-	// Load and set override patches if configured
-	if t.overridesDir != "" {
-		patches, err := override.Load(t.overridesDir)
-		if err != nil {
-			if !errors.Is(err, os.ErrNotExist) {
-				return eb.Wrapf(err, "failed to load overrides from %s", t.overridesDir)
-			}
-			// No overrides directory found, continue without overrides
-		} else {
-			utils.SetOverrides(patches)
-		}
-	}
 
 	for _, target := range targets {
 		eb := eb.With("target", target)

@@ -2,20 +2,6 @@
 
 This directory contains override patches for vulnerability advisories. Patches are applied at file read time during database build without modifying the original cached files.
 
-## Usage
-
-By default, the `trivy-db build` command reads overrides from the `overrides/` directory:
-
-```bash
-trivy-db build --cache-dir /path/to/cache
-```
-
-To use a different directory:
-
-```bash
-trivy-db build --cache-dir /path/to/cache --overrides /path/to/overrides
-```
-
 ## Use Cases
 
 1. **ID remapping** - Add CVE-ID alias to GHSA-only advisories, making CVE the primary key
@@ -151,14 +137,6 @@ We use path suffix matching (e.g., `/ghsa/.../GHSA-xxxx.json`) rather than exact
 
 - Cache directory path is not available at the matching layer
 - Does not require changes to `FileWalk` interface
-
-### Performance
-
-Performance overhead is negligible:
-
-| Build | Time | Overhead |
-|-------|------|----------|
-| GHSA only | ~1.3s | - |
-| Full build | ~3.1s | ~1.2% |
+- Performance overhead is negligible (~1.3s for full GHSA build with 1 patch)
 
 In the future, we may pass `cache-dir` to enable exact path matching for better precision.

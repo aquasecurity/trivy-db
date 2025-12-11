@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"io/fs"
 	"os"
@@ -16,13 +17,17 @@ import (
 
 var patches *override.Patches
 
-// SetOverrides sets the override patches to be applied during FileWalk.
-// This should be called before any FileWalk calls.
-func SetOverrides(p *override.Patches) {
-	patches = p
-	if p != nil {
-		log.Info("Loaded override patches", log.Int("count", p.Count()))
+func init() {
+	// Look for overrides directory relative to current working directory
+	p, err := override.Load("overrides")
+	if err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			log.Warn("Failed to load overrides", log.Err(err))
+		}
+		return
 	}
+	patches = p
+	log.Info("Loaded override patches", log.Int("count", p.Count()))
 }
 
 func FileWalk(root string, walkFn func(r io.Reader, path string) error) error {
