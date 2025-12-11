@@ -19,9 +19,10 @@ func build(c *cli.Context) error {
 	cacheDir := c.String("cache-dir")
 	targets := c.StringSlice("only-update")
 	updateInterval := c.Duration("update-interval")
+	overridesDir := c.String("overrides")
 	eb = eb.With("cache_dir", cacheDir).With("update_interval", updateInterval).With("targets", targets)
 
-	vdb := vulndb.New(cacheDir, outputDir, updateInterval)
+	vdb := vulndb.New(cacheDir, outputDir, updateInterval, vulndb.WithOverrides(overridesDir))
 	if err := vdb.Build(targets); err != nil {
 		return eb.Wrapf(err, "build error")
 	}
