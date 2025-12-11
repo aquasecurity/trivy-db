@@ -137,6 +137,14 @@ We use path suffix matching (e.g., `/ghsa/.../GHSA-xxxx.json`) rather than exact
 
 - Cache directory path is not available at the matching layer
 - Does not require changes to `FileWalk` interface
-- Performance overhead is negligible (~1.3s for full GHSA build with 1 patch)
+
+### Performance
+
+Performance overhead is negligible:
+
+| Build | Overhead |
+|-------|----------|
+| GHSA only | ~1.3s |
+| Full build | ~3.1s (~1.2%) |
 
 In the future, we may pass `cache-dir` to enable exact path matching for better precision.
