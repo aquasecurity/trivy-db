@@ -33,4 +33,5 @@ type RawPackageInfo struct {
 type RawCVEInfo struct {
 	VulnerableRanges []string `json:"vulnerable_ranges"`
 	FixedVersions    []string `json:"fixed_versions"`
+	Severity         string   `json:"severity,omitempty"`
 }

@@ -47,6 +47,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.Advisory{
 						VulnerableVersions: []string{"<3.40.1-2+deb12u1.root.io.2"},
 						PatchedVersions:    []string{"3.40.1-2+deb12u1.root.io.2"},
+						Severity:           types.SeverityMedium,
 					},
 				},
 				{
@@ -78,6 +79,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.Advisory{
 						VulnerableVersions: []string{"<1.6.17-r00071"},
 						PatchedVersions:    []string{"1.6.17-r00071"},
+						Severity:           types.SeverityHigh,
 					},
 				},
 				{
@@ -109,6 +111,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.Advisory{
 						VulnerableVersions: []string{"<1:4.8.1-2ubuntu2.2.root.io.2"},
 						PatchedVersions:    []string{"1:4.8.1-2ubuntu2.2.root.io.2"},
+						Severity:           types.SeverityCritical,
 					},
 				},
 				{

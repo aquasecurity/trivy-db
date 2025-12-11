@@ -13,7 +13,8 @@
                 ],
                 "fixed_versions": [
                   "1.6.17-r00071"
-                ]
+                ],
+                "severity": "HIGH"
               }
             }
           }
@@ -35,7 +36,8 @@
                 ],
                 "fixed_versions": [
                   "3.40.1-2+deb12u1.root.io.2"
-                ]
+                ],
+                "severity": "MEDIUM"
               }
             }
           }
@@ -57,7 +59,8 @@
                 ],
                 "fixed_versions": [
                   "1:4.8.1-2ubuntu2.2.root.io.2"
-                ]
+                ],
+                "severity": "CRITICAL"
               }
             }
           }
