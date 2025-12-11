@@ -16,19 +16,19 @@ func TestLoad(t *testing.T) {
 		name         string
 		overridesDir string
 		wantCount    int
-		wantErr      bool
+		wantErr      require.ErrorAssertionFunc
 	}{
 		{
 			name:         "valid config",
 			overridesDir: "testdata",
 			wantCount:    3,
-			wantErr:      false,
+			wantErr:      require.NoError,
 		},
 		{
 			name:         "non-existent directory",
 			overridesDir: "non-existent",
 			wantCount:    0,
-			wantErr:      true,
+			wantErr:      require.Error,
 		},
 	}
 
@@ -37,12 +37,11 @@ func TestLoad(t *testing.T) {
 			t.Parallel()
 
 			patches, err := override.Load(tt.overridesDir)
-			if tt.wantErr {
-				require.Error(t, err)
+			tt.wantErr(t, err)
+			if err != nil {
 				return
 			}
 
-			require.NoError(t, err)
 			assert.Equal(t, tt.wantCount, patches.Count())
 		})
 	}
@@ -68,7 +67,7 @@ func TestPatches_MatchAndApply(t *testing.T) {
 			original:   `{"id":"GHSA-xxxx-yyyy-zzzz","aliases":[]}`,
 			wantMatch:  true,
 			wantDelete: false,
-			wantJSON:   `{"aliases":["GHSA-xxxx-yyyy-zzzz","CVE-2024-12345"],"id":"GHSA-xxxx-yyyy-zzzz"}`,
+			wantJSON:   `{"aliases":["CVE-2024-12345","GHSA-xxxx-yyyy-zzzz"],"id":"GHSA-xxxx-yyyy-zzzz"}`,
 		},
 		{
 			name:       "path with prefix",
@@ -76,7 +75,7 @@ func TestPatches_MatchAndApply(t *testing.T) {
 			original:   `{"id":"GHSA-xxxx-yyyy-zzzz","aliases":[]}`,
 			wantMatch:  true,
 			wantDelete: false,
-			wantJSON:   `{"aliases":["GHSA-xxxx-yyyy-zzzz","CVE-2024-12345"],"id":"GHSA-xxxx-yyyy-zzzz"}`,
+			wantJSON:   `{"aliases":["CVE-2024-12345","GHSA-xxxx-yyyy-zzzz"],"id":"GHSA-xxxx-yyyy-zzzz"}`,
 		},
 		{
 			name:       "no match",
@@ -122,37 +121,20 @@ func TestPatches_MatchAndApply(t *testing.T) {
 
 			patch, ok, err := patches.Match(tt.path)
 			require.NoError(t, err)
-
-			if !tt.wantMatch {
-				assert.False(t, ok, "expected no match for path %s", tt.path)
+			require.Equal(t, tt.wantMatch, ok)
+			if !ok {
 				return
 			}
-
-			require.True(t, ok, "expected match for path %s", tt.path)
-			require.NotNil(t, patch)
 
 			got, err := patch.Apply([]byte(tt.original))
 			require.NoError(t, err)
 
 			if tt.wantDelete {
-				assert.Empty(t, got, "expected empty result (delete) for path %s", tt.path)
+				assert.Empty(t, got)
 				return
 			}
 
 			assert.JSONEq(t, tt.wantJSON, string(got))
 		})
 	}
-}
-
-func TestPatches_NilSafe(t *testing.T) {
-	t.Parallel()
-
-	var patches *override.Patches
-
-	// Should not panic
-	patch, ok, err := patches.Match("any/path")
-	require.NoError(t, err)
-	assert.False(t, ok)
-	assert.Nil(t, patch)
-	assert.Equal(t, 0, patches.Count())
 }

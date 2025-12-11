@@ -7,7 +7,7 @@ import (
 
 	"github.com/josephburnett/jd/v2"
 	"github.com/samber/oops"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 // Config represents the override configuration file
@@ -23,13 +23,8 @@ type PatchEntry struct {
 
 // Patches holds loaded override configuration
 type Patches struct {
-	entries      []patchEntry
+	entries      []PatchEntry
 	overridesDir string
-}
-
-type patchEntry struct {
-	pathSuffix string
-	diffFile   string // Path to diff file (relative to overrides dir)
 }
 
 // Patch represents a matched patch that can be applied to content
@@ -42,23 +37,24 @@ func Load(overridesDir string) (*Patches, error) {
 	eb := oops.With("overrides_dir", overridesDir)
 
 	configPath := filepath.Join(overridesDir, "config.yaml")
-	data, err := os.ReadFile(configPath)
+	f, err := os.Open(configPath)
 	if err != nil {
-		return nil, eb.Wrapf(err, "failed to read config file")
+		return nil, eb.Wrapf(err, "failed to open config file")
 	}
+	defer f.Close()
 
 	var cfg Config
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
+	if err := yaml.NewDecoder(f).Decode(&cfg); err != nil {
 		return nil, eb.Wrapf(err, "failed to parse config.yaml")
 	}
 
 	patches := &Patches{
-		entries:      make([]patchEntry, 0, len(cfg.Patches)),
+		entries:      make([]PatchEntry, 0, len(cfg.Patches)),
 		overridesDir: overridesDir,
 	}
 
 	for _, p := range cfg.Patches {
-		eb = eb.With("target", p.Target, "diff", p.Diff)
+		eb := eb.With("target", p.Target, "diff", p.Diff)
 		if p.Diff == "" {
 			return nil, eb.Errorf("patch entry missing 'diff' field")
 		} else if !filepath.IsLocal(p.Diff) {
@@ -70,12 +66,10 @@ func Load(overridesDir string) (*Patches, error) {
 			return nil, eb.Errorf("target path must start with '/'")
 		}
 
-		entry := patchEntry{
-			pathSuffix: target,
-			diffFile:   p.Diff,
-		}
-
-		patches.entries = append(patches.entries, entry)
+		patches.entries = append(patches.entries, PatchEntry{
+			Target: target,
+			Diff:   p.Diff,
+		})
 	}
 
 	return patches, nil
@@ -91,20 +85,15 @@ func (p *Patches) Match(path string) (*Patch, bool, error) {
 
 	normalizedPath := filepath.ToSlash(path)
 	for _, entry := range p.entries {
-		if !hasSuffix(normalizedPath, entry.pathSuffix) {
+		if !hasSuffix(normalizedPath, entry.Target) {
 			continue
 		}
 
 		// Read and parse diff file when matched
-		diffPath := filepath.Join(p.overridesDir, entry.diffFile)
-		diffData, err := os.ReadFile(diffPath)
+		diffPath := filepath.Join(p.overridesDir, entry.Diff)
+		diff, err := jd.ReadDiffFile(diffPath)
 		if err != nil {
-			return nil, false, oops.With("diff_file", diffPath).Wrapf(err, "failed to read diff file")
-		}
-
-		diff, err := jd.ReadDiffString(string(diffData))
-		if err != nil {
-			return nil, false, oops.With("diff_file", diffPath).Wrapf(err, "failed to parse diff file")
+			return nil, false, oops.With("diff_file", diffPath).Wrapf(err, "failed to read/parse diff file")
 		}
 
 		return &Patch{diff: diff}, true, nil

@@ -15,25 +15,16 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/override"
 )
 
-var patches *override.Patches
-
-func init() {
-	// Look for overrides directory relative to current working directory
-	p, err := override.Load("overrides")
-	if err != nil {
-		if !errors.Is(err, os.ErrNotExist) {
-			log.Warn("Failed to load overrides", log.Err(err))
-		}
-		return
-	}
-	patches = p
-	log.Info("Loaded override patches", log.Int("count", p.Count()))
-}
-
 func FileWalk(root string, walkFn func(r io.Reader, path string) error) error {
 	eb := oops.With("root_dir", root)
 
-	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+	// Load overrides from the default directory
+	patches, err := override.Load("overrides")
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return eb.Wrapf(err, "failed to load overrides")
+	}
+
+	err = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		eb := eb.With("path", path)
 		if err != nil {
 			return eb.Wrapf(err, "walk dir error")
@@ -74,12 +65,12 @@ func FileWalk(root string, walkFn func(r io.Reader, path string) error) error {
 			}
 
 			if len(patched) == 0 {
-				log.Debug("Skipping file due to override", log.FilePath(path))
+				log.Info("Skipping file due to override", log.FilePath(path))
 				return nil
 			}
 
 			r = bytes.NewReader(patched)
-			log.Debug("Applied override patch", log.FilePath(path))
+			log.Info("Applied override patch", log.FilePath(path))
 		}
 
 		if err = walkFn(r, path); err != nil {
