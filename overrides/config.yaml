@@ -1,0 +1,3 @@
+patches:
+  - target: /ghsa/advisories/github-reviewed/2025/12/GHSA-9qr9-h5gf-34mp/GHSA-9qr9-h5gf-34mp.json
+    diff: patches/GHSA-9qr9-h5gf-34mp.jd
