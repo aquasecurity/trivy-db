@@ -85,7 +85,7 @@ func (p *Patches) Match(path string) (*Patch, bool, error) {
 
 	normalizedPath := filepath.ToSlash(path)
 	for _, entry := range p.entries {
-		if !hasSuffix(normalizedPath, entry.Target) {
+		if !strings.HasSuffix(normalizedPath, entry.Target) {
 			continue
 		}
 
@@ -126,14 +126,4 @@ func (p *Patches) Count() int {
 		return 0
 	}
 	return len(p.entries)
-}
-
-// hasSuffix checks if path ends with suffix, ensuring proper path boundary.
-// The suffix must start with '/' to ensure path boundary matching.
-// e.g., "/foo/bar.json" matches "/bar.json" but not "ar.json"
-func hasSuffix(path, suffix string) bool {
-	if len(path) < len(suffix) {
-		return false
-	}
-	return strings.HasSuffix(path, suffix)
 }
