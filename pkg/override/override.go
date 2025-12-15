@@ -54,7 +54,7 @@ func Load(overridesDir string) (*Patches, error) {
 	}
 
 	for _, p := range cfg.Patches {
-		eb := eb.With("target", p.Target, "diff", p.Diff)
+		eb := eb.With("target", p.Target).With("diff", p.Diff)
 		if p.Diff == "" {
 			return nil, eb.Errorf("patch entry missing 'diff' field")
 		} else if !filepath.IsLocal(p.Diff) {
