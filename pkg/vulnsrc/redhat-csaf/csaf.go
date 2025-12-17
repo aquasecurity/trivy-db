@@ -12,6 +12,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
@@ -104,9 +105,6 @@ func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 }
 
 func (vs VulnSrc) putMappings(tx *bolt.Tx, cpeList CPEList) error {
-	// TODO(debug): delete
-	vs.dbc.PutVulnerabilityDetail(tx, "aaa", source.ID, types.VulnerabilityDetail{})
-
 	// Store the data source
 	if err := vs.dbc.PutDataSource(tx, rootBucket, source); err != nil {
 		return xerrors.Errorf("failed to put data source: %w", err)
@@ -160,48 +158,9 @@ func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt Bucket, adv Advisory, cpeList CPE
 	return nil
 }
 
-// func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advisory, error) {
-//	var advisories []types.Advisory
-//
-//	err := vs.dbc.View(func(tx *bolt.Tx) error {
-//		bucket := tx.Bucket([]byte(rootBucket))
-//		if bucket == nil {
-//			return nil
-//		}
-//
-//		return bucket.ForEach(func(k, v []byte) error {
-//			var advisory Advisory
-//			if err := json.Unmarshal(v, &advisory); err != nil {
-//				return xerrors.Errorf("failed to unmarshal advisory JSON: %w", err)
-//			}
-//
-//			if advisory.PkgName == pkgName {
-//				advisories = append(advisories, types.Advisory{
-//					VulnerabilityID: advisory.VulnerabilityID,
-//					FixedVersion:    advisory.FixedVersion,
-//					Severity:        advisory.Severity,
-//				})
-//			}
-//
-//			return nil
-//		})
-//	})
-//
-//	if err != nil {
-//		return nil, xerrors.Errorf("failed to get advisories: %w", err)
-//	}
-//
-//	return advisories, nil
-//}
-
-// Helper function to use ProductIdentificationHelpers
-// func (vs VulnSrc) getProductPURLs(adv csaf.Advisory, productID csaf.ProductID) []string {
-//	helpers := adv.ProductTree.CollectProductIdentificationHelpers(productID)
-//	var purls []string
-//	for _, helper := range helpers {
-//		if helper.PURL != nil {
-//			purls = append(purls, string(*helper.PURL))
-//		}
-//	}
-//	return purls
-//}
+// Get retrieves advisories for a package.
+// TODO: The Get implementation is the same as redhat-oval since both use the same DB structure.
+// When redhat-oval is removed in the future, move the Get implementation here.
+func (vs VulnSrc) Get(pkgName string, repositories, nvrs []string) ([]types.Advisory, error) {
+	return redhatoval.NewVulnSrc().Get(pkgName, repositories, nvrs)
+}
