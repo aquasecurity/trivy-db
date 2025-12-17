@@ -1,0 +1,12 @@
+patches:
+  # Delete entry - removes the entire advisory
+  - target: /ghsa/2025/01/GHSA-delete-me.json
+    diff: patches/delete.jd
+
+  # Patch entry - add CVE alias
+  - target: /ghsa/2025/11/GHSA-xxxx-yyyy-zzzz.json
+    diff: patches/add-alias.jd
+
+  # Patch entry - add references
+  - target: /osv/go/stdlib/CVE-2024-1234.json
+    diff: patches/add-refs.jd

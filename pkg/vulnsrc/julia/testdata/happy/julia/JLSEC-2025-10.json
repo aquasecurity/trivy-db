@@ -1,0 +1,52 @@
+{
+    "schema_version": "1.7.4",
+    "id": "JLSEC-2025-10",
+    "modified": "2025-10-31T18:41:21.318Z",
+    "published": "2025-10-09T21:46:55.585Z",
+    "upstream": [
+        "CVE-2016-3189"
+    ],
+    "summary": "Use-after-free vulnerability in bzip2recover in bzip2 1.0.6 allows remote attackers to cause a denia...",
+    "details": "Use-after-free vulnerability in bzip2recover in bzip2 1.0.6 allows remote attackers to cause a denial of service (crash) via a crafted bzip2 file, related to block ends set to before the start of the block.",
+    "affected": [
+        {
+            "ranges": [
+                {
+                    "type": "SEMVER",
+                    "events": [
+                        {
+                            "introduced": "0"
+                        },
+                        {
+                            "fixed": "1.0.7+0"
+                        }
+                    ]
+                }
+            ],
+            "package": {
+                "ecosystem": "Julia",
+                "name": "Bzip2_jll",
+                "purl": "pkg:julia/Bzip2_jll?uuid=6e34b625-4abd-537c-b88f-471c36dfa7a0"
+            }
+        }
+    ],
+    "references": [
+        {
+            "type": "WEB",
+            "url": "http://packetstormsecurity.com/files/153644/Slackware-Security-Advisory-bzip2-Updates.html"
+        }
+    ],
+    "database_specific": {
+        "license": "CC-BY-4.0",
+        "sources": [
+            {
+                "id": "CVE-2016-3189",
+                "imported": "2025-10-09T21:41:14.265Z",
+                "modified": "2025-06-09T16:15:25.307Z",
+                "published": "2016-06-30T17:59:01.470Z",
+                "url": "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=CVE-2016-3189",
+                "html_url": "https://nvd.nist.gov/vuln/detail/CVE-2016-3189"
+            }
+        ]
+    }
+}

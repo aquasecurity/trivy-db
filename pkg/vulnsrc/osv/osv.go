@@ -158,8 +158,10 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 		return nil
 	}
 
+	// Upstream IDs are also considered as aliases
+	entryAliases := lo.Uniq(append(entry.Aliases, entry.Upstream...))
 	// Group IDs into primary vulnerability IDs and aliases.
-	vulnIDs, aliases := groupVulnIDs(entry.ID, entry.Aliases)
+	vulnIDs, aliases := groupVulnIDs(entry.ID, entryAliases)
 
 	references := lo.Map(entry.References, func(ref Reference, _ int) string {
 		return ref.URL
@@ -428,6 +430,8 @@ func (o OSV) resolveBucket(raw string) (bucket.Bucket, error) {
 		return bucket.NewRubyGems(o.dataSources[ecosystem.RubyGems])
 	case ecosystemCrates:
 		return bucket.NewCargo(o.dataSources[ecosystem.Cargo])
+	case ecosystemJulia:
+		return bucket.NewJulia(o.dataSources[ecosystem.Julia])
 	case ecosystemPackagist:
 		return bucket.NewComposer(o.dataSources[ecosystem.Composer])
 	case ecosystemMaven:
