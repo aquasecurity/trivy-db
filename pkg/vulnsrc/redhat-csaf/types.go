@@ -54,10 +54,21 @@ type Entry struct {
 	Arches       []string     `json:",omitempty"`
 	Status       types.Status `json:"-"`
 
-	// For DB size optimization, CPE names will not be stored.
-	// CPE indices are stored instead.
-	AffectedCPEList    []string `json:"-"`
-	AffectedCPEIndices []int    `json:"Affected,omitempty"`
+	// AffectedCPEList is used during parsing, then converted to indices for storage.
+	AffectedCPEList []string `json:"-"`
+	// AffectedCPEIndices stores CPE indices for efficient matching at scan time.
+	AffectedCPEIndices []int `json:"Affected,omitempty"`
+}
+
+func (e Entry) MarshalJSON() ([]byte, error) {
+	type Alias Entry
+	return json.Marshal(&struct {
+		Status int `json:"Status,omitempty"`
+		Alias
+	}{
+		Status: int(e.Status),
+		Alias:  Alias(e),
+	})
 }
 
 func (e *Entry) UnmarshalJSON(data []byte) error {
