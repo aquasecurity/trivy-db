@@ -292,17 +292,9 @@ func (p *Parser) parseVulnerability(adv CSAFAdvisory, vuln *csaf.Vulnerability) 
 					arch, cveID, product.Package.Name)
 			}
 
-			pkgName := product.Package.Name
-			if strings.HasPrefix(product.Package.Namespace, "redhat/") {
-				// Some PURLs have a namespace, which is unclear how to handle.
-				// e.g. pkg:rpm/redhat/satellite_client_6/foreman_ygg_worker?arch=src
-				// cf. https://issues.redhat.com/browse/SECDATA-854
-				pkgName = strings.TrimPrefix(product.Package.Namespace, "redhat/") + "/" + pkgName
-			}
-
 			pkg := Package{
 				Module: product.Module,
-				Name:   pkgName,
+				Name:   product.Package.Name,
 			}
 
 			var vulnID, alias VulnerabilityID

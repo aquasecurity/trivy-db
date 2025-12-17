@@ -106,7 +106,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"advisory-detail",
 						"RHSA-2024:9999",
 						"Red Hat",
-						"test-namespace/test-package",
+						"test-package",
 					},
 					Value: redhatcsaf.Advisory{
 						Entries: []redhatcsaf.Entry{
@@ -139,6 +139,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						Entries: []redhatcsaf.Entry{
 							{
 								FixedVersion: "", // unpatched vulnerability has no fixed version
+								Status:       types.StatusAffected,
 								CVEs: []redhatcsaf.CVEEntry{
 									{
 										Severity: types.SeverityHigh,
@@ -161,6 +162,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						Entries: []redhatcsaf.Entry{
 							{
 								FixedVersion: "", // unpatched vulnerability has no fixed version
+								Status:       types.StatusAffected,
 								CVEs: []redhatcsaf.CVEEntry{
 									{
 										Severity: types.SeverityCritical,

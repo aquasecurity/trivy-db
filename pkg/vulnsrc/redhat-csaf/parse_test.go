@@ -53,7 +53,7 @@ func TestParser_Parse(t *testing.T) {
 				},
 				{
 					Package: Package{
-						Name: "test-namespace/test-package",
+						Name: "test-package",
 					},
 					VulnerabilityID: "RHSA-2024:9999",
 				}: {
