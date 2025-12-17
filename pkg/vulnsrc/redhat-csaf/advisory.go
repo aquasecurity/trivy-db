@@ -47,6 +47,20 @@ func (a CSAFAdvisory) LookUpProduct(productID csaf.ProductID) (*Product, error) 
 		return nil, eb.Wrap(err)
 	}
 
+	// Extract module information from the "rpmmod" qualifier if present.
+	// Red Hat changed the PURL format from "pkg:rpmmod/redhat/..." to "pkg:rpm/redhat/...?rpmmod=..."
+	// cf. https://issues.redhat.com/browse/SECDATA-1115
+	if module == "" {
+		if rpmmod := purl.Qualifiers.Map()["rpmmod"]; rpmmod != "" {
+			// rpmmod = "389-ds:1.4:8100020240613122040:25e700aa"
+			// module = "389-ds:1.4"
+			parts := strings.SplitN(rpmmod, ":", 3)
+			if len(parts) >= 2 {
+				module = parts[0] + ":" + parts[1]
+			}
+		}
+	}
+
 	return &Product{
 		Module:  module,
 		Package: purl,
