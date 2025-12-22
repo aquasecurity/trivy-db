@@ -1,2 +1,8 @@
 # Global
 *   @knqyf263
+
+# Partner
+/pkg/vulnsrc/echo/       @DmitriyLewen
+/pkg/vulnsrc/minimos/    @DmitriyLewen
+/pkg/vulnsrc/rootio/     @DmitriyLewen
+/pkg/vulnsrc/seal/       @DmitriyLewen
