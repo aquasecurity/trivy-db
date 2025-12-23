@@ -104,7 +104,9 @@ func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 	return nil
 }
 
-func (vs VulnSrc) putMappings(tx *bolt.Tx, cpeList CPEList) error {
+// TODO: The CPEList type is the same as redhat-oval since both use the same DB structure.
+// When redhat-oval is removed in the future, move the CPEList type definition here.
+func (vs VulnSrc) putMappings(tx *bolt.Tx, cpeList redhatoval.CPEList) error {
 	// Store the data source
 	if err := vs.dbc.PutDataSource(tx, rootBucket, source); err != nil {
 		return xerrors.Errorf("failed to put data source: %w", err)
@@ -133,7 +135,7 @@ func (vs VulnSrc) putMappings(tx *bolt.Tx, cpeList CPEList) error {
 	return nil
 }
 
-func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt Bucket, adv Advisory, cpeList CPEList) error {
+func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt Bucket, adv Advisory, cpeList redhatoval.CPEList) error {
 	for i := range adv.Entries {
 		// Convert CPE names to indices.
 		adv.Entries[i].AffectedCPEIndices = cpeList.Indices(adv.Entries[i].AffectedCPEList)

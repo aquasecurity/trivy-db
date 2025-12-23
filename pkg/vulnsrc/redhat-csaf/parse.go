@@ -18,6 +18,7 @@ import (
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
+	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
 )
 
 // Fixed path for temporary data file
@@ -418,7 +419,7 @@ func (p *Parser) AdvisoryNum() int {
 	return count
 }
 
-func (p *Parser) CPEList() CPEList {
+func (p *Parser) CPEList() redhatoval.CPEList {
 	return p.cpeSet.Values()
 }
 
