@@ -23,7 +23,8 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/photon"
-	redhatcsaf "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-csaf"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat"
+	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rocky"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rootio"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/seal"
@@ -46,7 +47,8 @@ var (
 		// OS packages
 		alma.NewVulnSrc(),
 		alpine.NewVulnSrc(),
-		redhatcsaf.NewVulnSrc(),
+		redhat.NewVulnSrc(),
+		redhatoval.NewVulnSrc(),
 		debian.NewVulnSrc(),
 		ubuntu.NewVulnSrc(),
 		amazon.NewVulnSrc(),
