@@ -30,7 +30,7 @@ var (
 func resolveBucket(suffix string) (bucket.Bucket, error) {
 	var eco ecosystem.Type
 	// Separate base ecosystem and version (if exists)
-	// e.g. "Alpine", "Red Hat:8", "Debian"
+	// e.g. "Alpine", "Red Hat:8", "Debian", "Maven", "PyPI", "npm", "Go"
 	baseEco, ver, _ := strings.Cut(suffix, ":")
 	switch baseEco {
 	case "alpine":
@@ -42,6 +42,18 @@ func resolveBucket(suffix string) (bucket.Bucket, error) {
 	case "red hat":
 		eco = ecosystem.RedHat
 		source.BaseID = vulnerability.RedHat
+	case "maven":
+		eco = ecosystem.Maven
+		source.BaseID = ""
+	case "pypi":
+		eco = ecosystem.Pip
+		source.BaseID = ""
+	case "npm":
+		eco = ecosystem.Npm
+		source.BaseID = ""
+	case "go":
+		eco = ecosystem.Go
+		source.BaseID = ""
 	default:
 		return nil, oops.With("ecosystem", "seal").With("base", suffix).Errorf("unsupported base ecosystem")
 	}
