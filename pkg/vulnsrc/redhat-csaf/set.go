@@ -6,9 +6,9 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-// -----------------------------------------
-// Generic Set implementation (thread-unsafe
-// -----------------------------------------
+// ------------------------------------------
+// Generic Set implementation (thread-unsafe)
+// ------------------------------------------
 
 // Set represents a generic set of comparable items
 type Set[T comparable] struct {
