@@ -29,19 +29,20 @@ var (
 // resolveBucket creates a seal bucket from base ecosystem suffix
 func resolveBucket(suffix string) (bucket.Bucket, error) {
 	var eco ecosystem.Type
+	src := source
 	// Separate base ecosystem and version (if exists)
 	// e.g. "Alpine", "Red Hat:8", "Debian", "Maven", "PyPI", "npm", "Go"
 	baseEco, ver, _ := strings.Cut(suffix, ":")
 	switch baseEco {
 	case "alpine":
 		eco = ecosystem.Alpine
-		source.BaseID = vulnerability.Alpine
+		src.BaseID = vulnerability.Alpine
 	case "debian":
 		eco = ecosystem.Debian
-		source.BaseID = vulnerability.Debian
+		src.BaseID = vulnerability.Debian
 	case "red hat":
 		eco = ecosystem.RedHat
-		source.BaseID = vulnerability.RedHat
+		src.BaseID = vulnerability.RedHat
 	case "maven":
 		eco = ecosystem.Maven
 	case "pypi":
@@ -54,7 +55,7 @@ func resolveBucket(suffix string) (bucket.Bucket, error) {
 		return nil, oops.With("ecosystem", "seal").With("base", suffix).Errorf("unsupported base ecosystem")
 	}
 
-	return newBucket(eco, ver, source)
+	return newBucket(eco, ver, src)
 }
 
 type VulnSrc struct {
