@@ -52,13 +52,21 @@ func TestVulnSrc_Update(t *testing.T) {
 						"cpe",
 						"1",
 					},
-					Value: "cpe:/o:redhat:enterprise_linux:9::appstream",
+					Value: "cpe:/o:redhat:enterprise_linux:9",
 				},
 				{
 					Key: []string{
 						"Red Hat CPE",
 						"cpe",
 						"2",
+					},
+					Value: "cpe:/o:redhat:enterprise_linux:9::appstream",
+				},
+				{
+					Key: []string{
+						"Red Hat CPE",
+						"cpe",
+						"3",
 					},
 					Value: "cpe:/o:redhat:enterprise_linux:9::baseos",
 				},
@@ -76,7 +84,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"nvr",
 						"pam-1.5.1-21.el9_5.x86_64",
 					},
-					Value: []int{2},
+					Value: []int{3},
 				},
 				{
 					Key: []string{
@@ -96,7 +104,7 @@ func TestVulnSrc_Update(t *testing.T) {
 									},
 								},
 								Arches:             []string{"aarch64", "x86_64"},
-								AffectedCPEIndices: []int{2},
+								AffectedCPEIndices: []int{3},
 							},
 						},
 					},
@@ -123,7 +131,7 @@ func TestVulnSrc_Update(t *testing.T) {
 									},
 								},
 								Arches:             []string{"aarch64", "x86_64"},
-								AffectedCPEIndices: []int{1, 2},
+								AffectedCPEIndices: []int{2, 3},
 							},
 						},
 					},
@@ -146,7 +154,7 @@ func TestVulnSrc_Update(t *testing.T) {
 									},
 								},
 								Arches:             nil, // no arch in PURL for unpatched vulnerabilities
-								AffectedCPEIndices: []int{2},
+								AffectedCPEIndices: []int{3},
 							},
 						},
 					},
@@ -169,7 +177,7 @@ func TestVulnSrc_Update(t *testing.T) {
 									},
 								},
 								Arches:             nil, // no arch in PURL for unpatched vulnerabilities
-								AffectedCPEIndices: []int{2},
+								AffectedCPEIndices: []int{3},
 							},
 						},
 					},
@@ -196,6 +204,29 @@ func TestVulnSrc_Update(t *testing.T) {
 									},
 								},
 								Arches:             []string{"aarch64"},
+								AffectedCPEIndices: []int{2},
+							},
+						},
+					},
+				},
+				// Test case for new rpmmod qualifier format (pkg:rpm/...?rpmmod=...)
+				{
+					Key: []string{
+						"advisory-detail",
+						"RHSA-2025:0001",
+						"Red Hat",
+						"firefox:flatpak::firefox-x11",
+					},
+					Value: redhatcsaf.Advisory{
+						Entries: []redhatcsaf.Entry{
+							{
+								Status: types.StatusFixed,
+								CVEs: []redhatcsaf.CVEEntry{
+									{
+										ID:       "CVE-2025-33333",
+										Severity: types.SeverityHigh,
+									},
+								},
 								AffectedCPEIndices: []int{1},
 							},
 						},

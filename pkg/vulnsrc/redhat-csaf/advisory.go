@@ -197,20 +197,5 @@ func (a CSAFAdvisory) findProductIdentificationHelper(id csaf.ProductID, pt *csa
 		return nil, false
 	}
 
-	if h, found := recBranch(pt.Branches); found {
-		return h, true
-	}
-
-	// Iterate over relationships
-	if rels := pt.RelationShips; rels != nil {
-		for _, rel := range *rels {
-			if rel == nil {
-				continue
-			}
-			if fpn := rel.FullProductName; fpn != nil && lo.FromPtr(fpn.ProductID) == id {
-				return fpn.ProductIdentificationHelper, true
-			}
-		}
-	}
-	return nil, false
+	return recBranch(pt.Branches)
 }
