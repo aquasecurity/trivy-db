@@ -11,6 +11,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/samber/oops"
 
+	"github.com/aquasecurity/trivy-db/pkg/set"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 )
 
@@ -116,7 +117,7 @@ func (a *Aggregator) aggregateArches(entries Entries) Entries {
 	var result Entries
 	for key, group := range groups {
 		// Collect unique architectures
-		archSet := NewOrderedSet[string]()
+		archSet := set.NewOrdered[string]()
 		for _, entry := range group {
 			// Filter out empty arches
 			arches := lo.Filter(entry.Arches, func(arch string, _ int) bool {
@@ -161,7 +162,7 @@ func (a *Aggregator) aggregateCPEs(entries Entries) Entries {
 	var result Entries
 	for key, group := range groups {
 		// Collect unique CPEs
-		cpeSet := NewOrderedSet[string]()
+		cpeSet := set.NewOrdered[string]()
 		for _, entry := range group {
 			cpeSet.Append(entry.AffectedCPEList...)
 		}

@@ -16,6 +16,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/samber/oops"
 
+	"github.com/aquasecurity/trivy-db/pkg/set"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
@@ -29,7 +30,7 @@ type Parser struct {
 	repoToCPE  map[string][]string
 	nvrToCPE   map[string][]string
 	advisories map[Package]map[VulnerabilityID]RawEntries
-	cpeSet     OrderedSet[string]
+	cpeSet     set.Ordered[string]
 }
 
 func NewParser() Parser {
@@ -44,7 +45,7 @@ func NewParser() Parser {
 		repoToCPE:  map[string][]string{},
 		nvrToCPE:   map[string][]string{},
 		advisories: map[Package]map[VulnerabilityID]RawEntries{},
-		cpeSet:     NewOrderedSet[string](),
+		cpeSet:     set.NewOrdered[string](),
 	}
 }
 
@@ -233,7 +234,7 @@ func (p *Parser) parseVulnerability(adv CSAFAdvisory, vuln *csaf.Vulnerability) 
 			Package
 			RawEntry
 		}
-		uniq := NewSet[uniqKey]()
+		uniq := set.New[uniqKey]()
 
 		// For each remediation, iterate over product_ids
 		for _, productID := range lo.FromPtr(remediation.ProductIds) {

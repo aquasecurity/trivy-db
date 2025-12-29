@@ -1,4 +1,4 @@
-package redhatcsaf
+package set
 
 import (
 	"sort"
@@ -15,8 +15,8 @@ type Set[T comparable] struct {
 	items map[T]struct{}
 }
 
-// NewSet creates a new Set
-func NewSet[T comparable]() Set[T] {
+// New creates a new Set
+func New[T comparable]() Set[T] {
 	return Set[T]{
 		items: make(map[T]struct{}),
 	}
@@ -44,20 +44,20 @@ func (s Set[T]) Values() []T {
 	return v
 }
 
-// OrderedSet is a set of ordered elements that supports sorted Values
-type OrderedSet[T constraints.Ordered] struct {
+// Ordered is a set of ordered elements that supports sorted Values
+type Ordered[T constraints.Ordered] struct {
 	Set[T]
 }
 
-// NewOrderedSet creates a new OrderedSet
-func NewOrderedSet[T constraints.Ordered]() OrderedSet[T] {
-	return OrderedSet[T]{
-		Set: NewSet[T](),
+// NewOrdered creates a new Ordered set
+func NewOrdered[T constraints.Ordered]() Ordered[T] {
+	return Ordered[T]{
+		Set: New[T](),
 	}
 }
 
 // Values returns all elements in the set as a sorted slice
-func (s OrderedSet[T]) Values() []T {
+func (s Ordered[T]) Values() []T {
 	v := s.Set.Values()
 	sort.Slice(v, func(i, j int) bool {
 		return v[i] < v[j]
