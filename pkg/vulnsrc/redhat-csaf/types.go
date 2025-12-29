@@ -60,6 +60,10 @@ type Entry struct {
 	AffectedCPEIndices []int `json:"Affected,omitempty"`
 }
 
+// MarshalJSON customizes JSON marshaling for Entry.
+// types.Status has its own MarshalJSON that serializes to a string (e.g., "affected"),
+// but storing strings increases database size. This method serializes Status as an int
+// to reduce storage overhead.
 func (e Entry) MarshalJSON() ([]byte, error) {
 	type Alias Entry
 	return json.Marshal(&struct {
@@ -71,22 +75,23 @@ func (e Entry) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func (e *Entry) UnmarshalJSON(data []byte) error {
-	type Alias Entry
-	aux := &struct {
-		Status int `json:"Status,omitempty"`
-		*Alias
-	}{
-		Alias: (*Alias)(e),
-	}
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-	if len(types.Statuses) > aux.Status {
-		e.Status = types.Status(aux.Status)
-	}
-	return nil
-}
+// TODO: UnmarshalJSON is not currently needed because Get() delegates to redhat-oval.
+// When redhat-oval is removed and Get() is implemented in this package, uncomment this method.
+//
+// func (e *Entry) UnmarshalJSON(data []byte) error {
+// 	type Alias Entry
+// 	aux := &struct {
+// 		Status int `json:"Status,omitempty"`
+// 		*Alias
+// 	}{
+// 		Alias: (*Alias)(e),
+// 	}
+// 	if err := json.Unmarshal(data, &aux); err != nil {
+// 		return err
+// 	}
+// 	e.Status = types.Status(aux.Status)
+// 	return nil
+// }
 
 type Entries []Entry
 
