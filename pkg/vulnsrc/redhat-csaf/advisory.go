@@ -62,9 +62,7 @@ func (a *CSAFAdvisory) buildProductMap() {
 			continue
 		}
 		if id := lo.FromPtr(fpn.ProductID); id != "" {
-			if _, exists := productHelperMap[id]; !exists {
-				productHelperMap[id] = fpn.ProductIdentificationHelper
-			}
+			productHelperMap[id] = fpn.ProductIdentificationHelper
 		}
 	}
 
@@ -77,9 +75,7 @@ func (a *CSAFAdvisory) buildProductMap() {
 			}
 			if fpn := b.Product; fpn != nil {
 				if id := lo.FromPtr(fpn.ProductID); id != "" {
-					if _, exists := productHelperMap[id]; !exists {
-						productHelperMap[id] = fpn.ProductIdentificationHelper
-					}
+					productHelperMap[id] = fpn.ProductIdentificationHelper
 				}
 			}
 			walkBranches(b.Branches)
