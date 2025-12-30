@@ -42,7 +42,7 @@ type ProgressBar struct {
 	client *pb.ProgressBar
 }
 
-func PbStartNew(total int) *ProgressBar {
+func NewProgressBar(total int) *ProgressBar {
 	if Quiet {
 		return &ProgressBar{}
 	}
