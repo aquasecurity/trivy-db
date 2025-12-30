@@ -158,6 +158,6 @@ func (a *CSAFAdvisory) resolveCPE(
 }
 
 // LookUpProduct returns the pre-computed Product for a given ProductID.
-func (a CSAFAdvisory) LookUpProduct(productID csaf.ProductID) (*Product, error) {
-	return a.productMap[productID], nil
+func (a CSAFAdvisory) LookUpProduct(productID csaf.ProductID) *Product {
+	return a.productMap[productID]
 }

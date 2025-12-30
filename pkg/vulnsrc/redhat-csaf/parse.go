@@ -242,10 +242,7 @@ func (p *Parser) parseVulnerability(adv CSAFAdvisory, vuln *csaf.Vulnerability) 
 			if productID == nil {
 				continue
 			}
-			product, err := adv.LookUpProduct(*productID)
-			if err != nil {
-				return eb.Wrap(err)
-			}
+			product := adv.LookUpProduct(*productID)
 			if product == nil {
 				continue
 			}
