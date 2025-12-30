@@ -1,7 +1,6 @@
 package redhatcsaf
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/gocsaf/csaf/v3/csaf"
@@ -94,7 +93,7 @@ func (a *CSAFAdvisory) buildProductMap() {
 
 	// Step 3: Build final product map by resolving all relationships
 	for productID, rel := range relationshipMap {
-		product := a.resolveProduct(productID, rel, relationshipMap, productHelperMap)
+		product := a.resolveProduct(productID, rel, productHelperMap)
 		if product != nil {
 			a.productMap[productID] = product
 		}
@@ -105,7 +104,6 @@ func (a *CSAFAdvisory) buildProductMap() {
 func (a *CSAFAdvisory) resolveProduct(
 	productID csaf.ProductID,
 	rel *csaf.Relationship,
-	relationshipMap map[csaf.ProductID]*csaf.Relationship,
 	productHelperMap map[csaf.ProductID]*csaf.ProductIdentificationHelper,
 ) *Product {
 	// Get PURL from product_reference
@@ -127,24 +125,22 @@ func (a *CSAFAdvisory) resolveProduct(
 		return nil
 	}
 
-	// Get CPE and module from relates_to_product_reference
-	cpe, module := a.resolveRelatesToProductReference(
+	// Get CPE from relates_to_product_reference
+	cpe := a.resolveCPE(
 		lo.FromPtr(rel.RelatesToProductReference),
-		relationshipMap,
 		productHelperMap,
 	)
 
 	// Extract module information from the "rpmmod" qualifier if present.
 	// Red Hat changed the PURL format from "pkg:rpmmod/redhat/..." to "pkg:rpm/redhat/...?rpmmod=..."
 	// cf. https://issues.redhat.com/browse/SECDATA-1115
-	if module == "" {
-		if rpmmod := purl.Qualifiers.Map()["rpmmod"]; rpmmod != "" {
-			// rpmmod = "389-ds:1.4:8100020240613122040:25e700aa"
-			// module = "389-ds:1.4"
-			parts := strings.SplitN(rpmmod, ":", 3)
-			if len(parts) >= 2 {
-				module = parts[0] + ":" + parts[1]
-			}
+	var module string
+	if rpmmod := purl.Qualifiers.Map()["rpmmod"]; rpmmod != "" {
+		// rpmmod = "389-ds:1.4:8100020240613122040:25e700aa"
+		// module = "389-ds:1.4"
+		parts := strings.SplitN(rpmmod, ":", 3)
+		if len(parts) >= 2 {
+			module = parts[0] + ":" + parts[1]
 		}
 	}
 
@@ -155,72 +151,15 @@ func (a *CSAFAdvisory) resolveProduct(
 	}
 }
 
-// resolveRelatesToProductReference resolves the CPE and module for a relates_to_product_reference.
-func (a *CSAFAdvisory) resolveRelatesToProductReference(
+// resolveCPE resolves the CPE for a relates_to_product_reference.
+func (a *CSAFAdvisory) resolveCPE(
 	productID csaf.ProductID,
-	relationshipMap map[csaf.ProductID]*csaf.Relationship,
 	productHelperMap map[csaf.ProductID]*csaf.ProductIdentificationHelper,
-) (csaf.CPE, string) {
-	// Check if the package is a module (has its own relationship)
-	if rel := relationshipMap[productID]; rel != nil {
-		return a.resolveModule(rel, relationshipMap, productHelperMap)
-	}
-
-	// Otherwise, get CPE directly from product helper
+) csaf.CPE {
 	if helper := productHelperMap[productID]; helper != nil && helper.CPE != nil {
-		return *helper.CPE, ""
+		return *helper.CPE
 	}
-
-	return "", ""
-}
-
-// resolveModule resolves module information for a modular package.
-// e.g.
-//
-//	{
-//	  "category": "default_component_of",
-//	  "full_product_name": {
-//	    "name": "httpd:2.4:8070020230131172653:bd1311ed as a component of Red Hat Enterprise Linux AppStream (v. 8)",
-//	    "product_id": "AppStream-8.7.0.Z.MAIN:httpd:2.4:8070020230131172653:bd1311ed"
-//	  },
-//	  "product_reference": "httpd:2.4:8070020230131172653:bd1311ed",
-//	  "relates_to_product_reference": "AppStream-8.7.0.Z.MAIN"
-//	}
-func (a *CSAFAdvisory) resolveModule(
-	relationship *csaf.Relationship,
-	relationshipMap map[csaf.ProductID]*csaf.Relationship,
-	productHelperMap map[csaf.ProductID]*csaf.ProductIdentificationHelper,
-) (csaf.CPE, string) {
-	productRef := lo.FromPtr(relationship.ProductReference)
-	if productRef == "" {
-		return "", ""
-	}
-
-	// Look up the module stream
-	moduleHelper := productHelperMap[productRef]
-	if moduleHelper == nil || moduleHelper.PURL == nil {
-		return "", ""
-	}
-
-	purl, err := packageurl.FromString(string(*moduleHelper.PURL))
-	if err != nil {
-		return "", ""
-	}
-	if purl.Type != "rpmmod" {
-		return "", ""
-	}
-
-	ver, _, _ := strings.Cut(purl.Version, ":")
-	module := fmt.Sprintf("%s:%s", purl.Name, ver)
-
-	// Look up the product stream (recursively)
-	cpe, _ := a.resolveRelatesToProductReference(
-		lo.FromPtr(relationship.RelatesToProductReference),
-		relationshipMap,
-		productHelperMap,
-	)
-
-	return cpe, module
+	return ""
 }
 
 // LookUpProduct returns the pre-computed Product for a given ProductID.
