@@ -43,15 +43,13 @@ func (a *CSAFAdvisory) buildProductMap() {
 
 	// Step 1: Build relationship map
 	relationshipMap := make(map[csaf.ProductID]*csaf.Relationship)
-	if pt.RelationShips != nil {
-		for _, rel := range *pt.RelationShips {
-			if rel == nil {
-				continue
-			}
-			fpn := lo.FromPtr(rel.FullProductName)
-			if id := lo.FromPtr(fpn.ProductID); id != "" {
-				relationshipMap[id] = rel
-			}
+	for _, rel := range lo.FromPtr(pt.RelationShips) {
+		if rel == nil {
+			continue
+		}
+		fpn := lo.FromPtr(rel.FullProductName)
+		if id := lo.FromPtr(fpn.ProductID); id != "" {
+			relationshipMap[id] = rel
 		}
 	}
 
@@ -59,15 +57,13 @@ func (a *CSAFAdvisory) buildProductMap() {
 	productHelperMap := make(map[csaf.ProductID]*csaf.ProductIdentificationHelper)
 
 	// From full product names
-	if pt.FullProductNames != nil {
-		for _, fpn := range *pt.FullProductNames {
-			if fpn == nil {
-				continue
-			}
-			if id := lo.FromPtr(fpn.ProductID); id != "" {
-				if _, exists := productHelperMap[id]; !exists {
-					productHelperMap[id] = fpn.ProductIdentificationHelper
-				}
+	for _, fpn := range lo.FromPtr(pt.FullProductNames) {
+		if fpn == nil {
+			continue
+		}
+		if id := lo.FromPtr(fpn.ProductID); id != "" {
+			if _, exists := productHelperMap[id]; !exists {
+				productHelperMap[id] = fpn.ProductIdentificationHelper
 			}
 		}
 	}
