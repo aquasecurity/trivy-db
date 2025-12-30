@@ -104,10 +104,11 @@ func (p *Parser) parseCSAFFile(filePath string) error {
 	}
 	defer f.Close()
 
-	var adv CSAFAdvisory
-	if err := json.NewDecoder(f).Decode(&adv); err != nil {
+	var raw csaf.Advisory
+	if err := json.NewDecoder(f).Decode(&raw); err != nil {
 		return eb.Wrapf(err, "JSON decode error")
 	}
+	adv := NewCSAFAdvisory(raw)
 
 	if err = p.parseAdvisory(adv); err != nil {
 		return eb.Wrapf(err, "advisory parse error")

@@ -7,45 +7,132 @@ import (
 	"github.com/gocsaf/csaf/v3/csaf"
 	"github.com/package-url/packageurl-go"
 	"github.com/samber/lo"
-	"github.com/samber/oops"
 )
 
+// CSAFAdvisory wraps csaf.Advisory with pre-built lookup map for O(1) access.
 type CSAFAdvisory struct {
 	csaf.Advisory
+
+	// Pre-built map: ProductID -> *Product
+	productMap map[csaf.ProductID]*Product
 }
 
-func (a CSAFAdvisory) LookUpProduct(productID csaf.ProductID) (*Product, error) {
-	eb := oops.Code("lookup_error").With("product_id", productID)
-	rel := a.LookUpRelationship(productID)
-	if rel == nil { // Not supported
-		return nil, nil
+// NewCSAFAdvisory creates a new CSAFAdvisory with pre-built lookup map.
+func NewCSAFAdvisory(adv csaf.Advisory) CSAFAdvisory {
+	a := CSAFAdvisory{
+		Advisory:   adv,
+		productMap: make(map[csaf.ProductID]*Product),
+	}
+	a.buildProductMap()
+	return a
+}
+
+// buildProductMap pre-builds all product lookups by iterating over all relationships
+// and branches in the ProductTree, resolving each ProductID to a Product.
+//
+// Note on duplicate product IDs:
+//
+//	There might be multiple products with the same ProductID in the ProductTree.
+//	Based on our understanding, these duplicates should essentially represent the same product,
+//	so retrieving the first occurrence is sufficient for our purposes.
+//
+// e.g.
+//   - https://github.com/aquasecurity/vuln-list-redhat/blob/42df5998a5f20d1a1cb67978486fffd82e61c34e/csaf-vex/2004/cve-2004-0885.json#L272-L282
+//   - https://github.com/aquasecurity/vuln-list-redhat/blob/42df5998a5f20d1a1cb67978486fffd82e61c34e/csaf-vex/2004/cve-2004-0885.json#L470-L480
+func (a *CSAFAdvisory) buildProductMap() {
+	pt := lo.FromPtr(a.ProductTree)
+
+	// Step 1: Build relationship map
+	relationshipMap := make(map[csaf.ProductID]*csaf.Relationship)
+	if pt.RelationShips != nil {
+		for _, rel := range *pt.RelationShips {
+			if rel == nil {
+				continue
+			}
+			fpn := lo.FromPtr(rel.FullProductName)
+			if id := lo.FromPtr(fpn.ProductID); id != "" {
+				relationshipMap[id] = rel
+			}
+		}
 	}
 
-	// Look up product_reference
+	// Step 2: Build product helper map (ProductID -> ProductIdentificationHelper)
+	productHelperMap := make(map[csaf.ProductID]*csaf.ProductIdentificationHelper)
+
+	// From full product names
+	if pt.FullProductNames != nil {
+		for _, fpn := range *pt.FullProductNames {
+			if fpn == nil {
+				continue
+			}
+			if id := lo.FromPtr(fpn.ProductID); id != "" {
+				if _, exists := productHelperMap[id]; !exists {
+					productHelperMap[id] = fpn.ProductIdentificationHelper
+				}
+			}
+		}
+	}
+
+	// From branches (recursively)
+	var walkBranches func(csaf.Branches)
+	walkBranches = func(branches csaf.Branches) {
+		for _, b := range branches {
+			if b == nil {
+				continue
+			}
+			if fpn := b.Product; fpn != nil {
+				if id := lo.FromPtr(fpn.ProductID); id != "" {
+					if _, exists := productHelperMap[id]; !exists {
+						productHelperMap[id] = fpn.ProductIdentificationHelper
+					}
+				}
+			}
+			walkBranches(b.Branches)
+		}
+	}
+	walkBranches(pt.Branches)
+
+	// Step 3: Build final product map by resolving all relationships
+	for productID, rel := range relationshipMap {
+		product := a.resolveProduct(productID, rel, relationshipMap, productHelperMap)
+		if product != nil {
+			a.productMap[productID] = product
+		}
+	}
+}
+
+// resolveProduct resolves a ProductID to a Product using the pre-built maps.
+func (a *CSAFAdvisory) resolveProduct(
+	productID csaf.ProductID,
+	rel *csaf.Relationship,
+	relationshipMap map[csaf.ProductID]*csaf.Relationship,
+	productHelperMap map[csaf.ProductID]*csaf.ProductIdentificationHelper,
+) *Product {
+	// Get PURL from product_reference
+	// According to the documentation, the product_version object should always include PURL.
+	// cf. https://redhatproductsecurity.github.io/security-data-guidelines/csaf-vex/
+	// However, there is a known discrepancy where some product_version objects lack a PURL.
+	// e.g. https://github.com/aquasecurity/vuln-list-redhat/blob/42df5998a5f20d1a1cb67978486fffd82e61c34e/csaf-vex/2016/cve-2016-3674.json#L330-L336
+	// In such cases, we generate a pseudo-PURL.
 	var purlString string
-	if pkg, err := a.LookUpProductReference(lo.FromPtr(rel.ProductReference)); err != nil {
-		return nil, eb.Wrap(err)
-	} else if pkg == nil || pkg.PURL == nil {
-		// According to the documentation, the product_version object should always include PURL.
-		// cf. https://redhatproductsecurity.github.io/security-data-guidelines/csaf-vex/
-		// However, there is a known discrepancy where some product_version objects lack a PURL.
-		// e.g. https://github.com/aquasecurity/vuln-list-redhat/blob/42df5998a5f20d1a1cb67978486fffd82e61c34e/csaf-vex/2016/cve-2016-3674.json#L330-L336
-		// In such cases, we generate a pseudo-PURL.
-		purlString = "pkg:rpm/redhat/" + string(productID)
+	productRef := lo.FromPtr(rel.ProductReference)
+	if helper := productHelperMap[productRef]; helper != nil && helper.PURL != nil {
+		purlString = string(*helper.PURL)
 	} else {
-		purlString = string(*pkg.PURL)
+		purlString = "pkg:rpm/redhat/" + string(productID)
 	}
 
 	purl, err := packageurl.FromString(purlString)
 	if err != nil {
-		return nil, eb.Wrapf(err, "invalid purl")
+		return nil
 	}
 
-	// Look up relates_to_product_reference
-	cpe, module, err := a.LookUpRelatesToProductReference(lo.FromPtr(rel.RelatesToProductReference))
-	if err != nil {
-		return nil, eb.Wrap(err)
-	}
+	// Get CPE and module from relates_to_product_reference
+	cpe, module := a.resolveRelatesToProductReference(
+		lo.FromPtr(rel.RelatesToProductReference),
+		relationshipMap,
+		productHelperMap,
+	)
 
 	// Extract module information from the "rpmmod" qualifier if present.
 	// Red Hat changed the PURL format from "pkg:rpmmod/redhat/..." to "pkg:rpm/redhat/...?rpmmod=..."
@@ -65,38 +152,29 @@ func (a CSAFAdvisory) LookUpProduct(productID csaf.ProductID) (*Product, error) 
 		Module:  module,
 		Package: purl,
 		Stream:  cpe,
-	}, nil
+	}
 }
 
-func (a CSAFAdvisory) LookUpProductReference(productID csaf.ProductID) (*csaf.ProductIdentificationHelper, error) {
-	eb := oops.Tags("product_reference").With("product_reference", productID)
-	productReference, found := a.findProductIdentificationHelper(productID, a.ProductTree)
-	if !found {
-		return nil, eb.Errorf("product reference not found")
+// resolveRelatesToProductReference resolves the CPE and module for a relates_to_product_reference.
+func (a *CSAFAdvisory) resolveRelatesToProductReference(
+	productID csaf.ProductID,
+	relationshipMap map[csaf.ProductID]*csaf.Relationship,
+	productHelperMap map[csaf.ProductID]*csaf.ProductIdentificationHelper,
+) (csaf.CPE, string) {
+	// Check if the package is a module (has its own relationship)
+	if rel := relationshipMap[productID]; rel != nil {
+		return a.resolveModule(rel, relationshipMap, productHelperMap)
 	}
-	return productReference, nil
+
+	// Otherwise, get CPE directly from product helper
+	if helper := productHelperMap[productID]; helper != nil && helper.CPE != nil {
+		return *helper.CPE, ""
+	}
+
+	return "", ""
 }
 
-func (a CSAFAdvisory) LookUpRelatesToProductReference(productID csaf.ProductID) (csaf.CPE, string, error) {
-	eb := oops.Tags("relates_to_product_reference").With("relates_to_product_reference", productID)
-
-	// Check if the package is a module
-	rel := a.LookUpRelationship(productID)
-	if rel != nil {
-		return a.LookUpModule(rel)
-	}
-
-	product, err := a.LookUpProductReference(productID)
-	if err != nil {
-		return "", "", eb.Wrap(err)
-	} else if product.CPE == nil {
-		return "", "", eb.Errorf("stream CPE not found")
-	}
-
-	return *product.CPE, "", nil
-}
-
-// LookUpModule looks up the module information for a given relationship.
+// resolveModule resolves module information for a modular package.
 // e.g.
 //
 //	{
@@ -107,95 +185,45 @@ func (a CSAFAdvisory) LookUpRelatesToProductReference(productID csaf.ProductID) 
 //	  },
 //	  "product_reference": "httpd:2.4:8070020230131172653:bd1311ed",
 //	  "relates_to_product_reference": "AppStream-8.7.0.Z.MAIN"
-//	 }
-func (a CSAFAdvisory) LookUpModule(relationship *csaf.Relationship) (csaf.CPE, string, error) {
-	eb := oops.Tags("lookup_module")
-	if lo.FromPtr(relationship.ProductReference) == "" {
-		return "", "", eb.Wrapf(errUnexpectedRecord, "empty product reference")
+//	}
+func (a *CSAFAdvisory) resolveModule(
+	relationship *csaf.Relationship,
+	relationshipMap map[csaf.ProductID]*csaf.Relationship,
+	productHelperMap map[csaf.ProductID]*csaf.ProductIdentificationHelper,
+) (csaf.CPE, string) {
+	productRef := lo.FromPtr(relationship.ProductReference)
+	if productRef == "" {
+		return "", ""
 	}
-	eb = eb.With("product_reference", *relationship.ProductReference)
 
 	// Look up the module stream
-	moduleRef, err := a.LookUpProductReference(*relationship.ProductReference)
-	if err != nil {
-		return "", "", eb.Wrap(err)
-	} else if moduleRef == nil || moduleRef.PURL == nil {
-		return "", "", eb.Wrapf(errUnexpectedRecord, "module purl not found")
-	}
-	eb = eb.With("module_purl", *moduleRef.PURL)
-
-	purl, err := packageurl.FromString(string(*moduleRef.PURL))
-	if err != nil {
-		return "", "", eb.Wrapf(err, "invalid purl")
-	} else if purl.Type != "rpmmod" { // Must be "rpmmod" for modular streams
-		return "", "", eb.With("purl_type", purl.Type).Wrapf(errUnexpectedRecord, "unexpected purl type")
+	moduleHelper := productHelperMap[productRef]
+	if moduleHelper == nil || moduleHelper.PURL == nil {
+		return "", ""
 	}
 
-	ver, _, _ := strings.Cut(purl.Version, ":") // e.g. "2.4:8070020230131172653:bd1311ed" => "2.4"
+	purl, err := packageurl.FromString(string(*moduleHelper.PURL))
+	if err != nil {
+		return "", ""
+	}
+	if purl.Type != "rpmmod" {
+		return "", ""
+	}
+
+	ver, _, _ := strings.Cut(purl.Version, ":")
 	module := fmt.Sprintf("%s:%s", purl.Name, ver)
-	eb = eb.With("module", module)
 
-	// Look up the product stream
-	cpe, _, err := a.LookUpRelatesToProductReference(lo.FromPtr(relationship.RelatesToProductReference))
-	if err != nil {
-		return "", "", eb.Wrap(err)
-	}
+	// Look up the product stream (recursively)
+	cpe, _ := a.resolveRelatesToProductReference(
+		lo.FromPtr(relationship.RelatesToProductReference),
+		relationshipMap,
+		productHelperMap,
+	)
 
-	return cpe, module, nil
+	return cpe, module
 }
 
-func (a CSAFAdvisory) LookUpRelationship(productID csaf.ProductID) *csaf.Relationship {
-	for _, rel := range a.Relationships() {
-		fpn := lo.FromPtr(rel.FullProductName)
-		if lo.FromPtr(fpn.ProductID) == productID {
-			return rel
-		}
-	}
-	return nil
-}
-
-func (a CSAFAdvisory) Relationships() []*csaf.Relationship {
-	pt := lo.FromPtr(a.ProductTree)
-	return lo.Filter(lo.FromPtr(pt.RelationShips), func(r *csaf.Relationship, _ int) bool {
-		return r != nil
-	})
-}
-
-// findProductIdentificationHelper returns the first ProductIdentificationHelper matching a given ProductID
-// by iterating over all full product names and branches recursively available in the ProductTree.
-//
-// Note on duplicate product ids:
-//
-//	There might be multiple products with the same ProductID in the ProductTree.
-//	Based on our understanding, these duplicates should essentially represent the same product,
-//	so retrieving the first occurrence is sufficient for our purposes.
-//
-// e.g.
-//   - https://github.com/aquasecurity/vuln-list-redhat/blob/42df5998a5f20d1a1cb67978486fffd82e61c34e/csaf-vex/2004/cve-2004-0885.json#L272-L282
-//   - https://github.com/aquasecurity/vuln-list-redhat/blob/42df5998a5f20d1a1cb67978486fffd82e61c34e/csaf-vex/2004/cve-2004-0885.json#L470-L480
-func (a CSAFAdvisory) findProductIdentificationHelper(id csaf.ProductID, pt *csaf.ProductTree) (*csaf.ProductIdentificationHelper, bool) {
-	// Iterate over all full product names
-	if fpns := pt.FullProductNames; fpns != nil {
-		for _, fpn := range *fpns {
-			if fpn != nil && lo.FromPtr(fpn.ProductID) == id {
-				return fpn.ProductIdentificationHelper, true
-			}
-		}
-	}
-
-	// Iterate over branches recursively
-	var recBranch func(csaf.Branches) (*csaf.ProductIdentificationHelper, bool)
-	recBranch = func(branches csaf.Branches) (*csaf.ProductIdentificationHelper, bool) {
-		for _, b := range branches {
-			if fpn := b.Product; fpn != nil && lo.FromPtr(fpn.ProductID) == id {
-				return fpn.ProductIdentificationHelper, true
-			}
-			if h, found := recBranch(b.Branches); found {
-				return h, true
-			}
-		}
-		return nil, false
-	}
-
-	return recBranch(pt.Branches)
+// LookUpProduct returns the pre-computed Product for a given ProductID.
+func (a CSAFAdvisory) LookUpProduct(productID csaf.ProductID) (*Product, error) {
+	return a.productMap[productID], nil
 }
