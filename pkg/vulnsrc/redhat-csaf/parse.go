@@ -4,7 +4,6 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"iter"
-	"log"
 	"maps"
 	"os"
 	"path"
@@ -16,6 +15,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/samber/oops"
 
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/set"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
@@ -52,7 +52,7 @@ func NewParser() Parser {
 func (p *Parser) Parse(dir string) error {
 	// Load advisories from the cache for debugging
 	if err := p.loadAdvisories(); err == nil {
-		log.Println("Loaded CSAF VEX data from the cache")
+		log.Info("Loaded CSAF VEX data from the cache")
 		return nil
 	}
 
@@ -291,8 +291,10 @@ func (p *Parser) parseVulnerability(adv CSAFAdvisory, vuln *csaf.Vulnerability) 
 			// Based on investigation, unpatched binary packages should not have arch in PURL.
 			// If this happens, it may indicate a format change that needs attention.
 			if status != types.StatusFixed && arch != "" {
-				log.Printf("WARN: unexpected arch %q for unpatched vulnerability %s, package %s",
-					arch, cveID, product.Package.Name)
+				log.Warn("Unexpected arch for unpatched vulnerability",
+					log.String("arch", arch),
+					log.String("cve_id", string(cveID)),
+					log.String("package", product.Package.Name))
 			}
 
 			pkg := Package{

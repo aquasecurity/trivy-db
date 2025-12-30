@@ -6,6 +6,8 @@ import (
 	"github.com/gocsaf/csaf/v3/csaf"
 	"github.com/package-url/packageurl-go"
 	"github.com/samber/lo"
+
+	"github.com/aquasecurity/trivy-db/pkg/log"
 )
 
 // CSAFAdvisory wraps csaf.Advisory with pre-built lookup map for O(1) access.
@@ -114,6 +116,7 @@ func (a *CSAFAdvisory) resolveProduct(
 
 	purl, err := packageurl.FromString(purlString)
 	if err != nil {
+		log.Warn("Failed to parse PURL", log.String("purl", purlString), log.Err(err))
 		return nil
 	}
 

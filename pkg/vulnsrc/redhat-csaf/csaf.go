@@ -2,7 +2,6 @@ package redhatcsaf
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
 
 	"github.com/samber/oops"
@@ -10,6 +9,7 @@ import (
 	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
@@ -64,21 +64,21 @@ func (vs VulnSrc) Update(dir string) error {
 func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 	eb := oops.In("redhat_csaf_vex")
 
-	log.Println("Parsing CSAF VEX...")
+	log.Info("Parsing CSAF VEX...")
 	vulnListDir := filepath.Join(dir, vulnListDir)
 	if err := vs.parser.Parse(vulnListDir); err != nil {
 		return eb.Wrapf(err, "failed to parse CSAF VEX")
 	}
-	log.Println("Parsed CSAF VEX")
+	log.Info("Parsed CSAF VEX")
 
 	cpeList := vs.parser.CPEList()
 
-	log.Println("Inserting mappings...")
+	log.Info("Inserting mappings...")
 	if err := vs.putMappings(tx, cpeList); err != nil {
 		return eb.Wrapf(err, "failed to put mappings")
 	}
 
-	log.Println("Inserting CSAF VEX...")
+	log.Info("Inserting CSAF VEX...")
 	bar := utils.NewProgressBar(vs.parser.AdvisoryNum())
 	for bkt, rawEntries := range vs.parser.Advisories() {
 		eb = eb.Tags("aggregate").With("module", bkt.Module).With("package", bkt.Name).

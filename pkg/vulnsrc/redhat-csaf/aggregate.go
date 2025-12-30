@@ -2,7 +2,6 @@ package redhatcsaf
 
 import (
 	"fmt"
-	"log"
 	"slices"
 	"sort"
 	"strings"
@@ -11,6 +10,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/samber/oops"
 
+	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/set"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 )
@@ -201,14 +201,14 @@ func decodeCVEs(encoded string) []CVEEntry {
 		// Split ID and severity
 		id, severityStr, found := strings.Cut(entry, ":")
 		if !found {
-			log.Printf("Invalid encoded string: %q", entry)
+			log.Warn("Invalid encoded string", log.String("entry", entry))
 			return CVEEntry{}, false
 		}
 
 		// Parse severity
 		severity, err := types.NewSeverity(severityStr)
 		if err != nil {
-			log.Printf("Failed to parse severity for CVE %q: %v", id, err)
+			log.Warn("Failed to parse severity", log.String("cve_id", id), log.Err(err))
 			return CVEEntry{}, false
 		}
 
