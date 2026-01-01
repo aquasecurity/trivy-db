@@ -11,7 +11,7 @@ require (
 	github.com/briandowns/spinner v1.23.0
 	github.com/cheggaaa/pb/v3 v3.1.7
 	github.com/gocsaf/csaf/v3 v3.1.1
-	github.com/josephburnett/jd/v2 v2.3.0
+	github.com/josephburnett/jd/v2 v2.3.1
 	github.com/knqyf263/go-deb-version v0.0.0-20190517075300-09fca494f03d
 	github.com/knqyf263/go-rpm-version v0.0.0-20170716094938-74609b86c936
 	github.com/masahiro331/go-mvn-version v0.0.0-20250131095131-f4974fa13b8a
