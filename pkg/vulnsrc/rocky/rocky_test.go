@@ -357,9 +357,83 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
-			name:       "skip advisories for modular package",
-			dir:        filepath.Join("testdata", "modular"),
-			wantValues: []vulnsrctest.WantValues{},
+			name: "happy path with modular packages",
+			dir:  filepath.Join("testdata", "modular"),
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{
+						"data-source",
+						"rocky 8",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.Rocky,
+						Name: "Rocky Linux updateinfo",
+						URL:  "https://download.rockylinux.org/pub/rocky/",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2020-25097",
+						"rocky 8",
+						"ruby:2.6::rubygem-abrt",
+					},
+					Value: types.Advisories{
+						FixedVersion: "0.3.0-4.module+el8.5.0+738+032c9c02",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "0.3.0-4.module+el8.5.0+738+032c9c02",
+								Arches: []string{
+									"noarch",
+								},
+								VendorIDs: []string{"RLSA-2021:1979"},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2020-25097",
+						"rocky 8",
+						"ruby:2.6::rubygem-bson",
+					},
+					Value: types.Advisories{
+						FixedVersion: "4.3.0-2.module+el8.4.0+592+03ff458a",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "4.3.0-2.module+el8.4.0+592+03ff458a",
+								Arches: []string{
+									"x86_64",
+								},
+								VendorIDs: []string{"RLSA-2021:1979"},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2020-25097",
+						string(vulnerability.Rocky),
+					},
+					Value: types.VulnerabilityDetail{
+						Severity: types.SeverityHigh,
+						References: []string{
+							"https://access.redhat.com/hydra/rest/securitydata/cve/CVE-2020-25097.json",
+						},
+						Title:       "Important: ruby:2.6 security update",
+						Description: "For more information visit https://errata.rockylinux.org/RLSA-2021:1979",
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2020-25097",
+					},
+					Value: map[string]any{},
+				},
+			},
 		},
 		{
 			name:    "sad path",

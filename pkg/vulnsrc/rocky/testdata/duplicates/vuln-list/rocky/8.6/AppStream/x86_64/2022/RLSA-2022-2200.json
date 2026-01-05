@@ -9,24 +9,28 @@
   },
   "severity": "Important",
   "description": "For more information visit https://errata.rockylinux.org/RLSA-2022:2200",
-  "packages": [
+  "collections": [
     {
-      "name": "aspnetcore-runtime-6.0",
-      "epoch": "0",
-      "version": "6.0.5",
-      "release": "1.el8_6",
-      "arch": "x86_64",
-      "src": "dotnet6.0-6.0.105-1.el8_6.src.rpm",
-      "filename": "aspnetcore-runtime-6.0-6.0.5-1.el8_6.x86_64.rpm"
-    },
-    {
-      "name": "aspnetcore-runtime-6.0",
-      "epoch": "0",
-      "version": "6.0.5",
-      "release": "1.el8_6",
-      "arch": "x86_64",
-      "src": "dotnet6.0-6.0.105-1.el8_6.src.rpm",
-      "filename": "aspnetcore-runtime-6.0-6.0.5-1.el8_6.x86_64.rpm"
+      "packages": [
+        {
+          "name": "aspnetcore-runtime-6.0",
+          "epoch": "0",
+          "version": "6.0.5",
+          "release": "1.el8_6",
+          "arch": "x86_64",
+          "src": "dotnet6.0-6.0.105-1.el8_6.src.rpm",
+          "filename": "aspnetcore-runtime-6.0-6.0.5-1.el8_6.x86_64.rpm"
+        },
+        {
+          "name": "aspnetcore-runtime-6.0",
+          "epoch": "0",
+          "version": "6.0.5",
+          "release": "1.el8_6",
+          "arch": "x86_64",
+          "src": "dotnet6.0-6.0.105-1.el8_6.src.rpm",
+          "filename": "aspnetcore-runtime-6.0-6.0.5-1.el8_6.x86_64.rpm"
+        }
+      ]
     }
   ],
   "references": [
