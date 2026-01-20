@@ -14,7 +14,7 @@ type RLSA struct {
 
 // Collection represents a package collection with optional module info
 type Collection struct {
-	Module   *Module   `json:"module,omitempty"`
+	Module   Module    `json:"module,omitempty"`
 	Packages []Package `json:"packages,omitempty"`
 }
 

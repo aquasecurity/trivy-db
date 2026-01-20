@@ -165,7 +165,7 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 			for _, collection := range erratum.Collections {
 				// Construct module prefix if exists
 				var modulePrefix string
-				if collection.Module != nil && collection.Module.Name != "" && collection.Module.Stream != "" {
+				if collection.Module.Name != "" && collection.Module.Stream != "" {
 					modulePrefix = fmt.Sprintf("%s:%s::", collection.Module.Name, collection.Module.Stream)
 				}
 				for _, pkg := range collection.Packages {
