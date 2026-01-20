@@ -163,12 +163,14 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 				input = in
 			}
 			for _, collection := range erratum.Collections {
+				// Construct module prefix if exists
+				var modulePrefix string
+				if collection.Module != nil && collection.Module.Name != "" && collection.Module.Stream != "" {
+					modulePrefix = fmt.Sprintf("%s:%s::", collection.Module.Name, collection.Module.Stream)
+				}
 				for _, pkg := range collection.Packages {
-					pkgName := pkg.Name
-					// For modular packages, use module:stream::pkgName format
-					if collection.Module != nil && collection.Module.Name != "" && collection.Module.Stream != "" {
-						pkgName = fmt.Sprintf("%s:%s::%s", collection.Module.Name, collection.Module.Stream, pkg.Name)
-					}
+					// Add module prefix if exists
+					pkgName := modulePrefix + pkg.Name
 
 					entry := types.Advisory{
 						FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
