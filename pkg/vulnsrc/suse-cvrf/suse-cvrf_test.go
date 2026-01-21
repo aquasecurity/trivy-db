@@ -268,7 +268,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{
-						"advisory-detail", "SUSE-SU-2025-20377-1", "SUSE Linux Enterprise Micro 6.0", "docker",
+						"advisory-detail", "SUSE-SU-2025:20377-1", "SUSE Linux Enterprise Micro 6.0", "docker",
 					},
 
 					Value: types.Advisory{
@@ -277,14 +277,14 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{
-						"advisory-detail", "SUSE-SU-2025-20377-1", "SUSE Linux Enterprise Micro 6.0", "docker-buildx",
+						"advisory-detail", "SUSE-SU-2025:20377-1", "SUSE Linux Enterprise Micro 6.0", "docker-buildx",
 					},
 					Value: types.Advisory{
 						FixedVersion: "0.22.0-3.1",
 					},
 				},
 				{
-					Key: []string{"vulnerability-detail", "SUSE-SU-2025-20377-1", "suse-cvrf"},
+					Key: []string{"vulnerability-detail", "SUSE-SU-2025:20377-1", "suse-cvrf"},
 					Value: types.VulnerabilityDetail{
 						Title:       "Security update for docker",
 						Description: "This update for docker fixes the following issues:\n\nAlways clear SUSEConnect suse_* secrets when starting containers regardless\nof whether the daemon was built with SUSEConnect support. Not doing this\ncauses containers from SUSEConnect-enabled daemons to fail to start when\nrunning with SUSEConnect-disabled (i.e. upstream) daemons. (bsc#1244035)\n",
@@ -300,7 +300,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key:   []string{"vulnerability-id", "SUSE-SU-2025-20377-1"},
+					Key:   []string{"vulnerability-id", "SUSE-SU-2025:20377-1"},
 					Value: map[string]any{},
 				},
 			},
