@@ -2,7 +2,6 @@ package rocky
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"path/filepath"
 	"slices"
@@ -162,51 +161,47 @@ func (vs *VulnSrc) commit(tx *bolt.Tx, platformName string, errata []RLSA) error
 			if in, ok := savedInputs[cveID]; ok {
 				input = in
 			}
-			for _, collection := range erratum.Collections {
-				// Construct module prefix if exists
-				var modulePrefix string
-				if collection.Module.Name != "" && collection.Module.Stream != "" {
-					modulePrefix = fmt.Sprintf("%s:%s::", collection.Module.Name, collection.Module.Stream)
+			for _, pkg := range erratum.Packages {
+				// Skip the modular packages until the following bug is fixed.
+				// https://forums.rockylinux.org/t/some-errata-missing-in-comparison-with-rhel-and-almalinux/3843/8
+				if strings.Contains(pkg.Release, ".module+el") {
+					continue
 				}
-				for _, pkg := range collection.Packages {
-					// Add module prefix if exists
-					pkgName := modulePrefix + pkg.Name
 
-					entry := types.Advisory{
-						FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
-						Arches:       []string{pkg.Arch},
-						VendorIDs:    []string{erratum.ID},
+				entry := types.Advisory{
+					FixedVersion: utils.ConstructVersion(pkg.Epoch, pkg.Version, pkg.Release),
+					Arches:       []string{pkg.Arch},
+					VendorIDs:    []string{erratum.ID},
+				}
+
+				// if the advisory for this package and CVE have been kept - just add the new architecture
+				if adv, ok := input.Advisories[pkg.Name]; ok {
+					// update `fixedVersion` if `fixedVersion` for `x86_64` was not previously saved
+					adv.FixedVersion = fixedVersion(adv.FixedVersion, entry.FixedVersion, pkg.Arch)
+
+					old, i, found := lo.FindIndexOf(adv.Entries, func(adv types.Advisory) bool {
+						return adv.FixedVersion == entry.FixedVersion
+					})
+
+					// If the advisory with the same fixed version and RLSA-ID is present - just add the new architecture
+					if found {
+						if !slices.Contains(old.Arches, pkg.Arch) {
+							adv.Entries[i].Arches = append(old.Arches, pkg.Arch)
+						}
+						if !slices.Contains(old.VendorIDs, erratum.ID) {
+							adv.Entries[i].VendorIDs = append(old.VendorIDs, erratum.ID)
+						}
+						input.Advisories[pkg.Name] = adv
+					} else if !found {
+						adv.Entries = append(adv.Entries, entry)
+						input.Advisories[pkg.Name] = adv
 					}
-
-					// if the advisory for this package and CVE have been kept - just add the new architecture
-					if adv, ok := input.Advisories[pkgName]; ok {
-						// update `fixedVersion` if `fixedVersion` for `x86_64` was not previously saved
-						adv.FixedVersion = fixedVersion(adv.FixedVersion, entry.FixedVersion, pkg.Arch)
-
-						old, i, found := lo.FindIndexOf(adv.Entries, func(adv types.Advisory) bool {
-							return adv.FixedVersion == entry.FixedVersion
-						})
-
-						// If the advisory with the same fixed version and RLSA-ID is present - just add the new architecture
-						if found {
-							if !slices.Contains(old.Arches, pkg.Arch) {
-								adv.Entries[i].Arches = append(old.Arches, pkg.Arch)
-							}
-							if !slices.Contains(old.VendorIDs, erratum.ID) {
-								adv.Entries[i].VendorIDs = append(old.VendorIDs, erratum.ID)
-							}
-							input.Advisories[pkgName] = adv
-						} else {
-							adv.Entries = append(adv.Entries, entry)
-							input.Advisories[pkgName] = adv
-						}
-					} else {
-						input.Advisories[pkgName] = types.Advisories{
-							// will save `0.0.0` version for non-`x86_64` arch
-							// to avoid false positives when using old Trivy with new database
-							FixedVersion: fixedVersion("0.0.0", entry.FixedVersion, pkg.Arch), // For backward compatibility
-							Entries:      []types.Advisory{entry},
-						}
+				} else {
+					input.Advisories[pkg.Name] = types.Advisories{
+						// will save `0.0.0` version for non-`x86_64` arch
+						// to avoid false positives when using old Trivy with new database
+						FixedVersion: fixedVersion("0.0.0", entry.FixedVersion, pkg.Arch), // For backward compatibility
+						Entries:      []types.Advisory{entry},
 					}
 				}
 			}

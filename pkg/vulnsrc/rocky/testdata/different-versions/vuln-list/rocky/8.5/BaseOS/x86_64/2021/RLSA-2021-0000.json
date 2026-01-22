@@ -9,26 +9,22 @@
   },
   "severity": "Important",
   "description": "For more information visit https://errata.rockylinux.org/RLSA-2021:1989",
-  "collections": [
+  "packages": [
     {
-      "packages": [
-        {
-          "name": "bind-export-devel",
-          "epoch": "32",
-          "version": "7.11.26",
-          "release": "4.el8_4",
-          "arch": "x86_64",
-          "filename": "bind-export-devel-7.11.26-4.el8_4.x86_64.rpm"
-        },
-        {
-          "name": "bind-export-devel",
-          "epoch": "32",
-          "version": "8.11.26",
-          "release": "4.el8_4",
-          "arch": "i686",
-          "filename": "bind-export-devel-8.11.26-4.el8_4.i686.rpm"
-        }
-      ]
+      "name": "bind-export-devel",
+      "epoch": "32",
+      "version": "7.11.26",
+      "release": "4.el8_4",
+      "arch": "x86_64",
+      "filename": "bind-export-devel-7.11.26-4.el8_4.x86_64.rpm"
+    },
+    {
+      "name": "bind-export-devel",
+      "epoch": "32",
+      "version": "8.11.26",
+      "release": "4.el8_4",
+      "arch": "i686",
+      "filename": "bind-export-devel-8.11.26-4.el8_4.i686.rpm"
     }
   ],
   "references": [
