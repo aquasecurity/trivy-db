@@ -89,8 +89,7 @@
             "SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0.2.1-1.7.1"
           ]
         }
-      ],
-      "CVSSScoreSets": {}
+      ]
     },
     {
       "CVE": "CVE-2018-16874",
@@ -126,8 +125,7 @@
             "SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0.2.1-1.7.1"
           ]
         }
-      ],
-      "CVSSScoreSets": {}
+      ]
     },
     {
       "CVE": "CVE-2018-16875",
@@ -163,8 +161,7 @@
             "SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0.2.1-1.7.1"
           ]
         }
-      ],
-      "CVSSScoreSets": {}
+      ]
     }
   ]
 }
