@@ -1,6 +1,6 @@
 {
   "id": "RLSA-2021:1979",
-  "title": "Important: squid:4 security update",
+  "title": "Important: ruby:2.6 security update",
   "issued": {
     "date": "2021-07-22 03:16:49"
   },
@@ -9,22 +9,33 @@
   },
   "severity": "Important",
   "description": "For more information visit https://errata.rockylinux.org/RLSA-2021:1979",
-  "packages": [
+  "collections": [
     {
-      "name": "libecap",
-      "epoch": "0",
-      "version": "1.0.1",
-      "release": "2.module+el8.4.0+404+316a0dc5",
-      "arch": "x86_64",
-      "filename": "libecap-1.0.1-2.module+el8.4.0+404+316a0dc5.x86_64.rpm"
-    },
-    {
-      "name": "libecap-devel",
-      "epoch": "0",
-      "version": "1.0.1",
-      "release": "2.module+el8.4.0+404+316a0dc5",
-      "arch": "x86_64",
-      "filename": "libecap-devel-1.0.1-2.module+el8.4.0+404+316a0dc5.x86_64.rpm"
+      "module": {
+        "name": "ruby",
+        "stream": "2.6",
+        "version": "8060020220628150300",
+        "context": "d63f516d",
+        "arch": "x86_64"
+      },
+      "packages": [
+        {
+          "name": "rubygem-abrt",
+          "epoch": "0",
+          "version": "0.3.0",
+          "release": "4.module+el8.5.0+738+032c9c02",
+          "arch": "noarch",
+          "filename": "rubygem-abrt-0.3.0-4.module+el8.5.0+738+032c9c02.noarch.rpm"
+        },
+        {
+          "name": "rubygem-bson",
+          "epoch": "0",
+          "version": "4.3.0",
+          "release": "2.module+el8.4.0+592+03ff458a",
+          "arch": "x86_64",
+          "filename": "rubygem-bson-4.3.0-2.module+el8.4.0+592+03ff458a.x86_64.rpm"
+        }
+      ]
     }
   ],
   "references": [

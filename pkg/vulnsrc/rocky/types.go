@@ -2,14 +2,29 @@ package rocky
 
 // RLSA has detailed data of RLSA
 type RLSA struct {
-	ID          string      `json:"id,omitempty"`
-	Title       string      `json:"title,omitempty"`
-	Severity    string      `json:"severity,omitempty"`
-	Description string      `json:"description,omitempty"`
-	Packages    []Package   `json:"packages,omitempty"`
-	References  []Reference `json:"references,omitempty"`
-	CveIDs      []string    `json:"cveids,omitempty"`
-	IssuedDate  Date        `json:"issued,omitempty"`
+	ID          string       `json:"id,omitempty"`
+	Title       string       `json:"title,omitempty"`
+	Severity    string       `json:"severity,omitempty"`
+	Description string       `json:"description,omitempty"`
+	Collections []Collection `json:"collections,omitempty"`
+	References  []Reference  `json:"references,omitempty"`
+	CveIDs      []string     `json:"cveids,omitempty"`
+	IssuedDate  Date         `json:"issued,omitempty"`
+}
+
+// Collection represents a package collection with optional module info
+type Collection struct {
+	Module   Module    `json:"module,omitempty"`
+	Packages []Package `json:"packages,omitempty"`
+}
+
+// Module has module information for modular packages
+type Module struct {
+	Name    string `json:"name,omitempty"`
+	Stream  string `json:"stream,omitempty"`
+	Version string `json:"version,omitempty"`
+	Context string `json:"context,omitempty"`
+	Arch    string `json:"arch,omitempty"`
 }
 
 // Reference has reference information
