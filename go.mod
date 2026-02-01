@@ -17,8 +17,8 @@ require (
 	github.com/masahiro331/go-mvn-version v0.0.0-20250131095131-f4974fa13b8a
 	github.com/package-url/packageurl-go v0.1.3
 	github.com/pandatix/go-cvss v0.6.2
-	github.com/samber/lo v1.50.0
-	github.com/samber/oops v1.18.1
+	github.com/samber/lo v1.52.0
+	github.com/samber/oops v1.21.0
 	github.com/stretchr/testify v1.11.1
 	github.com/urfave/cli v1.22.16
 	go.etcd.io/bbolt v1.4.3
