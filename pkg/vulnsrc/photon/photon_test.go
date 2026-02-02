@@ -27,7 +27,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.DataSource{
 						ID:   vulnerability.Photon,
 						Name: "Photon OS CVE metadata",
-						URL:  "https://packages.vmware.com/photon/photon_cve_metadata/",
+						URL:  "https://packages.broadcom.com/photon/photon_cve_metadata/",
 					},
 				},
 				{
