@@ -32,9 +32,9 @@ var (
 	moduleRegexp = regexp.MustCompile(`Module\s+(.*)\s+is enabled`)
 
 	source = types.DataSource{
-		ID:   vulnerability.RedHatOVAL,
-		Name: "Red Hat OVAL v2",
-		URL:  "https://www.redhat.com/security/data/oval/v2/",
+		ID:   vulnerability.RedHat,
+		Name: "Red Hat",
+		URL:  "https://access.redhat.com/security/cve/",
 	}
 )
 
