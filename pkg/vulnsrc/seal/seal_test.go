@@ -145,6 +145,186 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: map[string]any{},
 				},
+				{
+					Key: []string{
+						"data-source",
+						"seal maven::Seal Security Database",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.Seal,
+						Name: "Seal Security Database",
+						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2024-12345",
+						"seal maven::Seal Security Database",
+						"seal.sp1.org.apache.logging.log4j:log4j-core",
+					},
+					Value: types.Advisory{
+						PatchedVersions: []string{
+							"2.17.0+sp1",
+						},
+						VulnerableVersions: []string{
+							">=2.17.0, <2.17.0+sp1",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2024-12345",
+						"seal",
+					},
+					Value: types.VulnerabilityDetail{
+						LastModifiedDate: utils.MustTimeParse("2024-12-20T10:00:00.000000Z"),
+						PublishedDate:    utils.MustTimeParse("2024-12-15T00:00:00Z"),
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2024-12345",
+					},
+					Value: map[string]any{},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"seal pip::Seal Security Database",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.Seal,
+						Name: "Seal Security Database",
+						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2024-12346",
+						"seal pip::Seal Security Database",
+						"seal-requests",
+					},
+					Value: types.Advisory{
+						PatchedVersions: []string{
+							"2.31.0+sp1",
+						},
+						VulnerableVersions: []string{
+							">=2.31.0, <2.31.0+sp1",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2024-12346",
+						"seal",
+					},
+					Value: types.VulnerabilityDetail{
+						LastModifiedDate: utils.MustTimeParse("2024-12-21T11:00:00.000000Z"),
+						PublishedDate:    utils.MustTimeParse("2024-12-16T00:00:00Z"),
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2024-12346",
+					},
+					Value: map[string]any{},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"seal npm::Seal Security Database",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.Seal,
+						Name: "Seal Security Database",
+						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2024-12347",
+						"seal npm::Seal Security Database",
+						"@seal-security/lodash",
+					},
+					Value: types.Advisory{
+						PatchedVersions: []string{
+							"4.17.21+sp1",
+						},
+						VulnerableVersions: []string{
+							">=4.17.21, <4.17.21+sp1",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2024-12347",
+						"seal",
+					},
+					Value: types.VulnerabilityDetail{
+						LastModifiedDate: utils.MustTimeParse("2024-12-22T12:00:00.000000Z"),
+						PublishedDate:    utils.MustTimeParse("2024-12-17T00:00:00Z"),
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2024-12347",
+					},
+					Value: map[string]any{},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"seal go::Seal Security Database",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.Seal,
+						Name: "Seal Security Database",
+						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2024-12348",
+						"seal go::Seal Security Database",
+						"sealsecurity.io/golang.org/x/crypto",
+					},
+					Value: types.Advisory{
+						PatchedVersions: []string{
+							"0.17.0+sp1",
+						},
+						VulnerableVersions: []string{
+							">=0.17.0, <0.17.0+sp1",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2024-12348",
+						"seal",
+					},
+					Value: types.VulnerabilityDetail{
+						LastModifiedDate: utils.MustTimeParse("2024-12-23T13:00:00.000000Z"),
+						PublishedDate:    utils.MustTimeParse("2024-12-18T00:00:00Z"),
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2024-12348",
+					},
+					Value: map[string]any{},
+				},
 			},
 		},
 		{
