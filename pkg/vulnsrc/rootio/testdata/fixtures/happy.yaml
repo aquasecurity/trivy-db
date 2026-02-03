@@ -79,3 +79,50 @@
               - "<643-r00072"
             PatchedVersions:
               - "643-r00072"
+- bucket: rocky 8
+  pairs:
+    - bucket: openssl
+      pairs:
+        - key: CVE-2023-0464
+          value:
+            FixedVersion: "1.1.1k-7.el8_6"
+            Arches:
+              - "amd64"
+              - "arm64"
+            VendorIDs:
+              - "RLSA-2023:1234"
+        - key: CVE-2024-13176
+          value:
+            FixedVersion: "3.0.7-1.el8"
+            Arches:
+              - "amd64"
+            VendorIDs:
+              - "RLSA-2024:5678"
+- bucket: root.io rocky 8
+  pairs:
+    - bucket: openssl
+      pairs:
+        - key: CVE-2023-0464
+          value:
+            VulnerableVersions:
+              - "<1.1.1k-7.el8_6.root.io.1"
+            PatchedVersions:
+              - "1.1.1k-7.el8_6.root.io.1"
+        - key: CVE-2024-13176
+          value:
+            VulnerableVersions:
+              - "<3.0.7-1.el8.root.io.2"
+            PatchedVersions:
+              - "3.0.7-1.el8.root.io.2"
+- bucket: rocky 9
+  pairs:
+    - bucket: openssl
+      pairs:
+        - key: CVE-2023-0464
+          value:
+            FixedVersion: ""
+            Status: 2
+        - key: CVE-2024-13176
+          value:
+            FixedVersion: ""
+            Status: 2
