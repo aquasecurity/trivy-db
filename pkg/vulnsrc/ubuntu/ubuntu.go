@@ -49,6 +49,7 @@ var (
 		"noble":    "24.04",
 		"oracular": "24.10",
 		"plucky":   "25.04",
+		"questing": "25.10",
 		// ESM versions:
 		"precise/esm": "12.04-ESM",
 		"trusty/esm":  "14.04-ESM",
