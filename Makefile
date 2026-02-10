@@ -5,6 +5,17 @@ CACHE_DIR ?= cache
 OUT_DIR ?= out
 ASSET_DIR ?= assets
 
+# Download and extract function - separates download from extraction for stability
+# Usage: $(call download_and_extract,URL,TARGET_DIR)
+# This approach prevents pipe failures when wget encounters recoverable errors
+define download_and_extract
+	@echo "Downloading $(1)..." && \
+	TMP_FILE=$$(mktemp) && \
+	wget -q $(1) -O "$$TMP_FILE" && \
+	tar xzf "$$TMP_FILE" -C $(2) --strip-components=1 && \
+	rm -f "$$TMP_FILE"
+endef
+
 GOPATH=$(shell go env GOPATH)
 GOBIN=$(GOPATH)/bin
 
@@ -65,16 +76,16 @@ trivy-db:
 .PHONY: db-fetch-langs
 db-fetch-langs:
 	mkdir -p $(CACHE_DIR)/{ruby-advisory-db,php-security-advisories,nodejs-security-wg,ghsa,cocoapods-specs,bitnami-vulndb,govulndb,k8s-cve-feed,julia}
-	wget -qO - https://github.com/rubysec/ruby-advisory-db/archive/master.tar.gz | tar xz -C $(CACHE_DIR)/ruby-advisory-db --strip-components=1
-	wget -qO - https://github.com/FriendsOfPHP/security-advisories/archive/master.tar.gz | tar xz -C $(CACHE_DIR)/php-security-advisories --strip-components=1
-	wget -qO - https://github.com/nodejs/security-wg/archive/main.tar.gz | tar xz -C $(CACHE_DIR)/nodejs-security-wg --strip-components=1
-	wget -qO - https://github.com/bitnami/vulndb/archive/main.tar.gz | tar xz -C $(CACHE_DIR)/bitnami-vulndb --strip-components=1
-	wget -qO - https://github.com/github/advisory-database/archive/refs/heads/main.tar.gz | tar xz -C $(CACHE_DIR)/ghsa --strip-components=1
-	wget -qO - https://github.com/golang/vulndb/archive/refs/heads/master.tar.gz | tar xz -C $(CACHE_DIR)/govulndb --strip-components=1
+	$(call download_and_extract,https://github.com/rubysec/ruby-advisory-db/archive/master.tar.gz,$(CACHE_DIR)/ruby-advisory-db)
+	$(call download_and_extract,https://github.com/FriendsOfPHP/security-advisories/archive/master.tar.gz,$(CACHE_DIR)/php-security-advisories)
+	$(call download_and_extract,https://github.com/nodejs/security-wg/archive/main.tar.gz,$(CACHE_DIR)/nodejs-security-wg)
+	$(call download_and_extract,https://github.com/bitnami/vulndb/archive/main.tar.gz,$(CACHE_DIR)/bitnami-vulndb)
+	$(call download_and_extract,https://github.com/github/advisory-database/archive/refs/heads/main.tar.gz,$(CACHE_DIR)/ghsa)
+	$(call download_and_extract,https://github.com/golang/vulndb/archive/refs/heads/master.tar.gz,$(CACHE_DIR)/govulndb)
 	## required to convert GHSA Swift repo links to Cocoapods package names
-	wget -qO - https://github.com/CocoaPods/Specs/archive/master.tar.gz | tar xz -C $(CACHE_DIR)/cocoapods-specs --strip-components=1
-	wget -qO - https://github.com/kubernetes-sigs/cve-feed-osv/archive/main.tar.gz | tar xz -C $(CACHE_DIR)/k8s-cve-feed --strip-components=1
-	wget -qO - https://github.com/JuliaLang/SecurityAdvisories.jl/archive/refs/heads/generated/osv.tar.gz | tar xz -C $(CACHE_DIR)/julia --strip-components=1
+	$(call download_and_extract,https://github.com/CocoaPods/Specs/archive/master.tar.gz,$(CACHE_DIR)/cocoapods-specs)
+	$(call download_and_extract,https://github.com/kubernetes-sigs/cve-feed-osv/archive/main.tar.gz,$(CACHE_DIR)/k8s-cve-feed)
+	$(call download_and_extract,https://github.com/JuliaLang/SecurityAdvisories.jl/archive/refs/heads/generated/osv.tar.gz,$(CACHE_DIR)/julia)
 
 .PHONY: db-build
 db-build: trivy-db
@@ -97,13 +108,9 @@ db-clean:
 
 .PHONY: db-fetch-vuln-list
 db-fetch-vuln-list:
-	mkdir -p $(CACHE_DIR)/vuln-list
-	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list/archive/main.tar.gz | tar xz -C $(CACHE_DIR)/vuln-list --strip-components=1
-	mkdir -p $(CACHE_DIR)/vuln-list-redhat
-	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-redhat/archive/main.tar.gz | tar xz -C $(CACHE_DIR)/vuln-list-redhat --strip-components=1
-	mkdir -p $(CACHE_DIR)/vuln-list-debian
-	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-debian/archive/main.tar.gz | tar xz -C $(CACHE_DIR)/vuln-list-debian --strip-components=1
-	mkdir -p $(CACHE_DIR)/vuln-list-nvd
-	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-nvd/archive/main.tar.gz | tar xz -C $(CACHE_DIR)/vuln-list-nvd --strip-components=1
-	mkdir -p $(CACHE_DIR)/vuln-list-aqua
-	wget -qO - https://github.com/$(REPO_OWNER)/vuln-list-aqua/archive/main.tar.gz | tar xz -C $(CACHE_DIR)/vuln-list-aqua --strip-components=1
+	mkdir -p $(CACHE_DIR)/{vuln-list,vuln-list-redhat,vuln-list-debian,vuln-list-nvd,vuln-list-aqua}
+	$(call download_and_extract,https://github.com/$(REPO_OWNER)/vuln-list/archive/main.tar.gz,$(CACHE_DIR)/vuln-list)
+	$(call download_and_extract,https://github.com/$(REPO_OWNER)/vuln-list-redhat/archive/main.tar.gz,$(CACHE_DIR)/vuln-list-redhat)
+	$(call download_and_extract,https://github.com/$(REPO_OWNER)/vuln-list-debian/archive/main.tar.gz,$(CACHE_DIR)/vuln-list-debian)
+	$(call download_and_extract,https://github.com/$(REPO_OWNER)/vuln-list-nvd/archive/main.tar.gz,$(CACHE_DIR)/vuln-list-nvd)
+	$(call download_and_extract,https://github.com/$(REPO_OWNER)/vuln-list-aqua/archive/main.tar.gz,$(CACHE_DIR)/vuln-list-aqua)
