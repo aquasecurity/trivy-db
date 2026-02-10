@@ -9,10 +9,11 @@ ASSET_DIR ?= assets
 # Usage: $(call download_and_extract,URL,TARGET_DIR)
 # This approach prevents pipe failures when wget encounters recoverable errors
 define download_and_extract
-	@echo "Downloading $(1)..."
-	wget -q $(1) -O $(CACHE_DIR)/tmp-archive.tar.gz
-	tar xzf $(CACHE_DIR)/tmp-archive.tar.gz -C $(2) --strip-components=1
-	rm -f $(CACHE_DIR)/tmp-archive.tar.gz
+	@echo "Downloading $(1)..." && \
+	TMP_FILE=$$(mktemp) && \
+	wget -q $(1) -O "$$TMP_FILE" && \
+	tar xzf "$$TMP_FILE" -C $(2) --strip-components=1 && \
+	rm -f "$$TMP_FILE"
 endef
 
 GOPATH=$(shell go env GOPATH)
