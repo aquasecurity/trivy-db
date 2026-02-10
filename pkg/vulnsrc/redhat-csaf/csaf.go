@@ -33,18 +33,42 @@ var (
 	errUnexpectedRecord = xerrors.New("unexpected record")
 )
 
+// PutAdvisoryInput is the argument passed to the put function (default or custom).
+// Custom put implementations (e.g. WithCustomPut) can type-assert adv to *PutAdvisoryInput.
+type PutAdvisoryInput struct {
+	Bucket   Bucket
+	Advisory Advisory
+	CPEList  redhatoval.CPEList
+}
+
+type Option func(src *VulnSrc)
+
+// WithCustomPut injects a custom function to write advisories (e.g. for filtering RHEL 10).
+// The injected function receives *PutAdvisoryInput when called.
+func WithCustomPut(put db.CustomPut) Option {
+	return func(src *VulnSrc) {
+		src.put = put
+	}
+}
+
 type VulnSrc struct {
+	put        db.CustomPut
 	dbc        db.Operation
 	parser     Parser
 	aggregator Aggregator
 }
 
-func NewVulnSrc() VulnSrc {
-	return VulnSrc{
+func NewVulnSrc(opts ...Option) VulnSrc {
+	src := VulnSrc{
+		put:        defaultPut,
 		dbc:        db.Config{},
 		parser:     NewParser(),
 		aggregator: Aggregator{},
 	}
+	for _, o := range opts {
+		o(&src)
+	}
+	return src
 }
 
 func (vs VulnSrc) Name() types.SourceID {
@@ -93,8 +117,9 @@ func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 		// Create an advisory containing these entries
 		advisory := Advisory{Entries: entries}
 
-		// Store the advisory in the DB
-		if err := vs.putAdvisory(tx, bkt, advisory, cpeList); err != nil {
+		// Store the advisory in the DB (default or custom put)
+		input := &PutAdvisoryInput{Bucket: bkt, Advisory: advisory, CPEList: cpeList}
+		if err := vs.put(vs.dbc, tx, input); err != nil {
 			return eb.Wrapf(err, "failed to put advisory")
 		}
 		bar.Increment()
@@ -135,10 +160,17 @@ func (vs VulnSrc) putMappings(tx *bolt.Tx, cpeList redhatoval.CPEList) error {
 	return nil
 }
 
-func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt Bucket, adv Advisory, cpeList redhatoval.CPEList) error {
-	for i := range adv.Entries {
+// defaultPut is the default advisory write implementation; can be overridden via WithCustomPut.
+func defaultPut(dbc db.Operation, tx *bolt.Tx, adv any) error {
+	input, ok := adv.(*PutAdvisoryInput)
+	if !ok {
+		return xerrors.Errorf("redhat-csaf put: unexpected type %T", adv)
+	}
+	bkt, advEnt, cpeList := input.Bucket, input.Advisory, input.CPEList
+
+	for i := range advEnt.Entries {
 		// Convert CPE names to indices.
-		adv.Entries[i].AffectedCPEIndices = cpeList.Indices(adv.Entries[i].AffectedCPEList)
+		advEnt.Entries[i].AffectedCPEIndices = cpeList.Indices(advEnt.Entries[i].AffectedCPEList)
 	}
 
 	vulnID := string(bkt.VulnerabilityID)
@@ -149,14 +181,12 @@ func (vs VulnSrc) putAdvisory(tx *bolt.Tx, bkt Bucket, adv Advisory, cpeList red
 		pkgName = fmt.Sprintf("%s::%s", bkt.Package.Module, pkgName)
 	}
 
-	if err := vs.dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{rootBucket}, adv); err != nil {
+	if err := dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{rootBucket}, advEnt); err != nil {
 		return xerrors.Errorf("failed to save Red Hat CSAF advisory: %w", err)
 	}
-
-	if err := vs.dbc.PutVulnerabilityID(tx, vulnID); err != nil {
+	if err := dbc.PutVulnerabilityID(tx, vulnID); err != nil {
 		return xerrors.Errorf("failed to put vulnerability ID: %w", err)
 	}
-
 	return nil
 }
 
