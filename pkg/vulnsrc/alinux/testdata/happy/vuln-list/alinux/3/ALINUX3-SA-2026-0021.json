@@ -1,0 +1,37 @@
+{
+  "id": "ALINUX3-SA-2026:0021",
+  "title": "ALINUX3-SA-2026:0021: glib2 security update (Moderate)",
+  "severity": "Moderate",
+  "description": "Package updates are available for Alibaba Cloud Linux 3 that fix the following vulnerabilities:\n\nCVE-2025-13601:\nA heap-based buffer overflow problem was found in glib through an incorrect calculation of buffer size in the g_escape_uri_string() function. If the string to escape contains a very large number of unacceptable characters (which would need escaping), the calculation of the length of the escaped string could overflow, leading to a potential write off the end of the newly allocated string.",
+  "issued": {
+    "date": "2026-02-03"
+  },
+  "updated": {
+    "date": "2026-02-03"
+  },
+  "packages": [
+    {
+      "name": "glib2",
+      "epoch": "0",
+      "version": "2.68.4",
+      "release": "18.0.1.al8.1"
+    },
+    {
+      "name": "glib2-devel",
+      "epoch": "0",
+      "version": "2.68.4",
+      "release": "18.0.1.al8.1"
+    }
+  ],
+  "cveids": [
+    "CVE-2025-13601"
+  ],
+  "references": [
+    {
+      "id": "CVE-2025-13601",
+      "href": "https://alas.aliyun-inc.com/cves/detail/CVE-2025-13601",
+      "cvss3": "7.7/CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H",
+      "impact": "Important"
+    }
+  ]
+}

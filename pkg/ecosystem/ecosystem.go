@@ -25,6 +25,7 @@ const (
 	Kubernetes Type = "k8s"
 
 	// OS ecosystems
+	Alinux      Type = "alinux"
 	Alpine      Type = "alpine"
 	RedHat      Type = "redhat"
 	Debian      Type = "debian"
