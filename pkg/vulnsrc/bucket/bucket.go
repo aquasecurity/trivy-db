@@ -80,6 +80,9 @@ func newLang(ecoType ecosystem.Type, dataSource types.DataSource) (DataSourceBuc
 // Standard OS buckets //
 /////////////////////////
 
+// NewAlinux creates a bucket for Alibaba Cloud Linux
+func NewAlinux(version string) Bucket { return newOS(ecosystem.Alinux, version) }
+
 // NewAlma creates a bucket for Alma Linux
 func NewAlma(version string) Bucket { return newOS(ecosystem.AlmaLinux, version) }
 
