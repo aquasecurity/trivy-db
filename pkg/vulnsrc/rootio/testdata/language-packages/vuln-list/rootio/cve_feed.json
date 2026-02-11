@@ -1,0 +1,31 @@
+{
+  "debian": [
+    {
+      "distro": {
+        "name": "debian",
+        "latest": "13",
+        "min_fixed_version": "12",
+        "max_fixed_version": "13",
+        "min_unfixed_version": "10",
+        "max_unfixed_version": ""
+      },
+      "packages": [
+        {
+          "name": "testpkg",
+          "min_version": "1.0.0",
+          "max_version": "2.0.0",
+          "cves": {
+            "CVE-2021-12345": {
+              "vulnerable_ranges": [
+                "<1.0.9"
+              ],
+              "fixed_versions": [
+                "1.0.9.root.io"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

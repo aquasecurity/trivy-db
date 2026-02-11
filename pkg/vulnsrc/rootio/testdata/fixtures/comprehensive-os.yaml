@@ -1,0 +1,25 @@
+- bucket: data-source
+  pairs:
+    - key: root.io debian 12
+      value:
+        ID: rootio
+        Name: Root.io Security Patches
+        URL: https://api.root.io/external/patch_feed
+        BaseID: debian
+
+- bucket: root.io debian 12
+  pairs:
+    - bucket: postgresql
+      pairs:
+        - key: CVE-2024-DB-001
+          value:
+            VulnerableVersions:
+              - "<15.4"
+            PatchedVersions:
+              - "15.4.root.io"
+        - key: CVE-2024-DB-002
+          value:
+            VulnerableVersions:
+              - "<15.5"
+            PatchedVersions:
+              - "15.5.root.io"
