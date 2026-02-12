@@ -58,6 +58,9 @@ type Entry struct {
 	AffectedCPEList []string `json:"-"`
 	// AffectedCPEIndices stores CPE indices for efficient matching at scan time.
 	AffectedCPEIndices []int `json:"Affected,omitempty"`
+
+	// Custom is basically for extensibility and is not supposed to be used in OSS
+	Custom any `json:",omitempty"`
 }
 
 // MarshalJSON customizes JSON marshaling for Entry.
