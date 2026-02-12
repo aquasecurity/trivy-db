@@ -6,7 +6,6 @@ import (
 
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-	"golang.org/x/xerrors"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/log"
@@ -30,12 +29,12 @@ var (
 		URL:  "https://access.redhat.com/security/data/csaf/v2/vex/",
 	}
 
-	errUnexpectedRecord = xerrors.New("unexpected record")
+	errUnexpectedRecord = oops.Errorf("unexpected record")
 )
 
-// PutAdvisoryInput is the argument passed to the put function (default or custom).
-// Custom put implementations (e.g. WithCustomPut) can type-assert adv to *PutAdvisoryInput.
-type PutAdvisoryInput struct {
+// PutInput is the argument passed to the put function (default or custom).
+// Custom put implementations (e.g. WithCustomPut) can type-assert adv to *PutInput.
+type PutInput struct {
 	Bucket   Bucket
 	Advisory Advisory
 	CPEList  redhatoval.CPEList
@@ -44,7 +43,7 @@ type PutAdvisoryInput struct {
 type Option func(src *VulnSrc)
 
 // WithCustomPut injects a custom function to write advisories (e.g. for filtering RHEL 10).
-// The injected function receives *PutAdvisoryInput when called.
+// The injected function receives *PutInput when called.
 func WithCustomPut(put db.CustomPut) Option {
 	return func(src *VulnSrc) {
 		src.put = put
@@ -118,7 +117,7 @@ func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 		advisory := Advisory{Entries: entries}
 
 		// Store the advisory in the DB (default or custom put)
-		input := &PutAdvisoryInput{Bucket: bkt, Advisory: advisory, CPEList: cpeList}
+		input := &PutInput{Bucket: bkt, Advisory: advisory, CPEList: cpeList}
 		if err := vs.put(vs.dbc, tx, input); err != nil {
 			return eb.Wrapf(err, "failed to put advisory")
 		}
@@ -134,7 +133,7 @@ func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 func (vs VulnSrc) putMappings(tx *bolt.Tx, cpeList redhatoval.CPEList) error {
 	// Store the data source
 	if err := vs.dbc.PutDataSource(tx, rootBucket, source); err != nil {
-		return xerrors.Errorf("failed to put data source: %w", err)
+		return oops.Wrapf(err, "failed to put data source")
 	}
 
 	// Store the mapping between repository and CPE names
@@ -162,30 +161,29 @@ func (vs VulnSrc) putMappings(tx *bolt.Tx, cpeList redhatoval.CPEList) error {
 
 // defaultPut is the default advisory write implementation; can be overridden via WithCustomPut.
 func defaultPut(dbc db.Operation, tx *bolt.Tx, adv any) error {
-	input, ok := adv.(*PutAdvisoryInput)
+	input, ok := adv.(*PutInput)
 	if !ok {
-		return xerrors.Errorf("redhat-csaf put: unexpected type %T", adv)
+		return oops.Errorf("redhat-csaf put: unexpected type %T", adv)
 	}
-	bkt, advEnt, cpeList := input.Bucket, input.Advisory, input.CPEList
 
-	for i := range advEnt.Entries {
+	for i := range input.Advisory.Entries {
 		// Convert CPE names to indices.
-		advEnt.Entries[i].AffectedCPEIndices = cpeList.Indices(advEnt.Entries[i].AffectedCPEList)
+		input.Advisory.Entries[i].AffectedCPEIndices = input.CPEList.Indices(input.Advisory.Entries[i].AffectedCPEList)
 	}
 
-	vulnID := string(bkt.VulnerabilityID)
-	pkgName := bkt.Package.Name
-	if bkt.Package.Module != "" {
+	vulnID := string(input.Bucket.VulnerabilityID)
+	pkgName := input.Bucket.Package.Name
+	if input.Bucket.Package.Module != "" {
 		// Add modular namespace
 		// e.g. nodejs:12::npm
-		pkgName = fmt.Sprintf("%s::%s", bkt.Package.Module, pkgName)
+		pkgName = fmt.Sprintf("%s::%s", input.Bucket.Package.Module, pkgName)
 	}
 
-	if err := dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{rootBucket}, advEnt); err != nil {
-		return xerrors.Errorf("failed to save Red Hat CSAF advisory: %w", err)
+	if err := dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{rootBucket}, input.Advisory); err != nil {
+		return oops.Wrapf(err, "failed to save Red Hat CSAF advisory")
 	}
 	if err := dbc.PutVulnerabilityID(tx, vulnID); err != nil {
-		return xerrors.Errorf("failed to put vulnerability ID: %w", err)
+		return oops.Wrapf(err, "failed to put vulnerability ID")
 	}
 	return nil
 }
