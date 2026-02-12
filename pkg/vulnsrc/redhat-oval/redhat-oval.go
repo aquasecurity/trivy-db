@@ -426,6 +426,8 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 //
 // When multiple modules exist at the same level (e.g., nodejs:20 OR nodejs:22),
 // each module's packages are processed separately and tagged with their respective module.
+//
+//nolint:misspell
 func walkCriterion(cri criteria, tests map[string]rpmInfoTest) []pkg {
 	var moduleName string
 	var packages []pkg
@@ -462,12 +464,12 @@ func walkCriterion(cri criteria, tests map[string]rpmInfoTest) []pkg {
 		})
 	}
 
-	if len(cri.Criterias) == 0 { //nolint:misspell
+	if len(cri.Criterias) == 0 {
 		return packages
 	}
 
 	// Second pass: recursively process nested Criterias
-	for _, c := range cri.Criterias { //nolint:misspell
+	for _, c := range cri.Criterias {
 		pkgs := walkCriterion(c, tests)
 
 		// Apply current module to nested packages that don't have one.
