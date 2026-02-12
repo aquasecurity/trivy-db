@@ -51,6 +51,16 @@
       "SignatureKeyID": {}
     },
     {
+      "ID": "oval:com.redhat.cve:ste:20052541001",
+      "Version": "636",
+      "Arch": {},
+      "Evr": {},
+      "SignatureKeyID": {
+        "Text": "199e2f91fd431d51",
+        "Operation": "equals"
+      }
+    },
+    {
       "ID": "oval:com.redhat.cve:ste:202421538003",
       "Version": "636",
       "Text": {

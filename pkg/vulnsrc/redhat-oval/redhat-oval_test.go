@@ -321,6 +321,27 @@ func TestVulnSrc_Update(t *testing.T) {
 						"advisory-detail",
 						"CVE-2026-23745",
 						"Red Hat",
+						"grafana-postgres",
+					},
+					Value: redhat.Advisory{
+						Entries: []redhat.Entry{
+							{
+								Status:             types.StatusAffected,
+								AffectedCPEIndices: []int{1, 2, 6},
+								Cves: []redhat.CveEntry{
+									{
+										Severity: types.SeverityHigh,
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2026-23745",
+						"Red Hat",
 						"nodejs:20::nodejs-full-i18n",
 					},
 					Value: redhat.Advisory{

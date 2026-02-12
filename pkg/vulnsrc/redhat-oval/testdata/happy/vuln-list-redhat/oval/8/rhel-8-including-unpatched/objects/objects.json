@@ -31,6 +31,11 @@
       "Name": "evolution"
     },
     {
+      "ID": "oval:com.redhat.cve:obj:202028362013",
+      "Version": "636",
+      "Name": "grafana-postgres"
+    },
+    {
       "ID": "oval:com.redhat.cve:obj:20183750002",
       "Version": "636",
       "Filepath": {
