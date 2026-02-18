@@ -124,12 +124,12 @@ func TestVulnSrc_Update(t *testing.T) {
 						string(vulnerability.OSV),
 					},
 					Value: types.VulnerabilityDetail{
-						Title:        "Werkzeug safe_join() allows Windows special device names with compound extensions",
-						Description:  "Werkzeug's `safe_join` function allows path segments with Windows device names that have file extensions or trailing spaces.",
-						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
-						CvssScoreV3:  5.3,
+						Title:         "Werkzeug safe_join() allows Windows special device names with compound extensions",
+						Description:   "Werkzeug's `safe_join` function allows path segments with Windows device names that have file extensions or trailing spaces.",
+						CvssVectorV3:  "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+						CvssScoreV3:   5.3,
 						CvssVectorV40: "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
-						CvssScoreV40: 6.3,
+						CvssScoreV40:  6.3,
 						References: []string{
 							"https://github.com/pallets/werkzeug/security/advisories/GHSA-87hc-h4r5-73f7",
 							"https://nvd.nist.gov/vuln/detail/CVE-2026-21860",
