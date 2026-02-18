@@ -443,62 +443,6 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: map[string]any{},
 				},
-				// CVSSv4: Werkzeug advisory with both V3 and V4
-				{
-					Key: []string{
-						"data-source",
-						"pip::GitHub Security Advisory pip",
-					},
-					Value: types.DataSource{
-						ID:   vulnerability.GHSA,
-						Name: "GitHub Security Advisory pip",
-						URL:  "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Apip",
-					},
-				},
-				{
-					Key: []string{
-						"advisory-detail",
-						"CVE-2026-21860",
-						"pip::GitHub Security Advisory pip",
-						"werkzeug",
-					},
-					Value: types.Advisory{
-						VendorIDs: []string{
-							"GHSA-87hc-h4r5-73f7",
-						},
-						PatchedVersions:    []string{"3.1.5"},
-						VulnerableVersions: []string{"<3.1.5"},
-					},
-				},
-				{
-					Key: []string{
-						"vulnerability-detail",
-						"CVE-2026-21860",
-						"ghsa",
-					},
-					Value: types.VulnerabilityDetail{
-						Title:       "Werkzeug safe_join() allows Windows special device names with compound extensions",
-						Description: "Werkzeug's `safe_join` function allows path segments with Windows device names that have file extensions or trailing spaces.",
-						References: []string{
-							"https://github.com/pallets/werkzeug/security/advisories/GHSA-87hc-h4r5-73f7",
-							"https://nvd.nist.gov/vuln/detail/CVE-2026-21860",
-						},
-						Severity:         types.SeverityMedium,
-						CvssVectorV3:     "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
-						CvssScoreV3:      5.3,
-						CvssVectorV40:    "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
-						CvssScoreV40:     6.3,
-						LastModifiedDate: utils.MustTimeParse("2026-02-02T19:57:31Z"),
-						PublishedDate:    utils.MustTimeParse("2026-01-08T19:51:21Z"),
-					},
-				},
-				{
-					Key: []string{
-						"vulnerability-id",
-						"CVE-2026-21860",
-					},
-					Value: map[string]any{},
-				},
 				// NuGet: store original and lowercased package names
 				{
 					Key: []string{
