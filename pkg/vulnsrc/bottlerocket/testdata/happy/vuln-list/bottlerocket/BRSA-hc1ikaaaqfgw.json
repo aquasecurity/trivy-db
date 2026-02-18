@@ -1,0 +1,37 @@
+{
+  "id": "BRSA-hc1ikaaaqfgw",
+  "title": "amazon-ssm-agent CVE-2025-22870",
+  "severity": "important",
+  "description": "A flaw was found in amazon-ssm-agent dependency golang.org/x/net.",
+  "packages": [
+    {
+      "name": "amazon-ssm-agent",
+      "epoch": "0",
+      "version": "3.3.2746.0",
+      "release": "1.1754950980.06e00082.br1",
+      "arch": "x86_64"
+    },
+    {
+      "name": "amazon-ssm-agent",
+      "epoch": "0",
+      "version": "3.3.2746.0",
+      "release": "1.1754950980.06e00082.br1",
+      "arch": "aarch64"
+    }
+  ],
+  "references": [
+    {
+      "href": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-22870",
+      "id": "CVE-2025-22870",
+      "type": "cve"
+    },
+    {
+      "href": "https://github.com/bottlerocket-os/bottlerocket-core-kit/blob/develop/advisories/10.1.0/BRSA-hc1ikaaaqfgw.toml",
+      "id": "BRSA-hc1ikaaaqfgw",
+      "type": "brsa"
+    }
+  ],
+  "cveids": [
+    "CVE-2025-22870"
+  ]
+}
