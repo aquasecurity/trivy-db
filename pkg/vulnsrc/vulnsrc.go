@@ -26,6 +26,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat"
 	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rocky"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rapidfort"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rootio"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/seal"
 	susecvrf "github.com/aquasecurity/trivy-db/pkg/vulnsrc/suse-cvrf"
@@ -65,6 +66,7 @@ var (
 		echo.NewVulnSrc(),
 		minimos.NewVulnSrc(),
 
+		rapidfort.NewVulnSrc(),
 		rootio.NewVulnSrc(),
 		seal.NewVulnSrc(),
 

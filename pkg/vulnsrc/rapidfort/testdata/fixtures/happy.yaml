@@ -1,0 +1,22 @@
+- bucket: rapidfort ubuntu 20.04
+  pairs:
+    - bucket: curl
+      pairs:
+        - key: CVE-2020-8169
+          value:
+            VulnerableVersions:
+              - ">= 7.68.0, < 7.68.0-1ubuntu2.1"
+            PatchedVersions:
+              - "7.68.0-1ubuntu2.1"
+            Severity: 3
+- bucket: rapidfort debian 12
+  pairs:
+    - bucket: openssl
+      pairs:
+        - key: CVE-2024-5535
+          value:
+            VulnerableVersions:
+              - ">= 3.0.0, < 3.0.14-1~deb12u2"
+            PatchedVersions:
+              - "3.0.14-1~deb12u2"
+            Severity: 4

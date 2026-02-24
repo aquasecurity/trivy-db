@@ -1,0 +1,19 @@
+{
+  "package_name": "openssl",
+  "distro_codename": "bookworm",
+  "advisories": {
+    "CVE-2024-5535": {
+      "cve_id": "CVE-2024-5535",
+      "title": "openssl: SSL_select_next_proto buffer overread",
+      "description": "Issue summary: Calling the OpenSSL API function SSL_select_next_proto with an empty supported client protocols buffer may cause a crash or memory contents to be sent to the peer.",
+      "severity": "CRITICAL",
+      "status": "fixed",
+      "events": [
+        {
+          "introduced": "3.0.0",
+          "fixed": "3.0.14-1~deb12u2"
+        }
+      ]
+    }
+  }
+}
