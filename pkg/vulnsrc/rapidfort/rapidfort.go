@@ -22,40 +22,11 @@ const (
 	platformFormat = "rapidfort %s %s" // "rapidfort ubuntu 22.04"
 )
 
-var (
-	source = types.DataSource{
-		ID:   vulnerability.RapidFort,
-		Name: "RapidFort Security Advisories",
-		URL:  "https://github.com/rapidfort/security-advisories",
-	}
-
-	// ubuntuCodenames maps Ubuntu release codenames to version numbers.
-	ubuntuCodenames = map[string]string{
-		"trusty":  "14.04",
-		"xenial":  "16.04",
-		"bionic":  "18.04",
-		"focal":   "20.04",
-		"jammy":   "22.04",
-		"kinetic": "22.10",
-		"lunar":   "23.04",
-		"mantic":  "23.10",
-		"noble":   "24.04",
-		"oracular": "24.10",
-	}
-
-	// debianCodenames maps Debian release codenames to version numbers.
-	debianCodenames = map[string]string{
-		"buster":   "10",
-		"bullseye": "11",
-		"bookworm": "12",
-		"trixie":   "13",
-	}
-
-	codenameToVersion = map[string]map[string]string{
-		"ubuntu": ubuntuCodenames,
-		"debian": debianCodenames,
-	}
-)
+var source = types.DataSource{
+	ID:   vulnerability.RapidFort,
+	Name: "RapidFort Security Advisories",
+	URL:  "https://github.com/rapidfort/security-advisories",
+}
 
 type config struct {
 	dbc    db.Operation
@@ -80,7 +51,7 @@ func (vs VulnSrc) Name() types.SourceID {
 	return source.ID
 }
 
-// Update reads all per-package JSON files from vuln-list/rapidfort/{os}/{codename}/{pkg}.json
+// Update reads all per-package JSON files from vuln-list/rapidfort/{os}/{version}/{pkg}.json
 // and writes them into the BoltDB.
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", rapidfortDir)
@@ -104,7 +75,7 @@ func (vs VulnSrc) Update(dir string) error {
 			return nil
 		}
 
-		// Relative path: {osName}/{codename}/{pkg}.json
+		// Relative path: {osName}/{version}/{pkg}.json
 		relPath, err := filepath.Rel(rootDir, path)
 		if err != nil {
 			return eb.With("path", path).Wrapf(err, "failed to make relative path")
@@ -126,14 +97,7 @@ func (vs VulnSrc) Update(dir string) error {
 			return eb.With("path", path).Wrapf(err, "json decode error")
 		}
 
-		// Map codename → version number for the platform bucket name.
-		version := pkg.DistroCodename
-		if verMap, ok := codenameToVersion[osName]; ok {
-			if v, ok := verMap[pkg.DistroCodename]; ok {
-				version = v
-			}
-		}
-		platformName := fmt.Sprintf(platformFormat, osName, version)
+		platformName := fmt.Sprintf(platformFormat, osName, pkg.DistroVersion)
 
 		for cveID, cveEntry := range pkg.Advisories {
 			advisory := buildAdvisory(cveEntry)

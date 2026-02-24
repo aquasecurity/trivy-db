@@ -1,6 +1,6 @@
 {
   "package_name": "curl",
-  "distro_codename": "focal",
+  "distro_version": "20.04",
   "advisories": {
     "CVE-2020-8169": {
       "cve_id": "CVE-2020-8169",

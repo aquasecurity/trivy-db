@@ -1,12 +1,12 @@
 package rapidfort
 
-// PackageAdvisory matches the per-codename per-package JSON format written by
+// PackageAdvisory matches the per-version per-package JSON format written by
 // vuln-list-update's rapidfort package.
-// File path: vuln-list/rapidfort/{os}/{codename}/{package_name}.json
+// File path: vuln-list/rapidfort/{os}/{version}/{package_name}.json
 type PackageAdvisory struct {
-	PackageName    string              `json:"package_name"`
-	DistroCodename string              `json:"distro_codename"`
-	Advisories     map[string]CVEEntry `json:"advisories"` // cveID -> CVEEntry
+	PackageName   string              `json:"package_name"`
+	DistroVersion string              `json:"distro_version"`
+	Advisories    map[string]CVEEntry `json:"advisories"` // cveID -> CVEEntry
 }
 
 // CVEEntry holds the advisory details for a single CVE within a distro release.

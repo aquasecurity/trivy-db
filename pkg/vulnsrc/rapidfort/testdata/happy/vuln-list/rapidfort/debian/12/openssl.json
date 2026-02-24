@@ -1,6 +1,6 @@
 {
   "package_name": "openssl",
-  "distro_codename": "bookworm",
+  "distro_version": "12",
   "advisories": {
     "CVE-2024-5535": {
       "cve_id": "CVE-2024-5535",
