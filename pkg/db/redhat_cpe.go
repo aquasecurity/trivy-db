@@ -65,3 +65,37 @@ func (dbc Config) getCPEs(bucket, key string) ([]int, error) {
 	}
 	return cpes, nil
 }
+
+// GetAllRedHatCPEs returns all stored CPE mappings (index -> CPE string).
+// This is used to merge CSAF CPEs with existing OVAL CPEs.
+func (dbc Config) GetAllRedHatCPEs(tx *bolt.Tx) (map[int]string, error) {
+	result := make(map[int]string)
+
+	root := tx.Bucket([]byte(redhatCPERootBucket))
+	if root == nil {
+		return result, nil
+	}
+
+	cpeBucket := root.Bucket([]byte(redhatCPEBucket))
+	if cpeBucket == nil {
+		return result, nil
+	}
+
+	err := cpeBucket.ForEach(func(k, v []byte) error {
+		index, err := strconv.Atoi(string(k))
+		if err != nil {
+			return oops.Wrapf(err, "invalid CPE index key: %s", string(k))
+		}
+		var cpe string
+		if err := json.Unmarshal(v, &cpe); err != nil {
+			return oops.Wrapf(err, "failed to unmarshal CPE value")
+		}
+		result[index] = cpe
+		return nil
+	})
+	if err != nil {
+		return nil, oops.Wrapf(err, "failed to iterate CPE bucket")
+	}
+
+	return result, nil
+}
