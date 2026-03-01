@@ -85,7 +85,10 @@ func (vs VulnSrc) Update(dir string) error {
 			vs.logger.Warn("Skipping file with unexpected path structure", "path", path)
 			return nil
 		}
+		// Extract OS and version from the directory structure: {osName}/{version}/{pkg}.json
+		// This is authoritative and avoids dependence on the JSON field name (distro_version vs distro_codename).
 		osName := parts[0]
+		version := parts[1]
 
 		data, err := os.ReadFile(path)
 		if err != nil {
@@ -97,7 +100,7 @@ func (vs VulnSrc) Update(dir string) error {
 			return eb.With("path", path).Wrapf(err, "json decode error")
 		}
 
-		platformName := fmt.Sprintf(platformFormat, osName, pkg.DistroVersion)
+		platformName := fmt.Sprintf(platformFormat, osName, version)
 
 		for cveID, cveEntry := range pkg.Advisories {
 			advisory := buildAdvisory(cveEntry)
@@ -176,13 +179,16 @@ func buildAdvisory(cve CVEEntry) types.Advisory {
 		if ev.Fixed != "" {
 			patched = append(patched, ev.Fixed)
 			if ev.Introduced != "" {
+				// Comma-separated: each part is parsed individually by newConstraint which handles spaces.
 				vulnerable = append(vulnerable, fmt.Sprintf(">= %s, < %s", ev.Introduced, ev.Fixed))
 			} else {
-				vulnerable = append(vulnerable, fmt.Sprintf("< %s", ev.Fixed))
+				// Single constraint: write without space so the existing space-based splitter
+				// doesn't break it into ["<", "version"].
+				vulnerable = append(vulnerable, fmt.Sprintf("<%s", ev.Fixed))
 			}
 		} else if ev.Introduced != "" {
-			// Open vulnerability: no fix available.
-			vulnerable = append(vulnerable, fmt.Sprintf(">= %s", ev.Introduced))
+			// Open vulnerability (no fix): write without space for the same reason.
+			vulnerable = append(vulnerable, fmt.Sprintf(">=%s", ev.Introduced))
 		}
 	}
 
