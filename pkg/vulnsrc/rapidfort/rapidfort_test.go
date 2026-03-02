@@ -59,7 +59,7 @@ func TestVulnSrc_Update(t *testing.T) {
 						"curl",
 					},
 					Value: types.Advisory{
-						VulnerableVersions: []string{">= 7.68.0"},
+						VulnerableVersions: []string{">=7.68.0"},
 						Severity:           types.SeverityMedium,
 					},
 				},
