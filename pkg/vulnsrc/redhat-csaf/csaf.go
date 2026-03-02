@@ -35,9 +35,10 @@ var (
 // PutInput is the argument passed to the put function (default or custom).
 // Custom put implementations (e.g. WithCustomPut) can type-assert adv to *PutInput.
 type PutInput struct {
-	Bucket   Bucket
-	Advisory Advisory
-	CPEList  redhatoval.CPEList
+	Bucket      Bucket
+	Advisory    Advisory
+	CPEList     redhatoval.CPEList
+	ReleaseDate string // Advisory's initial release date (YYYY-MM-DD), used by CustomPut for PublishDate
 }
 
 type Option func(src *VulnSrc)
@@ -131,7 +132,12 @@ func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 		advisory := Advisory{Entries: entries}
 
 		// Store the advisory in the DB (default or custom put)
-		input := &PutInput{Bucket: bkt, Advisory: advisory, CPEList: cpeList}
+		input := &PutInput{
+			Bucket:      bkt,
+			Advisory:    advisory,
+			CPEList:     cpeList,
+			ReleaseDate: vs.parser.ReleaseDate(bkt.VulnerabilityID),
+		}
 		if err := vs.put(vs.dbc, tx, input); err != nil {
 			return eb.Wrapf(err, "failed to put advisory")
 		}
