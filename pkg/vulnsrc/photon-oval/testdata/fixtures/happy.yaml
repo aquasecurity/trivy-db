@@ -1,0 +1,7 @@
+- bucket: Photon OS 5.0
+  pairs:
+    - bucket: libcap
+      pairs:
+        - key: CVE-2023-2602
+          value:
+            FixedVersion: "2.66-2.ph5"
