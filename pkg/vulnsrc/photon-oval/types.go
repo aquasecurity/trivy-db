@@ -27,8 +27,8 @@ type Cve struct {
 
 // Criteria represents the OVAL criteria tree
 type Criteria struct {
-	Operator   string     `json:"Operator"`
-	Criterias  []Criteria `json:"Criterias"` //nolint:misspell
+	Operator   string      `json:"Operator"`
+	Criterias  []Criteria  `json:"Criterias"` //nolint:misspell
 	Criterions []Criterion `json:"Criterions"`
 }
 

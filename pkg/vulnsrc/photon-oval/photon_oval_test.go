@@ -141,12 +141,12 @@ func TestVulnSrc_Update(t *testing.T) {
 
 func TestVulnSrc_Get(t *testing.T) {
 	tests := []struct {
-		name    string
+		name     string
 		fixtures []string
-		release string
-		pkgName string
-		want    []types.Advisory
-		wantErr string
+		release  string
+		pkgName  string
+		want     []types.Advisory
+		wantErr  string
 	}{
 		{
 			name:     "happy path",
