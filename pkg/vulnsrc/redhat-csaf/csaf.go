@@ -105,10 +105,17 @@ func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 	}
 	log.Info("Parsed CSAF VEX")
 
-	// Merge CSAF CPEs with existing OVAL CPEs to preserve OVAL indices.
-	cpeList, err := vs.mergeCPEList(tx, vs.parser.CPEList())
-	if err != nil {
-		return eb.Wrapf(err, "failed to merge CPE list")
+	var cpeList redhatoval.CPEList
+	if vs.skipRepoNVRMappings {
+		// OVAL runs alongside CSAF: merge to preserve OVAL CPE indices.
+		var err error
+		cpeList, err = vs.mergeCPEList(tx, vs.parser.CPEList())
+		if err != nil {
+			return eb.Wrapf(err, "failed to merge CPE list")
+		}
+	} else {
+		// use CSAF CPE list as-is; no OVAL in DB.
+		cpeList = vs.parser.CPEList()
 	}
 
 	log.Info("Inserting mappings...")
@@ -215,7 +222,7 @@ func (vs VulnSrc) putMappings(tx *bolt.Tx, cpeList redhatoval.CPEList) error {
 		}
 	}
 
-	// Store CPE indices (the merged list preserves OVAL indices and appends new CSAF CPEs)
+	// Store CPE indices (when skipRepoNVRMappings, cpeList is merged with OVAL; otherwise CSAF-only)
 	for i, cpe := range cpeList {
 		if err := vs.dbc.PutRedHatCPEs(tx, i, cpe); err != nil {
 			return oops.With("cpe", cpe).Wrapf(err, "CPE put error")
