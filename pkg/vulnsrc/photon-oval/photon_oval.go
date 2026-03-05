@@ -22,7 +22,7 @@ const photonOvalDir = "photon-oval"
 var source = types.DataSource{
 	ID:   vulnerability.PhotonOVAL,
 	Name: "Photon OS OVAL definitions",
-	URL:  "https://packages.broadcom.com/photon/photon_oval/",
+	URL:  "https://packages.broadcom.com/photon/photon_oval_definitions/",
 }
 
 // VulnSrc implements the VulnSrc interface for Photon OS OVAL advisories

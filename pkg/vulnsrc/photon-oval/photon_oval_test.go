@@ -35,7 +35,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.DataSource{
 						ID:   vulnerability.PhotonOVAL,
 						Name: "Photon OS OVAL definitions",
-						URL:  "https://packages.broadcom.com/photon/photon_oval/",
+						URL:  "https://packages.broadcom.com/photon/photon_oval_definitions/",
 					},
 				},
 				// libcap advisory for CVE-2023-2602
@@ -98,7 +98,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.DataSource{
 						ID:   vulnerability.PhotonOVAL,
 						Name: "Photon OS OVAL definitions",
-						URL:  "https://packages.broadcom.com/photon/photon_oval/",
+						URL:  "https://packages.broadcom.com/photon/photon_oval_definitions/",
 					},
 				},
 				// curl advisory for CVE-2023-23914 (Moderate -> Medium)
