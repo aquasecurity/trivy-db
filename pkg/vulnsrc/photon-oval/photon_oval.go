@@ -78,14 +78,14 @@ func (vs VulnSrc) Update(dir string) error {
 }
 
 // osVersionFromPath extracts the OS version segment from the file path.
-// Given rootDir = ".../photon/oval" and path = ".../photon/oval/5.0/PHSA-2023-0001.json",
+// Given rootDir = ".../photon-oval" and path = ".../photon-oval/5.0/PHSA-2023-5.0-20.json",
 // the function returns "5.0".
 func osVersionFromPath(rootDir, path string) (string, error) {
 	rel, err := filepath.Rel(rootDir, path)
 	if err != nil {
 		return "", err
 	}
-	// rel is like "5.0/PHSA-2023-0001.json"
+	// rel is like "5.0/PHSA-2023-5.0-20.json"
 	parts := strings.SplitN(rel, string(filepath.Separator), 2)
 	if len(parts) < 2 {
 		return "", oops.Errorf("unexpected path structure: %s", path)
@@ -158,7 +158,8 @@ func parsePackages(criteria Criteria) []AffectedPackage {
 		}
 		pkgName := strings.TrimSpace(ss[0])
 		rawVer := strings.TrimSpace(ss[1])
-		// Strip the leading "0:" epoch prefix if present
+		// Strip epoch "0:" prefix — epoch 0 is not included in Trivy version strings
+		// (per utils.ConstructVersion convention); non-zero epochs (e.g. "1:ver") are kept as-is.
 		fixedVersion := strings.TrimPrefix(rawVer, "0:")
 		pkgs = append(pkgs, AffectedPackage{
 			Name:         pkgName,
