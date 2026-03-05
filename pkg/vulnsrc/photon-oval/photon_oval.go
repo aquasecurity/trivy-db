@@ -50,18 +50,23 @@ func (vs VulnSrc) Update(dir string) error {
 	eb := oops.In("photon-oval").With("root_dir", rootDir)
 
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-		// Extract OS version from path segment, e.g. ".../photon/oval/5.0/PHSA-....json" -> "5.0"
+		// Extract OS version from path segment, e.g. ".../photon-oval/5.0/PHSA-2023-5.0-20.json" -> "5.0"
 		osVer, err := osVersionFromPath(rootDir, path)
 		if err != nil {
 			return eb.With("file_path", path).Wrapf(err, "failed to extract OS version from path")
 		}
+
+		// The advisory ID (e.g. "PHSA-2023-5.0-20") is taken from the filename.
+		// It is constructed by vuln-list-update when converting OVAL XML to JSON
+		// (see aquasecurity/vuln-list-update#408).
+		advisoryID := strings.TrimSuffix(filepath.Base(path), ".json")
 
 		var oval PhotonOVAL
 		if err = json.NewDecoder(r).Decode(&oval); err != nil {
 			return eb.With("file_path", path).Wrapf(err, "json decode error")
 		}
 
-		if err = vs.save(osVer, oval); err != nil {
+		if err = vs.save(osVer, advisoryID, oval); err != nil {
 			return eb.With("file_path", path).Wrapf(err, "save error")
 		}
 		return nil
@@ -88,9 +93,9 @@ func osVersionFromPath(rootDir, path string) (string, error) {
 	return parts[0], nil
 }
 
-func (vs VulnSrc) save(osVer string, oval PhotonOVAL) error {
+func (vs VulnSrc) save(osVer, advisoryID string, oval PhotonOVAL) error {
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		return vs.commit(tx, osVer, oval)
+		return vs.commit(tx, osVer, advisoryID, oval)
 	})
 	if err != nil {
 		return oops.Wrapf(err, "batch update error")
@@ -98,7 +103,7 @@ func (vs VulnSrc) save(osVer string, oval PhotonOVAL) error {
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, osVer string, oval PhotonOVAL) error {
+func (vs VulnSrc) commit(tx *bolt.Tx, osVer, advisoryID string, oval PhotonOVAL) error {
 	platform := platformName(osVer)
 
 	if err := vs.dbc.PutDataSource(tx, platform, source); err != nil {
@@ -131,6 +136,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, osVer string, oval PhotonOVAL) error {
 		for _, pkg := range pkgs {
 			advisory := types.Advisory{
 				FixedVersion: pkg.FixedVersion,
+				VendorIDs:    []string{advisoryID},
 			}
 			if err := vs.dbc.PutAdvisoryDetail(tx, cve.ID, pkg.Name, []string{platform}, advisory); err != nil {
 				return oops.With("cve_id", cve.ID).With("pkg", pkg.Name).Wrapf(err, "failed to save advisory")

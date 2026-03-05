@@ -43,6 +43,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"advisory-detail", "CVE-2023-2602", "Photon OS 5.0", "libcap"},
 					Value: types.Advisory{
 						FixedVersion: "2.66-2.ph5",
+						VendorIDs:    []string{"PHSA-2023-5.0-20"},
 					},
 				},
 				// libcap-devel advisory for CVE-2023-2602
@@ -50,6 +51,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"advisory-detail", "CVE-2023-2602", "Photon OS 5.0", "libcap-devel"},
 					Value: types.Advisory{
 						FixedVersion: "2.66-2.ph5",
+						VendorIDs:    []string{"PHSA-2023-5.0-20"},
 					},
 				},
 				// libcap advisory for CVE-2023-2603
@@ -57,6 +59,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"advisory-detail", "CVE-2023-2603", "Photon OS 5.0", "libcap"},
 					Value: types.Advisory{
 						FixedVersion: "2.66-2.ph5",
+						VendorIDs:    []string{"PHSA-2023-5.0-20"},
 					},
 				},
 				// libcap-devel advisory for CVE-2023-2603
@@ -64,6 +67,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"advisory-detail", "CVE-2023-2603", "Photon OS 5.0", "libcap-devel"},
 					Value: types.Advisory{
 						FixedVersion: "2.66-2.ph5",
+						VendorIDs:    []string{"PHSA-2023-5.0-20"},
 					},
 				},
 				// vulnerability details
@@ -102,6 +106,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"advisory-detail", "CVE-2023-23914", "Photon OS 4.0", "curl"},
 					Value: types.Advisory{
 						FixedVersion: "7.87.0-3.ph4",
+						VendorIDs:    []string{"PHSA-2023-4.0-20"},
 					},
 				},
 				{
@@ -157,6 +162,7 @@ func TestVulnSrc_Get(t *testing.T) {
 				{
 					VulnerabilityID: "CVE-2023-2602",
 					FixedVersion:    "2.66-2.ph5",
+					VendorIDs:       []string{"PHSA-2023-5.0-20"},
 				},
 			},
 		},
