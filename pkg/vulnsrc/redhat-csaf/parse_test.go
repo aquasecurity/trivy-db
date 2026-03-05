@@ -222,16 +222,14 @@ func TestMergeCPEList(t *testing.T) {
 	vs := NewVulnSrc(WithRunAlongsideOVAL())
 	vs.dbc = dbc
 
-	t.Run("empty existing CPEs returns CSAF list as-is", func(t *testing.T) {
+	t.Run("empty existing CPEs returns error (OVAL must run first)", func(t *testing.T) {
 		csafCPEs := redhatoval.CPEList{"cpe:/o:redhat:el10", "cpe:/o:redhat:el10::appstream"}
-		var merged redhatoval.CPEList
 		err := dbc.BatchUpdate(func(tx *bolt.Tx) error {
-			var err error
-			merged, err = vs.mergeCPEList(tx, csafCPEs)
+			_, err := vs.mergeCPEList(tx, csafCPEs)
 			return err
 		})
-		require.NoError(t, err)
-		assert.Equal(t, csafCPEs, merged)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "no OVAL CPEs in DB")
 	})
 
 	t.Run("merges existing OVAL CPEs with new CSAF CPEs", func(t *testing.T) {

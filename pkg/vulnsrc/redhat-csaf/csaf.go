@@ -158,10 +158,10 @@ func (vs VulnSrc) mergeCPEList(tx *bolt.Tx, csafCPEs redhatoval.CPEList) (redhat
 	if err != nil {
 		return nil, oops.Wrapf(err, "failed to get existing CPEs")
 	}
-	// No OVAL CPEs in DB (e.g. CPEs only affect RHEL 10): use CSAF list as-is.
+	// runAlongsideOVAL is only used when OVAL has already run and written advisories/CPEs.
+	// Empty existingCPEs here is unexpected and indicates misconfiguration (e.g. wrong build order).
 	if len(existingCPEs) == 0 {
-		log.Debug("No OVAL CPEs in DB when merging, using CSAF list as-is", log.Int("csaf_count", len(csafCPEs)))
-		return csafCPEs, nil
+		return nil, oops.Errorf("no OVAL CPEs in DB; run redhat-oval before redhat-csaf when using WithRunAlongsideOVAL")
 	}
 
 	// Build a set of existing CPE strings (index-ordered slice from DB)
