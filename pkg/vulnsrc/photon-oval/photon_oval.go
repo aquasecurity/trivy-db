@@ -104,7 +104,7 @@ func (vs VulnSrc) save(osVer, advisoryID string, oval PhotonOVAL) error {
 }
 
 func (vs VulnSrc) commit(tx *bolt.Tx, osVer, advisoryID string, oval PhotonOVAL) error {
-	platform := platformName(osVer)
+	platform := bucket.NewPhoton(osVer).Name()
 
 	if err := vs.dbc.PutDataSource(tx, platform, source); err != nil {
 		return oops.With("platform", platform).Wrapf(err, "failed to put data source")
@@ -115,7 +115,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, osVer, advisoryID string, oval PhotonOVAL)
 		return nil
 	}
 
-	sev := mapSeverity(oval.Severity)
+	sev := severityFromThreat(oval.Severity)
 
 	for _, cve := range oval.Cves {
 		if cve.ID == "" {
@@ -171,8 +171,8 @@ func parsePackages(criteria Criteria) []AffectedPackage {
 	return pkgs
 }
 
-// mapSeverity maps a Photon OVAL severity string to a types.Severity value
-func mapSeverity(sev string) types.Severity {
+// severityFromThreat maps a Photon OVAL severity string to a types.Severity value
+func severityFromThreat(sev string) types.Severity {
 	switch sev {
 	case "Critical":
 		return types.SeverityCritical
@@ -186,15 +186,10 @@ func mapSeverity(sev string) types.Severity {
 	return types.SeverityUnknown
 }
 
-// platformName returns the BoltDB bucket name for a given Photon OS version
-func platformName(osVer string) string {
-	return bucket.NewPhoton(osVer).Name()
-}
-
 // Get returns advisories for a given Photon OS release and package name
 func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In("photon-oval").With("release", params.Release)
-	platform := platformName(params.Release)
+	platform := bucket.NewPhoton(params.Release).Name()
 	advisories, err := vs.dbc.GetAdvisories(platform, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories")
