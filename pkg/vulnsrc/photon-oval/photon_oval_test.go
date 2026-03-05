@@ -31,7 +31,7 @@ func TestVulnSrc_Update(t *testing.T) {
 			wantValues: []vulnsrctest.WantValues{
 				// Photon OS 5.0 data source
 				{
-					Key: []string{"data-source", "Photon OS 5.0"},
+					Key: []string{"data-source", "Photon OS OVAL 5.0"},
 					Value: types.DataSource{
 						ID:   vulnerability.PhotonOVAL,
 						Name: "Photon OS OVAL definitions",
@@ -40,7 +40,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				// libcap advisory for CVE-2023-2602
 				{
-					Key: []string{"advisory-detail", "CVE-2023-2602", "Photon OS 5.0", "libcap"},
+					Key: []string{"advisory-detail", "CVE-2023-2602", "Photon OS OVAL 5.0", "libcap"},
 					Value: types.Advisory{
 						FixedVersion: "2.66-2.ph5",
 						VendorIDs:    []string{"PHSA-2023-5.0-20"},
@@ -48,7 +48,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				// libcap-devel advisory for CVE-2023-2602
 				{
-					Key: []string{"advisory-detail", "CVE-2023-2602", "Photon OS 5.0", "libcap-devel"},
+					Key: []string{"advisory-detail", "CVE-2023-2602", "Photon OS OVAL 5.0", "libcap-devel"},
 					Value: types.Advisory{
 						FixedVersion: "2.66-2.ph5",
 						VendorIDs:    []string{"PHSA-2023-5.0-20"},
@@ -56,7 +56,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				// libcap advisory for CVE-2023-2603
 				{
-					Key: []string{"advisory-detail", "CVE-2023-2603", "Photon OS 5.0", "libcap"},
+					Key: []string{"advisory-detail", "CVE-2023-2603", "Photon OS OVAL 5.0", "libcap"},
 					Value: types.Advisory{
 						FixedVersion: "2.66-2.ph5",
 						VendorIDs:    []string{"PHSA-2023-5.0-20"},
@@ -64,7 +64,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				// libcap-devel advisory for CVE-2023-2603
 				{
-					Key: []string{"advisory-detail", "CVE-2023-2603", "Photon OS 5.0", "libcap-devel"},
+					Key: []string{"advisory-detail", "CVE-2023-2603", "Photon OS OVAL 5.0", "libcap-devel"},
 					Value: types.Advisory{
 						FixedVersion: "2.66-2.ph5",
 						VendorIDs:    []string{"PHSA-2023-5.0-20"},
@@ -94,7 +94,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				// Photon OS 4.0 data source
 				{
-					Key: []string{"data-source", "Photon OS 4.0"},
+					Key: []string{"data-source", "Photon OS OVAL 4.0"},
 					Value: types.DataSource{
 						ID:   vulnerability.PhotonOVAL,
 						Name: "Photon OS OVAL definitions",
@@ -103,7 +103,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				// curl advisory for CVE-2023-23914 (Moderate -> Medium)
 				{
-					Key: []string{"advisory-detail", "CVE-2023-23914", "Photon OS 4.0", "curl"},
+					Key: []string{"advisory-detail", "CVE-2023-23914", "Photon OS OVAL 4.0", "curl"},
 					Value: types.Advisory{
 						FixedVersion: "7.87.0-3.ph4",
 						VendorIDs:    []string{"PHSA-2023-4.0-20"},

@@ -1,4 +1,4 @@
-- bucket: Photon OS 5.0
+- bucket: Photon OS OVAL 5.0
   pairs:
     - bucket: libcap
       pairs:
