@@ -55,7 +55,7 @@ type Operation interface {
 	PutRedHatCPEs(tx *bolt.Tx, cpeIndex int, cpe string) (err error)
 	RedHatRepoToCPEs(repository string) (cpeIndices []int, err error)
 	RedHatNVRToCPEs(nvr string) (cpeIndices []int, err error)
-	GetAllRedHatCPEs(tx *bolt.Tx) (cpes map[int]string, err error)
+	GetAllRedHatCPEs(tx *bolt.Tx) (cpes []string, err error)
 }
 
 type Getter interface {

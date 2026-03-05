@@ -51,21 +51,20 @@ func WithCustomPut(put db.CustomPut) Option {
 	}
 }
 
-// WithSkipRepoNVRMappings skips storing repository-to-CPE and NVR-to-CPE mappings.
-// Use this when OVAL already stores these mappings and CSAF should not overwrite them.
-// This is useful when CSAF runs alongside OVAL (e.g., for RHEL 10 support while OVAL handles RHEL 7-9).
-func WithSkipRepoNVRMappings() Option {
+// WithRunAlongsideOVAL enables mode for CSAF running alongside redhat-oval (e.g. RHEL 10 from CSAF, RHEL 7–9 from OVAL).
+// When set: (1) CPE list is merged with existing OVAL CPEs in the DB; (2) repo-to-CPE and NVR-to-CPE mappings are not written (OVAL already stores them).
+func WithRunAlongsideOVAL() Option {
 	return func(src *VulnSrc) {
-		src.skipRepoNVRMappings = true
+		src.runAlongsideOVAL = true
 	}
 }
 
 type VulnSrc struct {
-	put                 db.CustomPut
-	skipRepoNVRMappings bool
-	dbc                 db.Operation
-	parser              Parser
-	aggregator          Aggregator
+	put              db.CustomPut
+	runAlongsideOVAL bool
+	dbc              db.Operation
+	parser           Parser
+	aggregator       Aggregator
 }
 
 func NewVulnSrc(opts ...Option) VulnSrc {
@@ -105,17 +104,14 @@ func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 	}
 	log.Info("Parsed CSAF VEX")
 
-	var cpeList redhatoval.CPEList
-	if vs.skipRepoNVRMappings {
-		// OVAL runs alongside CSAF: merge to preserve OVAL CPE indices.
+	cpeList := vs.parser.CPEList()
+	if vs.runAlongsideOVAL {
+		// Merge with existing OVAL CPEs in DB and preserve OVAL indices.
 		var err error
-		cpeList, err = vs.mergeCPEList(tx, vs.parser.CPEList())
+		cpeList, err = vs.mergeCPEList(tx, cpeList)
 		if err != nil {
 			return eb.Wrapf(err, "failed to merge CPE list")
 		}
-	} else {
-		// use CSAF CPE list as-is; no OVAL in DB.
-		cpeList = vs.parser.CPEList()
 	}
 
 	log.Info("Inserting mappings...")
@@ -156,32 +152,29 @@ func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 }
 
 // mergeCPEList merges the CSAF CPE list with existing OVAL CPEs in the database.
-// Existing OVAL CPE indices are preserved, and new CSAF-only CPEs are appended.
+// Existing OVAL CPE indices are preserved; new CPEs (e.g. RHEL 10-only, not in OVAL) are appended.
 func (vs VulnSrc) mergeCPEList(tx *bolt.Tx, csafCPEs redhatoval.CPEList) (redhatoval.CPEList, error) {
 	existingCPEs, err := vs.dbc.GetAllRedHatCPEs(tx)
 	if err != nil {
 		return nil, oops.Wrapf(err, "failed to get existing CPEs")
 	}
-
+	// No OVAL CPEs in DB (e.g. CPEs only affect RHEL 10): use CSAF list as-is.
 	if len(existingCPEs) == 0 {
+		log.Debug("No OVAL CPEs in DB when merging, using CSAF list as-is", log.Int("csaf_count", len(csafCPEs)))
 		return csafCPEs, nil
 	}
 
-	// Build a set of existing CPE strings and find max index
+	// Build a set of existing CPE strings (index-ordered slice from DB)
 	existingSet := make(map[string]bool, len(existingCPEs))
-	maxIndex := -1
-	for idx, cpe := range existingCPEs {
-		existingSet[cpe] = true
-		if idx > maxIndex {
-			maxIndex = idx
+	for _, cpe := range existingCPEs {
+		if cpe != "" {
+			existingSet[cpe] = true
 		}
 	}
 
 	// Start with existing CPEs in order
-	merged := make(redhatoval.CPEList, maxIndex+1)
-	for idx, cpe := range existingCPEs {
-		merged[idx] = cpe
-	}
+	merged := make(redhatoval.CPEList, len(existingCPEs))
+	copy(merged, existingCPEs)
 
 	// Append new CSAF CPEs that don't exist in OVAL
 	for _, cpe := range csafCPEs {
@@ -203,10 +196,8 @@ func (vs VulnSrc) putMappings(tx *bolt.Tx, cpeList redhatoval.CPEList) error {
 		return oops.Wrapf(err, "failed to put data source")
 	}
 
-	// Skip repo/NVR mappings if requested (e.g., when OVAL already stores them).
-	// This prevents CSAF from overwriting OVAL's correct mappings with indices
-	// computed from a different CPE directory.
-	if !vs.skipRepoNVRMappings {
+	// When running alongside OVAL, do not write repo/NVR mappings (OVAL already stores them).
+	if !vs.runAlongsideOVAL {
 		// Store the mapping between repository and CPE names
 		for repo, cpes := range vs.parser.RepoToCPE() {
 			if err := vs.dbc.PutRedHatRepositories(tx, repo, cpeList.Indices(cpes)); err != nil {
@@ -222,7 +213,7 @@ func (vs VulnSrc) putMappings(tx *bolt.Tx, cpeList redhatoval.CPEList) error {
 		}
 	}
 
-	// Store CPE indices (when skipRepoNVRMappings, cpeList is merged with OVAL; otherwise CSAF-only)
+	// Store CPE indices (when runAlongsideOVAL, cpeList is merged with OVAL; otherwise CSAF-only)
 	for i, cpe := range cpeList {
 		if err := vs.dbc.PutRedHatCPEs(tx, i, cpe); err != nil {
 			return oops.With("cpe", cpe).Wrapf(err, "CPE put error")

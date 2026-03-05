@@ -66,21 +66,20 @@ func (dbc Config) getCPEs(bucket, key string) ([]int, error) {
 	return cpes, nil
 }
 
-// GetAllRedHatCPEs returns all stored CPE mappings (index -> CPE string).
+// GetAllRedHatCPEs returns all stored CPE strings ordered by their index.
 // This is used to merge CSAF CPEs with existing OVAL CPEs.
-func (dbc Config) GetAllRedHatCPEs(tx *bolt.Tx) (map[int]string, error) {
-	result := make(map[int]string)
-
+func (dbc Config) GetAllRedHatCPEs(tx *bolt.Tx) ([]string, error) {
 	root := tx.Bucket([]byte(redhatCPERootBucket))
 	if root == nil {
-		return result, nil
+		return nil, nil
 	}
-
 	cpeBucket := root.Bucket([]byte(redhatCPEBucket))
 	if cpeBucket == nil {
-		return result, nil
+		return nil, nil
 	}
-
+	// BoltDB iterates keys in lexicographic order ("0","1","10","2",...),
+	// so we parse each key as an integer and assign by index directly.
+	var result []string
 	err := cpeBucket.ForEach(func(k, v []byte) error {
 		index, err := strconv.Atoi(string(k))
 		if err != nil {
@@ -90,12 +89,14 @@ func (dbc Config) GetAllRedHatCPEs(tx *bolt.Tx) (map[int]string, error) {
 		if err := json.Unmarshal(v, &cpe); err != nil {
 			return oops.Wrapf(err, "failed to unmarshal CPE value")
 		}
+		for len(result) <= index {
+			result = append(result, "")
+		}
 		result[index] = cpe
 		return nil
 	})
 	if err != nil {
 		return nil, oops.Wrapf(err, "failed to iterate CPE bucket")
 	}
-
 	return result, nil
 }

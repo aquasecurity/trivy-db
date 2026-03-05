@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/gocsaf/csaf/v3/csaf"
 	"github.com/package-url/packageurl-go"
@@ -447,10 +448,11 @@ func (p *Parser) ReleaseDate(vulnID VulnerabilityID) string {
 
 // formatDate extracts the date portion (YYYY-MM-DD) from an RFC3339 timestamp.
 func (p *Parser) formatDate(timestamp string) string {
-	if len(timestamp) >= 10 {
-		return timestamp[:10]
+	t, err := time.Parse(time.RFC3339, timestamp)
+	if err != nil {
+		return ""
 	}
-	return timestamp
+	return t.Format(time.DateOnly)
 }
 
 // SerializeAdvisories saves the current advisories map to a file
