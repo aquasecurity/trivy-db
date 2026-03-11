@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/samber/lo"
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
 
@@ -154,7 +155,7 @@ func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 // mergeCPEList merges the CSAF CPE list with existing OVAL CPEs in the database.
 // Existing OVAL CPE indices are preserved; new CPEs (e.g. RHEL 10-only, not in OVAL) are appended.
 func (vs VulnSrc) mergeCPEList(tx *bolt.Tx, csafCPEs redhatoval.CPEList) (redhatoval.CPEList, error) {
-	existingCPEs, err := vs.dbc.GetAllRedHatCPEs(tx)
+	existingCPEs, err := vs.dbc.RedHatCPEs(tx)
 	if err != nil {
 		return nil, oops.Wrapf(err, "failed to get existing CPEs")
 	}
@@ -163,27 +164,7 @@ func (vs VulnSrc) mergeCPEList(tx *bolt.Tx, csafCPEs redhatoval.CPEList) (redhat
 	if len(existingCPEs) == 0 {
 		return nil, oops.Errorf("no OVAL CPEs in DB; run redhat-oval before redhat-csaf when using WithRunAlongsideOVAL")
 	}
-
-	// Build a set of existing CPE strings (index-ordered slice from DB)
-	existingSet := make(map[string]bool, len(existingCPEs))
-	for _, cpe := range existingCPEs {
-		if cpe != "" {
-			existingSet[cpe] = true
-		}
-	}
-
-	// Start with existing CPEs in order
-	merged := make(redhatoval.CPEList, len(existingCPEs))
-	copy(merged, existingCPEs)
-
-	// Append new CSAF CPEs that don't exist in OVAL
-	for _, cpe := range csafCPEs {
-		if !existingSet[cpe] {
-			merged = append(merged, cpe)
-			existingSet[cpe] = true
-		}
-	}
-
+	merged := redhatoval.CPEList(lo.Uniq(append(existingCPEs, csafCPEs...)))
 	log.Info("Merged CPE list", "oval_count", len(existingCPEs), "csaf_count", len(csafCPEs), "merged_count", len(merged))
 	return merged, nil
 }

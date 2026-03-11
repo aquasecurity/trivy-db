@@ -211,54 +211,66 @@ func TestParser_DetectStatus(t *testing.T) {
 		})
 	}
 }
-
 func TestMergeCPEList(t *testing.T) {
-	tempDir := t.TempDir()
-	err := db.Init(tempDir)
-	require.NoError(t, err)
-	defer db.Close()
-
-	dbc := db.Config{}
-	vs := NewVulnSrc(WithRunAlongsideOVAL())
-	vs.dbc = dbc
-
-	t.Run("empty existing CPEs returns error (OVAL must run first)", func(t *testing.T) {
-		csafCPEs := redhatoval.CPEList{"cpe:/o:redhat:el10", "cpe:/o:redhat:el10::appstream"}
-		err := dbc.BatchUpdate(func(tx *bolt.Tx) error {
-			_, err := vs.mergeCPEList(tx, csafCPEs)
-			return err
+	tests := []struct {
+		name         string
+		existingCPEs redhatoval.CPEList
+		csafCPEs     redhatoval.CPEList
+		want         redhatoval.CPEList
+		wantErr      string
+	}{
+		{
+			name:     "no existing OVAL CPEs returns error",
+			csafCPEs: redhatoval.CPEList{"cpe:/o:redhat:el10", "cpe:/o:redhat:el10::appstream"},
+			wantErr:  "no OVAL CPEs in DB",
+		},
+		{
+			name:         "appends new CSAF CPEs to OVAL CPEs",
+			existingCPEs: redhatoval.CPEList{"cpe:/o:redhat:el8::baseos", "cpe:/o:redhat:el9::baseos"},
+			csafCPEs:     redhatoval.CPEList{"cpe:/o:redhat:el10::baseos"},
+			want: redhatoval.CPEList{
+				"cpe:/o:redhat:el8::baseos", "cpe:/o:redhat:el9::baseos", "cpe:/o:redhat:el10::baseos",
+			},
+		},
+		{
+			name:         "deduplicates CPEs already present in OVAL",
+			existingCPEs: redhatoval.CPEList{"cpe:/o:redhat:el8::baseos", "cpe:/o:redhat:el9::baseos"},
+			csafCPEs:     redhatoval.CPEList{"cpe:/o:redhat:el9::baseos", "cpe:/o:redhat:el10::baseos"},
+			want: redhatoval.CPEList{
+				"cpe:/o:redhat:el8::baseos", "cpe:/o:redhat:el9::baseos", "cpe:/o:redhat:el10::baseos",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tempDir := t.TempDir()
+			require.NoError(t, db.Init(tempDir))
+			t.Cleanup(func() {
+				_ = db.Close()
+			})
+			dbc := db.Config{}
+			vs := NewVulnSrc(WithRunAlongsideOVAL())
+			vs.dbc = dbc
+			if len(tt.existingCPEs) > 0 {
+				require.NoError(t, dbc.BatchUpdate(func(tx *bolt.Tx) error {
+					for i, cpe := range tt.existingCPEs {
+						require.NoError(t, dbc.PutRedHatCPEs(tx, i, cpe))
+					}
+					return nil
+				}))
+			}
+			var got redhatoval.CPEList
+			err := dbc.BatchUpdate(func(tx *bolt.Tx) error {
+				var err error
+				got, err = vs.mergeCPEList(tx, tt.csafCPEs)
+				return err
+			})
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
 		})
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "no OVAL CPEs in DB")
-	})
-
-	t.Run("merges existing OVAL CPEs with new CSAF CPEs", func(t *testing.T) {
-		csafCPEs := redhatoval.CPEList{"cpe:/o:redhat:el10::baseos"}
-		var merged redhatoval.CPEList
-		err := dbc.BatchUpdate(func(tx *bolt.Tx) error {
-			require.NoError(t, dbc.PutRedHatCPEs(tx, 0, "cpe:/o:redhat:el8::baseos"))
-			require.NoError(t, dbc.PutRedHatCPEs(tx, 1, "cpe:/o:redhat:el9::baseos"))
-			var err error
-			merged, err = vs.mergeCPEList(tx, csafCPEs)
-			return err
-		})
-		require.NoError(t, err)
-		want := redhatoval.CPEList{"cpe:/o:redhat:el8::baseos", "cpe:/o:redhat:el9::baseos", "cpe:/o:redhat:el10::baseos"}
-		assert.Equal(t, want, merged)
-	})
-
-	t.Run("does not duplicate CPEs that exist in OVAL", func(t *testing.T) {
-		csafCPEs := redhatoval.CPEList{"cpe:/o:redhat:el9::baseos", "cpe:/o:redhat:el10::baseos"}
-		var merged redhatoval.CPEList
-		err := dbc.BatchUpdate(func(tx *bolt.Tx) error {
-			require.NoError(t, dbc.PutRedHatCPEs(tx, 0, "cpe:/o:redhat:el8::baseos"))
-			require.NoError(t, dbc.PutRedHatCPEs(tx, 1, "cpe:/o:redhat:el9::baseos"))
-			var err error
-			merged, err = vs.mergeCPEList(tx, csafCPEs)
-			return err
-		})
-		require.NoError(t, err)
-		want := redhatoval.CPEList{"cpe:/o:redhat:el8::baseos", "cpe:/o:redhat:el9::baseos", "cpe:/o:redhat:el10::baseos"}
-		assert.Equal(t, want, merged)
-	})
+	}
 }

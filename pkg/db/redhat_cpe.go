@@ -66,9 +66,9 @@ func (dbc Config) getCPEs(bucket, key string) ([]int, error) {
 	return cpes, nil
 }
 
-// GetAllRedHatCPEs returns all stored CPE strings ordered by their index.
+// RedHatCPEs returns all stored CPE strings ordered by their index.
 // This is used to merge CSAF CPEs with existing OVAL CPEs.
-func (dbc Config) GetAllRedHatCPEs(tx *bolt.Tx) ([]string, error) {
+func (dbc Config) RedHatCPEs(tx *bolt.Tx) ([]string, error) {
 	root := tx.Bucket([]byte(redhatCPERootBucket))
 	if root == nil {
 		return nil, nil
