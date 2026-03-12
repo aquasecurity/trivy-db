@@ -10,6 +10,7 @@ import (
 
 	gocvss30 "github.com/pandatix/go-cvss/30"
 	gocvss31 "github.com/pandatix/go-cvss/31"
+	gocvss40 "github.com/pandatix/go-cvss/40"
 	"github.com/samber/lo"
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
@@ -36,14 +37,16 @@ type Advisory struct {
 	Arches             []string
 
 	// Vulnerability detail
-	Severity     types.Severity
-	Title        string
-	Description  string
-	References   []string
-	CVSSScoreV3  float64
-	CVSSVectorV3 string
-	Modified     time.Time
-	Published    time.Time
+	Severity      types.Severity
+	Title         string
+	Description   string
+	References    []string
+	CVSSScoreV3   float64
+	CVSSVectorV3  string
+	CVSSScoreV40  float64
+	CVSSVectorV40 string
+	Modified      time.Time
+	Published     time.Time
 }
 
 // BucketResolver resolves an ecosystem string to a bucket
@@ -214,6 +217,8 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 			Description:      adv.Description,
 			CvssScoreV3:      adv.CVSSScoreV3,
 			CvssVectorV3:     adv.CVSSVectorV3,
+			CvssScoreV40:     adv.CVSSScoreV40,
+			CvssVectorV40:    adv.CVSSVectorV40,
 			PublishedDate:    lo.Ternary(!adv.Published.IsZero(), &adv.Published, nil),
 			LastModifiedDate: lo.Ternary(!adv.Modified.IsZero(), &adv.Modified, nil),
 		}
@@ -235,7 +240,7 @@ func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) (
 	eb := oops.With("entry_id", entry.ID).With("vuln_ids", vulnIDs).With("aliases", aliases)
 
 	// Severities can be found both in severity and affected[].severity fields.
-	cvssVectorV3, cvssScoreV3, err := parseSeverity(entry.Severities)
+	sev, err := parseSeverities(entry.Severities)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to decode CVSS vector")
 	}
@@ -256,11 +261,15 @@ func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) (
 		}
 
 		// Parse affected[].severity
-		if vecV3, scoreV3, err := parseSeverity(affected.Severities); err != nil {
+		affSev, err := parseSeverities(affected.Severities)
+		if err != nil {
 			return nil, eb.Wrapf(err, "failed to decode CVSS vector")
-		} else if vecV3 != "" {
-			// Overwrite the CVSS vector and score if affected[].severity is set
-			cvssVectorV3, cvssScoreV3 = vecV3, scoreV3
+		}
+		if affSev.VectorV3 != "" {
+			sev.VectorV3, sev.ScoreV3 = affSev.VectorV3, affSev.ScoreV3
+		}
+		if affSev.VectorV40 != "" {
+			sev.VectorV40, sev.ScoreV40 = affSev.VectorV40, affSev.ScoreV40
 		}
 
 		key := fmt.Sprintf("%s/%s", bkt.Ecosystem(), pkgName)
@@ -282,8 +291,10 @@ func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) (
 					Title:              entry.Summary,
 					Description:        entry.Details,
 					References:         references,
-					CVSSVectorV3:       cvssVectorV3,
-					CVSSScoreV3:        cvssScoreV3,
+					CVSSVectorV3:       sev.VectorV3,
+					CVSSScoreV3:        sev.ScoreV3,
+					CVSSVectorV40:      sev.VectorV40,
+					CVSSScoreV40:       sev.ScoreV40,
 					Modified:           entry.Modified,
 					Published:          entry.Published,
 				}
@@ -370,43 +381,76 @@ func parseAffectedVersions(affected Affected) ([]string, []string, error) {
 	return vulnerableVersions, patchedVersions, nil
 }
 
-// parseSeverity parses the severity field and returns CVSSv3 vector and score
+type severityResult struct {
+	VectorV3  string
+	ScoreV3   float64
+	VectorV40 string
+	ScoreV40  float64
+}
+
+// parseSeverities parses the severity field and returns CVSSv3 and CVSSv4 vectors and scores
 // cf.
 // - https://ossf.github.io/osv-schema/#severity-field
 // - https://ossf.github.io/osv-schema/#affectedseverity-field
-func parseSeverity(severities []Severity) (string, float64, error) {
+func parseSeverities(severities []Severity) (severityResult, error) {
+	var result severityResult
 	for _, s := range severities {
-		if s.Type == "CVSS_V3" && s.Score != "" {
-			// CVSS vectors possibly have `/` suffix
-			// e.g. https://github.com/github/advisory-database/blob/2d3bc73d2117893b217233aeb95b9236c7b93761/advisories/github-reviewed/2019/05/GHSA-j59f-6m4q-62h6/GHSA-j59f-6m4q-62h6.json#L14
-			// Trim the suffix to avoid errors
-			cvssVectorV3 := strings.TrimSuffix(s.Score, "/")
-			eb := oops.With("cvss_vector_v3", cvssVectorV3)
-			switch {
-			case strings.HasPrefix(cvssVectorV3, "CVSS:3.0"):
-				cvss, err := gocvss30.ParseVector(cvssVectorV3)
-				if err != nil {
-					return "", 0, eb.Wrapf(err, "failed to parse CVSSv3.0 vector")
-				}
-				// cvss.EnvironmentalScore() returns the optimal score required from Vector.
-				// If the Environmental Metrics is not set, it will be the same value as TemporalScore(),
-				// and if Temporal Metrics is not set, it will be the same value as Basescore().
-				return cvssVectorV3, cvss.EnvironmentalScore(), nil
-			case strings.HasPrefix(s.Score, "CVSS:3.1"):
-				cvss, err := gocvss31.ParseVector(cvssVectorV3)
-				if err != nil {
-					return "", 0, oops.Wrapf(err, "failed to parse CVSSv3.1 vector")
-				}
-				// cvss.EnvironmentalScore() returns the optimal score required from Vector.
-				// If the Environmental Metrics is not set, it will be the same value as TemporalScore(),
-				// and if Temporal Metrics is not set, it will be the same value as Basescore().
-				return cvssVectorV3, cvss.EnvironmentalScore(), nil
-			default:
-				return "", 0, eb.Errorf("vector does not have CVSS v3 prefix: \"CVSS:3.0\" or \"CVSS:3.1\"")
+		if s.Score == "" {
+			continue
+		}
+		switch s.Type {
+		case "CVSS_V3":
+			vec, score, err := parseSeverityV3(s.Score)
+			if err != nil {
+				return severityResult{}, err
 			}
+			result.VectorV3 = vec
+			result.ScoreV3 = score
+		case "CVSS_V4":
+			vec, score, err := parseSeverityV40(s.Score)
+			if err != nil {
+				return severityResult{}, err
+			}
+			result.VectorV40 = vec
+			result.ScoreV40 = score
 		}
 	}
-	return "", 0, nil
+	return result, nil
+}
+
+// parseSeverityV3 parses a CVSSv3 vector string and returns the vector and score
+func parseSeverityV3(score string) (string, float64, error) {
+	// CVSS vectors possibly have `/` suffix
+	// e.g. https://github.com/github/advisory-database/blob/2d3bc73d2117893b217233aeb95b9236c7b93761/advisories/github-reviewed/2019/05/GHSA-j59f-6m4q-62h6/GHSA-j59f-6m4q-62h6.json#L14
+	// Trim the suffix to avoid errors
+	vector := strings.TrimSuffix(score, "/")
+	eb := oops.With("cvss_vector_v3", vector)
+	switch {
+	case strings.HasPrefix(vector, "CVSS:3.0"):
+		cvss, err := gocvss30.ParseVector(vector)
+		if err != nil {
+			return "", 0, eb.Wrapf(err, "failed to parse CVSSv3.0 vector")
+		}
+		return vector, cvss.EnvironmentalScore(), nil
+	case strings.HasPrefix(vector, "CVSS:3.1"):
+		cvss, err := gocvss31.ParseVector(vector)
+		if err != nil {
+			return "", 0, eb.Wrapf(err, "failed to parse CVSSv3.1 vector")
+		}
+		return vector, cvss.EnvironmentalScore(), nil
+	default:
+		return "", 0, eb.Errorf("vector does not have CVSS v3 prefix: \"CVSS:3.0\" or \"CVSS:3.1\"")
+	}
+}
+
+// parseSeverityV40 parses a CVSSv4.0 vector string and returns the vector and score
+func parseSeverityV40(score string) (string, float64, error) {
+	vector := strings.TrimSuffix(score, "/")
+	cvss, err := gocvss40.ParseVector(vector)
+	if err != nil {
+		return "", 0, oops.With("cvss_vector_v40", vector).Wrapf(err, "failed to parse CVSSv4.0 vector")
+	}
+	return cvss.Vector(), cvss.Score(), nil
 }
 
 func (o OSV) resolveBucket(raw string) (bucket.Bucket, error) {

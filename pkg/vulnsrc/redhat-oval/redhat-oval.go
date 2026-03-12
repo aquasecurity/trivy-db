@@ -345,13 +345,13 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 		}
 
 		// Parse criteria
-		moduleName, affectedPkgs := walkCriterion(advisory.Criteria, tests)
+		affectedPkgs := walkCriterion(advisory.Criteria, tests)
 		for _, affectedPkg := range affectedPkgs {
 			pkgName := affectedPkg.Name
-			if moduleName != "" {
+			if affectedPkg.Module != "" {
 				// Add modular namespace
 				// e.g. nodejs:12::npm
-				pkgName = fmt.Sprintf("%s::%s", moduleName, pkgName)
+				pkgName = fmt.Sprintf("%s::%s", affectedPkg.Module, pkgName)
 			}
 
 			rhsaID := vendorID(advisory.Metadata.References)
@@ -412,12 +412,29 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 	return defs
 }
 
-func walkCriterion(cri criteria, tests map[string]rpmInfoTest) (string, []pkg) {
+// walkCriterion recursively walks the OVAL criteria tree and extracts affected packages.
+// It handles modular packages by associating each package with its module context.
+//
+// OVAL structure for modular packages:
+//
+//	Criteria (AND)
+//	├── Criterion: "Module nodejs:20 is enabled"   ← module condition at this level
+//	└── Criterias                                   ← packages are always nested
+//	    └── Criteria (AND)
+//	        ├── Criterion: "nodejs-full-i18n is installed"
+//	        └── Criterion: "nodejs-full-i18n is signed..."
+//
+// When multiple modules exist at the same level (e.g., nodejs:20 OR nodejs:22),
+// each module's packages are processed separately and tagged with their respective module.
+//
+//nolint:misspell
+func walkCriterion(cri criteria, tests map[string]rpmInfoTest) []pkg {
 	var moduleName string
 	var packages []pkg
 
+	// First pass: extract module name and packages from current level Criterions
 	for _, c := range cri.Criterions {
-		// Parse module name
+		// Check if this criterion defines a module (e.g., "Module nodejs:20 is enabled")
 		m := moduleRegexp.FindStringSubmatch(c.Comment)
 		if len(m) > 1 && m[1] != "" {
 			moduleName = m[1]
@@ -447,20 +464,25 @@ func walkCriterion(cri criteria, tests map[string]rpmInfoTest) (string, []pkg) {
 		})
 	}
 
-	if len(cri.Criterias) == 0 { //nolint:misspell
-		return moduleName, packages
+	if len(cri.Criterias) == 0 {
+		return packages
 	}
 
-	for _, c := range cri.Criterias { //nolint:misspell
-		m, pkgs := walkCriterion(c, tests)
-		if m != "" {
-			moduleName = m
+	// Second pass: recursively process nested Criterias
+	for _, c := range cri.Criterias {
+		pkgs := walkCriterion(c, tests)
+
+		// Apply current module to nested packages that don't have one.
+		// This propagates the module context down the tree.
+		for i := range pkgs {
+			if pkgs[i].Module == "" {
+				pkgs[i].Module = moduleName
+			}
 		}
-		if len(pkgs) != 0 {
-			packages = append(packages, pkgs...)
-		}
+
+		packages = append(packages, pkgs...)
 	}
-	return moduleName, packages
+	return packages
 }
 
 func updateCPEs(cpes []string, uniqCPEs CPEMap) {

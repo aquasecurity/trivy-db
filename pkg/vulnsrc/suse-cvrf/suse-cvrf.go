@@ -220,6 +220,7 @@ func (vs VulnSrc) getAffectedPackages(relationships []Relationship) []AffectedPa
 	return pkgs
 }
 
+//nolint:gocyclo
 func (vs VulnSrc) getOSVersion(platformName string) string {
 	if strings.Contains(platformName, "SUSE Manager") {
 		// SUSE Linux Enterprise Module for SUSE Manager Server 4.0
@@ -272,6 +273,21 @@ func (vs VulnSrc) getOSVersion(platformName string) string {
 			return ""
 		}
 		return bucket.NewSUSELinuxEnterpriseMicro(ss[4]).Name()
+	}
+	if strings.HasPrefix(platformName, "SUSE Linux Micro") {
+		// SUSE Linux Micro 6.0
+		ss := strings.Split(platformName, " ")
+		if len(ss) < 4 {
+			vs.logger.Warn("Invalid version", log.String("platform", platformName))
+			return ""
+		}
+		if _, err := version.Parse(ss[3]); err != nil {
+			vs.logger.Warn("Invalid version",
+				log.String("platform", platformName),
+				log.Err(err))
+			return ""
+		}
+		return bucket.NewSUSELinuxEnterpriseMicro(ss[3]).Name()
 	}
 	if strings.Contains(platformName, "SUSE Linux Enterprise") {
 		// e.g. SUSE Linux Enterprise Storage 7

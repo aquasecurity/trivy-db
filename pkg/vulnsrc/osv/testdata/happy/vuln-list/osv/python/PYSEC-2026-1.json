@@ -1,0 +1,51 @@
+{
+  "id": "PYSEC-2026-1",
+  "modified": "2026-02-02T19:57:31Z",
+  "published": "2026-01-08T19:51:21Z",
+  "aliases": [
+    "CVE-2026-21860"
+  ],
+  "summary": "Werkzeug safe_join() allows Windows special device names with compound extensions",
+  "details": "Werkzeug's `safe_join` function allows path segments with Windows device names that have file extensions or trailing spaces.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+    },
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "PyPI",
+        "name": "Werkzeug"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.1.5"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/pallets/werkzeug/security/advisories/GHSA-87hc-h4r5-73f7"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-21860"
+    }
+  ]
+}

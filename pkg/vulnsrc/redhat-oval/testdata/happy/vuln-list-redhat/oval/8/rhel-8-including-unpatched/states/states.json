@@ -49,6 +49,32 @@
         "Operation": "less than"
       },
       "SignatureKeyID": {}
+    },
+    {
+      "ID": "oval:com.redhat.cve:ste:20052541001",
+      "Version": "636",
+      "Arch": {},
+      "Evr": {},
+      "SignatureKeyID": {
+        "Text": "199e2f91fd431d51",
+        "Operation": "equals"
+      }
+    },
+    {
+      "ID": "oval:com.redhat.cve:ste:202421538003",
+      "Version": "636",
+      "Text": {
+        "Text": "\\nstream\\s*=\\s*20\\b[\\w\\W]*\\nstate\\s*=\\s*(enabled|1|true)|\\nstate\\s*=\\s*(enabled|1|true)[\\w\\W]*\\nstream\\s*=\\s*20\\b",
+        "Operation": "pattern match"
+      }
+    },
+    {
+      "ID": "oval:com.redhat.cve:ste:202529087002",
+      "Version": "636",
+      "Text": {
+        "Text": "\\nstream\\s*=\\s*22\\b[\\w\\W]*\\nstate\\s*=\\s*(enabled|1|true)|\\nstate\\s*=\\s*(enabled|1|true)[\\w\\W]*\\nstream\\s*=\\s*22\\b",
+        "Operation": "pattern match"
+      }
     }
   ]
 }

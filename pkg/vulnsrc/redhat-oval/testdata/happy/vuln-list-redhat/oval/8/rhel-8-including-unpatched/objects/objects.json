@@ -29,6 +29,32 @@
       "ID": "oval:com.redhat.cve:obj:202011879002",
       "Version": "636",
       "Name": "evolution"
+    },
+    {
+      "ID": "oval:com.redhat.cve:obj:202028362013",
+      "Version": "636",
+      "Name": "grafana-postgres"
+    },
+    {
+      "ID": "oval:com.redhat.cve:obj:20183750002",
+      "Version": "636",
+      "Filepath": {
+        "Text": "/etc/dnf/modules.d/nodejs.module",
+        "Datatype": "string"
+      },
+      "Pattern": {
+        "Text": "\\[nodejs\\][\\w\\W]*",
+        "Operation": "pattern match"
+      },
+      "Instance": {
+        "Text": "1",
+        "Datatype": "int"
+      }
+    },
+    {
+      "ID": "oval:com.redhat.cve:obj:201715897003",
+      "Version": "636",
+      "Name": "nodejs-full-i18n"
     }
   ]
 }
