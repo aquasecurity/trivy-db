@@ -494,6 +494,98 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 			wantErr: "failed to split advisories by ranges: vulnerable version range should contain the patched version",
 		},
+		{
+			name:   "Seal maven advisories",
+			baseOS: ecosystem.Maven,
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			args: args{
+				pkgName: "seal.sp1.org.apache.logging.log4j:log4j-core",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2025-68161",
+					VulnerableVersions: []string{">=2.13.3, <2.13.3+sp999"},
+					PatchedVersions:    []string{"2.13.3+sp999"},
+					DataSource: &types.DataSource{
+						ID:   vulnerability.Seal,
+						Name: "Seal Security Database",
+						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+					},
+				},
+			},
+		},
+		{
+			name:   "Seal pip advisories",
+			baseOS: ecosystem.Pip,
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			args: args{
+				pkgName: "seal-requests",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-32681",
+					VulnerableVersions: []string{">=2.14.2+sp1, <2.14.2+sp999"},
+					PatchedVersions:    []string{"2.14.2+sp999"},
+					DataSource: &types.DataSource{
+						ID:   vulnerability.Seal,
+						Name: "Seal Security Database",
+						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+					},
+				},
+			},
+		},
+		{
+			name:   "Seal npm advisories",
+			baseOS: ecosystem.Npm,
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			args: args{
+				pkgName: "@seal-security/ajv",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2025-69873",
+					VulnerableVersions: []string{">=5.5.2-sp1, <5.5.2-sp999"},
+					PatchedVersions:    []string{"5.5.2-sp999"},
+					DataSource: &types.DataSource{
+						ID:   vulnerability.Seal,
+						Name: "Seal Security Database",
+						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+					},
+				},
+			},
+		},
+		{
+			name:   "Seal go advisories",
+			baseOS: ecosystem.Go,
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			args: args{
+				pkgName: "sealsecurity.io/golang.org/x/crypto",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2025-22869",
+					VulnerableVersions: []string{">=0.26.0-sp1, <0.26.0-sp2"},
+					PatchedVersions:    []string{"0.26.0-sp2"},
+					DataSource: &types.DataSource{
+						ID:   vulnerability.Seal,
+						Name: "Seal Security Database",
+						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
