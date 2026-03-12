@@ -43,11 +43,11 @@ func resolveBucket(suffix string) (bucket.Bucket, error) {
 	case "red hat":
 		eco = ecosystem.RedHat
 		src.BaseID = vulnerability.RedHat
-	case "maven":
+	case "java":
 		eco = ecosystem.Maven
-	case "pypi":
+	case "python":
 		eco = ecosystem.Pip
-	case "npm":
+	case "node":
 		eco = ecosystem.Npm
 	case "go":
 		eco = ecosystem.Go
