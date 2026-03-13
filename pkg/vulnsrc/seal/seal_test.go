@@ -122,6 +122,18 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"data-source",
+						"seal Red Hat 6",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.Seal,
+						Name:   "Seal Security Database",
+						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+						BaseID: vulnerability.RedHat,
+					},
+				},
+				{
+					Key: []string{
+						"data-source",
 						"seal Red Hat 7",
 					},
 					Value: types.DataSource{
