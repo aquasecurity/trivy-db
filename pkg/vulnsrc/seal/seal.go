@@ -29,24 +29,33 @@ var (
 // resolveBucket creates a seal bucket from base ecosystem suffix
 func resolveBucket(suffix string) (bucket.Bucket, error) {
 	var eco ecosystem.Type
+	src := source
 	// Separate base ecosystem and version (if exists)
-	// e.g. "Alpine", "Red Hat:8", "Debian"
+	// e.g. "Alpine", "Red Hat:8", "Debian", "Maven", "PyPI", "npm", "Go"
 	baseEco, ver, _ := strings.Cut(suffix, ":")
 	switch baseEco {
 	case "alpine":
 		eco = ecosystem.Alpine
-		source.BaseID = vulnerability.Alpine
+		src.BaseID = vulnerability.Alpine
 	case "debian":
 		eco = ecosystem.Debian
-		source.BaseID = vulnerability.Debian
+		src.BaseID = vulnerability.Debian
 	case "red hat":
 		eco = ecosystem.RedHat
-		source.BaseID = vulnerability.RedHat
+		src.BaseID = vulnerability.RedHat
+	case "java":
+		eco = ecosystem.Maven
+	case "python":
+		eco = ecosystem.Pip
+	case "node":
+		eco = ecosystem.Npm
+	case "go":
+		eco = ecosystem.Go
 	default:
 		return nil, oops.With("ecosystem", "seal").With("base", suffix).Errorf("unsupported base ecosystem")
 	}
 
-	return newBucket(eco, ver, source)
+	return newBucket(eco, ver, src)
 }
 
 type VulnSrc struct {
@@ -92,7 +101,7 @@ func NewVulnSrcGetter(baseEcosystem ecosystem.Type) VulnSrcGetter {
 func (vs VulnSrcGetter) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In("seal").With("base_ecosystem", vs.baseEcosystem).With("os_version", params.Release).With("package_name", params.PkgName)
 
-	bkt, err := newBucket(vs.baseEcosystem, params.Release, types.DataSource{})
+	bkt, err := newBucket(vs.baseEcosystem, params.Release, source)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to create a bucket name")
 	}

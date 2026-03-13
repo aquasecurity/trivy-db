@@ -33,6 +33,8 @@ func newBucket(baseEco ecosystem.Type, baseEcoVer string, dataSource types.DataS
 	bkt := sealBucket{
 		dataSource: dataSource,
 	}
+
+	var err error
 	switch baseEco {
 	case ecosystem.Alpine:
 		bkt.base = bucket.NewAlpine("")
@@ -40,8 +42,20 @@ func newBucket(baseEco ecosystem.Type, baseEcoVer string, dataSource types.DataS
 		bkt.base = bucket.NewDebian("")
 	case ecosystem.RedHat:
 		bkt.base = bucket.NewRedHat(baseEcoVer)
+	case ecosystem.Maven:
+		bkt.base, err = bucket.NewMaven(dataSource)
+	case ecosystem.Pip:
+		bkt.base, err = bucket.NewPyPI(dataSource)
+	case ecosystem.Npm:
+		bkt.base, err = bucket.NewNpm(dataSource)
+	case ecosystem.Go:
+		bkt.base, err = bucket.NewGo(dataSource)
 	default:
 		return nil, oops.With("base", baseEco).Errorf("unsupported base ecosystem for Seal bucket")
+	}
+
+	if err != nil {
+		return nil, oops.Wrapf(err, "failed to initialize seal language bucket")
 	}
 
 	return bkt, nil

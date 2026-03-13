@@ -145,6 +145,202 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: map[string]any{},
 				},
+				{
+					Key: []string{
+						"data-source",
+						"seal maven::Seal Security Database",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.Seal,
+						Name: "Seal Security Database",
+						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2025-68161",
+						"seal maven::Seal Security Database",
+						"seal.sp1.org.apache.logging.log4j:log4j-core",
+					},
+					Value: types.Advisory{
+						PatchedVersions: []string{
+							"2.13.3+sp999",
+						},
+						VulnerableVersions: []string{
+							">=2.13.3, <2.13.3+sp999",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2025-68161",
+						"seal maven::Seal Security Database",
+						"seal.sp3.org.apache.logging.log4j:log4j-core",
+					},
+					Value: types.Advisory{
+						PatchedVersions: []string{
+							"2.14.1+sp999",
+						},
+						VulnerableVersions: []string{
+							">=2.14.1, <2.14.1+sp999",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2025-68161",
+						"seal",
+					},
+					Value: types.VulnerabilityDetail{
+						LastModifiedDate: utils.MustTimeParse("2026-01-14T16:19:33.150424Z"),
+						PublishedDate:    utils.MustTimeParse("2025-12-18T00:00:00Z"),
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2025-68161",
+					},
+					Value: map[string]any{},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"seal pip::Seal Security Database",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.Seal,
+						Name: "Seal Security Database",
+						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-32681",
+						"seal pip::Seal Security Database",
+						"seal-requests",
+					},
+					Value: types.Advisory{
+						PatchedVersions: []string{
+							"2.14.2+sp999",
+						},
+						VulnerableVersions: []string{
+							">=2.14.2+sp1, <2.14.2+sp999",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2023-32681",
+						"seal",
+					},
+					Value: types.VulnerabilityDetail{
+						LastModifiedDate: utils.MustTimeParse("2024-01-29T07:51:16.696541Z"),
+						PublishedDate:    utils.MustTimeParse("2023-05-22T00:00:00Z"),
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2023-32681",
+					},
+					Value: map[string]any{},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"seal npm::Seal Security Database",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.Seal,
+						Name: "Seal Security Database",
+						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2025-69873",
+						"seal npm::Seal Security Database",
+						"@seal-security/ajv",
+					},
+					Value: types.Advisory{
+						PatchedVersions: []string{
+							"5.5.2-sp999",
+						},
+						VulnerableVersions: []string{
+							">=5.5.2-sp1, <5.5.2-sp999",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2025-69873",
+						"seal",
+					},
+					Value: types.VulnerabilityDetail{
+						LastModifiedDate: utils.MustTimeParse("2026-03-05T00:19:07.862511Z"),
+						PublishedDate:    utils.MustTimeParse("2026-02-11T00:00:00Z"),
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2025-69873",
+					},
+					Value: map[string]any{},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"seal go::Seal Security Database",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.Seal,
+						Name: "Seal Security Database",
+						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2025-22869",
+						"seal go::Seal Security Database",
+						"sealsecurity.io/golang.org/x/crypto",
+					},
+					Value: types.Advisory{
+						PatchedVersions: []string{
+							"0.26.0-sp2",
+						},
+						VulnerableVersions: []string{
+							">=0.26.0-sp1, <0.26.0-sp2",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2025-22869",
+						"seal",
+					},
+					Value: types.VulnerabilityDetail{
+						LastModifiedDate: utils.MustTimeParse("2025-05-15T11:43:10.691190Z"),
+						PublishedDate:    utils.MustTimeParse("2025-02-26T00:00:00Z"),
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2025-22869",
+					},
+					Value: map[string]any{},
+				},
 			},
 		},
 		{
@@ -297,6 +493,98 @@ func TestVulnSrc_Get(t *testing.T) {
 				pkgName: "seal-wget",
 			},
 			wantErr: "failed to split advisories by ranges: vulnerable version range should contain the patched version",
+		},
+		{
+			name:   "Seal maven advisories",
+			baseOS: ecosystem.Maven,
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			args: args{
+				pkgName: "seal.sp1.org.apache.logging.log4j:log4j-core",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2025-68161",
+					VulnerableVersions: []string{">=2.13.3, <2.13.3+sp999"},
+					PatchedVersions:    []string{"2.13.3+sp999"},
+					DataSource: &types.DataSource{
+						ID:   vulnerability.Seal,
+						Name: "Seal Security Database",
+						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+					},
+				},
+			},
+		},
+		{
+			name:   "Seal pip advisories",
+			baseOS: ecosystem.Pip,
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			args: args{
+				pkgName: "seal-requests",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-32681",
+					VulnerableVersions: []string{">=2.14.2+sp1, <2.14.2+sp999"},
+					PatchedVersions:    []string{"2.14.2+sp999"},
+					DataSource: &types.DataSource{
+						ID:   vulnerability.Seal,
+						Name: "Seal Security Database",
+						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+					},
+				},
+			},
+		},
+		{
+			name:   "Seal npm advisories",
+			baseOS: ecosystem.Npm,
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			args: args{
+				pkgName: "@seal-security/ajv",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2025-69873",
+					VulnerableVersions: []string{">=5.5.2-sp1, <5.5.2-sp999"},
+					PatchedVersions:    []string{"5.5.2-sp999"},
+					DataSource: &types.DataSource{
+						ID:   vulnerability.Seal,
+						Name: "Seal Security Database",
+						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+					},
+				},
+			},
+		},
+		{
+			name:   "Seal go advisories",
+			baseOS: ecosystem.Go,
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			args: args{
+				pkgName: "sealsecurity.io/golang.org/x/crypto",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2025-22869",
+					VulnerableVersions: []string{">=0.26.0-sp1, <0.26.0-sp2"},
+					PatchedVersions:    []string{"0.26.0-sp2"},
+					DataSource: &types.DataSource{
+						ID:   vulnerability.Seal,
+						Name: "Seal Security Database",
+						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+					},
+				},
+			},
 		},
 	}
 
