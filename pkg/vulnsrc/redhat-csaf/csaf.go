@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/samber/lo"
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
 
@@ -35,9 +36,10 @@ var (
 // PutInput is the argument passed to the put function (default or custom).
 // Custom put implementations (e.g. WithCustomPut) can type-assert adv to *PutInput.
 type PutInput struct {
-	Bucket   Bucket
-	Advisory Advisory
-	CPEList  redhatoval.CPEList
+	Bucket      Bucket
+	Advisory    Advisory
+	CPEList     redhatoval.CPEList
+	ReleaseDate string // Advisory's initial release date (YYYY-MM-DD), used by CustomPut for PublishDate
 }
 
 type Option func(src *VulnSrc)
@@ -50,11 +52,20 @@ func WithCustomPut(put db.CustomPut) Option {
 	}
 }
 
+// WithRunAlongsideOVAL enables mode for CSAF running alongside redhat-oval (e.g. RHEL 10 from CSAF, RHEL 7–9 from OVAL).
+// When set: (1) CPE list is merged with existing OVAL CPEs in the DB; (2) repo-to-CPE and NVR-to-CPE mappings are not written (OVAL already stores them).
+func WithRunAlongsideOVAL() Option {
+	return func(src *VulnSrc) {
+		src.runAlongsideOVAL = true
+	}
+}
+
 type VulnSrc struct {
-	put        db.CustomPut
-	dbc        db.Operation
-	parser     Parser
-	aggregator Aggregator
+	put              db.CustomPut
+	runAlongsideOVAL bool
+	dbc              db.Operation
+	parser           Parser
+	aggregator       Aggregator
 }
 
 func NewVulnSrc(opts ...Option) VulnSrc {
@@ -95,6 +106,14 @@ func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 	log.Info("Parsed CSAF VEX")
 
 	cpeList := vs.parser.CPEList()
+	if vs.runAlongsideOVAL {
+		// Merge with existing OVAL CPEs in DB and preserve OVAL indices.
+		var err error
+		cpeList, err = vs.mergeCPEList(tx, cpeList)
+		if err != nil {
+			return eb.Wrapf(err, "failed to merge CPE list")
+		}
+	}
 
 	log.Info("Inserting mappings...")
 	if err := vs.putMappings(tx, cpeList); err != nil {
@@ -117,7 +136,12 @@ func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 		advisory := Advisory{Entries: entries}
 
 		// Store the advisory in the DB (default or custom put)
-		input := &PutInput{Bucket: bkt, Advisory: advisory, CPEList: cpeList}
+		input := &PutInput{
+			Bucket:      bkt,
+			Advisory:    advisory,
+			CPEList:     cpeList,
+			ReleaseDate: vs.parser.ReleaseDate(bkt.VulnerabilityID),
+		}
 		if err := vs.put(vs.dbc, tx, input); err != nil {
 			return eb.Wrapf(err, "failed to put advisory")
 		}
@@ -128,6 +152,23 @@ func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 	return nil
 }
 
+// mergeCPEList merges the CSAF CPE list with existing OVAL CPEs in the database.
+// Existing OVAL CPE indices are preserved; new CPEs (e.g. RHEL 10-only, not in OVAL) are appended.
+func (vs VulnSrc) mergeCPEList(tx *bolt.Tx, csafCPEs redhatoval.CPEList) (redhatoval.CPEList, error) {
+	existingCPEs, err := vs.dbc.RedHatCPEs(tx)
+	if err != nil {
+		return nil, oops.Wrapf(err, "failed to get existing CPEs")
+	}
+	// runAlongsideOVAL is only used when OVAL has already run and written advisories/CPEs.
+	// Empty existingCPEs here is unexpected and indicates misconfiguration (e.g. wrong build order).
+	if len(existingCPEs) == 0 {
+		return nil, oops.Errorf("no OVAL CPEs in DB; run redhat-oval before redhat-csaf when using WithRunAlongsideOVAL")
+	}
+	merged := redhatoval.CPEList(lo.Uniq(append(existingCPEs, csafCPEs...)))
+	log.Info("Merged CPE list", "oval_count", len(existingCPEs), "csaf_count", len(csafCPEs), "merged_count", len(merged))
+	return merged, nil
+}
+
 // TODO: The CPEList type is the same as redhat-oval since both use the same DB structure.
 // When redhat-oval is removed in the future, move the CPEList type definition here.
 func (vs VulnSrc) putMappings(tx *bolt.Tx, cpeList redhatoval.CPEList) error {
@@ -136,21 +177,24 @@ func (vs VulnSrc) putMappings(tx *bolt.Tx, cpeList redhatoval.CPEList) error {
 		return oops.Wrapf(err, "failed to put data source")
 	}
 
-	// Store the mapping between repository and CPE names
-	for repo, cpes := range vs.parser.RepoToCPE() {
-		if err := vs.dbc.PutRedHatRepositories(tx, repo, cpeList.Indices(cpes)); err != nil {
-			return oops.With("repo", repo).With("cpes", cpes).Wrapf(err, "repository put error")
+	// When running alongside OVAL, do not write repo/NVR mappings (OVAL already stores them).
+	if !vs.runAlongsideOVAL {
+		// Store the mapping between repository and CPE names
+		for repo, cpes := range vs.parser.RepoToCPE() {
+			if err := vs.dbc.PutRedHatRepositories(tx, repo, cpeList.Indices(cpes)); err != nil {
+				return oops.With("repo", repo).With("cpes", cpes).Wrapf(err, "repository put error")
+			}
+		}
+
+		// Store the mapping between NVR and CPE names
+		for nvr, cpes := range vs.parser.NVRToCPE() {
+			if err := vs.dbc.PutRedHatNVRs(tx, nvr, cpeList.Indices(cpes)); err != nil {
+				return oops.With("nvr", nvr).With("cpes", cpes).Wrapf(err, "NVR put error")
+			}
 		}
 	}
 
-	// Store the mapping between NVR and CPE names
-	for nvr, cpes := range vs.parser.NVRToCPE() {
-		if err := vs.dbc.PutRedHatNVRs(tx, nvr, cpeList.Indices(cpes)); err != nil {
-			return oops.With("nvr", nvr).With("cpes", cpes).Wrapf(err, "NVR put error")
-		}
-	}
-
-	// Store CPE indices for debug information
+	// Store CPE indices (when runAlongsideOVAL, cpeList is merged with OVAL; otherwise CSAF-only)
 	for i, cpe := range cpeList {
 		if err := vs.dbc.PutRedHatCPEs(tx, i, cpe); err != nil {
 			return oops.With("cpe", cpe).Wrapf(err, "CPE put error")

@@ -8,8 +8,11 @@ import (
 	"github.com/gocsaf/csaf/v3/csaf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	bolt "go.etcd.io/bbolt"
 
+	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
 )
 
 func TestParser_Parse(t *testing.T) {
@@ -111,6 +114,47 @@ func TestParser_Parse(t *testing.T) {
 	}
 }
 
+func TestParser_FormatDate(t *testing.T) {
+	tests := []struct {
+		name      string
+		timestamp string
+		wantDate  string
+	}{
+		{
+			name:      "valid RFC3339 with Z",
+			timestamp: "2024-12-18T09:14:23Z",
+			wantDate:  "2024-12-18",
+		},
+		{
+			name:      "valid RFC3339 with timezone offset",
+			timestamp: "2025-01-01T00:00:00+00:00",
+			wantDate:  "2025-01-01",
+		},
+		{
+			name:      "invalid timestamp",
+			timestamp: "not-a-date",
+			wantDate:  "",
+		},
+		{
+			name:      "empty string",
+			timestamp: "",
+			wantDate:  "",
+		},
+		{
+			name:      "wrong format (date only)",
+			timestamp: "2024-12-18",
+			wantDate:  "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := NewParser()
+			got := p.formatDate(tt.timestamp)
+			assert.Equal(t, tt.wantDate, got)
+		})
+	}
+}
+
 func TestParser_DetectStatus(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -163,6 +207,69 @@ func TestParser_DetectStatus(t *testing.T) {
 			}
 
 			got := parser.detectStatus(remediation)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+func TestMergeCPEList(t *testing.T) {
+	tests := []struct {
+		name         string
+		existingCPEs redhatoval.CPEList
+		csafCPEs     redhatoval.CPEList
+		want         redhatoval.CPEList
+		wantErr      string
+	}{
+		{
+			name:     "no existing OVAL CPEs returns error",
+			csafCPEs: redhatoval.CPEList{"cpe:/o:redhat:el10", "cpe:/o:redhat:el10::appstream"},
+			wantErr:  "no OVAL CPEs in DB",
+		},
+		{
+			name:         "appends new CSAF CPEs to OVAL CPEs",
+			existingCPEs: redhatoval.CPEList{"cpe:/o:redhat:el8::baseos", "cpe:/o:redhat:el9::baseos"},
+			csafCPEs:     redhatoval.CPEList{"cpe:/o:redhat:el10::baseos"},
+			want: redhatoval.CPEList{
+				"cpe:/o:redhat:el8::baseos", "cpe:/o:redhat:el9::baseos", "cpe:/o:redhat:el10::baseos",
+			},
+		},
+		{
+			name:         "deduplicates CPEs already present in OVAL",
+			existingCPEs: redhatoval.CPEList{"cpe:/o:redhat:el8::baseos", "cpe:/o:redhat:el9::baseos"},
+			csafCPEs:     redhatoval.CPEList{"cpe:/o:redhat:el9::baseos", "cpe:/o:redhat:el10::baseos"},
+			want: redhatoval.CPEList{
+				"cpe:/o:redhat:el8::baseos", "cpe:/o:redhat:el9::baseos", "cpe:/o:redhat:el10::baseos",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tempDir := t.TempDir()
+			require.NoError(t, db.Init(tempDir))
+			t.Cleanup(func() {
+				_ = db.Close()
+			})
+			dbc := db.Config{}
+			vs := NewVulnSrc(WithRunAlongsideOVAL())
+			vs.dbc = dbc
+			if len(tt.existingCPEs) > 0 {
+				require.NoError(t, dbc.BatchUpdate(func(tx *bolt.Tx) error {
+					for i, cpe := range tt.existingCPEs {
+						require.NoError(t, dbc.PutRedHatCPEs(tx, i, cpe))
+					}
+					return nil
+				}))
+			}
+			var got redhatoval.CPEList
+			err := dbc.BatchUpdate(func(tx *bolt.Tx) error {
+				var err error
+				got, err = vs.mergeCPEList(tx, tt.csafCPEs)
+				return err
+			})
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+				return
+			}
+			require.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
 	}
