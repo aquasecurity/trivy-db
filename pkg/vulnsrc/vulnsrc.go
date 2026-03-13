@@ -10,6 +10,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bitnami"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bundler"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/chainguard"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/cleanstart"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/composer"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/echo"
@@ -61,6 +62,7 @@ var (
 		azure.NewVulnSrc(azure.Mariner),
 		wolfi.NewVulnSrc(),
 		chainguard.NewVulnSrc(),
+		cleanstart.NewVulnSrc(),
 		bitnami.NewVulnSrc(),
 		echo.NewVulnSrc(),
 		minimos.NewVulnSrc(),
