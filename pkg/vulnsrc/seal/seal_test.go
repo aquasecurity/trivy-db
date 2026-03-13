@@ -117,10 +117,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: map[string]any{},
 				},
-				// TODO: CVE-2022-22822 tests below expose a bug in osv.parseAffected where
-				// advisories for the same package across different OS versions (e.g. Red Hat 6
-				// and Red Hat 7) are merged because the deduplication key uses bkt.Ecosystem()
-				// instead of bkt.Name(). These tests will pass once the bug is fixed.
+				// CVE-2022-22822 affects the same package (seal-expat) across multiple
+				// Red Hat versions. Verify that advisories are stored in separate buckets.
 				{
 					Key: []string{
 						"data-source",
