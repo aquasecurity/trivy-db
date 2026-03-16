@@ -31,7 +31,7 @@ func resolveBucket(suffix string) (bucket.Bucket, error) {
 	var eco ecosystem.Type
 	src := source
 	// Separate base ecosystem and version (if exists)
-	// e.g. "Alpine", "Red Hat:8", "Debian", "Maven", "PyPI", "npm", "Go"
+	// e.g. "Alpine", "Red Hat:8", "Debian", "Java", "Python", "Node", "Go", "RubyGems"
 	baseEco, ver, _ := strings.Cut(suffix, ":")
 	switch baseEco {
 	case "alpine":
@@ -51,6 +51,8 @@ func resolveBucket(suffix string) (bucket.Bucket, error) {
 		eco = ecosystem.Npm
 	case "go":
 		eco = ecosystem.Go
+	case "rubygems":
+		eco = ecosystem.RubyGems
 	default:
 		return nil, oops.With("ecosystem", "seal").With("base", suffix).Errorf("unsupported base ecosystem")
 	}

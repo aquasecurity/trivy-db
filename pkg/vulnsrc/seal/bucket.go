@@ -50,6 +50,8 @@ func newBucket(baseEco ecosystem.Type, baseEcoVer string, dataSource types.DataS
 		bkt.base, err = bucket.NewNpm(dataSource)
 	case ecosystem.Go:
 		bkt.base, err = bucket.NewGo(dataSource)
+	case ecosystem.RubyGems:
+		bkt.base, err = bucket.NewRubyGems(dataSource)
 	default:
 		return nil, oops.With("base", baseEco).Errorf("unsupported base ecosystem for Seal bucket")
 	}
