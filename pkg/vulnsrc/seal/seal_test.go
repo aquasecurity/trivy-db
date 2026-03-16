@@ -341,6 +341,53 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: map[string]any{},
 				},
+				{
+					Key: []string{
+						"data-source",
+						"seal rubygems::Seal Security Database",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.Seal,
+						Name: "Seal Security Database",
+						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2025-61780",
+						"seal rubygems::Seal Security Database",
+						"seal-rack",
+					},
+					Value: types.Advisory{
+						PatchedVersions: []string{
+							"2.0.7.0.1.sp999",
+							"2.2.6.2.0.1.sp999",
+						},
+						VulnerableVersions: []string{
+							">=2.0.7.0.1.sp1, <2.0.7.0.1.sp999",
+							">=2.2.6.2.0.1.sp1, <2.2.6.2.0.1.sp999",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2025-61780",
+						"seal",
+					},
+					Value: types.VulnerabilityDetail{
+						LastModifiedDate: utils.MustTimeParse("2026-01-13T10:00:49.549342Z"),
+						PublishedDate:    utils.MustTimeParse("2025-10-10T00:00:00Z"),
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2025-61780",
+					},
+					Value: map[string]any{},
+				},
 			},
 		},
 		{
@@ -578,6 +625,39 @@ func TestVulnSrc_Get(t *testing.T) {
 					VulnerabilityID:    "CVE-2025-22869",
 					VulnerableVersions: []string{">=0.26.0-sp1, <0.26.0-sp2"},
 					PatchedVersions:    []string{"0.26.0-sp2"},
+					DataSource: &types.DataSource{
+						ID:   vulnerability.Seal,
+						Name: "Seal Security Database",
+						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+					},
+				},
+			},
+		},
+		{
+			name:   "Seal rubygems advisories",
+			baseOS: ecosystem.RubyGems,
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			args: args{
+				pkgName: "seal-rack",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2025-61780",
+					VulnerableVersions: []string{">=2.0.7.0.1.sp1, <2.0.7.0.1.sp999"},
+					PatchedVersions:    []string{"2.0.7.0.1.sp999"},
+					DataSource: &types.DataSource{
+						ID:   vulnerability.Seal,
+						Name: "Seal Security Database",
+						URL:  "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+					},
+				},
+				{
+					VulnerabilityID:    "CVE-2025-61780",
+					VulnerableVersions: []string{">=2.2.6.2.0.1.sp1, <2.2.6.2.0.1.sp999"},
+					PatchedVersions:    []string{"2.2.6.2.0.1.sp999"},
 					DataSource: &types.DataSource{
 						ID:   vulnerability.Seal,
 						Name: "Seal Security Database",
