@@ -35,20 +35,12 @@ var (
 
 // Store customizes how CSAF VEX data is persisted to the database.
 // The default implementation (defaultStore) is used for OSS.
-// Premium can provide a custom implementation to change behavior
-// (e.g., merge CPE lists with OVAL, skip repo/NVR mappings, read-merge-write advisories).
 type Store interface {
 	// PutMappings writes CPE-related mappings to the database and returns
 	// the CPE list to use for advisory writes.
-	// The default implementation writes all mappings (repo-to-CPE, NVR-to-CPE, CPE indices)
-	// and returns the input CPE list unchanged.
-	// Custom implementations can merge the CPE list with existing data (e.g., OVAL CPEs)
-	// and selectively skip certain mappings.
 	PutMappings(dbc db.Operation, tx *bolt.Tx, input *MappingsInput) (redhatoval.CPEList, error)
 
 	// Put writes an advisory to the database.
-	// The default implementation converts CPE names to indices and calls PutAdvisoryDetail.
-	// Custom implementations can add filtering, read-merge-write, etc.
 	Put(dbc db.Operation, tx *bolt.Tx, input *PutInput) error
 }
 
@@ -68,6 +60,9 @@ type PutInput struct {
 // defaultStore is the OSS default implementation of Store.
 type defaultStore struct{}
 
+// PutMappings writes all mappings (repo-to-CPE, NVR-to-CPE, CPE indices) and returns
+// the input CPE list unchanged.
+//
 // TODO: The CPEList type is the same as redhat-oval since both use the same DB structure.
 // When redhat-oval is removed in the future, move the CPEList type definition here.
 func (defaultStore) PutMappings(dbc db.Operation, tx *bolt.Tx, input *MappingsInput) (redhatoval.CPEList, error) {
@@ -95,6 +90,7 @@ func (defaultStore) PutMappings(dbc db.Operation, tx *bolt.Tx, input *MappingsIn
 	return input.CPEList, nil
 }
 
+// Put converts CPE names to indices and writes the advisory via PutAdvisoryDetail.
 func (defaultStore) Put(dbc db.Operation, tx *bolt.Tx, input *PutInput) error {
 	for i := range input.Advisory.Entries {
 		// Convert CPE names to indices.
