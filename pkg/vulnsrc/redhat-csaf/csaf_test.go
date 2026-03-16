@@ -313,7 +313,7 @@ func TestVulnSrc_Update_WithCustomStore(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify the custom store was called with Put
-	assert.Greater(t, len(store.putInputs), 0, "custom Store.Put should have been called")
+	assert.NotEmpty(t, store.putInputs, "custom Store.Put should have been called")
 
 	// Verify the extra CPE was merged
 	// The merged list should contain both CSAF CPEs and the extra one
