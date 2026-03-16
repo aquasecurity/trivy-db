@@ -28,34 +28,6 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"data-source",
-						"seal Red Hat 6",
-					},
-					Value: types.DataSource{
-						ID:     vulnerability.Seal,
-						Name:   "Seal Security Database",
-						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
-						BaseID: vulnerability.RedHat,
-					},
-				},
-				{
-					Key: []string{
-						"advisory-detail",
-						"CVE-2024-10524",
-						"seal Red Hat 6",
-						"seal-wget",
-					},
-					Value: types.Advisory{
-						PatchedVersions: []string{
-							"1.12-10.el6+sp999",
-						},
-						VulnerableVersions: []string{
-							">=1.12-10.el6, <1.12-10.el6+sp999",
-						},
-					},
-				},
-				{
-					Key: []string{
-						"data-source",
 						"seal debian",
 					},
 					Value: types.DataSource{
@@ -142,6 +114,82 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{
 						"vulnerability-id",
 						"CVE-2023-6992",
+					},
+					Value: map[string]any{},
+				},
+				// CVE-2022-22822 affects the same package (seal-expat) across multiple
+				// Red Hat versions. Verify that advisories are stored in separate buckets.
+				{
+					Key: []string{
+						"data-source",
+						"seal Red Hat 6",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.Seal,
+						Name:   "Seal Security Database",
+						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+						BaseID: vulnerability.RedHat,
+					},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"seal Red Hat 7",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.Seal,
+						Name:   "Seal Security Database",
+						URL:    "http://vulnfeed.sealsecurity.io/v1/osv/renamed/vulnerabilities.zip",
+						BaseID: vulnerability.RedHat,
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2022-22822",
+						"seal Red Hat 6",
+						"seal-expat",
+					},
+					Value: types.Advisory{
+						PatchedVersions: []string{
+							"2.0.1-15.el6_10+sp999",
+						},
+						VulnerableVersions: []string{
+							">=2.0.1-15.el6_10+sp1, <2.0.1-15.el6_10+sp999",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2022-22822",
+						"seal Red Hat 7",
+						"seal-expat",
+					},
+					Value: types.Advisory{
+						PatchedVersions: []string{
+							"2.1.0-15.el7_9+sp999",
+						},
+						VulnerableVersions: []string{
+							">=2.1.0-15.el7_9+sp1, <2.1.0-15.el7_9+sp999",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2022-22822",
+						"seal",
+					},
+					Value: types.VulnerabilityDetail{
+						LastModifiedDate: utils.MustTimeParse("2024-12-29T14:06:33.867677Z"),
+						PublishedDate:    utils.MustTimeParse("2022-03-28T00:00:00Z"),
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2022-22822",
 					},
 					Value: map[string]any{},
 				},
