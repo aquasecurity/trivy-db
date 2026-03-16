@@ -47,7 +47,7 @@ func resolveBucket(suffix string) (bucket.Bucket, error) {
 		eco = ecosystem.Maven
 	case "python":
 		eco = ecosystem.Pip
-	case "node":
+	case "node": // Seal uses "Node" to refer to the npm/Node.js ecosystem
 		eco = ecosystem.Npm
 	case "go":
 		eco = ecosystem.Go
@@ -108,6 +108,9 @@ func (vs VulnSrcGetter) Get(params db.GetParams) ([]types.Advisory, error) {
 		return nil, eb.Wrapf(err, "failed to create a bucket name")
 	}
 	advs, err := vs.dbc.GetAdvisories(bkt.Name(), params.PkgName)
+	if err != nil {
+		return nil, eb.Wrapf(err, "failed to get advisories for base OS")
+	}
 
 	var splitAdvs []types.Advisory
 	for _, adv := range advs {
@@ -116,9 +119,6 @@ func (vs VulnSrcGetter) Get(params db.GetParams) ([]types.Advisory, error) {
 			return nil, eb.Wrapf(err, "failed to split advisories by ranges")
 		}
 		splitAdvs = append(splitAdvs, sadvs...)
-	}
-	if err != nil {
-		return nil, eb.Wrapf(err, "failed to get advisories for base OS")
 	}
 	return splitAdvs, nil
 }
