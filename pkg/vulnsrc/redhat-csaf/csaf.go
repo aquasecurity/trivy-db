@@ -2,6 +2,7 @@ package redhatcsaf
 
 import (
 	"fmt"
+	"iter"
 	"path/filepath"
 
 	"github.com/samber/oops"
@@ -32,26 +33,98 @@ var (
 	errUnexpectedRecord = oops.Errorf("unexpected record")
 )
 
-// PutInput is the argument passed to the put function (default or custom).
-// Custom put implementations (e.g. WithCustomPut) can type-assert adv to *PutInput.
+// Store customizes how CSAF VEX data is persisted to the database.
+// The default implementation (defaultStore) is used for OSS.
+type Store interface {
+	// PutMappings writes CPE-related mappings to the database and returns
+	// the CPE list to use for advisory writes.
+	PutMappings(dbc db.Operation, tx *bolt.Tx, input *MappingsInput) (redhatoval.CPEList, error)
+
+	// Put writes an advisory to the database.
+	Put(dbc db.Operation, tx *bolt.Tx, input *PutInput) error
+}
+
+// MappingsInput contains the data needed to write CPE-related mappings.
+type MappingsInput struct {
+	CPEList   redhatoval.CPEList
+	RepoToCPE iter.Seq2[string, []string]
+	NVRToCPE  iter.Seq2[string, []string]
+}
+
 type PutInput struct {
 	Bucket   Bucket
 	Advisory Advisory
 	CPEList  redhatoval.CPEList
 }
 
+// defaultStore is the OSS default implementation of Store.
+type defaultStore struct{}
+
+// PutMappings writes all mappings (repo-to-CPE, NVR-to-CPE, CPE indices) and returns
+// the input CPE list unchanged.
+//
+// TODO: The CPEList type is the same as redhat-oval since both use the same DB structure.
+// When redhat-oval is removed in the future, move the CPEList type definition here.
+func (defaultStore) PutMappings(dbc db.Operation, tx *bolt.Tx, input *MappingsInput) (redhatoval.CPEList, error) {
+	// Store the mapping between repository and CPE names
+	for repo, cpes := range input.RepoToCPE {
+		if err := dbc.PutRedHatRepositories(tx, repo, input.CPEList.Indices(cpes)); err != nil {
+			return nil, oops.With("repo", repo).With("cpes", cpes).Wrapf(err, "repository put error")
+		}
+	}
+
+	// Store the mapping between NVR and CPE names
+	for nvr, cpes := range input.NVRToCPE {
+		if err := dbc.PutRedHatNVRs(tx, nvr, input.CPEList.Indices(cpes)); err != nil {
+			return nil, oops.With("nvr", nvr).With("cpes", cpes).Wrapf(err, "NVR put error")
+		}
+	}
+
+	// Store CPE indices for debug information
+	for i, cpe := range input.CPEList {
+		if err := dbc.PutRedHatCPEs(tx, i, cpe); err != nil {
+			return nil, oops.With("cpe", cpe).Wrapf(err, "CPE put error")
+		}
+	}
+
+	return input.CPEList, nil
+}
+
+// Put converts CPE names to indices and writes the advisory via PutAdvisoryDetail.
+func (defaultStore) Put(dbc db.Operation, tx *bolt.Tx, input *PutInput) error {
+	for i := range input.Advisory.Entries {
+		// Convert CPE names to indices.
+		input.Advisory.Entries[i].AffectedCPEIndices = input.CPEList.Indices(input.Advisory.Entries[i].AffectedCPEList)
+	}
+
+	vulnID := string(input.Bucket.VulnerabilityID)
+	pkgName := input.Bucket.Package.Name
+	if input.Bucket.Package.Module != "" {
+		// Add modular namespace
+		// e.g. nodejs:12::npm
+		pkgName = fmt.Sprintf("%s::%s", input.Bucket.Package.Module, pkgName)
+	}
+
+	if err := dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{rootBucket}, input.Advisory); err != nil {
+		return oops.Wrapf(err, "failed to save Red Hat CSAF advisory")
+	}
+	if err := dbc.PutVulnerabilityID(tx, vulnID); err != nil {
+		return oops.Wrapf(err, "failed to put vulnerability ID")
+	}
+	return nil
+}
+
 type Option func(src *VulnSrc)
 
-// WithCustomPut injects a custom function to write advisories (e.g. for filtering RHEL 10).
-// The injected function receives *PutInput when called.
-func WithCustomPut(put db.CustomPut) Option {
+// WithStore injects a custom Store implementation (e.g., for premium).
+func WithStore(store Store) Option {
 	return func(src *VulnSrc) {
-		src.put = put
+		src.store = store
 	}
 }
 
 type VulnSrc struct {
-	put        db.CustomPut
+	store      Store
 	dbc        db.Operation
 	parser     Parser
 	aggregator Aggregator
@@ -59,7 +132,7 @@ type VulnSrc struct {
 
 func NewVulnSrc(opts ...Option) VulnSrc {
 	src := VulnSrc{
-		put:        defaultPut,
+		store:      defaultStore{},
 		dbc:        db.Config{},
 		parser:     NewParser(),
 		aggregator: Aggregator{},
@@ -94,10 +167,18 @@ func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 	}
 	log.Info("Parsed CSAF VEX")
 
-	cpeList := vs.parser.CPEList()
+	// Store the data source
+	if err := vs.dbc.PutDataSource(tx, rootBucket, source); err != nil {
+		return eb.Wrapf(err, "failed to put data source")
+	}
 
 	log.Info("Inserting mappings...")
-	if err := vs.putMappings(tx, cpeList); err != nil {
+	cpeList, err := vs.store.PutMappings(vs.dbc, tx, &MappingsInput{
+		CPEList:   vs.parser.CPEList(),
+		RepoToCPE: vs.parser.RepoToCPE(),
+		NVRToCPE:  vs.parser.NVRToCPE(),
+	})
+	if err != nil {
 		return eb.Wrapf(err, "failed to put mappings")
 	}
 
@@ -107,84 +188,25 @@ func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 		eb = eb.Tags("aggregate").With("module", bkt.Module).With("package", bkt.Name).
 			With("vulnerability_id", bkt.VulnerabilityID)
 
-		// Convert RawEntries into final Entries
 		entries, err := vs.aggregator.AggregateEntries(rawEntries)
 		if err != nil {
 			return eb.Wrapf(err, "failed to aggregate entries")
 		}
 
-		// Create an advisory containing these entries
 		advisory := Advisory{Entries: entries}
 
-		// Store the advisory in the DB (default or custom put)
-		input := &PutInput{Bucket: bkt, Advisory: advisory, CPEList: cpeList}
-		if err := vs.put(vs.dbc, tx, input); err != nil {
+		input := &PutInput{
+			Bucket:   bkt,
+			Advisory: advisory,
+			CPEList:  cpeList,
+		}
+		if err := vs.store.Put(vs.dbc, tx, input); err != nil {
 			return eb.Wrapf(err, "failed to put advisory")
 		}
 		bar.Increment()
 	}
 	bar.Finish()
 
-	return nil
-}
-
-// TODO: The CPEList type is the same as redhat-oval since both use the same DB structure.
-// When redhat-oval is removed in the future, move the CPEList type definition here.
-func (vs VulnSrc) putMappings(tx *bolt.Tx, cpeList redhatoval.CPEList) error {
-	// Store the data source
-	if err := vs.dbc.PutDataSource(tx, rootBucket, source); err != nil {
-		return oops.Wrapf(err, "failed to put data source")
-	}
-
-	// Store the mapping between repository and CPE names
-	for repo, cpes := range vs.parser.RepoToCPE() {
-		if err := vs.dbc.PutRedHatRepositories(tx, repo, cpeList.Indices(cpes)); err != nil {
-			return oops.With("repo", repo).With("cpes", cpes).Wrapf(err, "repository put error")
-		}
-	}
-
-	// Store the mapping between NVR and CPE names
-	for nvr, cpes := range vs.parser.NVRToCPE() {
-		if err := vs.dbc.PutRedHatNVRs(tx, nvr, cpeList.Indices(cpes)); err != nil {
-			return oops.With("nvr", nvr).With("cpes", cpes).Wrapf(err, "NVR put error")
-		}
-	}
-
-	// Store CPE indices for debug information
-	for i, cpe := range cpeList {
-		if err := vs.dbc.PutRedHatCPEs(tx, i, cpe); err != nil {
-			return oops.With("cpe", cpe).Wrapf(err, "CPE put error")
-		}
-	}
-	return nil
-}
-
-// defaultPut is the default advisory write implementation; can be overridden via WithCustomPut.
-func defaultPut(dbc db.Operation, tx *bolt.Tx, adv any) error {
-	input, ok := adv.(*PutInput)
-	if !ok {
-		return oops.Errorf("redhat-csaf put: unexpected type %T", adv)
-	}
-
-	for i := range input.Advisory.Entries {
-		// Convert CPE names to indices.
-		input.Advisory.Entries[i].AffectedCPEIndices = input.CPEList.Indices(input.Advisory.Entries[i].AffectedCPEList)
-	}
-
-	vulnID := string(input.Bucket.VulnerabilityID)
-	pkgName := input.Bucket.Package.Name
-	if input.Bucket.Package.Module != "" {
-		// Add modular namespace
-		// e.g. nodejs:12::npm
-		pkgName = fmt.Sprintf("%s::%s", input.Bucket.Package.Module, pkgName)
-	}
-
-	if err := dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{rootBucket}, input.Advisory); err != nil {
-		return oops.Wrapf(err, "failed to save Red Hat CSAF advisory")
-	}
-	if err := dbc.PutVulnerabilityID(tx, vulnID); err != nil {
-		return oops.Wrapf(err, "failed to put vulnerability ID")
-	}
 	return nil
 }
 
