@@ -325,7 +325,6 @@ func TestVulnSrc_Update_WithCustomStore(t *testing.T) {
 	// Verify repo/NVR mappings were NOT written (custom store skips them)
 	require.NoError(t, db.Close())
 	require.NoError(t, db.Init(tempDir))
-	defer db.Close()
 
 	// repo mapping should not exist since custom store doesn't write it
 	_, err = db.Config{}.RedHatRepoToCPEs("rhel-8-for-x86_64-baseos-rpms")
