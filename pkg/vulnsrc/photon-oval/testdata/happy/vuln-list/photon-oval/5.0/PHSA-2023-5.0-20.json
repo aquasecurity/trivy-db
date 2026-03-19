@@ -1,0 +1,45 @@
+{
+  "Title": "PHSA-2023:5001 libcap Security Update. (Important)",
+  "Description": "An update for libcap is now available for Photon OS 5.0.",
+  "Platform": ["Photon 5"],
+  "References": [
+    {"Source": "PHSA", "URI": "https://packages.broadcom.com/photon/photon_oval/5.0/PHSA-2023-5001.json", "ID": "PHSA:5001:5.0:20"},
+    {"Source": "CVE",  "URI": "https://nvd.nist.gov/vuln/detail/CVE-2023-2602", "ID": "CVE:00001:CVE-2023-2602"},
+    {"Source": "CVE",  "URI": "https://nvd.nist.gov/vuln/detail/CVE-2023-2603", "ID": "CVE:00001:CVE-2023-2603"}
+  ],
+  "Criteria": {
+    "Operator": "AND",
+    "Criterias": [
+      {
+        "Operator": "OR",
+        "Criterias": [
+          {
+            "Operator": "AND",
+            "Criterias": null,
+            "Criterions": [
+              {"Comment": "libcap is earlier than 0:2.66-2.ph5"},
+              {"Comment": "libcap is signed with VMware key"}
+            ]
+          },
+          {
+            "Operator": "AND",
+            "Criterias": null,
+            "Criterions": [
+              {"Comment": "libcap-devel is earlier than 0:2.66-2.ph5"},
+              {"Comment": "libcap-devel is signed with VMware key"}
+            ]
+          }
+        ],
+        "Criterions": null
+      }
+    ],
+    "Criterions": [{"Comment": "Photon OS 5 is installed"}]
+  },
+  "Severity": "Important",
+  "Cves": [
+    {"ID": "CVE-2023-2602"},
+    {"ID": "CVE-2023-2603"}
+  ],
+  "Issued":  {"Date": "2023-06-07"},
+  "Updated": {"Date": "2023-06-07"}
+}
