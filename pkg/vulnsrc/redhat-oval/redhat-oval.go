@@ -32,6 +32,9 @@ var (
 	moduleRegexp = regexp.MustCompile(`Module\s+(.*)\s+is enabled`)
 
 	source = types.DataSource{
+		// Use the same ID as the Security Data API ("redhat") so that users see
+		// a single, unified "redhat" severity source instead of the internal
+		// "redhat-oval" distinction, which is meaningless to them.
 		ID:   vulnerability.RedHat,
 		Name: "Red Hat",
 		URL:  "https://access.redhat.com/security/cve/",
@@ -51,7 +54,7 @@ func NewVulnSrc() VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return source.ID
+	return vulnerability.RedHatOVAL
 }
 
 func (vs VulnSrc) Update(dir string) error {
