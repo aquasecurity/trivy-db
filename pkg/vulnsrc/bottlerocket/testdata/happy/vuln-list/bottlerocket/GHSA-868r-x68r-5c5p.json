@@ -1,0 +1,37 @@
+{
+  "id": "GHSA-868r-x68r-5c5p",
+  "title": "kernel CVE-2023-5345",
+  "severity": "medium",
+  "description": "A flaw was found in the SMB client component in the Linux kernel.",
+  "packages": [
+    {
+      "name": "kernel-6.1",
+      "epoch": "0",
+      "version": "6.1.61",
+      "release": "1.1700513487.br1",
+      "arch": "x86_64"
+    },
+    {
+      "name": "kernel-6.1",
+      "epoch": "0",
+      "version": "6.1.61",
+      "release": "1.1700513487.br1",
+      "arch": "aarch64"
+    }
+  ],
+  "references": [
+    {
+      "href": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-5345",
+      "id": "CVE-2023-5345",
+      "type": "cve"
+    },
+    {
+      "href": "https://github.com/bottlerocket-os/bottlerocket/security/advisories/GHSA-868r-x68r-5c5p",
+      "id": "GHSA-868r-x68r-5c5p",
+      "type": "ghsa"
+    }
+  ],
+  "cveids": [
+    "CVE-2023-5345"
+  ]
+}
