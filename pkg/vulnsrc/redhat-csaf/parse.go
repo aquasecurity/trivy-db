@@ -28,10 +28,10 @@ import (
 const dataPath = "redhat-csaf.data"
 
 type Parser struct {
-	repoToCPE    map[string][]string
-	nvrToCPE     map[string][]string
-	advisories   map[Package]map[VulnerabilityID]RawEntries
-	cpeSet       set.Ordered[string]
+	repoToCPE  map[string][]string
+	nvrToCPE   map[string][]string
+	advisories map[Package]map[VulnerabilityID]RawEntries
+	cpeSet     set.Ordered[string]
 	// releaseDates: advisory release date (YYYY-MM-DD) per RHSA ID. Only set for fixed
 	// advisories; unpatched (CVE-only) entries do not need it for PutInput.ReleaseDate.
 	releaseDates map[VulnerabilityID]string
