@@ -32,7 +32,9 @@ type Parser struct {
 	nvrToCPE     map[string][]string
 	advisories   map[Package]map[VulnerabilityID]RawEntries
 	cpeSet       set.Ordered[string]
-	releaseDates map[VulnerabilityID]string // Advisory initial release date (YYYY-MM-DD) per vulnerability ID
+	// releaseDates: advisory release date (YYYY-MM-DD) per RHSA ID. Only set for fixed
+	// advisories; unpatched (CVE-only) entries do not need it for PutInput.ReleaseDate.
+	releaseDates map[VulnerabilityID]string
 }
 
 func NewParser() Parser {
@@ -306,10 +308,11 @@ func (p *Parser) parseVulnerability(adv CSAFAdvisory, vuln *csaf.Vulnerability) 
 			if status == types.StatusFixed {
 				vulnID = p.extractRHSAID(remediation)
 				alias = cveID
-				// Store the advisory release date for this RHSA ID (once per vulnID)
-				if _, exists := p.releaseDates[vulnID]; !exists &&
-					adv.Document != nil && adv.Document.Tracking != nil && adv.Document.Tracking.InitialReleaseDate != nil {
-					p.releaseDates[vulnID] = p.formatDate(*adv.Document.Tracking.InitialReleaseDate)
+				// Store the RHSA release date (once per vulnID) from Remediation.Date.
+				if _, exists := p.releaseDates[vulnID]; !exists {
+					if remediation != nil && remediation.Date != nil {
+						p.releaseDates[vulnID] = p.formatDate(*remediation.Date)
+					}
 				}
 			} else {
 				vulnID = cveID
