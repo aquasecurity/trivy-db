@@ -1,0 +1,37 @@
+{
+  "id": "ALINUX2-SA-2025:0006",
+  "title": "ALINUX2-SA-2025:0006: postgresql security update (Important)",
+  "severity": "Important",
+  "description": "Package updates are available for Alibaba Cloud Linux 2.1903 that fix the following vulnerabilities:\n\nCVE-2024-10979:\nIncorrect control of environment variables in PostgreSQL PL/Perl allows an unprivileged database user to change sensitive process environment variables (e.g. PATH).  That often suffices to enable arbitrary code execution, even if the attacker lacks a database server operating system user.  Versions before PostgreSQL 17.1, 16.5, 15.9, 14.14, 13.17, and 12.21 are affected.",
+  "issued": {
+    "date": "2025-01-10"
+  },
+  "updated": {
+    "date": "2025-01-24"
+  },
+  "packages": [
+    {
+      "name": "postgresql",
+      "epoch": "0",
+      "version": "9.2.24",
+      "release": "9.1.al7.2"
+    },
+    {
+      "name": "postgresql-server",
+      "epoch": "0",
+      "version": "9.2.24",
+      "release": "9.1.al7.2"
+    }
+  ],
+  "cveids": [
+    "CVE-2024-10979"
+  ],
+  "references": [
+    {
+      "id": "CVE-2024-10979",
+      "href": "https://alas.aliyun-inc.com/cves/detail/CVE-2024-10979",
+      "cvss3": "8.8/CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+      "impact": "Important"
+    }
+  ]
+}
