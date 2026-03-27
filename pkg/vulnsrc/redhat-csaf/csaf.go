@@ -3,7 +3,6 @@ package redhatcsaf
 import (
 	"fmt"
 	"iter"
-	"path/filepath"
 
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
@@ -17,17 +16,14 @@ import (
 )
 
 const (
-	rootBucket  = "Red Hat"
-	cpeDir      = "cpe"
-	csafDir     = "csaf-vex"
-	vulnListDir = "vuln-list-redhat"
+	rootBucket = "Red Hat"
 )
 
 var (
 	source = types.DataSource{
 		ID:   vulnerability.RedHatCSAFVEX,
 		Name: "Red Hat CSAF VEX",
-		URL:  "https://access.redhat.com/security/data/csaf/v2/vex/",
+		URL:  "https://security.access.redhat.com/data/csaf/v2/vex/",
 	}
 
 	errUnexpectedRecord = oops.Errorf("unexpected record")
@@ -134,7 +130,7 @@ func NewVulnSrc(opts ...Option) VulnSrc {
 	src := VulnSrc{
 		store:      defaultStore{},
 		dbc:        db.Config{},
-		parser:     NewParser(),
+		parser:     NewParser("vuln-list-redhat", "csaf-vex", "csaf-vex-cpe"),
 		aggregator: Aggregator{},
 	}
 	for _, o := range opts {
@@ -144,7 +140,7 @@ func NewVulnSrc(opts ...Option) VulnSrc {
 }
 
 func (vs VulnSrc) Name() types.SourceID {
-	return vulnerability.RedHatCSAFVEX
+	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
@@ -161,8 +157,7 @@ func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 	eb := oops.In("redhat_csaf_vex")
 
 	log.Info("Parsing CSAF VEX...")
-	vulnListDir := filepath.Join(dir, vulnListDir)
-	if err := vs.parser.Parse(vulnListDir); err != nil {
+	if err := vs.parser.Parse(dir); err != nil {
 		return eb.Wrapf(err, "failed to parse CSAF VEX")
 	}
 	log.Info("Parsed CSAF VEX")
