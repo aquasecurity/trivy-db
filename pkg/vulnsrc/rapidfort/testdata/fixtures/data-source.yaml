@@ -12,3 +12,9 @@
         Name: RapidFort Security Advisories
         URL: https://github.com/rapidfort/security-advisories
         BaseID: debian
+    - key: rapidfort redhat 9
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: redhat

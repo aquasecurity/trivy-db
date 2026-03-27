@@ -174,7 +174,8 @@ func (vs VulnSrc) Update(dir string) error {
 // buildAdvisory converts a CVEEntry's Events into the trivy-db Advisory format.
 // Each event represents a version range: Introduced..Fixed (or open-ended if Fixed is empty).
 func buildAdvisory(cve CVEEntry) types.Advisory {
-	var patched, vulnerable []string
+	var patched, vulnerable, identifiers []string
+	var hasIdentifier bool
 	for _, ev := range cve.Events {
 		if ev.Fixed != "" {
 			patched = append(patched, ev.Fixed)
@@ -189,6 +190,13 @@ func buildAdvisory(cve CVEEntry) types.Advisory {
 		} else if ev.Introduced != "" {
 			// Open vulnerability (no fix): write without space for the same reason.
 			vulnerable = append(vulnerable, fmt.Sprintf(">=%s", ev.Introduced))
+		} else {
+			continue
+		}
+		// Track identifiers parallel to vulnerable versions.
+		identifiers = append(identifiers, ev.Identifier)
+		if ev.Identifier != "" {
+			hasIdentifier = true
 		}
 	}
 
@@ -197,11 +205,21 @@ func buildAdvisory(cve CVEEntry) types.Advisory {
 		severity = sev
 	}
 
-	return types.Advisory{
+	adv := types.Advisory{
 		PatchedVersions:    patched,
 		VulnerableVersions: vulnerable,
 		Severity:           severity,
 	}
+
+	// Only set Custom when at least one event carries an identifier (e.g. redhat).
+	// Ubuntu/alpine events have no identifiers, so Custom stays nil for them.
+	if hasIdentifier {
+		adv.Custom = RapidFortCustom{
+			Identifiers: identifiers,
+		}
+	}
+
+	return adv
 }
 
 // buildVulnerabilityDetail constructs a VulnerabilityDetail from a CVEEntry for

@@ -20,3 +20,28 @@
             PatchedVersions:
               - "3.0.14-1~deb12u2"
             Severity: 4
+- bucket: rapidfort redhat 9
+  pairs:
+    - bucket: curl
+      pairs:
+        - key: CVE-2023-27536
+          value:
+            VulnerableVersions:
+              - ">= 7.76.1-14.el9, < 7.76.1-26.el9_3.3"
+              - ">= 7.76.1-14.fc39, < 7.76.1-26.fc39"
+            PatchedVersions:
+              - "7.76.1-26.el9_3.3"
+              - "7.76.1-26.fc39"
+            Severity: 2
+            Custom:
+              identifiers:
+                - "el9"
+                - "fc39"
+        - key: CVE-2024-99999
+          value:
+            VulnerableVersions:
+              - ">=7.76.1-14.el9"
+            Severity: 3
+            Custom:
+              identifiers:
+                - "el9"

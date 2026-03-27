@@ -102,6 +102,64 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: map[string]any{},
 				},
+				{
+					Key: []string{
+						"data-source",
+						"rapidfort redhat 9",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "redhat",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-27536",
+						"rapidfort redhat 9",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"7.76.1-26.el9_3.3", "7.76.1-26.fc39"},
+						VulnerableVersions: []string{">= 7.76.1-14.el9, < 7.76.1-26.el9_3.3", ">= 7.76.1-14.fc39, < 7.76.1-26.fc39"},
+						Severity:           types.SeverityMedium,
+						Custom: map[string]interface{}{
+							"identifiers": []interface{}{"el9", "fc39"},
+						},
+					},
+				},
+				{
+					// Open vulnerability: no patched version
+					Key: []string{
+						"advisory-detail",
+						"CVE-2024-99999",
+						"rapidfort redhat 9",
+						"curl",
+					},
+					Value: types.Advisory{
+						VulnerableVersions: []string{">=7.76.1-14.el9"},
+						Severity:           types.SeverityHigh,
+						Custom: map[string]interface{}{
+							"identifiers": []interface{}{"el9"},
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2023-27536",
+					},
+					Value: map[string]any{},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2024-99999",
+					},
+					Value: map[string]any{},
+				},
 			},
 		},
 		{
@@ -187,6 +245,47 @@ func TestVulnSrc_Get(t *testing.T) {
 						Name:   "RapidFort Security Advisories",
 						URL:    "https://github.com/rapidfort/security-advisories",
 						BaseID: "debian",
+					},
+				},
+			},
+		},
+		{
+			name:    "redhat advisory found",
+			baseOS:  "redhat",
+			osVer:   "9",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-27536",
+					VulnerableVersions: []string{">= 7.76.1-14.el9, < 7.76.1-26.el9_3.3", ">= 7.76.1-14.fc39, < 7.76.1-26.fc39"},
+					PatchedVersions:    []string{"7.76.1-26.el9_3.3", "7.76.1-26.fc39"},
+					Severity:           types.SeverityMedium,
+					Custom: map[string]interface{}{
+						"identifiers": []interface{}{"el9", "fc39"},
+					},
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "redhat",
+					},
+				},
+				{
+					VulnerabilityID:    "CVE-2024-99999",
+					VulnerableVersions: []string{">=7.76.1-14.el9"},
+					Severity:           types.SeverityHigh,
+					Custom: map[string]interface{}{
+						"identifiers": []interface{}{"el9"},
+					},
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "redhat",
 					},
 				},
 			},
