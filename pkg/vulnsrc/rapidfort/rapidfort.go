@@ -3,8 +3,7 @@ package rapidfort
 import (
 	"encoding/json"
 	"fmt"
-	"io/fs"
-	"os"
+	"io"
 	"path/filepath"
 	"strings"
 
@@ -14,13 +13,12 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/utils"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-const (
-	rapidfortDir   = "rapidfort"
-	platformFormat = "rapidfort %s %s" // "rapidfort ubuntu 22.04"
-)
+const rapidfortDir = "rapidfort"
 
 var source = types.DataSource{
 	ID:   vulnerability.RapidFort,
@@ -57,21 +55,31 @@ func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", rapidfortDir)
 	eb := oops.In("rapidfort").With("root_dir", rootDir)
 
-	// Collect advisories grouped by platform name before batching the DB write.
-	type entry struct {
-		platform string
-		pkgName  string
-		cveID    string
-		advisory types.Advisory
-		detail   types.VulnerabilityDetail
+	entries, err := vs.parse(rootDir)
+	if err != nil {
+		return eb.Wrap(err)
 	}
+	if err = vs.put(entries); err != nil {
+		return eb.Wrap(err)
+	}
+	return nil
+}
+
+type entry struct {
+	platform string
+	baseOS   string
+	pkgName  string
+	cveID    string
+	advisory types.Advisory
+	detail   types.VulnerabilityDetail
+}
+
+func (vs VulnSrc) parse(rootDir string) ([]entry, error) {
+	eb := oops.In("rapidfort").With("root_dir", rootDir)
 	var entries []entry
 
-	err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, walkErr error) error {
-		if walkErr != nil {
-			return walkErr
-		}
-		if d.IsDir() || !strings.HasSuffix(d.Name(), ".json") {
+	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
+		if !strings.HasSuffix(path, ".json") {
 			return nil
 		}
 
@@ -90,57 +98,45 @@ func (vs VulnSrc) Update(dir string) error {
 		osName := parts[0]
 		version := parts[1]
 
-		data, err := os.ReadFile(path)
-		if err != nil {
-			return eb.With("path", path).Wrapf(err, "failed to read file")
-		}
-
 		var pkg PackageAdvisory
-		if err := json.Unmarshal(data, &pkg); err != nil {
+		if err := json.NewDecoder(r).Decode(&pkg); err != nil {
 			return eb.With("path", path).Wrapf(err, "json decode error")
 		}
 
-		platformName := fmt.Sprintf(platformFormat, osName, version)
-
+		b := bucket.NewRapidFort(osName, version)
 		for cveID, cveEntry := range pkg.Advisories {
-			advisory := buildAdvisory(cveEntry)
-			detail := buildVulnerabilityDetail(cveEntry)
 			entries = append(entries, entry{
-				platform: platformName,
+				platform: b.Name(),
+				baseOS:   b.BaseOS(),
 				pkgName:  pkg.PackageName,
 				cveID:    cveID,
-				advisory: advisory,
-				detail:   detail,
+				advisory: buildAdvisory(cveEntry),
+				detail:   buildVulnerabilityDetail(cveEntry),
 			})
 		}
 		return nil
 	})
 	if err != nil {
-		return eb.Wrapf(err, "directory walk error")
+		return nil, oops.Wrapf(err, "walk error")
 	}
+	return entries, nil
+}
 
+func (vs VulnSrc) put(entries []entry) error {
 	if len(entries) == 0 {
-		vs.logger.Info("No RapidFort advisories found", "root_dir", rootDir)
+		vs.logger.Info("No RapidFort advisories found")
 		return nil
 	}
-
 	vs.logger.Info("Saving RapidFort advisories", "count", len(entries))
 
-	// Group entries by platform for efficient DataSource writes.
-	platforms := map[string]struct{}{}
+	// Track unique platform → baseOS mappings for DataSource registration.
+	platforms := map[string]string{}
 	for _, e := range entries {
-		platforms[e.platform] = struct{}{}
+		platforms[e.platform] = e.baseOS
 	}
 
 	return vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		// Register the data source once per platform bucket.
-		for platform := range platforms {
-			// Extract the base OS from the platform name ("rapidfort ubuntu 22.04" → "ubuntu").
-			baseParts := strings.SplitN(platform, " ", 3)
-			baseOS := ""
-			if len(baseParts) >= 2 {
-				baseOS = baseParts[1]
-			}
+		for platform, baseOS := range platforms {
 			ds := types.DataSource{
 				ID:     source.ID,
 				Name:   source.Name,
@@ -148,7 +144,7 @@ func (vs VulnSrc) Update(dir string) error {
 				BaseID: types.SourceID(baseOS),
 			}
 			if err := vs.dbc.PutDataSource(tx, platform, ds); err != nil {
-				return oops.Wrapf(err, "failed to put data source for platform %s", platform)
+				return oops.With("platform", platform).Wrapf(err, "failed to put data source")
 			}
 		}
 
@@ -158,11 +154,9 @@ func (vs VulnSrc) Update(dir string) error {
 			if err := vs.dbc.PutAdvisoryDetail(tx, e.cveID, e.pkgName, []string{e.platform}, e.advisory); err != nil {
 				return eb.Wrapf(err, "failed to save advisory")
 			}
-
 			if err := vs.dbc.PutVulnerabilityDetail(tx, e.cveID, source.ID, e.detail); err != nil {
 				return eb.Wrapf(err, "failed to save vulnerability detail")
 			}
-
 			if err := vs.dbc.PutVulnerabilityID(tx, e.cveID); err != nil {
 				return eb.Wrapf(err, "failed to save vulnerability ID")
 			}
@@ -177,7 +171,8 @@ func buildAdvisory(cve CVEEntry) types.Advisory {
 	var patched, vulnerable, identifiers []string
 	var hasIdentifier bool
 	for _, ev := range cve.Events {
-		if ev.Fixed != "" {
+		switch {
+		case ev.Fixed != "":
 			patched = append(patched, ev.Fixed)
 			if ev.Introduced != "" {
 				// Comma-separated: each part is parsed individually by newConstraint which handles spaces.
@@ -187,10 +182,10 @@ func buildAdvisory(cve CVEEntry) types.Advisory {
 				// doesn't break it into ["<", "version"].
 				vulnerable = append(vulnerable, fmt.Sprintf("<%s", ev.Fixed))
 			}
-		} else if ev.Introduced != "" {
+		case ev.Introduced != "":
 			// Open vulnerability (no fix): write without space for the same reason.
 			vulnerable = append(vulnerable, fmt.Sprintf(">=%s", ev.Introduced))
-		} else {
+		default:
 			continue
 		}
 		// Track identifiers parallel to vulnerable versions.
@@ -248,7 +243,7 @@ func NewVulnSrcGetter(baseOS string) VulnSrcGetter {
 		baseOS: baseOS,
 		config: config{
 			dbc:    db.Config{},
-			logger: log.WithPrefix(fmt.Sprintf("rapidfort-%s", baseOS)),
+			logger: log.WithPrefix("rapidfort-" + baseOS),
 		},
 	}
 }
@@ -257,7 +252,7 @@ func NewVulnSrcGetter(baseOS string) VulnSrcGetter {
 func (vs VulnSrcGetter) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In("rapidfort").With("base_os", vs.baseOS).With("os_version", params.Release).With("package_name", params.PkgName)
 
-	platformName := fmt.Sprintf(platformFormat, vs.baseOS, params.Release)
+	platformName := bucket.NewRapidFort(vs.baseOS, params.Release).Name()
 	advs, err := vs.dbc.GetAdvisories(platformName, params.PkgName)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories")

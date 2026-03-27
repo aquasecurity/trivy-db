@@ -125,8 +125,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"7.76.1-26.el9_3.3", "7.76.1-26.fc39"},
 						VulnerableVersions: []string{">= 7.76.1-14.el9, < 7.76.1-26.el9_3.3", ">= 7.76.1-14.fc39, < 7.76.1-26.fc39"},
 						Severity:           types.SeverityMedium,
-						Custom: map[string]interface{}{
-							"identifiers": []interface{}{"el9", "fc39"},
+						Custom: map[string]any{
+							"identifiers": []any{"el9", "fc39"},
 						},
 					},
 				},
@@ -141,8 +141,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.Advisory{
 						VulnerableVersions: []string{">=7.76.1-14.el9"},
 						Severity:           types.SeverityHigh,
-						Custom: map[string]interface{}{
-							"identifiers": []interface{}{"el9"},
+						Custom: map[string]any{
+							"identifiers": []any{"el9"},
 						},
 					},
 				},
@@ -193,13 +193,13 @@ func TestVulnSrc_Update(t *testing.T) {
 
 func TestVulnSrc_Get(t *testing.T) {
 	tests := []struct {
-		name    string
-		baseOS  string
-		osVer   string
-		pkgName string
+		name     string
+		baseOS   string
+		osVer    string
+		pkgName  string
 		fixtures []string
-		want    []types.Advisory
-		wantErr string
+		want     []types.Advisory
+		wantErr  string
 	}{
 		{
 			name:    "ubuntu advisory found",
@@ -264,8 +264,8 @@ func TestVulnSrc_Get(t *testing.T) {
 					VulnerableVersions: []string{">= 7.76.1-14.el9, < 7.76.1-26.el9_3.3", ">= 7.76.1-14.fc39, < 7.76.1-26.fc39"},
 					PatchedVersions:    []string{"7.76.1-26.el9_3.3", "7.76.1-26.fc39"},
 					Severity:           types.SeverityMedium,
-					Custom: map[string]interface{}{
-						"identifiers": []interface{}{"el9", "fc39"},
+					Custom: map[string]any{
+						"identifiers": []any{"el9", "fc39"},
 					},
 					DataSource: &types.DataSource{
 						ID:     vulnerability.RapidFort,
@@ -278,8 +278,8 @@ func TestVulnSrc_Get(t *testing.T) {
 					VulnerabilityID:    "CVE-2024-99999",
 					VulnerableVersions: []string{">=7.76.1-14.el9"},
 					Severity:           types.SeverityHigh,
-					Custom: map[string]interface{}{
-						"identifiers": []interface{}{"el9"},
+					Custom: map[string]any{
+						"identifiers": []any{"el9"},
 					},
 					DataSource: &types.DataSource{
 						ID:     vulnerability.RapidFort,

@@ -110,6 +110,30 @@ func NewUbuntu(version string) Bucket { return newOS(ecosystem.Ubuntu, version) 
 // NewWolfi creates a bucket for Wolfi
 func NewWolfi(version string) Bucket { return newOS(ecosystem.Wolfi, version) }
 
+// rapidFortBucket for RapidFort advisories which span multiple base OSes.
+// The platform name encodes both the base OS and the version, e.g. "rapidfort ubuntu 22.04".
+type rapidFortBucket struct {
+	baseOS  string // e.g. "ubuntu", "debian", "redhat"
+	version string // e.g. "22.04", "12", "9"
+}
+
+func (r rapidFortBucket) Name() string {
+	return "rapidfort " + r.baseOS + " " + r.version
+}
+
+func (r rapidFortBucket) Ecosystem() ecosystem.Type {
+	return ecosystem.RapidFort
+}
+
+func (r rapidFortBucket) BaseOS() string {
+	return r.baseOS
+}
+
+// NewRapidFort creates a bucket for RapidFort advisories for a given base OS and version.
+func NewRapidFort(baseOS, version string) rapidFortBucket {
+	return rapidFortBucket{baseOS: baseOS, version: version}
+}
+
 //////////////////////////////////////////////////////////////////////
 // OS buckets with special naming conventions (alphabetical order)  //
 //////////////////////////////////////////////////////////////////////
