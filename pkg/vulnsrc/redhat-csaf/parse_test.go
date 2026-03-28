@@ -30,6 +30,19 @@ func TestParser_Parse(t *testing.T) {
 			wantAdvisories: map[Bucket]RawEntries{
 				{
 					Package: Package{
+						Name: "affected-package",
+					},
+					VulnerabilityID: "CVE-2024-9999",
+				}: {
+					{
+						FixedVersion: "1.0.0",
+						Arch:         "",
+						Severity:     types.SeverityHigh,
+						CPE:          csaf.CPE("cpe:/o:redhat:enterprise_linux:9::baseos"),
+					},
+				},
+				{
+					Package: Package{
 						Name: "pam",
 					},
 					VulnerabilityID: "RHSA-2024:9941",
@@ -86,7 +99,7 @@ func TestParser_Parse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			parser := NewParser()
+			parser := NewParser("", "csaf-vex", "cpe")
 			err := parser.Parse(tt.dir)
 
 			if tt.wantErr != "" {
@@ -156,7 +169,7 @@ func TestParser_DetectStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			parser := NewParser()
+			parser := NewParser("", "csaf-vex", "cpe")
 			remediation := &csaf.Remediation{
 				Category: &tt.category,
 				Details:  &tt.details,
