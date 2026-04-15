@@ -3,10 +3,10 @@ package rootio
 import (
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"maps"
 	"os"
 	"path/filepath"
-	"slices"
 	"sort"
 	"strings"
 
@@ -25,23 +25,14 @@ import (
 
 const (
 	rootioDir      = "rootio"
-	feedFileName   = "cve_feed.json"
 	platformFormat = "root.io %s %s" // "root.io {baseOS} {version}"
 )
 
-var (
-	source = types.DataSource{
-		ID:   vulnerability.RootIO,
-		Name: "Root.io Security Patches",
-		URL:  "https://api.root.io/external/patch_feed",
-	}
-
-	supportedOSes = []types.SourceID{
-		vulnerability.Alpine,
-		vulnerability.Debian,
-		vulnerability.Ubuntu,
-	}
-)
+var source = types.DataSource{
+	ID:   vulnerability.RootIO,
+	Name: "Root.io Security Patches",
+	URL:  "https://api.root.io/external/patch_feed",
+}
 
 type config struct {
 	dbc    db.Operation
@@ -49,13 +40,11 @@ type config struct {
 }
 
 type VulnSrc struct {
-	supportedOSes []types.SourceID
 	config
 }
 
 func NewVulnSrc() VulnSrc {
 	return VulnSrc{
-		supportedOSes: supportedOSes,
 		config: config{
 			dbc:    db.Config{},
 			logger: log.WithPrefix("rootio"),
@@ -68,117 +57,92 @@ func (vs VulnSrc) Name() types.SourceID {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	feedFilePath := filepath.Join(dir, "vuln-list", rootioDir, feedFileName)
-	eb := oops.In("rootio").With("file_path", feedFilePath)
+	rootDir := filepath.Join(dir, "vuln-list", rootioDir)
+	eb := oops.In("rootio").With("root_dir", rootDir)
 
-	feedFile, err := os.Open(feedFilePath)
-	if err != nil {
-		return eb.Wrapf(err, "failed to open feed file %s", feedFilePath)
-	}
-	defer feedFile.Close()
-
-	var rawFeed RawFeed
-	if err = json.NewDecoder(feedFile).Decode(&rawFeed); err != nil {
-		return eb.With("file_path", feedFilePath).Wrapf(err, "json decode error")
-	}
-
-	// Take rawDistroData for each base OS
-	for baseOS, rawDistroData := range rawFeed {
-		if !slices.Contains(vs.supportedOSes, types.SourceID(baseOS)) {
-			vs.logger.Warn("Unsupported base OS", "base_os", baseOS)
-			continue
-
-		}
-
-		// platform => feeds
-		feeds := make(map[string][]Feed)
-		// Convert each distro version to our internal Feed format
-		for _, distro := range rawDistroData {
-			platformName := fmt.Sprintf(platformFormat, strings.ToLower(baseOS), distro.DistroVersion)
-
-			// Convert packages to patches
-			for _, pkg := range distro.Packages {
-				for cveID, cveInfo := range pkg.Pkg.CVEs {
-					// Parse severity from the feed
-					severity := types.SeverityUnknown
-					if cveInfo.Severity != "" {
-						if sev, err := types.NewSeverity(cveInfo.Severity); err == nil {
-							severity = sev
-						} else {
-							vs.logger.Warn("Invalid severity value", "cve", cveID, "severity", cveInfo.Severity, "error", err)
-						}
-					}
-
-					feed := Feed{
-						VulnerabilityID: cveID,
-						PkgName:         pkg.Pkg.Name,
-						Patch: types.Advisory{
-							VulnerableVersions: cveInfo.VulnerableRanges,
-							PatchedVersions:    cveInfo.FixedVersions,
-							Severity:           severity,
-						},
-					}
-					feeds[platformName] = append(feeds[platformName], feed)
-				}
-			}
-		}
-
-		// Save feeds for the current base OS
-		if err = vs.save(baseOS, feeds); err != nil {
-			return eb.Wrapf(err, "save error")
-		}
-	}
-
-	return nil
-}
-
-func (vs VulnSrc) save(baseOS string, feeds map[string][]Feed) error {
-	vs.logger.Info("Saving Root.io DB", "base_os", baseOS)
-	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		for platform, platformFeeds := range feeds {
-			dataSource := types.DataSource{
-				ID:     source.ID,
-				Name:   source.Name + fmt.Sprintf(" (%s)", baseOS),
-				URL:    source.URL,
-				BaseID: types.SourceID(baseOS),
-			}
-			if err := vs.dbc.PutDataSource(tx, platform, dataSource); err != nil {
-				return oops.Wrapf(err, "failed to put data source")
-			}
-			if err := vs.commit(tx, platform, platformFeeds); err != nil {
+	return vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
+		return fs.WalkDir(os.DirFS(rootDir), ".", func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
 				return err
 			}
-		}
-		return nil
+			if d.IsDir() || !strings.HasSuffix(path, ".json") {
+				return nil
+			}
+
+			f, err := os.Open(filepath.Join(rootDir, path))
+			if err != nil {
+				return eb.Wrapf(err, "open %s", path)
+			}
+			defer f.Close()
+
+			var adv OSVAdvisory
+			if err := json.NewDecoder(f).Decode(&adv); err != nil {
+				return eb.With("path", path).Wrapf(err, "json decode error")
+			}
+
+			if len(adv.Affected) == 0 || len(adv.Upstream) == 0 {
+				return nil
+			}
+
+			return vs.put(tx, adv)
+		})
 	})
-	if err != nil {
-		return oops.Wrapf(err, "batch update error")
-	}
-	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, platform string, feeds []Feed) error {
-	for _, feed := range feeds {
-		if err := vs.put(tx, platform, feed); err != nil {
-			return oops.Wrapf(err, "put error")
+func (vs VulnSrc) put(tx *bolt.Tx, adv OSVAdvisory) error {
+	cveID := adv.Upstream[0]
+	affected := adv.Affected[0]
+
+	var fixedVersion string
+	for _, r := range affected.Ranges {
+		for _, e := range r.Events {
+			if e.Fixed != "" {
+				fixedVersion = e.Fixed
+				break
+			}
+		}
+		if fixedVersion != "" {
+			break
 		}
 	}
-	return nil
-}
+	if fixedVersion == "" {
+		return nil
+	}
 
-func (vs VulnSrc) put(tx *bolt.Tx, platform string, feed Feed) error {
-	eb := oops.With("platform", platform).With("package", feed.PkgName).With("cve", feed.VulnerabilityID)
+	platform := vs.platform(adv)
 
-	if err := vs.dbc.PutAdvisoryDetail(tx, feed.VulnerabilityID, feed.PkgName, []string{platform}, feed.Patch); err != nil {
+	ds := source
+	if adv.DatabaseSpecific.Distro != "" {
+		ds.Name = source.Name + fmt.Sprintf(" (%s)", adv.DatabaseSpecific.Distro)
+		ds.BaseID = types.SourceID(adv.DatabaseSpecific.Distro)
+	}
+
+	eb := oops.With("platform", platform).With("package", affected.Package.Name).With("cve", cveID)
+
+	if err := vs.dbc.PutDataSource(tx, platform, ds); err != nil {
+		return eb.Wrapf(err, "failed to put data source")
+	}
+
+	advisory := types.Advisory{FixedVersion: fixedVersion}
+	if err := vs.dbc.PutAdvisoryDetail(tx, cveID, affected.Package.Name, []string{platform}, advisory); err != nil {
 		return eb.Wrapf(err, "failed to save advisory")
 	}
 
-	// For optimization
-	if err := vs.dbc.PutVulnerabilityID(tx, feed.VulnerabilityID); err != nil {
+	if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
 		return eb.Wrapf(err, "failed to save the vulnerability ID")
 	}
 
 	return nil
+}
+
+func (vs VulnSrc) platform(adv OSVAdvisory) string {
+	distro := adv.DatabaseSpecific.Distro
+	if distro == "" {
+		// App advisory — use the ecosystem as the namespace.
+		// Callers guard len(adv.Affected) > 0 before reaching here.
+		return strings.ToLower(adv.Affected[0].Package.Ecosystem)
+	}
+	return fmt.Sprintf(platformFormat, distro, adv.DatabaseSpecific.DistroVersion)
 }
 
 type VulnSrcGetter struct {

@@ -1,37 +1,31 @@
 package rootio
 
-import "github.com/aquasecurity/trivy-db/pkg/types"
-
-// Feed represents the Root.io patch feed structure (internal format)
-type Feed struct {
-	VulnerabilityID string
-	PkgName         string
-	Patch           types.Advisory
+// OSVAdvisory is a subset of OSV schema v1.6.0 used by the rootio source.
+type OSVAdvisory struct {
+	ID               string        `json:"id"`
+	Upstream         []string      `json:"upstream"`
+	Affected         []OSVAffected `json:"affected"`
+	DatabaseSpecific struct {
+		Distro        string `json:"distro"`
+		DistroVersion string `json:"distro_version"`
+	} `json:"database_specific"`
 }
 
-// RawFeed represents the actual Root.io API feed format
-type RawFeed map[string][]RawDistroData
-
-// RawDistroData represents distribution data from the API
-type RawDistroData struct {
-	DistroVersion string           `json:"distroversion"`
-	Packages      []RawPackageData `json:"packages"`
+type OSVAffected struct {
+	Package OSVPackage `json:"package"`
+	Ranges  []OSVRange `json:"ranges"`
 }
 
-// RawPackageData represents package data from the API
-type RawPackageData struct {
-	Pkg RawPackageInfo `json:"pkg"`
+type OSVPackage struct {
+	Name      string `json:"name"`
+	Ecosystem string `json:"ecosystem"`
 }
 
-// RawPackageInfo represents package info from the API
-type RawPackageInfo struct {
-	Name string                `json:"name"`
-	CVEs map[string]RawCVEInfo `json:"cves"`
+type OSVRange struct {
+	Events []OSVEvent `json:"events"`
 }
 
-// RawCVEInfo represents CVE info from the API
-type RawCVEInfo struct {
-	VulnerableRanges []string `json:"vulnerable_ranges"`
-	FixedVersions    []string `json:"fixed_versions"`
-	Severity         string   `json:"severity,omitempty"`
+type OSVEvent struct {
+	Introduced string `json:"introduced,omitempty"`
+	Fixed      string `json:"fixed,omitempty"`
 }
