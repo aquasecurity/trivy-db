@@ -24,10 +24,10 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []vulnsrctest.WantValues{
 				{
-				Key: []string{
-					"data-source",
-					"echo pip::Echo OSV",
-				},
+					Key: []string{
+						"data-source",
+						"echo pip::Echo OSV",
+					},
 					Value: types.DataSource{
 						ID:   vulnerability.EchoOSV,
 						Name: "Echo OSV",
@@ -35,19 +35,19 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-				Key: []string{
-					"advisory-detail",
-					"CVE-2024-99999",
-					"echo pip::Echo OSV",
-					"requests",
-				},
-				Value: types.Advisory{
-					VendorIDs: []string{
-						"ECHO-2024-1234",
+					Key: []string{
+						"advisory-detail",
+						"CVE-2024-99999",
+						"echo pip::Echo OSV",
+						"requests",
 					},
-					PatchedVersions:    []string{"2.14.2+echo.999"},
-					VulnerableVersions: []string{">=2.14.2+echo.1, <2.14.2+echo.999"},
-				},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"ECHO-2024-1234",
+						},
+						PatchedVersions:    []string{"2.14.2+echo.999"},
+						VulnerableVersions: []string{">=2.14.2+echo.1, <2.14.2+echo.999"},
+					},
 				},
 				{
 					Key: []string{
