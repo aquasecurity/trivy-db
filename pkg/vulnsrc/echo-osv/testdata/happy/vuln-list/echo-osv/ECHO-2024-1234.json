@@ -7,7 +7,7 @@
     "CVE-2024-99999"
   ],
   "summary": "Example vulnerability in requests library",
-  "details": "The requests library before 2.32.0 has a vulnerability that allows an attacker to perform SSRF attacks.",
+  "details": "The requests library before 2.14.2+echo.999 has a vulnerability that allows an attacker to perform SSRF attacks.",
   "severity": [
     {
       "type": "CVSS_V3",
@@ -25,10 +25,10 @@
           "type": "ECOSYSTEM",
           "events": [
             {
-              "introduced": "2.0.0"
+              "introduced": "2.14.2+echo.1"
             },
             {
-              "fixed": "2.32.0"
+              "fixed": "2.14.2+echo.999"
             }
           ]
         }

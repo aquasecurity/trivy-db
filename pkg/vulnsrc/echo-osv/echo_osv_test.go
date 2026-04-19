@@ -24,10 +24,10 @@ func TestVulnSrc_Update(t *testing.T) {
 			dir:  filepath.Join("testdata", "happy"),
 			wantValues: []vulnsrctest.WantValues{
 				{
-					Key: []string{
-						"data-source",
-						"pip::Echo OSV",
-					},
+				Key: []string{
+					"data-source",
+					"echo pip::Echo OSV",
+				},
 					Value: types.DataSource{
 						ID:   vulnerability.EchoOSV,
 						Name: "Echo OSV",
@@ -35,19 +35,19 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{
-						"advisory-detail",
-						"CVE-2024-99999",
-						"pip::Echo OSV",
-						"requests",
+				Key: []string{
+					"advisory-detail",
+					"CVE-2024-99999",
+					"echo pip::Echo OSV",
+					"requests",
+				},
+				Value: types.Advisory{
+					VendorIDs: []string{
+						"ECHO-2024-1234",
 					},
-					Value: types.Advisory{
-						VendorIDs: []string{
-							"ECHO-2024-1234",
-						},
-						PatchedVersions:    []string{"2.32.0"},
-						VulnerableVersions: []string{">=2.0.0, <2.32.0"},
-					},
+					PatchedVersions:    []string{"2.14.2+echo.999"},
+					VulnerableVersions: []string{">=2.14.2+echo.1, <2.14.2+echo.999"},
+				},
 				},
 				{
 					Key: []string{
@@ -57,7 +57,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: types.VulnerabilityDetail{
 						Title:        "Example vulnerability in requests library",
-						Description:  "The requests library before 2.32.0 has a vulnerability that allows an attacker to perform SSRF attacks.",
+						Description:  "The requests library before 2.14.2+echo.999 has a vulnerability that allows an attacker to perform SSRF attacks.",
 						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
 						CvssScoreV3:  7.5,
 						References: []string{
