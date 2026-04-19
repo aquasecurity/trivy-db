@@ -3,146 +3,126 @@ package rootio
 import (
 	"encoding/json"
 	"fmt"
-	"io/fs"
 	"maps"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/samber/lo"
 	"github.com/samber/oops"
-	bolt "go.etcd.io/bbolt"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-const (
-	rootioDir      = "rootio"
-	platformFormat = "root.io %s %s" // "root.io {baseOS} {version}"
+const platformFormat = "root.io %s %s" // "root.io {baseOS} {version}"
+
+var (
+	vulnsDir = filepath.Join("vuln-list", "rootio")
+
+	source = types.DataSource{
+		ID:   vulnerability.RootIO,
+		Name: "Root.io Security Patches",
+		URL:  "https://api.root.io/external/patch_feed",
+	}
 )
 
-var source = types.DataSource{
-	ID:   vulnerability.RootIO,
-	Name: "Root.io Security Patches",
-	URL:  "https://api.root.io/external/patch_feed",
+type VulnSrc struct{}
+
+func NewVulnSrc() VulnSrc { return VulnSrc{} }
+
+func (VulnSrc) Name() types.SourceID { return source.ID }
+
+func (vs VulnSrc) Update(root string) error {
+	eb := oops.In("rootio").With("root", root)
+
+	dataSources := map[ecosystem.Type]types.DataSource{
+		ecosystem.Npm:      source,
+		ecosystem.Pip:      source,
+		ecosystem.RubyGems: source,
+	}
+
+	o := osv.New(vulnsDir, source.ID, dataSources,
+		osv.WithBucketResolver("alpine", resolveAlpineBucket),
+		osv.WithBucketResolver("debian", resolveDebianBucket),
+		osv.WithBucketResolver("ubuntu", resolveUbuntuBucket),
+		osv.WithTransformer(&transformer{}),
+	)
+	if err := o.Update(root); err != nil {
+		return eb.Wrapf(err, "failed to update Root.io vulnerability data")
+	}
+	return nil
+}
+
+// resolveAlpineBucket returns a placeholder Root.io Alpine bucket. The distro
+// version is unknown at this point — TransformAdvisories rebuilds the bucket
+// once it has read entry.DatabaseSpecific.
+func resolveAlpineBucket(_ string) (bucket.Bucket, error) {
+	return rootioBucket{base: bucket.NewAlpine(""), dataSource: source}, nil
+}
+
+func resolveDebianBucket(_ string) (bucket.Bucket, error) {
+	return rootioBucket{base: bucket.NewDebian(""), dataSource: source}, nil
+}
+
+func resolveUbuntuBucket(_ string) (bucket.Bucket, error) {
+	return rootioBucket{base: bucket.NewUbuntu(""), dataSource: source}, nil
+}
+
+type transformer struct{}
+
+func (t *transformer) PostParseAffected(adv osv.Advisory, _ osv.Affected) (osv.Advisory, error) {
+	return adv, nil
+}
+
+// TransformAdvisories applies Root.io's distro/distro_version (carried in
+// entry.DatabaseSpecific) to OS advisories and drops entries that have no
+// fixed version.
+func (t *transformer) TransformAdvisories(advs []osv.Advisory, entry osv.Entry) ([]osv.Advisory, error) {
+	var dbSpec struct {
+		Distro        string `json:"distro"`
+		DistroVersion string `json:"distro_version"`
+	}
+	if len(entry.DatabaseSpecific) > 0 {
+		if err := json.Unmarshal(entry.DatabaseSpecific, &dbSpec); err != nil {
+			return nil, oops.With("entry_id", entry.ID).Wrapf(err, "failed to decode database_specific")
+		}
+	}
+
+	out := make([]osv.Advisory, 0, len(advs))
+	for _, adv := range advs {
+		// Drop advisories without a fixed version.
+		if len(adv.PatchedVersions) == 0 {
+			continue
+		}
+
+		if dbSpec.Distro != "" {
+			ds := source
+			ds.Name = source.Name + fmt.Sprintf(" (%s)", dbSpec.Distro)
+			ds.BaseID = types.SourceID(dbSpec.Distro)
+
+			bkt, err := newOSBucket(ecosystem.Type(strings.ToLower(dbSpec.Distro)), dbSpec.DistroVersion, ds)
+			if err != nil {
+				return nil, oops.With("entry_id", entry.ID).Wrapf(err, "failed to build bucket")
+			}
+			adv.Bucket = bkt
+		}
+		out = append(out, adv)
+	}
+	return out, nil
 }
 
 type config struct {
 	dbc    db.Operation
 	logger *log.Logger
-}
-
-type VulnSrc struct {
-	config
-}
-
-func NewVulnSrc() VulnSrc {
-	return VulnSrc{
-		config: config{
-			dbc:    db.Config{},
-			logger: log.WithPrefix("rootio"),
-		},
-	}
-}
-
-func (vs VulnSrc) Name() types.SourceID {
-	return source.ID
-}
-
-func (vs VulnSrc) Update(dir string) error {
-	rootDir := filepath.Join(dir, "vuln-list", rootioDir)
-	eb := oops.In("rootio").With("root_dir", rootDir)
-
-	return vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		return fs.WalkDir(os.DirFS(rootDir), ".", func(path string, d fs.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
-			if d.IsDir() || !strings.HasSuffix(path, ".json") {
-				return nil
-			}
-
-			f, err := os.Open(filepath.Join(rootDir, path))
-			if err != nil {
-				return eb.Wrapf(err, "open %s", path)
-			}
-			defer f.Close()
-
-			var adv OSVAdvisory
-			if err := json.NewDecoder(f).Decode(&adv); err != nil {
-				return eb.With("path", path).Wrapf(err, "json decode error")
-			}
-
-			if len(adv.Affected) == 0 || len(adv.Upstream) == 0 {
-				return nil
-			}
-
-			return vs.put(tx, adv)
-		})
-	})
-}
-
-func (vs VulnSrc) put(tx *bolt.Tx, adv OSVAdvisory) error {
-	cveID := adv.Upstream[0]
-	affected := adv.Affected[0]
-
-	var fixedVersion string
-	for _, r := range affected.Ranges {
-		for _, e := range r.Events {
-			if e.Fixed != "" {
-				fixedVersion = e.Fixed
-				break
-			}
-		}
-		if fixedVersion != "" {
-			break
-		}
-	}
-	if fixedVersion == "" {
-		return nil
-	}
-
-	platform := vs.platform(adv)
-
-	ds := source
-	if adv.DatabaseSpecific.Distro != "" {
-		ds.Name = source.Name + fmt.Sprintf(" (%s)", adv.DatabaseSpecific.Distro)
-		ds.BaseID = types.SourceID(adv.DatabaseSpecific.Distro)
-	}
-
-	eb := oops.With("platform", platform).With("package", affected.Package.Name).With("cve", cveID)
-
-	if err := vs.dbc.PutDataSource(tx, platform, ds); err != nil {
-		return eb.Wrapf(err, "failed to put data source")
-	}
-
-	advisory := types.Advisory{FixedVersion: fixedVersion}
-	if err := vs.dbc.PutAdvisoryDetail(tx, cveID, affected.Package.Name, []string{platform}, advisory); err != nil {
-		return eb.Wrapf(err, "failed to save advisory")
-	}
-
-	if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
-		return eb.Wrapf(err, "failed to save the vulnerability ID")
-	}
-
-	return nil
-}
-
-func (vs VulnSrc) platform(adv OSVAdvisory) string {
-	distro := adv.DatabaseSpecific.Distro
-	if distro == "" {
-		// App advisory — use the ecosystem as the namespace.
-		// Callers guard len(adv.Affected) > 0 before reaching here.
-		return strings.ToLower(adv.Affected[0].Package.Ecosystem)
-	}
-	return fmt.Sprintf(platformFormat, distro, adv.DatabaseSpecific.DistroVersion)
 }
 
 type VulnSrcGetter struct {

@@ -45,7 +45,9 @@ func TestVulnSrc_Update(t *testing.T) {
 						"rootio-curl",
 					},
 					Value: types.Advisory{
-						FixedVersion: "8.4.0-r0.root.io.1",
+						VendorIDs:          []string{"ROOT-OS-ALPINE-318-CVE-2023-38473"},
+						VulnerableVersions: []string{"<8.4.0-r0.root.io.1"},
+						PatchedVersions:    []string{"8.4.0-r0.root.io.1"},
 					},
 				},
 				{
@@ -58,7 +60,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"data-source",
-						"npm",
+						"npm::Root.io Security Patches",
 					},
 					Value: types.DataSource{
 						ID:   vulnerability.RootIO,
@@ -70,11 +72,13 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{
 						"advisory-detail",
 						"CVE-2023-5678",
-						"npm",
+						"npm::Root.io Security Patches",
 						"@rootio/axios",
 					},
 					Value: types.Advisory{
-						FixedVersion: "1.6.1",
+						VendorIDs:          []string{"ROOT-APP-NPM-CVE-2023-5678"},
+						VulnerableVersions: []string{"<1.6.1"},
+						PatchedVersions:    []string{"1.6.1"},
 					},
 				},
 				{
