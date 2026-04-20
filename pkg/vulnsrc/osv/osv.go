@@ -405,14 +405,16 @@ func parseSeverities(severities []Severity) (severityResult, error) {
 		case "CVSS_V3":
 			vec, score, err := parseSeverityV3(s.Score)
 			if err != nil {
-				return severityResult{}, err
+				log.Warn("Failed to parse CVSSv3 vector", log.String("vector", s.Score), log.Err(err))
+				continue
 			}
 			result.VectorV3 = vec
 			result.ScoreV3 = score
 		case "CVSS_V4":
 			vec, score, err := parseSeverityV40(s.Score)
 			if err != nil {
-				return severityResult{}, err
+				log.Warn("Failed to parse CVSSv4.0 vector", log.String("vector", s.Score), log.Err(err))
+				continue
 			}
 			result.VectorV40 = vec
 			result.ScoreV40 = score
