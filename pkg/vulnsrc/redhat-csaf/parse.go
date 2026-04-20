@@ -310,8 +310,12 @@ func (p *Parser) parseVulnerability(adv CSAFAdvisory, vuln *csaf.Vulnerability) 
 				alias = cveID
 				// Store the RHSA release date (once per vulnID) from Remediation.Date.
 				if _, exists := p.releaseDates[vulnID]; !exists {
-					if remediation != nil && remediation.Date != nil {
-						p.releaseDates[vulnID] = p.formatDate(*remediation.Date)
+					if remediation.Date != nil {
+						formatted, err := formatDate(*remediation.Date)
+						if err != nil {
+							return oops.With("cve_id", cveID).With("vulnerability_id", vulnID).Wrapf(err, "remediation date")
+						}
+						p.releaseDates[vulnID] = formatted
 					}
 				}
 			} else {
@@ -449,12 +453,12 @@ func (p *Parser) ReleaseDate(vulnID VulnerabilityID) string {
 }
 
 // formatDate extracts the date portion (YYYY-MM-DD) from an RFC3339 timestamp.
-func (p *Parser) formatDate(timestamp string) string {
+func formatDate(timestamp string) (string, error) {
 	t, err := time.Parse(time.RFC3339, timestamp)
 	if err != nil {
-		return ""
+		return "", oops.With("raw", timestamp).Wrapf(err, "parse RFC3339")
 	}
-	return t.Format(time.DateOnly)
+	return t.Format(time.DateOnly), nil
 }
 
 // SerializeAdvisories saves the current advisories map to a file
