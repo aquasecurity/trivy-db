@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/gocsaf/csaf/v3/csaf"
 	"github.com/package-url/packageurl-go"
@@ -31,6 +32,9 @@ type Parser struct {
 	nvrToCPE   map[string][]string
 	advisories map[Package]map[VulnerabilityID]RawEntries
 	cpeSet     set.Ordered[string]
+	// releaseDates: advisory release date (YYYY-MM-DD) per RHSA ID. Only set for fixed
+	// advisories; unpatched (CVE-only) entries do not need it for PutInput.ReleaseDate.
+	releaseDates map[VulnerabilityID]string
 }
 
 func NewParser() Parser {
@@ -42,10 +46,11 @@ func NewParser() Parser {
 	gob.Register(csaf.CPE(""))
 
 	return Parser{
-		repoToCPE:  map[string][]string{},
-		nvrToCPE:   map[string][]string{},
-		advisories: map[Package]map[VulnerabilityID]RawEntries{},
-		cpeSet:     set.NewOrdered[string](),
+		repoToCPE:    map[string][]string{},
+		nvrToCPE:     map[string][]string{},
+		advisories:   map[Package]map[VulnerabilityID]RawEntries{},
+		cpeSet:       set.NewOrdered[string](),
+		releaseDates: map[VulnerabilityID]string{},
 	}
 }
 
@@ -303,6 +308,16 @@ func (p *Parser) parseVulnerability(adv CSAFAdvisory, vuln *csaf.Vulnerability) 
 			if status == types.StatusFixed {
 				vulnID = p.extractRHSAID(remediation)
 				alias = cveID
+				// Store the RHSA release date (once per vulnID) from Remediation.Date.
+				if _, exists := p.releaseDates[vulnID]; !exists {
+					if remediation.Date != nil {
+						formatted, err := formatDate(*remediation.Date)
+						if err != nil {
+							return oops.With("cve_id", cveID).With("vulnerability_id", vulnID).Wrapf(err, "remediation date")
+						}
+						p.releaseDates[vulnID] = formatted
+					}
+				}
 			} else {
 				vulnID = cveID
 			}
@@ -430,6 +445,20 @@ func (p *Parser) RepoToCPE() iter.Seq2[string, []string] {
 
 func (p *Parser) NVRToCPE() iter.Seq2[string, []string] {
 	return maps.All(p.nvrToCPE)
+}
+
+// ReleaseDate returns the advisory release date (YYYY-MM-DD) for a given vulnerability ID.
+func (p *Parser) ReleaseDate(vulnID VulnerabilityID) string {
+	return p.releaseDates[vulnID]
+}
+
+// formatDate extracts the date portion (YYYY-MM-DD) from an RFC3339 timestamp.
+func formatDate(timestamp string) (string, error) {
+	t, err := time.Parse(time.RFC3339, timestamp)
+	if err != nil {
+		return "", oops.With("raw", timestamp).Wrapf(err, "parse RFC3339")
+	}
+	return t.Format(time.DateOnly), nil
 }
 
 // SerializeAdvisories saves the current advisories map to a file

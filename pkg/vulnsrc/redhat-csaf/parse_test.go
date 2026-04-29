@@ -111,6 +111,52 @@ func TestParser_Parse(t *testing.T) {
 	}
 }
 
+func TestFormatDate(t *testing.T) {
+	tests := []struct {
+		name      string
+		timestamp string
+		wantDate  string
+		wantErr   bool
+	}{
+		{
+			name:      "valid RFC3339 with Z",
+			timestamp: "2024-12-18T09:14:23Z",
+			wantDate:  "2024-12-18",
+		},
+		{
+			name:      "valid RFC3339 with timezone offset",
+			timestamp: "2025-01-01T00:00:00+00:00",
+			wantDate:  "2025-01-01",
+		},
+		{
+			name:      "invalid timestamp",
+			timestamp: "not-a-date",
+			wantErr:   true,
+		},
+		{
+			name:      "empty string",
+			timestamp: "",
+			wantErr:   true,
+		},
+		{
+			name:      "wrong format (date only)",
+			timestamp: "2024-12-18",
+			wantErr:   true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := formatDate(tt.timestamp)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.wantDate, got)
+		})
+	}
+}
+
 func TestParser_DetectStatus(t *testing.T) {
 	tests := []struct {
 		name     string
