@@ -44,6 +44,7 @@ const (
 	Chainguard  Type = "chainguard"
 	Echo        Type = "echo"
 	MinimOS     Type = "minimos"
+	CleanStart  Type = "cleanstart" 
 	Seal        Type = "seal"
 )
 
