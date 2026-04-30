@@ -1,0 +1,6 @@
+- bucket: broken bucket
+  pairs:
+    - bucket: openssl
+      pairs:
+        - key: CVE-2024-5535
+          value: not-a-valid-advisory
