@@ -83,6 +83,9 @@ func newLang(ecoType ecosystem.Type, dataSource types.DataSource) (DataSourceBuc
 // NewAlma creates a bucket for Alma Linux
 func NewAlma(version string) Bucket { return newOS(ecosystem.AlmaLinux, version) }
 
+// NewBottlerocket creates a bucket for Bottlerocket
+func NewBottlerocket() Bucket { return newOS(ecosystem.Bottlerocket, "") }
+
 // NewAlpine creates a bucket for Alpine Linux
 func NewAlpine(version string) Bucket { return newOS(ecosystem.Alpine, version) }
 
