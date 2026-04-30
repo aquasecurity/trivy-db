@@ -4,181 +4,125 @@ import (
 	"encoding/json"
 	"fmt"
 	"maps"
-	"os"
 	"path/filepath"
-	"slices"
 	"sort"
 	"strings"
 
 	"github.com/samber/lo"
 	"github.com/samber/oops"
-	bolt "go.etcd.io/bbolt"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/log"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
 
-const (
-	rootioDir      = "rootio"
-	feedFileName   = "cve_feed.json"
-	platformFormat = "root.io %s %s" // "root.io {baseOS} {version}"
-)
+const platformFormat = "root.io %s %s" // "root.io {baseOS} {version}"
 
 var (
+	vulnsDir = filepath.Join("vuln-list", "rootio")
+
 	source = types.DataSource{
 		ID:   vulnerability.RootIO,
 		Name: "Root.io Security Patches",
 		URL:  "https://api.root.io/external/patch_feed",
 	}
-
-	supportedOSes = []types.SourceID{
-		vulnerability.Alpine,
-		vulnerability.Debian,
-		vulnerability.Ubuntu,
-	}
 )
+
+type VulnSrc struct{}
+
+func NewVulnSrc() VulnSrc { return VulnSrc{} }
+
+func (VulnSrc) Name() types.SourceID { return source.ID }
+
+func (vs VulnSrc) Update(root string) error {
+	eb := oops.In("rootio").With("root", root)
+
+	dataSources := map[ecosystem.Type]types.DataSource{
+		ecosystem.Npm:      source,
+		ecosystem.Pip:      source,
+		ecosystem.RubyGems: source,
+	}
+
+	o := osv.New(vulnsDir, source.ID, dataSources,
+		osv.WithBucketResolver("alpine", resolveAlpineBucket),
+		osv.WithBucketResolver("debian", resolveDebianBucket),
+		osv.WithBucketResolver("ubuntu", resolveUbuntuBucket),
+		osv.WithTransformer(&transformer{}),
+	)
+	if err := o.Update(root); err != nil {
+		return eb.Wrapf(err, "failed to update Root.io vulnerability data")
+	}
+	return nil
+}
+
+// resolveAlpineBucket returns a placeholder Root.io Alpine bucket. The distro
+// version is unknown at this point — TransformAdvisories rebuilds the bucket
+// once it has read entry.DatabaseSpecific.
+func resolveAlpineBucket(_ string) (bucket.Bucket, error) {
+	return rootioBucket{base: bucket.NewAlpine(""), dataSource: source}, nil
+}
+
+func resolveDebianBucket(_ string) (bucket.Bucket, error) {
+	return rootioBucket{base: bucket.NewDebian(""), dataSource: source}, nil
+}
+
+func resolveUbuntuBucket(_ string) (bucket.Bucket, error) {
+	return rootioBucket{base: bucket.NewUbuntu(""), dataSource: source}, nil
+}
+
+type transformer struct{}
+
+func (t *transformer) PostParseAffected(adv osv.Advisory, _ osv.Affected) (osv.Advisory, error) {
+	return adv, nil
+}
+
+// TransformAdvisories applies Root.io's distro/distro_version (carried in
+// entry.DatabaseSpecific) to OS advisories and drops entries that have no
+// fixed version.
+func (t *transformer) TransformAdvisories(advs []osv.Advisory, entry osv.Entry) ([]osv.Advisory, error) {
+	var dbSpec struct {
+		Distro        string `json:"distro"`
+		DistroVersion string `json:"distro_version"`
+	}
+	if len(entry.DatabaseSpecific) > 0 {
+		if err := json.Unmarshal(entry.DatabaseSpecific, &dbSpec); err != nil {
+			return nil, oops.With("entry_id", entry.ID).Wrapf(err, "failed to decode database_specific")
+		}
+	}
+
+	out := make([]osv.Advisory, 0, len(advs))
+	for _, adv := range advs {
+		// Drop advisories without a fixed version.
+		if len(adv.PatchedVersions) == 0 {
+			continue
+		}
+
+		if dbSpec.Distro != "" {
+			ds := source
+			ds.Name = source.Name + fmt.Sprintf(" (%s)", dbSpec.Distro)
+			ds.BaseID = types.SourceID(dbSpec.Distro)
+
+			bkt, err := newOSBucket(ecosystem.Type(strings.ToLower(dbSpec.Distro)), dbSpec.DistroVersion, ds)
+			if err != nil {
+				return nil, oops.With("entry_id", entry.ID).Wrapf(err, "failed to build bucket")
+			}
+			adv.Bucket = bkt
+		}
+		out = append(out, adv)
+	}
+	return out, nil
+}
 
 type config struct {
 	dbc    db.Operation
 	logger *log.Logger
-}
-
-type VulnSrc struct {
-	supportedOSes []types.SourceID
-	config
-}
-
-func NewVulnSrc() VulnSrc {
-	return VulnSrc{
-		supportedOSes: supportedOSes,
-		config: config{
-			dbc:    db.Config{},
-			logger: log.WithPrefix("rootio"),
-		},
-	}
-}
-
-func (vs VulnSrc) Name() types.SourceID {
-	return source.ID
-}
-
-func (vs VulnSrc) Update(dir string) error {
-	feedFilePath := filepath.Join(dir, "vuln-list", rootioDir, feedFileName)
-	eb := oops.In("rootio").With("file_path", feedFilePath)
-
-	feedFile, err := os.Open(feedFilePath)
-	if err != nil {
-		return eb.Wrapf(err, "failed to open feed file %s", feedFilePath)
-	}
-	defer feedFile.Close()
-
-	var rawFeed RawFeed
-	if err = json.NewDecoder(feedFile).Decode(&rawFeed); err != nil {
-		return eb.With("file_path", feedFilePath).Wrapf(err, "json decode error")
-	}
-
-	// Take rawDistroData for each base OS
-	for baseOS, rawDistroData := range rawFeed {
-		if !slices.Contains(vs.supportedOSes, types.SourceID(baseOS)) {
-			vs.logger.Warn("Unsupported base OS", "base_os", baseOS)
-			continue
-
-		}
-
-		// platform => feeds
-		feeds := make(map[string][]Feed)
-		// Convert each distro version to our internal Feed format
-		for _, distro := range rawDistroData {
-			platformName := fmt.Sprintf(platformFormat, strings.ToLower(baseOS), distro.DistroVersion)
-
-			// Convert packages to patches
-			for _, pkg := range distro.Packages {
-				for cveID, cveInfo := range pkg.Pkg.CVEs {
-					// Parse severity from the feed
-					severity := types.SeverityUnknown
-					if cveInfo.Severity != "" {
-						if sev, err := types.NewSeverity(cveInfo.Severity); err == nil {
-							severity = sev
-						} else {
-							vs.logger.Warn("Invalid severity value", "cve", cveID, "severity", cveInfo.Severity, "error", err)
-						}
-					}
-
-					feed := Feed{
-						VulnerabilityID: cveID,
-						PkgName:         pkg.Pkg.Name,
-						Patch: types.Advisory{
-							VulnerableVersions: cveInfo.VulnerableRanges,
-							PatchedVersions:    cveInfo.FixedVersions,
-							Severity:           severity,
-						},
-					}
-					feeds[platformName] = append(feeds[platformName], feed)
-				}
-			}
-		}
-
-		// Save feeds for the current base OS
-		if err = vs.save(baseOS, feeds); err != nil {
-			return eb.Wrapf(err, "save error")
-		}
-	}
-
-	return nil
-}
-
-func (vs VulnSrc) save(baseOS string, feeds map[string][]Feed) error {
-	vs.logger.Info("Saving Root.io DB", "base_os", baseOS)
-	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		for platform, platformFeeds := range feeds {
-			dataSource := types.DataSource{
-				ID:     source.ID,
-				Name:   source.Name + fmt.Sprintf(" (%s)", baseOS),
-				URL:    source.URL,
-				BaseID: types.SourceID(baseOS),
-			}
-			if err := vs.dbc.PutDataSource(tx, platform, dataSource); err != nil {
-				return oops.Wrapf(err, "failed to put data source")
-			}
-			if err := vs.commit(tx, platform, platformFeeds); err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		return oops.Wrapf(err, "batch update error")
-	}
-	return nil
-}
-
-func (vs VulnSrc) commit(tx *bolt.Tx, platform string, feeds []Feed) error {
-	for _, feed := range feeds {
-		if err := vs.put(tx, platform, feed); err != nil {
-			return oops.Wrapf(err, "put error")
-		}
-	}
-	return nil
-}
-
-func (vs VulnSrc) put(tx *bolt.Tx, platform string, feed Feed) error {
-	eb := oops.With("platform", platform).With("package", feed.PkgName).With("cve", feed.VulnerabilityID)
-
-	if err := vs.dbc.PutAdvisoryDetail(tx, feed.VulnerabilityID, feed.PkgName, []string{platform}, feed.Patch); err != nil {
-		return eb.Wrapf(err, "failed to save advisory")
-	}
-
-	// For optimization
-	if err := vs.dbc.PutVulnerabilityID(tx, feed.VulnerabilityID); err != nil {
-		return eb.Wrapf(err, "failed to save the vulnerability ID")
-	}
-
-	return nil
 }
 
 type VulnSrcGetter struct {
