@@ -23,6 +23,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/photon"
+	photonoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/photon-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat"
 	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rocky"
@@ -57,6 +58,7 @@ var (
 		susecvrf.NewVulnSrc(susecvrf.SUSEEnterpriseLinux),
 		susecvrf.NewVulnSrc(susecvrf.OpenSUSE),
 		photon.NewVulnSrc(),
+		photonoval.NewVulnSrc(),
 		azure.NewVulnSrc(azure.Azure),
 		azure.NewVulnSrc(azure.Mariner),
 		wolfi.NewVulnSrc(),

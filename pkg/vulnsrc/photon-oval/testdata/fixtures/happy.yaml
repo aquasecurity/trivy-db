@@ -1,0 +1,9 @@
+- bucket: Photon OS OVAL 5.0
+  pairs:
+    - bucket: libcap
+      pairs:
+        - key: CVE-2023-2602
+          value:
+            FixedVersion: "2.66-2.ph5"
+            VendorIDs:
+              - "PHSA-2023-5.0-20"
