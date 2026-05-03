@@ -1,0 +1,47 @@
+{
+  "id": "PYSEC-2026-2",
+  "modified": "2026-04-01T00:00:00Z",
+  "published": "2026-03-01T00:00:00Z",
+  "aliases": [
+    "CVE-2026-99999"
+  ],
+  "summary": "Test advisory with invalid CVSSv4.0 metric order",
+  "details": "Some vulnerability details.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    },
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/SC:N/VI:H/SI:N/VA:H/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "PyPI",
+        "name": "somepackage"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.2.3"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://example.com/advisory"
+    }
+  ]
+}
