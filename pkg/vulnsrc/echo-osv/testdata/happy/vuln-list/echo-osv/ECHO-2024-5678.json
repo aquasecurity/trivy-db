@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.4.0",
+  "id": "ECHO-2024-5678",
+  "modified": "2024-11-01T10:00:00Z",
+  "published": "2024-10-01T08:00:00Z",
+  "summary": "Vulnerability without CVE alias",
+  "details": "This entry has no CVE alias and should be filtered out.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "PyPI",
+        "name": "flask"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "1.0.0"
+            },
+            {
+              "fixed": "2.0.0"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
