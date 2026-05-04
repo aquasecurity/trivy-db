@@ -31,7 +31,7 @@ func resolveBucket(suffix string) (bucket.Bucket, error) {
 	var eco ecosystem.Type
 	src := source
 	// Separate base ecosystem and version (if exists)
-	// e.g. "Alpine", "Red Hat:8", "Debian", "Java", "Python", "Node", "Go", "RubyGems"
+	// e.g. "Alpine", "Red Hat:8", "Debian", "Maven", "PyPI", "npm", "Go", "RubyGems"
 	baseEco, ver, _ := strings.Cut(suffix, ":")
 	switch baseEco {
 	case "alpine":
@@ -43,11 +43,11 @@ func resolveBucket(suffix string) (bucket.Bucket, error) {
 	case "red hat":
 		eco = ecosystem.RedHat
 		src.BaseID = vulnerability.RedHat
-	case "java":
+	case "maven":
 		eco = ecosystem.Maven
-	case "python":
+	case "pypi":
 		eco = ecosystem.Pip
-	case "node": // Seal uses "Node" to refer to the npm/Node.js ecosystem
+	case "npm":
 		eco = ecosystem.Npm
 	case "go":
 		eco = ecosystem.Go
