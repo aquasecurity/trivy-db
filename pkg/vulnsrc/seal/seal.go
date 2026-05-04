@@ -31,7 +31,7 @@ func resolveBucket(suffix string) (bucket.Bucket, error) {
 	var eco ecosystem.Type
 	src := source
 	// Separate base ecosystem and version (if exists)
-	// e.g. "Alpine", "Red Hat:8", "Debian", "Maven", "PyPI", "npm", "Go", "RubyGems"
+	// e.g. "alpine", "red hat:8", "debian", "maven", "pypi", "npm", "go", "rubygems"
 	baseEco, ver, _ := strings.Cut(suffix, ":")
 	switch baseEco {
 	case "alpine":
