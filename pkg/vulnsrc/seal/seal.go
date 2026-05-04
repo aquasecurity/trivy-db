@@ -109,7 +109,7 @@ func (vs VulnSrcGetter) Get(params db.GetParams) ([]types.Advisory, error) {
 	}
 	advs, err := vs.dbc.GetAdvisories(bkt.Name(), params.PkgName)
 	if err != nil {
-		return nil, eb.Wrapf(err, "failed to get advisories for base OS")
+		return nil, eb.Wrapf(err, "failed to get Seal advisories")
 	}
 
 	var splitAdvs []types.Advisory
