@@ -578,7 +578,7 @@ func TestVulnSrc_Get(t *testing.T) {
 			args: args{
 				pkgName: "seal-wget",
 			},
-			wantErr: "failed to get advisories for base OS",
+			wantErr: "failed to get Seal advisories",
 		},
 		{
 			name:     "broken orders for VulnerableVersions and PatchedVersions",
