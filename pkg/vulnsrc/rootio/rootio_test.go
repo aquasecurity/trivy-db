@@ -52,39 +52,19 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 				{
 					Key: []string{
+						"vulnerability-detail",
+						"CVE-2023-38473",
+						string(vulnerability.RootIO),
+					},
+					Value: types.VulnerabilityDetail{
+						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+						CvssScoreV3:  9.8,
+					},
+				},
+				{
+					Key: []string{
 						"vulnerability-id",
 						"CVE-2023-38473",
-					},
-					Value: map[string]any{},
-				},
-				{
-					Key: []string{
-						"data-source",
-						"npm::Root.io Security Patches",
-					},
-					Value: types.DataSource{
-						ID:   vulnerability.RootIO,
-						Name: "Root.io Security Patches",
-						URL:  "https://api.root.io/external/patch_feed",
-					},
-				},
-				{
-					Key: []string{
-						"advisory-detail",
-						"CVE-2023-5678",
-						"npm::Root.io Security Patches",
-						"@rootio/axios",
-					},
-					Value: types.Advisory{
-						VendorIDs:          []string{"ROOT-APP-NPM-CVE-2023-5678"},
-						VulnerableVersions: []string{"<1.6.1"},
-						PatchedVersions:    []string{"1.6.1"},
-					},
-				},
-				{
-					Key: []string{
-						"vulnerability-id",
-						"CVE-2023-5678",
 					},
 					Value: map[string]any{},
 				},
