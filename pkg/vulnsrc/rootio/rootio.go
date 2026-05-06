@@ -40,32 +40,11 @@ func (vs VulnSrc) Update(root string) error {
 
 	o := osv.New(vulnsDir, source.ID, nil,
 		osv.WithBucketResolver("root", resolveBucket),
-		osv.WithTransformer(&transformer{}),
 	)
 	if err := o.Update(root); err != nil {
 		return eb.Wrapf(err, "failed to update Root.io vulnerability data")
 	}
 	return nil
-}
-
-type transformer struct{}
-
-func (t *transformer) PostParseAffected(adv osv.Advisory, _ osv.Affected) (osv.Advisory, error) {
-	return adv, nil
-}
-
-// TransformAdvisories drops advisories without a fixed version. Bucket
-// resolution happens entirely in resolveBucket, driven by the ecosystem
-// string (e.g. "Root:Alpine:3.18").
-func (t *transformer) TransformAdvisories(advs []osv.Advisory, _ osv.Entry) ([]osv.Advisory, error) {
-	out := make([]osv.Advisory, 0, len(advs))
-	for _, adv := range advs {
-		if len(adv.PatchedVersions) == 0 {
-			continue
-		}
-		out = append(out, adv)
-	}
-	return out, nil
 }
 
 type VulnSrcGetter struct {

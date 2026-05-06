@@ -18,7 +18,6 @@ func TestVulnSrc_Update(t *testing.T) {
 		name       string
 		dir        string
 		wantValues []vulnsrctest.WantValues
-		noBuckets  [][]string
 		wantErr    string
 	}{
 		{
@@ -69,13 +68,6 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: map[string]any{},
 				},
 			},
-			// Skipped entries (empty affected, no fixed) must not create buckets
-			noBuckets: [][]string{
-				{"advisory-detail", "CVE-2099-NOFIXED"},
-				{"vulnerability-id", "CVE-2099-NOFIXED"},
-				{"advisory-detail", "CVE-2099-EMPTY"},
-				{"vulnerability-id", "CVE-2099-EMPTY"},
-			},
 		},
 		{
 			name:    "sad path - invalid JSON",
@@ -90,7 +82,6 @@ func TestVulnSrc_Update(t *testing.T) {
 			vulnsrctest.TestUpdate(t, vs, vulnsrctest.TestUpdateArgs{
 				Dir:        tt.dir,
 				WantValues: tt.wantValues,
-				NoBuckets:  tt.noBuckets,
 				WantErr:    tt.wantErr,
 			})
 		})
