@@ -61,11 +61,13 @@ func NewVulnSrcGetter(baseOS types.SourceID) VulnSrcGetter {
 
 func (vs VulnSrcGetter) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In("rootio").With("base_os", vs.baseOS).With("os_version", params.Release).With("package_name", params.PkgName)
+	// Get advisories from the original distributors, like Debian or Alpine
 	advs, err := vs.baseOSGetter().Get(params)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to get advisories for base OS")
 	}
 
+	// Simulate the advisories with Root.io's version constraints
 	allAdvs := make(map[string]types.Advisory, len(advs))
 	for _, adv := range advs {
 		if adv.FixedVersion != "" {
