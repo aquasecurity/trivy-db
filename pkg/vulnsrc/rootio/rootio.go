@@ -4,7 +4,6 @@ import (
 	"maps"
 	"path/filepath"
 	"sort"
-	"strings"
 
 	"github.com/samber/lo"
 	"github.com/samber/oops"
@@ -48,11 +47,11 @@ func (vs VulnSrc) Update(root string) error {
 }
 
 type VulnSrcGetter struct {
-	baseOS types.SourceID
+	baseOS ecosystem.Type
 	dbc    db.Operation
 }
 
-func NewVulnSrcGetter(baseOS types.SourceID) VulnSrcGetter {
+func NewVulnSrcGetter(baseOS ecosystem.Type) VulnSrcGetter {
 	return VulnSrcGetter{
 		baseOS: baseOS,
 		dbc:    db.Config{},
@@ -78,7 +77,7 @@ func (vs VulnSrcGetter) Get(params db.GetParams) ([]types.Advisory, error) {
 		allAdvs[adv.VulnerabilityID] = adv
 	}
 
-	bkt, err := newOSBucket(ecosystem.Type(strings.ToLower(string(vs.baseOS))), params.Release, source)
+	bkt, err := newOSBucket(vs.baseOS, params.Release, source)
 	if err != nil {
 		return nil, eb.Wrapf(err, "failed to build bucket")
 	}
@@ -108,11 +107,11 @@ func (vs VulnSrcGetter) Get(params db.GetParams) ([]types.Advisory, error) {
 
 func (vs VulnSrcGetter) baseOSGetter() db.Getter {
 	switch vs.baseOS {
-	case vulnerability.Debian:
+	case ecosystem.Debian:
 		return debian.NewVulnSrc()
-	case vulnerability.Ubuntu:
+	case ecosystem.Ubuntu:
 		return ubuntu.NewVulnSrc()
-	case vulnerability.Alpine:
+	case ecosystem.Alpine:
 		return alpine.NewVulnSrc()
 	}
 	return nil

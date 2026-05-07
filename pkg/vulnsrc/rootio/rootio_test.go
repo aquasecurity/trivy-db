@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rootio"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -95,7 +96,7 @@ func TestVulnSrc_Get(t *testing.T) {
 	}
 	tests := []struct {
 		name     string
-		baseOS   types.SourceID
+		baseOS   ecosystem.Type
 		fixtures []string
 		args     args
 		want     []types.Advisory
@@ -103,7 +104,7 @@ func TestVulnSrc_Get(t *testing.T) {
 	}{
 		{
 			name:   "only Root.io debian advisories",
-			baseOS: vulnerability.Debian,
+			baseOS: ecosystem.Debian,
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/data-source.yaml",
@@ -128,7 +129,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:   "only Root.io debian advisories (with fixed version by Root.io and Debian)",
-			baseOS: vulnerability.Debian,
+			baseOS: ecosystem.Debian,
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/data-source.yaml",
@@ -159,7 +160,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:   "only Root.io ubuntu advisories",
-			baseOS: vulnerability.Ubuntu,
+			baseOS: ecosystem.Ubuntu,
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/data-source.yaml",
@@ -184,7 +185,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:   "only Root.io alpine advisories",
-			baseOS: vulnerability.Alpine,
+			baseOS: ecosystem.Alpine,
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/data-source.yaml",
@@ -209,7 +210,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:   "Root.io and Debian have advisories",
-			baseOS: vulnerability.Debian,
+			baseOS: ecosystem.Debian,
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/data-source.yaml",
@@ -248,7 +249,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:   "only debian advisories",
-			baseOS: vulnerability.Debian,
+			baseOS: ecosystem.Debian,
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/data-source.yaml",
@@ -282,7 +283,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:     "Root.io and Debian don't have advisories",
-			baseOS:   vulnerability.Debian,
+			baseOS:   ecosystem.Debian,
 			fixtures: []string{"testdata/fixtures/broken.yaml"},
 			args: args{
 				osVer:   "12",
@@ -291,7 +292,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:     "broken bucket",
-			baseOS:   vulnerability.Debian,
+			baseOS:   ecosystem.Debian,
 			fixtures: []string{"testdata/fixtures/broken.yaml"},
 			args: args{
 				osVer:   "11",
