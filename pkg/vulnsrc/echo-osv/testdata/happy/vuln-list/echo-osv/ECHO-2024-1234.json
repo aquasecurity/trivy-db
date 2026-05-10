@@ -3,7 +3,7 @@
   "id": "ECHO-2024-1234",
   "modified": "2024-10-15T12:00:00Z",
   "published": "2024-09-01T08:00:00Z",
-  "aliases": [
+  "upstream": [
     "CVE-2024-99999"
   ],
   "summary": "Example vulnerability in requests library",
@@ -17,8 +17,9 @@
   "affected": [
     {
       "package": {
-        "ecosystem": "PyPI",
-        "name": "requests"
+        "ecosystem": "Echo:PyPi",
+        "name": "requests",
+        "purl": "pkg:pypi/requests"
       },
       "ranges": [
         {

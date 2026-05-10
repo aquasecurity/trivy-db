@@ -39,7 +39,7 @@ func (VulnSrc) Update(root string) error {
 	}
 	o := osv.New(vulnsDir, source.ID, dataSources,
 		osv.WithTransformer(&transformer{}),
-		osv.WithBucketResolver("pypi", resolvePyPI),
+		osv.WithBucketResolver("echo", resolveEcho),
 	)
 	if err := o.Update(root); err != nil {
 		return oops.In("echo-osv").Wrapf(err, "failed to update Echo OSV vulnerability data")
@@ -47,8 +47,20 @@ func (VulnSrc) Update(root string) error {
 	return nil
 }
 
-func resolvePyPI(_ string) (bucket.Bucket, error) {
-	return newPipBucket(source)
+// resolveEcho dispatches Echo OSV ecosystems to the matching bucket.
+// The Echo OSV feed namespaces every entry under "Echo:*" (e.g. "Echo:PyPi"),
+// plus plain "Echo" for OS packages. resolveBucket lowercases and splits on ':',
+// so this is invoked with eco="echo" and the original suffix.
+func resolveEcho(suffix string) (bucket.Bucket, error) {
+	switch suffix {
+	case "pypi":
+		return newPipBucket(source)
+	default:
+		// Plain "Echo" entries are OS packages and are handled by the
+		// existing `echo` source from vuln-list/echo/. Skip them here so
+		// we don't double-store them under a language bucket.
+		return nil, oops.Errorf("unsupported Echo ecosystem suffix: %q", suffix)
+	}
 }
 
 // transformer filters out advisories that didn't resolve to a CVE ID.

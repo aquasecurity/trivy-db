@@ -8,8 +8,9 @@
   "affected": [
     {
       "package": {
-        "ecosystem": "PyPI",
-        "name": "flask"
+        "ecosystem": "Echo:PyPi",
+        "name": "flask",
+        "purl": "pkg:pypi/flask"
       },
       "ranges": [
         {

@@ -89,6 +89,20 @@ func TestVulnSrc_Update(t *testing.T) {
 					"vulnerability-id",
 					"ECHO-2024-5678",
 				},
+				// Plain "Echo" ecosystem entries are OS packages, owned by
+				// the `echo` source. They must not leak into echo-osv buckets.
+				{
+					"advisory-detail",
+					"CVE-2024-77777",
+				},
+				{
+					"vulnerability-detail",
+					"CVE-2024-77777",
+				},
+				{
+					"vulnerability-id",
+					"CVE-2024-77777",
+				},
 			},
 		},
 		{
