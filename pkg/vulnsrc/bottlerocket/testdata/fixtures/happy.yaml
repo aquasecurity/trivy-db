@@ -1,0 +1,7 @@
+- bucket: bottlerocket
+  pairs:
+    - bucket: kernel-6.1
+      pairs:
+        - key: CVE-2023-5345
+          value:
+            FixedVersion: "6.1.61-1.1700513487.br1"
