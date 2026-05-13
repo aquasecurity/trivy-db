@@ -6,6 +6,7 @@ import (
 	"iter"
 	"maps"
 	"os"
+	"slices"
 	"path"
 	"path/filepath"
 	"strings"
@@ -27,13 +28,16 @@ import (
 const dataPath = "redhat-csaf.data"
 
 type Parser struct {
-	repoToCPE  map[string][]string
-	nvrToCPE   map[string][]string
-	advisories map[Package]map[VulnerabilityID]RawEntries
-	cpeSet     set.Ordered[string]
+	vulnListDir string
+	csafDir     string
+	cpeDir      string
+	repoToCPE   map[string][]string
+	nvrToCPE    map[string][]string
+	advisories  map[Package]map[VulnerabilityID]RawEntries
+	cpeSet      set.Ordered[string]
 }
 
-func NewParser() Parser {
+func NewParser(vulnListDir, csafDir, cpeDir string) Parser {
 	// Register types for gob encoding
 	gob.Register(Package{})
 	gob.Register(VulnerabilityID(""))
@@ -42,10 +46,13 @@ func NewParser() Parser {
 	gob.Register(csaf.CPE(""))
 
 	return Parser{
-		repoToCPE:  map[string][]string{},
-		nvrToCPE:   map[string][]string{},
-		advisories: map[Package]map[VulnerabilityID]RawEntries{},
-		cpeSet:     set.NewOrdered[string](),
+		vulnListDir: vulnListDir,
+		csafDir:     csafDir,
+		cpeDir:      cpeDir,
+		repoToCPE:   map[string][]string{},
+		nvrToCPE:    map[string][]string{},
+		advisories:  map[Package]map[VulnerabilityID]RawEntries{},
+		cpeSet:      set.NewOrdered[string](),
 	}
 }
 
@@ -56,14 +63,19 @@ func (p *Parser) Parse(dir string) error {
 		return nil
 	}
 
-	eb := oops.With("dir", dir)
-	if err := p.parseRepositoryCPEMapping(dir); err != nil {
-		return eb.Wrap(err)
+	vulnListDir := filepath.Join(dir, p.vulnListDir)
+	eb := oops.With("dir", vulnListDir)
+
+	if p.cpeDir != "" {
+		if err := p.parseRepositoryCPEMapping(vulnListDir); err != nil {
+			return eb.Wrap(err)
+		}
+		if err := p.parseNVRCPEMapping(vulnListDir); err != nil {
+			return eb.Wrap(err)
+		}
 	}
-	if err := p.parseNVRCPEMapping(dir); err != nil {
-		return eb.Wrap(err)
-	}
-	if err := p.parseCSAF(dir); err != nil {
+
+	if err := p.parseCSAF(vulnListDir); err != nil {
 		return eb.Wrap(err)
 	}
 
@@ -75,7 +87,7 @@ func (p *Parser) Parse(dir string) error {
 }
 
 func (p *Parser) parseCSAF(dir string) error {
-	rootDir := filepath.Join(dir, csafDir)
+	rootDir := filepath.Join(dir, p.csafDir)
 	eb := oops.Tags("parse_csaf_vex").With("root", rootDir)
 
 	// Collect all JSON files for the progress bar
@@ -135,7 +147,7 @@ func (p *Parser) collectFilePaths(rootDir string) ([]string, error) {
 }
 
 func (p *Parser) parseRepositoryCPEMapping(dir string) error {
-	filePath := filepath.Join(dir, cpeDir, "repository-to-cpe.json")
+	filePath := filepath.Join(dir, p.cpeDir, "repository-to-cpe.json")
 	eb := oops.Tags("repository-to-cpe").With("path", filePath)
 
 	f, err := os.Open(filePath)
@@ -157,7 +169,7 @@ func (p *Parser) parseRepositoryCPEMapping(dir string) error {
 }
 
 func (p *Parser) parseNVRCPEMapping(dir string) error {
-	filePath := filepath.Join(dir, cpeDir, "nvr-to-cpe.json")
+	filePath := filepath.Join(dir, p.cpeDir, "nvr-to-cpe.json")
 	eb := oops.Tags("nvr-to-cpe").With("path", filePath)
 
 	f, err := os.Open(filePath)
@@ -237,7 +249,14 @@ func (p *Parser) parseVulnerability(adv CSAFAdvisory, vuln *csaf.Vulnerability) 
 		}
 		uniq := set.New[uniqKey]()
 
-		// For each remediation, iterate over product_ids
+		// Separate source and binary products. Binary packages are preferred,
+		// but when only source packages exist (as with some VEX feeds), the
+		// source package is used as a fallback so the advisory is still stored.
+		type resolvedProduct struct {
+			productID csaf.ProductID
+			product   *Product
+		}
+		var binaryProducts, srcProducts []resolvedProduct
 		for _, productID := range lo.FromPtr(remediation.ProductIds) {
 			if productID == nil {
 				continue
@@ -247,46 +266,63 @@ func (p *Parser) parseVulnerability(adv CSAFAdvisory, vuln *csaf.Vulnerability) 
 				continue
 			}
 			if product.Package.Type != packageurl.TypeRPM {
-				// OCI images are not supported
-				// e.g.
-				//    Product: CERT-MANAGER-1.11-RHEL-9
-				//    Component: cert-manager/cert-manager-operator-rhel9
-				// cf. https://access.redhat.com/security/cve/CVE-2023-39325
 				continue
 			}
 
 			// Add CPEs to the set
 			p.cpeSet.Append(string(product.Stream))
 
-			// PURL format differs between patched and unpatched vulnerabilities:
-			//
-			// Patched (vendor_fix):
-			//   - Binary packages have version and arch: pkg:rpm/redhat/pam@1.5.1-21.el9_5?arch=x86_64
-			//   - Source packages have version and arch=src: pkg:rpm/redhat/pam@1.5.1-21.el9_5?arch=src
-			//
-			// Unpatched (none_available: "Affected"/"Fix deferred", no_fix_planned: "Out of support scope"/"Will not fix"):
-			//   - Binary packages have NO version and NO arch: pkg:rpm/redhat/vim-X11
-			//   - Source packages have arch=src only: pkg:rpm/redhat/vim?arch=src
-			//
-			// cf. https://security.access.redhat.com/data/csaf/v2/vex/2024/cve-2024-10041.json (patched)
-			// cf. https://security.access.redhat.com/data/csaf/v2/vex/2023/cve-2023-5344.json (unpatched)
+			// When no external CPE mapping files are provided, extract
+			// repository-to-CPE mappings from PURL qualifiers.
+			if p.cpeDir == "" && product.Stream != "" {
+				qualifiers := product.Package.Qualifiers.Map()
+				repoID := qualifiers["repository_id"]
+				if repoID == "" {
+					repoID = qualifiers["repository_url"]
+				}
+				if repoID != "" {
+					existing := p.repoToCPE[repoID]
+					if !slices.Contains(existing, string(product.Stream)) {
+						p.repoToCPE[repoID] = append(existing, string(product.Stream))
+					}
+				}
+			}
+
 			arch := product.Package.Qualifiers.Map()["arch"]
-			if arch == "src" {
-				// Skip source packages to maintain backward compatibility with OVALv2,
-				// which only included binary package names.
-				// Now that SECDATA-1097 has been resolved, binary package names are also
-				// included for unpatched vulnerabilities, so we can safely skip source packages.
-				// cf. https://issues.redhat.com/browse/SECDATA-1097
-				//
-				// TODO(v3): In Trivy DB v3, consider storing only source package names instead
-				// of binary package names for better storage efficiency, as one source package
-				// typically produces multiple binary packages.
-				continue
+			if arch == "src" || arch == "source" {
+				srcProducts = append(srcProducts, resolvedProduct{*productID, product})
+			} else {
+				binaryProducts = append(binaryProducts, resolvedProduct{*productID, product})
+			}
+		}
+
+		// Use binary products when available. For source packages, include
+		// them only when no binary package with the same name exists in this
+		// remediation. This handles feeds where some products (e.g., Hummingbird)
+		// only have source RPM references while others (e.g., RHEL) have binary
+		// RPM references in the same remediation.
+		binaryNames := set.New[string]()
+		for _, rp := range binaryProducts {
+			binaryNames.Append(rp.product.Package.Name)
+		}
+		products := binaryProducts
+		for _, rp := range srcProducts {
+			if !binaryNames.Contains(rp.product.Package.Name) {
+				products = append(products, rp)
+			}
+		}
+
+		for _, rp := range products {
+			product := rp.product
+			arch := product.Package.Qualifiers.Map()["arch"]
+
+			// Clear arch for source packages used as fallback so they
+			// match any architecture at scan time.
+			if arch == "src" || arch == "source" {
+				arch = ""
 			}
 
 			// Log unexpected case: unpatched vulnerability with arch specified
-			// Based on investigation, unpatched binary packages should not have arch in PURL.
-			// If this happens, it may indicate a format change that needs attention.
 			if status != types.StatusFixed && arch != "" {
 				log.Warn("Unexpected arch for unpatched vulnerability",
 					log.String("arch", arch),
@@ -314,7 +350,7 @@ func (p *Parser) parseVulnerability(adv CSAFAdvisory, vuln *csaf.Vulnerability) 
 
 			rawEntry := RawEntry{
 				FixedVersion: fixedVersion,
-				Severity:     severities[*productID],
+				Severity:     severities[rp.productID],
 				Arch:         arch,
 				CPE:          product.Stream,
 				Alias:        alias,
