@@ -19,6 +19,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/alpine"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rocky"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 )
@@ -40,6 +41,7 @@ var (
 		vulnerability.Alpine,
 		vulnerability.Debian,
 		vulnerability.Ubuntu,
+		vulnerability.Rocky,
 	}
 )
 
@@ -247,6 +249,8 @@ func (vs VulnSrcGetter) baseOSGetter() db.Getter {
 		return debian.NewVulnSrc()
 	case vulnerability.Ubuntu:
 		return ubuntu.NewVulnSrc()
+	case vulnerability.Rocky:
+		return rocky.NewVulnSrc()
 	case vulnerability.Alpine:
 		return alpine.NewVulnSrc()
 	}
