@@ -197,6 +197,20 @@ func (p photonBucket) Name() string {
 // NewPhoton creates a bucket for PhotonOS OS
 func NewPhoton(version string) Bucket { return photonBucket{newOS(ecosystem.PhotonOS, version)} }
 
+// photonOVALBucket for Photon OS OVAL with special naming convention
+type photonOVALBucket struct {
+	osBucket
+}
+
+func (p photonOVALBucket) Name() string {
+	return "Photon OS OVAL " + p.version
+}
+
+// NewPhotonOVAL creates a bucket for Photon OS OVAL definitions
+func NewPhotonOVAL(version string) Bucket {
+	return photonOVALBucket{newOS(ecosystem.PhotonOVAL, version)}
+}
+
 // openSUSEBucket for openSUSE with special naming convention
 type openSUSEBucket struct {
 	osBucket

@@ -1,0 +1,6 @@
+- bucket: Photon OS OVAL 5.0
+  pairs:
+    - bucket: libcap
+      pairs:
+        - key: CVE-2023-2602
+          value: "not-a-valid-advisory-object"

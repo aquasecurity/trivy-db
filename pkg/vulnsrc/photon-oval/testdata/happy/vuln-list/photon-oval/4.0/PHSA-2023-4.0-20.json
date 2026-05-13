@@ -1,0 +1,35 @@
+{
+  "Title": "PHSA-2023:4001 curl Security Update. (Moderate)",
+  "Description": "An update for curl is now available for Photon OS 4.0.",
+  "Platform": ["Photon 4"],
+  "References": [
+    {"Source": "PHSA", "URI": "https://packages.broadcom.com/photon/photon_oval/4.0/PHSA-2023-4001.json", "ID": "PHSA:4001:4.0:20"},
+    {"Source": "CVE",  "URI": "https://nvd.nist.gov/vuln/detail/CVE-2023-23914", "ID": "CVE:00001:CVE-2023-23914"}
+  ],
+  "Criteria": {
+    "Operator": "AND",
+    "Criterias": [
+      {
+        "Operator": "OR",
+        "Criterias": [
+          {
+            "Operator": "AND",
+            "Criterias": null,
+            "Criterions": [
+              {"Comment": "curl is earlier than 0:7.87.0-3.ph4"},
+              {"Comment": "curl is signed with VMware key"}
+            ]
+          }
+        ],
+        "Criterions": null
+      }
+    ],
+    "Criterions": [{"Comment": "Photon OS 4 is installed"}]
+  },
+  "Severity": "Moderate",
+  "Cves": [
+    {"ID": "CVE-2023-23914"}
+  ],
+  "Issued":  {"Date": "2023-02-23"},
+  "Updated": {"Date": "2023-02-23"}
+}
