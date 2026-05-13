@@ -110,6 +110,8 @@ func NewUbuntu(version string) Bucket { return newOS(ecosystem.Ubuntu, version) 
 // NewWolfi creates a bucket for Wolfi
 func NewWolfi(version string) Bucket { return newOS(ecosystem.Wolfi, version) }
 
+func NewCleanStart(version string) Bucket { return newOS(ecosystem.CleanStart, version) }
+
 //////////////////////////////////////////////////////////////////////
 // OS buckets with special naming conventions (alphabetical order)  //
 //////////////////////////////////////////////////////////////////////
