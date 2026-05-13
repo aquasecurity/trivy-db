@@ -44,6 +44,7 @@ const (
 	Chainguard  Type = "chainguard"
 	Echo        Type = "echo"
 	MinimOS     Type = "minimos"
+	RapidFort   Type = "rapidfort"
 	Seal        Type = "seal"
 )
 
