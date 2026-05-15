@@ -32,8 +32,8 @@ type Parser struct {
 	nvrToCPE   map[string][]string
 	advisories map[Package]map[VulnerabilityID]RawEntries
 	cpeSet     set.Ordered[string]
-	// releaseDates: RHSA vendor_fix remediation time per advisory ID. Only set for fixed
-	// advisories; unpatched (CVE-only) entries leave PutInput.ReleaseDate as zero.
+	// releaseDates holds the vendor_fix remediation timestamp per RHSA ID.
+	// CVE-only (unpatched) entries are not stored here.
 	releaseDates map[VulnerabilityID]time.Time
 }
 
@@ -452,8 +452,8 @@ func (p *Parser) NVRToCPE() iter.Seq2[string, []string] {
 	return maps.All(p.nvrToCPE)
 }
 
-// ReleaseDate returns the RHSA vendor_fix remediation instant for a vulnerability ID, or
-// the zero value if unknown or not applicable.
+// ReleaseDate returns the vendor_fix remediation timestamp for the given RHSA ID,
+// or the zero value when no timestamp was recorded for it.
 func (p *Parser) ReleaseDate(vulnID VulnerabilityID) time.Time {
 	return p.releaseDates[vulnID]
 }

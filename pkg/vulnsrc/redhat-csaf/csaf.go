@@ -56,9 +56,9 @@ type PutInput struct {
 	Bucket   Bucket
 	Advisory Advisory
 	CPEList  redhatoval.CPEList
-	// ReleaseDate is the RHSA vendor_fix remediation instant from CSAF (RFC3339). Zero means
-	// unknown or not applicable (e.g. CVE-only rows). Custom Store implementations may use
-	// it for PublishDate (calendar day: t.UTC().Format(time.DateOnly)).
+	// ReleaseDate is the vendor_fix remediation timestamp from CSAF. Zero when there is
+	// no RHSA (CVE-only rows) or when the feed omits Remediation.Date. Intended for
+	// Store implementations that want to expose an advisory publish date.
 	ReleaseDate time.Time
 }
 
