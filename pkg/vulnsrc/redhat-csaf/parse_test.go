@@ -114,10 +114,10 @@ func TestParser_Parse(t *testing.T) {
 
 func TestParseRemediationDateTime(t *testing.T) {
 	tests := []struct {
-		name      string
-		input     string
-		wantRFC   string // expected instant in UTC as RFC3339
-		wantErr   bool
+		name    string
+		input   string
+		wantRFC string // expected instant in UTC as RFC3339
+		wantErr bool
 	}{
 		{
 			name:    "valid RFC3339 with Z",
