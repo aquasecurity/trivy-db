@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -324,14 +325,16 @@ func TestVulnSrc_Update_WithCustomStore(t *testing.T) {
 		vid := string(input.Bucket.VulnerabilityID)
 		switch vid {
 		case "RHSA-2024:9941", "RHSA-2024:9999":
-			assert.Equal(t, "2024-11-19", input.ReleaseDate,
-				"RHSA release date from remediation (YYYY-MM-DD)")
+			want, err := time.Parse(time.RFC3339, "2024-11-19T04:46:55Z")
+			require.NoError(t, err)
+			assert.True(t, input.ReleaseDate.Equal(want), "ReleaseDate for %s", vid)
 		case "RHSA-2025:0001":
-			assert.Equal(t, "2025-01-01", input.ReleaseDate,
-				"RHSA release date from remediation (YYYY-MM-DD)")
+			want, err := time.Parse(time.RFC3339, "2025-01-01T00:00:00Z")
+			require.NoError(t, err)
+			assert.True(t, input.ReleaseDate.Equal(want), "ReleaseDate for %s", vid)
 		default:
 			// Unpatched rows use the CVE as bucket ID; there is no RHSA remediation date.
-			assert.Empty(t, input.ReleaseDate, "ReleaseDate for %q", vid)
+			assert.True(t, input.ReleaseDate.IsZero(), "ReleaseDate for %q", vid)
 		}
 	}
 

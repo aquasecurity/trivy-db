@@ -32,9 +32,9 @@ type Parser struct {
 	nvrToCPE   map[string][]string
 	advisories map[Package]map[VulnerabilityID]RawEntries
 	cpeSet     set.Ordered[string]
-	// releaseDates: advisory release date (YYYY-MM-DD) per RHSA ID. Only set for fixed
-	// advisories; unpatched (CVE-only) entries do not need it for PutInput.ReleaseDate.
-	releaseDates map[VulnerabilityID]string
+	// releaseDates: RHSA vendor_fix remediation time per advisory ID. Only set for fixed
+	// advisories; unpatched (CVE-only) entries leave PutInput.ReleaseDate as zero.
+	releaseDates map[VulnerabilityID]time.Time
 }
 
 func NewParser() Parser {
@@ -50,7 +50,7 @@ func NewParser() Parser {
 		nvrToCPE:     map[string][]string{},
 		advisories:   map[Package]map[VulnerabilityID]RawEntries{},
 		cpeSet:       set.NewOrdered[string](),
-		releaseDates: map[VulnerabilityID]string{},
+		releaseDates: map[VulnerabilityID]time.Time{},
 	}
 }
 
@@ -311,11 +311,16 @@ func (p *Parser) parseVulnerability(adv CSAFAdvisory, vuln *csaf.Vulnerability) 
 				// Store the RHSA release date (once per vulnID) from Remediation.Date.
 				if _, exists := p.releaseDates[vulnID]; !exists {
 					if remediation.Date != nil {
-						formatted, err := formatDate(*remediation.Date)
+						t, err := parseRemediationDateTime(*remediation.Date)
 						if err != nil {
-							return oops.With("cve_id", cveID).With("vulnerability_id", vulnID).Wrapf(err, "remediation date")
+							log.Warn("Skipping invalid RHSA remediation date",
+								log.String("cve_id", string(cveID)),
+								log.String("vulnerability_id", string(vulnID)),
+								log.String("raw", *remediation.Date),
+								log.Err(err))
+						} else {
+							p.releaseDates[vulnID] = t
 						}
-						p.releaseDates[vulnID] = formatted
 					}
 				}
 			} else {
@@ -447,18 +452,15 @@ func (p *Parser) NVRToCPE() iter.Seq2[string, []string] {
 	return maps.All(p.nvrToCPE)
 }
 
-// ReleaseDate returns the advisory release date (YYYY-MM-DD) for a given vulnerability ID.
-func (p *Parser) ReleaseDate(vulnID VulnerabilityID) string {
+// ReleaseDate returns the RHSA vendor_fix remediation instant for a vulnerability ID, or
+// the zero value if unknown or not applicable.
+func (p *Parser) ReleaseDate(vulnID VulnerabilityID) time.Time {
 	return p.releaseDates[vulnID]
 }
 
-// formatDate extracts the date portion (YYYY-MM-DD) from an RFC3339 timestamp.
-func formatDate(timestamp string) (string, error) {
-	t, err := time.Parse(time.RFC3339, timestamp)
-	if err != nil {
-		return "", oops.With("raw", timestamp).Wrapf(err, "parse RFC3339")
-	}
-	return t.Format(time.DateOnly), nil
+// parseRemediationDateTime parses CSAF remediation date strings (expected RFC3339).
+func parseRemediationDateTime(s string) (time.Time, error) {
+	return time.Parse(time.RFC3339, s)
 }
 
 // SerializeAdvisories saves the current advisories map to a file

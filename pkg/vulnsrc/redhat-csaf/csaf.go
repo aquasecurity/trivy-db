@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"iter"
 	"path/filepath"
+	"time"
 
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
@@ -55,7 +56,10 @@ type PutInput struct {
 	Bucket      Bucket
 	Advisory    Advisory
 	CPEList     redhatoval.CPEList
-	ReleaseDate string // Advisory initial release date (YYYY-MM-DD), used by CustomPut for PublishDate
+	// ReleaseDate is the RHSA vendor_fix remediation instant from CSAF (RFC3339). Zero means
+	// unknown or not applicable (e.g. CVE-only rows). Custom Store implementations may use
+	// it for PublishDate (calendar day: t.UTC().Format(time.DateOnly)).
+	ReleaseDate time.Time
 }
 
 // defaultStore is the OSS default implementation of Store.

@@ -4,6 +4,7 @@ import (
 	"maps"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/gocsaf/csaf/v3/csaf"
 	"github.com/stretchr/testify/assert"
@@ -111,48 +112,50 @@ func TestParser_Parse(t *testing.T) {
 	}
 }
 
-func TestFormatDate(t *testing.T) {
+func TestParseRemediationDateTime(t *testing.T) {
 	tests := []struct {
 		name      string
-		timestamp string
-		wantDate  string
+		input     string
+		wantRFC   string // expected instant in UTC as RFC3339
 		wantErr   bool
 	}{
 		{
-			name:      "valid RFC3339 with Z",
-			timestamp: "2024-12-18T09:14:23Z",
-			wantDate:  "2024-12-18",
+			name:    "valid RFC3339 with Z",
+			input:   "2024-12-18T09:14:23Z",
+			wantRFC: "2024-12-18T09:14:23Z",
 		},
 		{
-			name:      "valid RFC3339 with timezone offset",
-			timestamp: "2025-01-01T00:00:00+00:00",
-			wantDate:  "2025-01-01",
+			name:    "valid RFC3339 with timezone offset",
+			input:   "2025-01-01T00:00:00+00:00",
+			wantRFC: "2025-01-01T00:00:00Z",
 		},
 		{
-			name:      "invalid timestamp",
-			timestamp: "not-a-date",
-			wantErr:   true,
+			name:    "invalid timestamp",
+			input:   "not-a-date",
+			wantErr: true,
 		},
 		{
-			name:      "empty string",
-			timestamp: "",
-			wantErr:   true,
+			name:    "empty string",
+			input:   "",
+			wantErr: true,
 		},
 		{
-			name:      "wrong format (date only)",
-			timestamp: "2024-12-18",
-			wantErr:   true,
+			name:    "wrong format (date only)",
+			input:   "2024-12-18",
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := formatDate(tt.timestamp)
+			got, err := parseRemediationDateTime(tt.input)
 			if tt.wantErr {
 				require.Error(t, err)
 				return
 			}
 			require.NoError(t, err)
-			assert.Equal(t, tt.wantDate, got)
+			want, err := time.Parse(time.RFC3339, tt.wantRFC)
+			require.NoError(t, err)
+			assert.True(t, got.Equal(want), "got %v want %v", got, want)
 		})
 	}
 }
