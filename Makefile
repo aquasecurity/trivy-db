@@ -8,6 +8,7 @@ ASSET_DIR ?= assets
 # Download and extract function - separates download from extraction for stability
 # Usage: $(call download_and_extract,URL,TARGET_DIR)
 # This approach prevents pipe failures when wget encounters recoverable errors
+# GITHUB_TOKEN is optional but recommended to avoid rate limiting on archive downloads
 define download_and_extract
 	@echo "Downloading $(1)..." && \
 	TMP_FILE=$$(mktemp) && \
