@@ -38,6 +38,8 @@ jobs:
         run: go install go.etcd.io/bbolt/cmd/bbolt@v1.3.5
 
       - name: Download vuln-list and advisories
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: make db-fetch-langs db-fetch-vuln-list
 
       - name: Build the binary
