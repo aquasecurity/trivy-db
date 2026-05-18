@@ -11,7 +11,7 @@ ASSET_DIR ?= assets
 define download_and_extract
 	@echo "Downloading $(1)..." && \
 	TMP_FILE=$$(mktemp) && \
-	wget -q $(1) -O "$$TMP_FILE" && \
+	wget --no-verbose $(if $(GITHUB_TOKEN),--header="Authorization: token $(GITHUB_TOKEN)",) $(1) -O "$$TMP_FILE" && \
 	tar xzf "$$TMP_FILE" -C $(2) --strip-components=1 && \
 	rm -f "$$TMP_FILE"
 endef
