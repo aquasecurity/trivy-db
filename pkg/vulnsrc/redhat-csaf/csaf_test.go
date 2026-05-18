@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -320,6 +321,21 @@ func TestVulnSrc_Update_WithCustomStore(t *testing.T) {
 	for _, input := range store.putInputs {
 		assert.Contains(t, []string(input.CPEList), "cpe:/o:redhat:enterprise_linux:7::server",
 			"merged CPE list should contain the extra CPE")
+
+		vid := string(input.Bucket.VulnerabilityID)
+		switch vid {
+		case "RHSA-2024:9941", "RHSA-2024:9999":
+			want, err := time.Parse(time.RFC3339, "2024-11-19T04:46:55Z")
+			require.NoError(t, err)
+			assert.True(t, input.ReleaseDate.Equal(want), "ReleaseDate for %s", vid)
+		case "RHSA-2025:0001":
+			want, err := time.Parse(time.RFC3339, "2025-01-01T00:00:00Z")
+			require.NoError(t, err)
+			assert.True(t, input.ReleaseDate.Equal(want), "ReleaseDate for %s", vid)
+		default:
+			// Unpatched rows use the CVE as bucket ID; there is no RHSA remediation date.
+			assert.True(t, input.ReleaseDate.IsZero(), "ReleaseDate for %q", vid)
+		}
 	}
 
 	// Verify repo/NVR mappings were NOT written (custom store skips them)

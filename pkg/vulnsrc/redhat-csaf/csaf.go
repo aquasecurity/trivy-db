@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"iter"
 	"path/filepath"
+	"time"
 
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
@@ -55,6 +56,10 @@ type PutInput struct {
 	Bucket   Bucket
 	Advisory Advisory
 	CPEList  redhatoval.CPEList
+	// ReleaseDate is the vendor_fix remediation timestamp from CSAF. Zero when there is
+	// no RHSA (CVE-only rows) or when the feed omits Remediation.Date. Intended for
+	// Store implementations that want to expose an advisory publish date.
+	ReleaseDate time.Time
 }
 
 // defaultStore is the OSS default implementation of Store.
@@ -196,9 +201,10 @@ func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 		advisory := Advisory{Entries: entries}
 
 		input := &PutInput{
-			Bucket:   bkt,
-			Advisory: advisory,
-			CPEList:  cpeList,
+			Bucket:      bkt,
+			Advisory:    advisory,
+			CPEList:     cpeList,
+			ReleaseDate: vs.parser.ReleaseDate(bkt.VulnerabilityID),
 		}
 		if err := vs.store.Put(vs.dbc, tx, input); err != nil {
 			return eb.Wrapf(err, "failed to put advisory")
