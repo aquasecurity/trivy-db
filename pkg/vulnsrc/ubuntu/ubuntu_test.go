@@ -48,6 +48,24 @@ func TestVulnSrc_Update(t *testing.T) {
 				{"advisory-detail", "CVE-2020-1234", "ubuntu 20.04"},
 			},
 		},
+		{
+			name: "pending status is included",
+			dir:  "testdata",
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "ubuntu 22.04"},
+					Value: types.DataSource{
+						ID:   vulnerability.Ubuntu,
+						Name: "Ubuntu CVE Tracker",
+						URL:  "https://git.launchpad.net/ubuntu-cve-tracker",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2020-1234", "ubuntu 22.04", "xen"},
+					Value: types.Advisory{},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
