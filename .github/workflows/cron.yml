@@ -8,6 +8,9 @@ env:
   REPO_OWNER: ${{ github.repository_owner }} # used in 'make db-build'
   GH_USER: aqua-bot
   VERSION: 2
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build DB
