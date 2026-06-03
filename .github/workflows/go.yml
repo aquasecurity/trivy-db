@@ -1,6 +1,9 @@
 ---
 name: Go
 on: [push, pull_request, merge_group]
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Test

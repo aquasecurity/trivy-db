@@ -145,6 +145,45 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: map[string]any{},
 				},
+				// CVSSv4 with invalid metric order: skipped with warn, V3 still parsed
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2026-99999",
+						"pip::Python Packaging Advisory Database",
+						"somepackage",
+					},
+					Value: types.Advisory{
+						VendorIDs:          []string{"PYSEC-2026-2"},
+						PatchedVersions:    []string{"1.2.3"},
+						VulnerableVersions: []string{"<1.2.3"},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2026-99999",
+						string(vulnerability.OSV),
+					},
+					Value: types.VulnerabilityDetail{
+						Title:        "Test advisory with invalid CVSSv4.0 metric order",
+						Description:  "Some vulnerability details.",
+						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+						CvssScoreV3:  9.8,
+						References: []string{
+							"https://example.com/advisory",
+						},
+						LastModifiedDate: utils.MustTimeParse("2026-04-01T00:00:00Z"),
+						PublishedDate:    utils.MustTimeParse("2026-03-01T00:00:00Z"),
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2026-99999",
+					},
+					Value: map[string]any{},
+				},
 			},
 			noBuckets: [][]string{
 				// skip withdrawn

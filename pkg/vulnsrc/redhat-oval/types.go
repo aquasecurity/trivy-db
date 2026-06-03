@@ -152,6 +152,7 @@ type evr struct {
 
 type pkg struct {
 	Name         string
+	Module       string
 	FixedVersion string
 	Arches       []string
 }

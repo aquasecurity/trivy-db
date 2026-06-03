@@ -1,12 +1,20 @@
 package redhatcsaf_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
+	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	bolt "go.etcd.io/bbolt"
+
+	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
 	redhatcsaf "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-csaf"
+	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 )
@@ -246,4 +254,95 @@ func TestVulnSrc_Update(t *testing.T) {
 			})
 		})
 	}
+}
+
+// testStore is a custom Store implementation for testing WithStore.
+// It records all Put calls and allows customizing PutMappings behavior.
+type testStore struct {
+	// extraCPEs are appended to the input CPE list by PutMappings
+	extraCPEs []string
+	// putInputs records all PutInput values passed to Put
+	putInputs []*redhatcsaf.PutInput
+}
+
+func (s *testStore) PutMappings(dbc db.Operation, tx *bolt.Tx, input *redhatcsaf.MappingsInput) (redhatoval.CPEList, error) {
+	// Simulate premium behavior: append extra CPEs (e.g., merged from OVAL)
+	// and only write CPE indices (skip repo/NVR mappings).
+	merged := append(redhatoval.CPEList{}, input.CPEList...)
+	merged = append(merged, s.extraCPEs...)
+
+	for i, cpe := range merged {
+		if err := dbc.PutRedHatCPEs(tx, i, cpe); err != nil {
+			return nil, err
+		}
+	}
+	return merged, nil
+}
+
+func (s *testStore) Put(dbc db.Operation, tx *bolt.Tx, input *redhatcsaf.PutInput) error {
+	s.putInputs = append(s.putInputs, input)
+
+	// Convert CPE names to indices and write advisory (same as default)
+	for i := range input.Advisory.Entries {
+		input.Advisory.Entries[i].AffectedCPEIndices = input.CPEList.Indices(input.Advisory.Entries[i].AffectedCPEList)
+	}
+
+	vulnID := string(input.Bucket.VulnerabilityID)
+	pkgName := input.Bucket.Package.Name
+	if input.Bucket.Package.Module != "" {
+		pkgName = fmt.Sprintf("%s::%s", input.Bucket.Package.Module, pkgName)
+	}
+
+	if err := dbc.PutAdvisoryDetail(tx, vulnID, pkgName, []string{"Red Hat"}, input.Advisory); err != nil {
+		return err
+	}
+	return dbc.PutVulnerabilityID(tx, vulnID)
+}
+
+func TestVulnSrc_Update_WithCustomStore(t *testing.T) {
+	store := &testStore{
+		extraCPEs: []string{"cpe:/o:redhat:enterprise_linux:7::server"},
+	}
+
+	vs := redhatcsaf.NewVulnSrc(redhatcsaf.WithStore(store))
+
+	tempDir := t.TempDir()
+	require.NoError(t, db.Init(tempDir))
+	defer db.Close()
+
+	err := vs.Update("testdata")
+	require.NoError(t, err)
+
+	// Verify the custom store was called with Put
+	assert.NotEmpty(t, store.putInputs, "custom Store.Put should have been called")
+
+	// Verify the extra CPE was merged
+	// The merged list should contain both CSAF CPEs and the extra one
+	for _, input := range store.putInputs {
+		assert.Contains(t, []string(input.CPEList), "cpe:/o:redhat:enterprise_linux:7::server",
+			"merged CPE list should contain the extra CPE")
+
+		vid := string(input.Bucket.VulnerabilityID)
+		switch vid {
+		case "RHSA-2024:9941", "RHSA-2024:9999":
+			want, err := time.Parse(time.RFC3339, "2024-11-19T04:46:55Z")
+			require.NoError(t, err)
+			assert.True(t, input.ReleaseDate.Equal(want), "ReleaseDate for %s", vid)
+		case "RHSA-2025:0001":
+			want, err := time.Parse(time.RFC3339, "2025-01-01T00:00:00Z")
+			require.NoError(t, err)
+			assert.True(t, input.ReleaseDate.Equal(want), "ReleaseDate for %s", vid)
+		default:
+			// Unpatched rows use the CVE as bucket ID; there is no RHSA remediation date.
+			assert.True(t, input.ReleaseDate.IsZero(), "ReleaseDate for %q", vid)
+		}
+	}
+
+	// Verify repo/NVR mappings were NOT written (custom store skips them)
+	require.NoError(t, db.Close())
+	require.NoError(t, db.Init(tempDir))
+
+	// repo mapping should not exist since custom store doesn't write it
+	_, err = db.Config{}.RedHatRepoToCPEs("rhel-8-for-x86_64-baseos-rpms")
+	assert.NoError(t, err) // returns empty, not error
 }

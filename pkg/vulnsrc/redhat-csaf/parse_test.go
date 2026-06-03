@@ -4,6 +4,7 @@ import (
 	"maps"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/gocsaf/csaf/v3/csaf"
 	"github.com/stretchr/testify/assert"
@@ -107,6 +108,52 @@ func TestParser_Parse(t *testing.T) {
 
 			// Verify advisories
 			assert.Equal(t, tt.wantAdvisories, gotAdvisories)
+		})
+	}
+}
+
+func TestParseRemediationDateTime(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		want    time.Time
+		wantErr bool
+	}{
+		{
+			name:  "valid RFC3339 with Z",
+			input: "2024-12-18T09:14:23Z",
+			want:  time.Date(2024, 12, 18, 9, 14, 23, 0, time.UTC),
+		},
+		{
+			name:  "valid RFC3339 with timezone offset",
+			input: "2025-01-01T00:00:00+00:00",
+			want:  time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+		},
+		{
+			name:    "invalid timestamp",
+			input:   "not-a-date",
+			wantErr: true,
+		},
+		{
+			name:    "empty string",
+			input:   "",
+			wantErr: true,
+		},
+		{
+			name:    "wrong format (date only)",
+			input:   "2024-12-18",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parseRemediationDateTime(tt.input)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.True(t, got.Equal(tt.want), "got %v want %v", got, tt.want)
 		})
 	}
 }
