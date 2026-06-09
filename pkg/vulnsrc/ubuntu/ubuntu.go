@@ -20,7 +20,7 @@ import (
 const ubuntuDir = "ubuntu"
 
 var (
-	targetStatuses        = []string{"needed", "deferred", "released"}
+	targetStatuses        = []string{"needed", "deferred", "pending", "released"}
 	UbuntuReleasesMapping = map[string]string{
 		"precise":  "12.04",
 		"quantal":  "12.10",
