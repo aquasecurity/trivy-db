@@ -61,7 +61,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"advisory-detail", "CVE-2020-1234", "ubuntu 22.04", "xen"},
+					Key:   []string{"advisory-detail", "CVE-2020-1234", "ubuntu 22.04", "xen"},
 					Value: types.Advisory{},
 				},
 			},
