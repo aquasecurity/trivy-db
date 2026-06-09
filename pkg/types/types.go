@@ -181,9 +181,16 @@ type Advisories struct {
 }
 
 type Vulnerability struct {
-	Title            string         `json:",omitempty"`
-	Description      string         `json:",omitempty"`
-	Severity         string         `json:",omitempty"` // Selected from VendorSeverity, depending on a scan target
+	Title       string `json:",omitempty"`
+	Description string `json:",omitempty"`
+
+	// Severity is the severity selected from VendorSeverity, depending on a scan target.
+	//
+	// Deprecated: Use VendorSeverity instead of Severity.
+	// Severity isn't related to a SourceID, so consumers can't tell the source of this severity.
+	// Kept for backward compatibility and will be removed at the next schema bump (Trivy DB v3).
+	Severity string `json:",omitempty"`
+
 	CweIDs           []string       `json:",omitempty"` // e.g. CWE-78, CWE-89
 	VendorSeverity   VendorSeverity `json:",omitempty"`
 	CVSS             VendorCVSS     `json:",omitempty"`
