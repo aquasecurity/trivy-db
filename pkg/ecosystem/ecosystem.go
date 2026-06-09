@@ -40,6 +40,7 @@ const (
 	AzureLinux  Type = "azure-linux"
 	CBLMariner  Type = "cbl-mariner"
 	PhotonOS    Type = "photon"
+	PhotonOVAL  Type = "photon-oval"
 	Wolfi       Type = "wolfi"
 	Chainguard  Type = "chainguard"
 	Echo        Type = "echo"
