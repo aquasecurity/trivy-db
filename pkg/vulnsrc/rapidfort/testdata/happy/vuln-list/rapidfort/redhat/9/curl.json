@@ -1,0 +1,38 @@
+{
+  "package_name": "curl",
+  "distro_version": "9",
+  "advisories": {
+    "CVE-2023-27536": {
+      "cve_id": "CVE-2023-27536",
+      "title": "curl: GSS delegation too eager connection re-use",
+      "description": "An authentication bypass vulnerability exists in libcurl prior to v8.0.0 where it reuses a previously established GSS-negotiate connection.",
+      "severity": "MEDIUM",
+      "status": "fixed",
+      "events": [
+        {
+          "introduced": "7.76.1-14.el9",
+          "fixed": "7.76.1-26.el9_3.3",
+          "identifier": "el9"
+        },
+        {
+          "introduced": "7.76.1-14.fc39",
+          "fixed": "7.76.1-26.fc39",
+          "identifier": "fc39"
+        }
+      ]
+    },
+    "CVE-2024-99999": {
+      "cve_id": "CVE-2024-99999",
+      "title": "curl: hypothetical unfixed vulnerability",
+      "description": "A hypothetical vulnerability in curl that has not yet been fixed.",
+      "severity": "HIGH",
+      "status": "open",
+      "events": [
+        {
+          "introduced": "7.76.1-14.el9",
+          "identifier": "el9"
+        }
+      ]
+    }
+  }
+}

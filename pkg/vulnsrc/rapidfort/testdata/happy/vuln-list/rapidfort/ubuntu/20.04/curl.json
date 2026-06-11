@@ -1,0 +1,31 @@
+{
+  "package_name": "curl",
+  "distro_version": "20.04",
+  "advisories": {
+    "CVE-2020-8169": {
+      "cve_id": "CVE-2020-8169",
+      "title": "curl: partial password leak over DNS on HTTP redirect",
+      "description": "curl 7.62.0 through 7.70.0 is vulnerable to an information disclosure vulnerability.",
+      "severity": "HIGH",
+      "status": "fixed",
+      "events": [
+        {
+          "introduced": "7.68.0",
+          "fixed": "7.68.0-1ubuntu2.1"
+        }
+      ]
+    },
+    "CVE-2021-22876": {
+      "cve_id": "CVE-2021-22876",
+      "title": "curl: Automatic referer leaks credentials",
+      "description": "curl does not strip off user credentials from the URL when automatically populating the Referer: HTTP request header field.",
+      "severity": "MEDIUM",
+      "status": "open",
+      "events": [
+        {
+          "introduced": "7.68.0"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,47 @@
+- bucket: rapidfort ubuntu 20.04
+  pairs:
+    - bucket: curl
+      pairs:
+        - key: CVE-2020-8169
+          value:
+            VulnerableVersions:
+              - ">= 7.68.0, < 7.68.0-1ubuntu2.1"
+            PatchedVersions:
+              - "7.68.0-1ubuntu2.1"
+            Severity: 3
+- bucket: rapidfort debian 12
+  pairs:
+    - bucket: openssl
+      pairs:
+        - key: CVE-2024-5535
+          value:
+            VulnerableVersions:
+              - ">= 3.0.0, < 3.0.14-1~deb12u2"
+            PatchedVersions:
+              - "3.0.14-1~deb12u2"
+            Severity: 4
+- bucket: rapidfort redhat 9
+  pairs:
+    - bucket: curl
+      pairs:
+        - key: CVE-2023-27536
+          value:
+            VulnerableVersions:
+              - ">= 7.76.1-14.el9, < 7.76.1-26.el9_3.3"
+              - ">= 7.76.1-14.fc39, < 7.76.1-26.fc39"
+            PatchedVersions:
+              - "7.76.1-26.el9_3.3"
+              - "7.76.1-26.fc39"
+            Severity: 2
+            Custom:
+              identifiers:
+                - "el9"
+                - "fc39"
+        - key: CVE-2024-99999
+          value:
+            VulnerableVersions:
+              - ">=7.76.1-14.el9"
+            Severity: 3
+            Custom:
+              identifiers:
+                - "el9"
