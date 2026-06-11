@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -30,12 +31,13 @@ const (
 )
 
 var (
-	suseDir = filepath.Join("cvrf", "suse")
+	csafDir = filepath.Join("csaf", "suse")
+	cvrfDir = filepath.Join("cvrf", "suse")
 
 	source = types.DataSource{
 		ID:   vulnerability.SuseCVRF,
-		Name: "SUSE CVRF",
-		URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+		Name: "SUSE CSAF",
+		URL:  "https://ftp.suse.com/pub/projects/security/csaf/",
 	}
 )
 
@@ -79,8 +81,8 @@ func (vs VulnSrc) Name() types.SourceID {
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	vs.logger.Info("Saving SUSE CVRF")
-	rootDir := filepath.Join(dir, "vuln-list", suseDir)
+	vs.logger.Info("Saving SUSE CSAF")
+	rootDir := filepath.Join(dir, "vuln-list", csafDir)
 	eb := oops.In("suse").Tags("cvrf").With("root_dir", rootDir)
 
 	switch vs.dist {
@@ -91,11 +93,21 @@ func (vs VulnSrc) Update(dir string) error {
 	default:
 		return eb.Errorf("unknown distribution")
 	}
+	if _, err := os.Stat(rootDir); os.IsNotExist(err) {
+		legacyRoot := filepath.Join(dir, "vuln-list", cvrfDir)
+		switch vs.dist {
+		case SUSEEnterpriseLinux, SUSEEnterpriseLinuxMicro:
+			legacyRoot = filepath.Join(legacyRoot, "suse")
+		case OpenSUSE, OpenSUSETumbleweed:
+			legacyRoot = filepath.Join(legacyRoot, "opensuse")
+		}
+		rootDir = legacyRoot
+	}
 
 	var cvrfs []SuseCvrf
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-		var cvrf SuseCvrf
-		if err := json.NewDecoder(r).Decode(&cvrf); err != nil {
+		cvrf, err := decodeAdvisory(r)
+		if err != nil {
 			return eb.With("file_path", path).Wrapf(err, "json decode error")
 		}
 		cvrfs = append(cvrfs, cvrf)
@@ -110,6 +122,86 @@ func (vs VulnSrc) Update(dir string) error {
 	}
 
 	return nil
+}
+
+func decodeAdvisory(r io.Reader) (SuseCvrf, error) {
+	var data json.RawMessage
+	if err := json.NewDecoder(r).Decode(&data); err != nil {
+		return SuseCvrf{}, err
+	}
+
+	var csaf SuseCSAF
+	if err := json.Unmarshal(data, &csaf); err == nil && csaf.Document.Tracking.ID != "" {
+		return toCvrf(csaf), nil
+	}
+
+	var cvrf SuseCvrf
+	if err := json.Unmarshal(data, &cvrf); err != nil {
+		return SuseCvrf{}, err
+	}
+	return cvrf, nil
+}
+
+func toCvrf(csaf SuseCSAF) SuseCvrf {
+	cvrf := SuseCvrf{
+		Title: csaf.Document.Title,
+		Tracking: DocumentTracking{
+			ID: csaf.Document.Tracking.ID,
+		},
+		References: make([]Reference, 0, len(csaf.Document.References)),
+		Notes:      make([]DocumentNote, 0, len(csaf.Document.Notes)),
+		ProductTree: ProductTree{
+			Relationships: make([]Relationship, 0, len(csaf.ProductTree.Relationships)),
+		},
+		Vulnerabilities: make([]Vulnerability, 0, len(csaf.Vulnerabilities)),
+	}
+
+	for _, n := range csaf.Document.Notes {
+		noteType := ""
+		noteTitle := n.Title
+		switch n.Category {
+		case "summary":
+			noteType = "Summary"
+			if noteTitle == "" {
+				noteTitle = "Topic"
+			}
+		case "description":
+			noteType = "General"
+			noteTitle = "Details"
+		default:
+			continue
+		}
+		cvrf.Notes = append(cvrf.Notes, DocumentNote{
+			Text:  n.Text,
+			Title: noteTitle,
+			Type:  noteType,
+		})
+	}
+
+	for _, ref := range csaf.Document.References {
+		cvrf.References = append(cvrf.References, Reference{URL: ref.URL})
+	}
+	for _, rel := range csaf.ProductTree.Relationships {
+		cvrf.ProductTree.Relationships = append(cvrf.ProductTree.Relationships, Relationship{
+			ProductReference:          rel.ProductReference,
+			RelatesToProductReference: rel.RelatesToProductReference,
+		})
+	}
+	for _, v := range csaf.Vulnerabilities {
+		vuln := Vulnerability{}
+		for _, t := range v.Threats {
+			if t.Category != "impact" {
+				continue
+			}
+			vuln.Threats = append(vuln.Threats, Threat{
+				Type:     "Impact",
+				Severity: t.Details,
+			})
+		}
+		cvrf.Vulnerabilities = append(cvrf.Vulnerabilities, vuln)
+	}
+
+	return cvrf
 }
 
 func (vs VulnSrc) save(cvrfs []SuseCvrf) error {
@@ -205,7 +297,7 @@ func (vs VulnSrc) getAffectedPackages(relationships []Relationship) []AffectedPa
 			continue
 		}
 
-		pkg := getPackage(relationship.ProductReference)
+		pkg := getPackage(stripArchSuffix(relationship.ProductReference))
 		if pkg == nil {
 			vs.logger.Warn("Invalid package name", log.String("reference", relationship.ProductReference))
 			continue
@@ -360,6 +452,19 @@ func splitPkgName(pkgName string) (string, string) {
 	pkgName = pkgName[:index]
 
 	return pkgName, version
+}
+
+func stripArchSuffix(ref string) string {
+	archSuffixes := []string{
+		".aarch64", ".x86_64", ".ppc64le", ".s390x", ".i586",
+		".riscv64", ".armv7hl", ".armv7l", ".ppc64", ".arm64",
+	}
+	for _, sfx := range archSuffixes {
+		if strings.HasSuffix(ref, sfx) {
+			return strings.TrimSuffix(ref, sfx)
+		}
+	}
+	return ref
 }
 
 func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
