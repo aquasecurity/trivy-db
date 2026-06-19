@@ -86,9 +86,51 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: map[string]any{},
 				},
+				// golang.org/x/* modules are also sourced from go-vulndb
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2025-22869",
+						"go::The Go Vulnerability Database",
+						"golang.org/x/crypto",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GO-2025-3487",
+						},
+						PatchedVersions: []string{
+							"0.35.0",
+						},
+						VulnerableVersions: []string{
+							"<0.35.0",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2025-22869",
+						"govulndb",
+					},
+					Value: types.VulnerabilityDetail{
+						Title:       "Potential denial of service in golang.org/x/crypto",
+						Description: "SSH servers which implement file transfer protocols are vulnerable to a denial of service attack from clients which complete the key exchange slowly, or not at all, causing pending content to be read into memory, but never transmitted.",
+						References: []string{
+							"https://go.dev/cl/652135",
+							"https://pkg.go.dev/vuln/GO-2025-3487",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2025-22869",
+					},
+					Value: map[string]any{},
+				},
 			},
 			noBuckets: [][]string{
-				// We should save only stdlib packages
+				// We should not save third-party modules other than golang.org/x/*
 				{
 					"advisory-detail",
 					"CVE-2021-41803",
