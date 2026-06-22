@@ -284,7 +284,8 @@ func (dbc Config) forEach(bktNames []string) (map[string]Value, error) {
 
 func (dbc Config) deleteBucket(bucketName string) error {
 	return db.Update(func(tx *bolt.Tx) error {
-		if err := tx.DeleteBucket([]byte(bucketName)); err != nil {
+		err := tx.DeleteBucket([]byte(bucketName))
+		if err != nil && !errors.Is(err, bolt.ErrBucketNotFound) {
 			return oops.With("bucket_name", bucketName).Wrapf(err, "failed to delete bucket")
 		}
 		return nil
