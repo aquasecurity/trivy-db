@@ -35,7 +35,8 @@ func (VulnSrc) Name() types.SourceID {
 
 func (VulnSrc) Update(root string) error {
 	dataSources := map[ecosystem.Type]types.DataSource{
-		ecosystem.Pip: source,
+		ecosystem.Pip:   source,
+		ecosystem.Maven: source,
 	}
 	o := osv.New(vulnsDir, source.ID, dataSources,
 		osv.WithTransformer(&transformer{}),
@@ -55,6 +56,8 @@ func resolveEcho(suffix string) (bucket.Bucket, error) {
 	switch suffix {
 	case "pypi":
 		return newPipBucket(source)
+	case "maven":
+		return newMavenBucket(source)
 	default:
 		// Plain "Echo" entries are OS packages and are handled by the
 		// existing `echo` source from vuln-list/echo/. Skip them here so
