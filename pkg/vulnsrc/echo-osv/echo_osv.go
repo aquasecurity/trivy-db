@@ -51,9 +51,11 @@ func resolveEcho(suffix string) (bucket.Bucket, error) {
 	switch suffix {
 	case "pypi":
 		return newPipBucket(source)
+	case "maven":
+		return newMavenBucket(source)
 	default:
-		// Only PyPI is supported for now. Plain "Echo" (OS packages, served by
-		// the `echo` source) and other suffixes are skipped by the OSV parser.
+		// Plain "Echo" (OS packages, served by the `echo` source) and
+		// unsupported suffixes are skipped by the OSV parser.
 		return nil, oops.Errorf("unsupported Echo ecosystem suffix: %q", suffix)
 	}
 }

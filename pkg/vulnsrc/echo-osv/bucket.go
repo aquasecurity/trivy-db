@@ -9,8 +9,8 @@ import (
 )
 
 // echoBucket wraps a standard language bucket and prepends "echo " to its name.
-// This ensures advisories are stored under "echo pip::Echo OSV" rather than
-// "pip::Echo OSV", matching the trivy scanner's "echo pip::" prefix query.
+// This ensures advisories are stored under supplier-specific buckets such as
+// "echo pip::Echo OSV", matching the trivy scanner's "echo <ecosystem>::" query.
 type echoBucket struct {
 	base       bucket.Bucket
 	dataSource types.DataSource
@@ -30,6 +30,17 @@ func (e echoBucket) DataSource() types.DataSource {
 
 func newPipBucket(dataSource types.DataSource) (bucket.Bucket, error) {
 	base, err := bucket.NewPyPI(dataSource)
+	if err != nil {
+		return nil, err
+	}
+	return echoBucket{
+		base:       base,
+		dataSource: dataSource,
+	}, nil
+}
+
+func newMavenBucket(dataSource types.DataSource) (bucket.Bucket, error) {
+	base, err := bucket.NewMaven(dataSource)
 	if err != nil {
 		return nil, err
 	}

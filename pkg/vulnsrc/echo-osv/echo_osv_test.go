@@ -108,6 +108,41 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: map[string]any{},
 				},
+				// Maven (Echo:Maven) advisories are stored under the
+				// "echo maven::Echo OSV" bucket, keyed by groupId:artifactId.
+				{
+					Key: []string{
+						"data-source",
+						"echo maven::Echo OSV",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.EchoOSV,
+						Name: "Echo OSV",
+						URL:  "https://advisory.echohq.com/osv/all.zip",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2024-88888",
+						"echo maven::Echo OSV",
+						"org.apache.commons:commons-lang3",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"ECHO-mvn1-0000-0001",
+						},
+						PatchedVersions:    []string{"3.14.0+echo.999"},
+						VulnerableVersions: []string{">=3.14.0+echo.1, <3.14.0+echo.999"},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2024-88888",
+					},
+					Value: map[string]any{},
+				},
 			},
 			noBuckets: [][]string{
 				{
