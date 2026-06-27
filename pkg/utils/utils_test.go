@@ -34,10 +34,14 @@ func TestFileWalk(t *testing.T) {
 	touch(t, filepath.Join(td, "dir", "foo1"))
 	touch(t, filepath.Join(td, "dir", "foo2"))
 	write(t, filepath.Join(td, "dir", "foo3"), "foo3")
+	// A non-empty dotfile, like the .DS_Store macOS creates, must be skipped
+	// before it reaches walkFn so parsers never try to decode it.
+	write(t, filepath.Join(td, "dir", ".DS_Store"), "\x00\x00\x01")
 
 	sawDir := false
 	sawFoo1 := false
 	sawFoo2 := false
+	sawDSStore := false
 	var contentFoo3 []byte
 	var err error
 
@@ -57,6 +61,9 @@ func TestFileWalk(t *testing.T) {
 				t.Fatal(err)
 			}
 		}
+		if strings.HasSuffix(path, ".DS_Store") {
+			sawDSStore = true
+		}
 		return nil
 	}
 
@@ -69,6 +76,9 @@ func TestFileWalk(t *testing.T) {
 	}
 	if sawFoo1 || sawFoo2 {
 		t.Error("an empty file must not be passed to walkFn")
+	}
+	if sawDSStore {
+		t.Error("a dotfile such as .DS_Store must not be passed to walkFn")
 	}
 	if string(contentFoo3) != "foo3" {
 		t.Error("The file content is wrong")

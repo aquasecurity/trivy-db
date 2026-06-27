@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/samber/oops"
 
@@ -29,6 +30,13 @@ func FileWalk(root string, walkFn func(r io.Reader, path string) error) error {
 		if err != nil {
 			return eb.Wrapf(err, "walk dir error")
 		} else if d.IsDir() {
+			return nil
+		}
+
+		// Skip dotfiles such as .DS_Store. They are not vulnerability data
+		// and most vulnsrc parsers json.Decode every file handed to walkFn,
+		// which fails on a binary .DS_Store with "invalid character".
+		if strings.HasPrefix(d.Name(), ".") {
 			return nil
 		}
 
