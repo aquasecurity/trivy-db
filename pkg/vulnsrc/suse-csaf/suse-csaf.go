@@ -1,4 +1,4 @@
-package susecvrf
+package susecsaf
 
 import (
 	"encoding/json"
@@ -27,15 +27,16 @@ const (
 	SUSEEnterpriseLinuxMicro
 	OpenSUSE
 	OpenSUSETumbleweed
+
+	vulnListDir = "vuln-list-suse"
+	csafDir     = "csaf/suse"
 )
 
 var (
-	suseDir = filepath.Join("cvrf", "suse")
-
 	source = types.DataSource{
-		ID:   vulnerability.SuseCVRF,
-		Name: "SUSE CVRF",
-		URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+		ID:   vulnerability.SuseCSAF,
+		Name: "SUSE CSAF",
+		URL:  "https://ftp.suse.com/pub/projects/security/csaf/",
 	}
 )
 
@@ -64,24 +65,24 @@ func NewVulnSrc(dist Distribution) VulnSrc {
 	return VulnSrc{
 		DB:     &Suse{Operation: db.Config{}},
 		dist:   dist,
-		logger: log.WithPrefix("suse-cvrf"),
+		logger: log.WithPrefix("suse-csaf"),
 	}
 }
 
 func (vs VulnSrc) Name() types.SourceID {
 	if vs.dist == OpenSUSE {
-		return "opensuse-cvrf"
+		return "opensuse-csaf"
 	}
 	if vs.dist == OpenSUSETumbleweed {
-		return "opensuse-tumbleweed-cvrf"
+		return "opensuse-tumbleweed-csaf"
 	}
 	return source.ID
 }
 
 func (vs VulnSrc) Update(dir string) error {
-	vs.logger.Info("Saving SUSE CVRF")
-	rootDir := filepath.Join(dir, "vuln-list", suseDir)
-	eb := oops.In("suse").Tags("cvrf").With("root_dir", rootDir)
+	vs.logger.Info("Saving SUSE CSAF")
+	rootDir := filepath.Join(dir, vulnListDir, csafDir)
+	eb := oops.In("suse").Tags("csaf").With("root_dir", rootDir)
 
 	switch vs.dist {
 	case SUSEEnterpriseLinux, SUSEEnterpriseLinuxMicro:
@@ -94,8 +95,8 @@ func (vs VulnSrc) Update(dir string) error {
 
 	var cvrfs []SuseCvrf
 	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-		var cvrf SuseCvrf
-		if err := json.NewDecoder(r).Decode(&cvrf); err != nil {
+		cvrf, err := decodeAdvisory(r)
+		if err != nil {
 			return eb.With("file_path", path).Wrapf(err, "json decode error")
 		}
 		cvrfs = append(cvrfs, cvrf)
@@ -110,6 +111,79 @@ func (vs VulnSrc) Update(dir string) error {
 	}
 
 	return nil
+}
+
+func decodeAdvisory(r io.Reader) (SuseCvrf, error) {
+	var csaf SuseCSAF
+	if err := json.NewDecoder(r).Decode(&csaf); err != nil {
+		return SuseCvrf{}, err
+	}
+	if csaf.Document.Tracking.ID == "" {
+		return SuseCvrf{}, fmt.Errorf("missing tracking id")
+	}
+	return toCvrf(csaf), nil
+}
+
+func toCvrf(csaf SuseCSAF) SuseCvrf {
+	cvrf := SuseCvrf{
+		Title: csaf.Document.Title,
+		Tracking: DocumentTracking{
+			ID: csaf.Document.Tracking.ID,
+		},
+		References: make([]Reference, 0, len(csaf.Document.References)),
+		Notes:      make([]DocumentNote, 0, len(csaf.Document.Notes)),
+		ProductTree: ProductTree{
+			Relationships: make([]Relationship, 0, len(csaf.ProductTree.Relationships)),
+		},
+		Vulnerabilities: make([]Vulnerability, 0, len(csaf.Vulnerabilities)),
+	}
+
+	for _, n := range csaf.Document.Notes {
+		noteType := ""
+		noteTitle := n.Title
+		switch n.Category {
+		case "summary":
+			noteType = "Summary"
+			if noteTitle == "" {
+				noteTitle = "Topic"
+			}
+		case "description":
+			noteType = "General"
+			noteTitle = "Details"
+		default:
+			continue
+		}
+		cvrf.Notes = append(cvrf.Notes, DocumentNote{
+			Text:  n.Text,
+			Title: noteTitle,
+			Type:  noteType,
+		})
+	}
+
+	for _, ref := range csaf.Document.References {
+		cvrf.References = append(cvrf.References, Reference{URL: ref.URL})
+	}
+	for _, rel := range csaf.ProductTree.Relationships {
+		cvrf.ProductTree.Relationships = append(cvrf.ProductTree.Relationships, Relationship{
+			ProductReference:          rel.ProductReference,
+			RelatesToProductReference: rel.RelatesToProductReference,
+		})
+	}
+	for _, v := range csaf.Vulnerabilities {
+		vuln := Vulnerability{}
+		for _, t := range v.Threats {
+			if t.Category != "impact" {
+				continue
+			}
+			vuln.Threats = append(vuln.Threats, Threat{
+				Type:     "Impact",
+				Severity: t.Details,
+			})
+		}
+		cvrf.Vulnerabilities = append(cvrf.Vulnerabilities, vuln)
+	}
+
+	return cvrf
 }
 
 func (vs VulnSrc) save(cvrfs []SuseCvrf) error {
@@ -182,15 +256,14 @@ func (vs *Suse) Put(tx *bolt.Tx, input PutInput) error {
 
 		if err := vs.PutAdvisoryDetail(tx, input.Cvrf.Tracking.ID, affectedPkg.Package.Name,
 			[]string{affectedPkg.OSVer}, advisory); err != nil {
-			return oops.Wrapf(err, "unable to save CVRF")
+			return oops.Wrapf(err, "unable to save CSAF advisory")
 		}
 	}
 
 	if err := vs.PutVulnerabilityDetail(tx, input.Cvrf.Tracking.ID, source.ID, input.Vuln); err != nil {
-		return oops.With("tracking_id", input.Cvrf.Tracking.ID).Wrapf(err, "failed to save SUSE CVRF vulnerability")
+		return oops.With("tracking_id", input.Cvrf.Tracking.ID).Wrapf(err, "failed to save SUSE CSAF vulnerability")
 	}
 
-	// for optimization
 	if err := vs.PutVulnerabilityID(tx, input.Cvrf.Tracking.ID); err != nil {
 		return oops.With("tracking_id", input.Cvrf.Tracking.ID).Wrapf(err, "failed to save the vulnerability ID")
 	}
@@ -205,7 +278,7 @@ func (vs VulnSrc) getAffectedPackages(relationships []Relationship) []AffectedPa
 			continue
 		}
 
-		pkg := getPackage(relationship.ProductReference)
+		pkg := getPackage(stripArchSuffix(relationship.ProductReference))
 		if pkg == nil {
 			vs.logger.Warn("Invalid package name", log.String("reference", relationship.ProductReference))
 			continue
@@ -223,11 +296,9 @@ func (vs VulnSrc) getAffectedPackages(relationships []Relationship) []AffectedPa
 //nolint:gocyclo
 func (vs VulnSrc) getOSVersion(platformName string) string {
 	if strings.Contains(platformName, "SUSE Manager") {
-		// SUSE Linux Enterprise Module for SUSE Manager Server 4.0
 		return ""
 	}
 	if strings.HasPrefix(platformName, "openSUSE Tumbleweed") {
-		// Tumbleweed has no version, it is a rolling release
 		return bucket.NewOpenSUSETumbleweed().Name()
 	}
 	if strings.HasPrefix(platformName, "openSUSE Leap Micro") {
@@ -245,7 +316,6 @@ func (vs VulnSrc) getOSVersion(platformName string) string {
 		return bucket.NewOpenSUSELeapMicro(ss[3]).Name()
 	}
 	if strings.HasPrefix(platformName, "openSUSE Leap") {
-		// openSUSE Leap 15.0
 		ss := strings.Split(platformName, " ")
 		if len(ss) < 3 {
 			vs.logger.Warn("Invalid version", log.String("platform", platformName))
@@ -260,7 +330,6 @@ func (vs VulnSrc) getOSVersion(platformName string) string {
 		return bucket.NewOpenSUSE(ss[2]).Name()
 	}
 	if strings.HasPrefix(platformName, "SUSE Linux Enterprise Micro") {
-		// SUSE Linux Enterprise Micro 5.3
 		ss := strings.Split(platformName, " ")
 		if len(ss) < 5 {
 			vs.logger.Warn("Invalid version", log.String("platform", platformName))
@@ -275,7 +344,6 @@ func (vs VulnSrc) getOSVersion(platformName string) string {
 		return bucket.NewSUSELinuxEnterpriseMicro(ss[4]).Name()
 	}
 	if strings.HasPrefix(platformName, "SUSE Linux Micro") {
-		// SUSE Linux Micro 6.0
 		ss := strings.Split(platformName, " ")
 		if len(ss) < 4 {
 			vs.logger.Warn("Invalid version", log.String("platform", platformName))
@@ -290,12 +358,10 @@ func (vs VulnSrc) getOSVersion(platformName string) string {
 		return bucket.NewSUSELinuxEnterpriseMicro(ss[3]).Name()
 	}
 	if strings.Contains(platformName, "SUSE Linux Enterprise") {
-		// e.g. SUSE Linux Enterprise Storage 7
 		if strings.HasPrefix(platformName, "SUSE Linux Enterprise Storage") {
 			return ""
 		}
 
-		// Handle both 15-SP7 and 16.0
 		ss := strings.Fields(strings.ReplaceAll(strings.ReplaceAll(platformName, "-", " "), ".", " "))
 		versions := make([]string, 0, 2)
 		for i := len(ss) - 1; i > 0; i-- {
@@ -332,38 +398,52 @@ func getDetail(notes []DocumentNote) string {
 }
 
 func getPackage(packVer string) *Package {
-	name, version := splitPkgName(packVer)
+	name, ver := splitPkgName(packVer)
+	if name == "" {
+		return nil
+	}
 	return &Package{
 		Name:         name,
-		FixedVersion: version,
+		FixedVersion: ver,
 	}
 }
 
 // reference: https://github.com/aquasecurity/trivy-db/blob/5c844be3ba6b9ef13df640857a10f8737e360feb/pkg/vulnsrc/redhat/redhat.go#L196-L217
 func splitPkgName(pkgName string) (string, string) {
-	var version string
+	var ver string
 
-	// Trim release
 	index := strings.LastIndex(pkgName, "-")
 	if index == -1 {
 		return "", ""
 	}
-	version = pkgName[index:]
+	ver = pkgName[index:]
 	pkgName = pkgName[:index]
 
-	// Trim version
 	index = strings.LastIndex(pkgName, "-")
 	if index == -1 {
 		return "", ""
 	}
-	version = pkgName[index+1:] + version
+	ver = pkgName[index+1:] + ver
 	pkgName = pkgName[:index]
 
-	return pkgName, version
+	return pkgName, ver
+}
+
+func stripArchSuffix(ref string) string {
+	archSuffixes := []string{
+		".aarch64", ".x86_64", ".ppc64le", ".s390x", ".i586",
+		".riscv64", ".armv7hl", ".armv7l", ".ppc64", ".arm64",
+	}
+	for _, sfx := range archSuffixes {
+		if strings.HasSuffix(ref, sfx) {
+			return strings.TrimSuffix(ref, sfx)
+		}
+	}
+	return ref
 }
 
 func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
-	eb := oops.In("suse").Tags("cvrf").With("release", params.Release).With("package_name", params.PkgName)
+	eb := oops.In("suse").Tags("csaf").With("release", params.Release).With("package_name", params.PkgName)
 	var bkt bucket.Bucket
 	switch vs.dist {
 	case SUSEEnterpriseLinuxMicro:

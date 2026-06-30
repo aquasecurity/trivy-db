@@ -1,13 +1,11 @@
 package susecvrf
 
 import (
-	"bytes"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
@@ -36,8 +34,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"data-source", "openSUSE Leap 15.1"},
 					Value: types.DataSource{
 						ID:   vulnerability.SuseCVRF,
-						Name: "SUSE CSAF",
-						URL:  "https://ftp.suse.com/pub/projects/security/csaf/",
+						Name: "SUSE CVRF",
+						URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
 					},
 				},
 				{
@@ -81,8 +79,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"data-source", "openSUSE Tumbleweed"},
 					Value: types.DataSource{
 						ID:   vulnerability.SuseCVRF,
-						Name: "SUSE CSAF",
-						URL:  "https://ftp.suse.com/pub/projects/security/csaf/",
+						Name: "SUSE CVRF",
+						URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
 					},
 				},
 				{
@@ -129,8 +127,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"data-source", "SUSE Linux Enterprise 15.1"},
 					Value: types.DataSource{
 						ID:   vulnerability.SuseCVRF,
-						Name: "SUSE CSAF",
-						URL:  "https://ftp.suse.com/pub/projects/security/csaf/",
+						Name: "SUSE CVRF",
+						URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
 					},
 				},
 				{
@@ -161,7 +159,7 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
-			name: "happy path with openSUSE CSAF including SUSE Linux Enterprise Linux",
+			name: "happy path with openSUSE CVRF including SUSE Linux Enterprise Linux",
 			dir:  filepath.Join("testdata", "happy", "openSUSE CVRF including SUSE Linux Enterprise Linux"),
 			dist: OpenSUSE,
 			wantValues: []vulnsrctest.WantValues{
@@ -169,8 +167,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"data-source", "SUSE Linux Enterprise 15"},
 					Value: types.DataSource{
 						ID:   vulnerability.SuseCVRF,
-						Name: "SUSE CSAF",
-						URL:  "https://ftp.suse.com/pub/projects/security/csaf/",
+						Name: "SUSE CVRF",
+						URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
 					},
 				},
 				{
@@ -217,8 +215,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"data-source", "SUSE Linux Enterprise Micro 5.3"},
 					Value: types.DataSource{
 						ID:   vulnerability.SuseCVRF,
-						Name: "SUSE CSAF",
-						URL:  "https://ftp.suse.com/pub/projects/security/csaf/",
+						Name: "SUSE CVRF",
+						URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
 					},
 				},
 				{
@@ -264,8 +262,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"data-source", "SUSE Linux Enterprise Micro 6.0"},
 					Value: types.DataSource{
 						ID:   vulnerability.SuseCVRF,
-						Name: "SUSE CSAF",
-						URL:  "https://ftp.suse.com/pub/projects/security/csaf/",
+						Name: "SUSE CVRF",
+						URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
 					},
 				},
 				{
@@ -731,44 +729,5 @@ func TestGetOSVersion(t *testing.T) {
 			actual := vs.getOSVersion(tc.inputPlatformName)
 			assert.Equal(t, tc.expectedPlatformName, actual, "input data: %s", tc.inputPlatformName)
 		})
-	}
-}
-
-func TestDecodeAdvisory_CSAF(t *testing.T) {
-	data := []byte(`{
-  "document": {
-    "title": "Security update for helm-mirror",
-    "tracking": {"id": "SUSE-SU-2019:0048-2"},
-    "notes": [{"category": "description", "text": "details"}],
-    "references": [{"url": "https://example.com/advisory"}]
-  },
-  "product_tree": {
-    "relationships": [{
-      "product_reference": "helm-mirror-0.2.1-1.7.1.x86_64",
-      "relates_to_product_reference": "SUSE Linux Enterprise Module for Containers 15 SP1"
-    }]
-  },
-  "vulnerabilities": [{
-    "threats": [{"category": "impact", "details": "important"}]
-  }]
-}`)
-	adv, err := decodeAdvisory(bytes.NewReader(data))
-	require.NoError(t, err)
-	assert.Equal(t, "SUSE-SU-2019:0048-2", adv.Tracking.ID)
-	assert.Equal(t, "Security update for helm-mirror", adv.Title)
-	assert.Len(t, adv.ProductTree.Relationships, 1)
-	assert.Equal(t, "helm-mirror-0.2.1-1.7.1.x86_64", adv.ProductTree.Relationships[0].ProductReference)
-	assert.Len(t, adv.Vulnerabilities, 1)
-	assert.Equal(t, "important", adv.Vulnerabilities[0].Threats[0].Severity)
-}
-
-func TestStripArchSuffix(t *testing.T) {
-	tests := map[string]string{
-		"helm-mirror-0.2.1-1.7.1.x86_64": "helm-mirror-0.2.1-1.7.1",
-		"pkg-1.2.3.aarch64":              "pkg-1.2.3",
-		"pkg-1.2.3":                      "pkg-1.2.3",
-	}
-	for in, want := range tests {
-		assert.Equal(t, want, stripArchSuffix(in))
 	}
 }

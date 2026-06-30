@@ -109,9 +109,10 @@ db-clean:
 
 .PHONY: db-fetch-vuln-list
 db-fetch-vuln-list:
-	mkdir -p $(CACHE_DIR)/{vuln-list,vuln-list-redhat,vuln-list-debian,vuln-list-nvd,vuln-list-aqua}
+	mkdir -p $(CACHE_DIR)/{vuln-list,vuln-list-redhat,vuln-list-debian,vuln-list-nvd,vuln-list-aqua,vuln-list-suse}
 	$(call download_and_extract,https://github.com/$(REPO_OWNER)/vuln-list/archive/main.tar.gz,$(CACHE_DIR)/vuln-list)
 	$(call download_and_extract,https://github.com/$(REPO_OWNER)/vuln-list-redhat/archive/main.tar.gz,$(CACHE_DIR)/vuln-list-redhat)
 	$(call download_and_extract,https://github.com/$(REPO_OWNER)/vuln-list-debian/archive/main.tar.gz,$(CACHE_DIR)/vuln-list-debian)
 	$(call download_and_extract,https://github.com/$(REPO_OWNER)/vuln-list-nvd/archive/main.tar.gz,$(CACHE_DIR)/vuln-list-nvd)
 	$(call download_and_extract,https://github.com/$(REPO_OWNER)/vuln-list-aqua/archive/main.tar.gz,$(CACHE_DIR)/vuln-list-aqua)
+	$(call download_and_extract,https://github.com/$(REPO_OWNER)/vuln-list-suse/archive/main.tar.gz,$(CACHE_DIR)/vuln-list-suse)

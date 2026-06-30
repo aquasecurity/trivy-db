@@ -28,7 +28,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rocky"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rootio"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/seal"
-	susecvrf "github.com/aquasecurity/trivy-db/pkg/vulnsrc/suse-cvrf"
+	susecsaf "github.com/aquasecurity/trivy-db/pkg/vulnsrc/suse-csaf"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/wolfi"
 )
@@ -54,8 +54,8 @@ var (
 		amazon.NewVulnSrc(),
 		oracleoval.NewVulnSrc(),
 		rocky.NewVulnSrc(),
-		susecvrf.NewVulnSrc(susecvrf.SUSEEnterpriseLinux),
-		susecvrf.NewVulnSrc(susecvrf.OpenSUSE),
+		susecsaf.NewVulnSrc(susecsaf.SUSEEnterpriseLinux),
+		susecsaf.NewVulnSrc(susecsaf.OpenSUSE),
 		photon.NewVulnSrc(),
 		azure.NewVulnSrc(azure.Azure),
 		azure.NewVulnSrc(azure.Mariner),
