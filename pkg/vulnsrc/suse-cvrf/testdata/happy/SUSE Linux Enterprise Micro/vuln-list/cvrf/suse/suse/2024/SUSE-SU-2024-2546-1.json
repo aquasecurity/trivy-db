@@ -118,8 +118,7 @@
             "SUSE Linux Enterprise Micro 5.3:libgnutls30-hmac-3.7.3-150400.8.1"
           ]
         }
-      ],
-      "CVSSScoreSets": {}
+      ]
     },
     {
       "CVE": "CVE-2024-28835",
@@ -149,8 +148,7 @@
             "SUSE Linux Enterprise Micro 5.3:libgnutls30-hmac-3.7.3-150400.8.1"
           ]
         }
-      ],
-      "CVSSScoreSets": {}
+      ]
     }
   ]
 }
