@@ -49,3 +49,14 @@ func newMavenBucket(dataSource types.DataSource) (bucket.Bucket, error) {
 		dataSource: dataSource,
 	}, nil
 }
+
+func newNpmBucket(dataSource types.DataSource) (bucket.Bucket, error) {
+	base, err := bucket.NewNpm(dataSource)
+	if err != nil {
+		return nil, err
+	}
+	return echoBucket{
+		base:       base,
+		dataSource: dataSource,
+	}, nil
+}

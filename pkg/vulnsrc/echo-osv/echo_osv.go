@@ -53,6 +53,8 @@ func resolveEcho(suffix string) (bucket.Bucket, error) {
 		return newPipBucket(source)
 	case "maven":
 		return newMavenBucket(source)
+	case "npm":
+		return newNpmBucket(source)
 	default:
 		// Plain "Echo" (OS packages, served by the `echo` source) and
 		// unsupported suffixes are skipped by the OSV parser.
