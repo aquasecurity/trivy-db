@@ -110,6 +110,42 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: map[string]any{},
 				},
+				// npm (Echo:npm) advisories are stored under the
+				// "echo npm::Echo OSV" bucket; scoped names keep the
+				// "@scope/name" form.
+				{
+					Key: []string{
+						"data-source",
+						"echo npm::Echo OSV",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.EchoOSV,
+						Name: "Echo OSV",
+						URL:  "https://advisory.echohq.com/osv",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2024-66666",
+						"echo npm::Echo OSV",
+						"@babel/traverse",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"ECHO-2024-2468",
+						},
+						PatchedVersions:    []string{"7.23.2+echo.999"},
+						VulnerableVersions: []string{">=7.23.2+echo.1, <7.23.2+echo.999"},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2024-66666",
+					},
+					Value: map[string]any{},
+				},
 			},
 			noBuckets: [][]string{
 				{

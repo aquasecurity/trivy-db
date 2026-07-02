@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.4.0",
+  "id": "ECHO-2024-2468",
+  "modified": "2024-11-01T12:00:00Z",
+  "published": "2024-10-01T08:00:00Z",
+  "upstream": [
+    "CVE-2024-66666"
+  ],
+  "summary": "Example vulnerability in @babel/traverse library",
+  "details": "Babel traverse before 7.23.2+echo.999 has a vulnerability.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Echo:npm",
+        "name": "@babel/traverse",
+        "purl": "pkg:npm/%40babel%2Ftraverse"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "7.23.2+echo.1"
+            },
+            {
+              "fixed": "7.23.2+echo.999"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-66666"
+    },
+    {
+      "type": "PACKAGE",
+      "url": "https://github.com/babel/babel"
+    }
+  ]
+}
