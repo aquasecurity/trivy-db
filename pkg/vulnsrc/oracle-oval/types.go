@@ -22,7 +22,12 @@ type Reference struct {
 type Cve struct {
 	Impact string
 	Href   string
-	ID     string
+	Public string
+	// Oracle encodes cvss2 and cvss3 as "score/vector" (e.g. cvss3="7.3/CVSS:3.1/AV:N/...").
+	// Stored verbatim; downstream consumers split into score/vector themselves.
+	CVSS2 string
+	CVSS3 string
+	ID    string
 }
 
 type Criteria struct {

@@ -8,6 +8,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/aqua"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/azure"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bitnami"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bottlerocket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bundler"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/chainguard"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/composer"
@@ -64,6 +65,7 @@ var (
 		bitnami.NewVulnSrc(),
 		echo.NewVulnSrc(),
 		minimos.NewVulnSrc(),
+		bottlerocket.NewVulnSrc(),
 
 		rootio.NewVulnSrc(),
 		seal.NewVulnSrc(),

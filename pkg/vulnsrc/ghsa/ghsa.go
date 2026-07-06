@@ -149,8 +149,10 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 				advisories = append(advisories, adv)
 			}
 		case ecosystem.Go:
-			// Skip a standard Go package as we use the Go Vulnerability Database (govulndb) for standard packages.
-			if isStandardGoPackage(adv.PkgName) {
+			// Skip standard library and golang.org/x/* packages, as we use
+			// the Go Vulnerability Database (govulndb) for those.
+			// cf. https://github.com/aquasecurity/trivy-db/issues/675
+			if isStandardGoPackage(adv.PkgName) || strings.HasPrefix(adv.PkgName, "golang.org/x/") {
 				advisories[i].Bucket = nil // Set nil bucket to skip later
 			}
 		case ecosystem.NuGet:

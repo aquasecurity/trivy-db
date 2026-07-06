@@ -20,7 +20,7 @@ import (
 const ubuntuDir = "ubuntu"
 
 var (
-	targetStatuses        = []string{"needed", "deferred", "released"}
+	targetStatuses        = []string{"needed", "deferred", "pending", "released"}
 	UbuntuReleasesMapping = map[string]string{
 		"precise":  "12.04",
 		"quantal":  "12.10",
@@ -50,6 +50,7 @@ var (
 		"oracular": "24.10",
 		"plucky":   "25.04",
 		"questing": "25.10",
+		"resolute": "26.04",
 		// ESM versions:
 		"precise/esm": "12.04-ESM",
 		"trusty/esm":  "14.04-ESM",
