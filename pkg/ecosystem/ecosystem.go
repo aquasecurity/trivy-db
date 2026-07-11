@@ -8,6 +8,7 @@ const (
 
 	// Language ecosystems
 	Npm        Type = "npm"
+	Node       Type = "node"
 	Composer   Type = "composer"
 	Pip        Type = "pip"
 	RubyGems   Type = "rubygems"
