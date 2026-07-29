@@ -1,0 +1,54 @@
+- bucket: chainguard
+  pairs:
+    - bucket: binutils
+      pairs:
+        # Fixed on both architectures.
+        - key: CVE-2022-38126
+          value:
+            FixedVersion: 2.39-r1
+            Entries:
+              - FixedVersion: 2.39-r1
+                Arches:
+                  - aarch64
+                  - x86_64
+                VendorIDs:
+                  - CGA-2222-2222-2222
+        # Unresolved on x86_64 only.
+        - key: CVE-2022-38533
+          value:
+            Entries:
+              - Status: 6
+                Arches:
+                  - x86_64
+                VendorIDs:
+                  - CGA-4444-4444-4444
+        # Fixed on x86_64, still unresolved on aarch64.
+        - key: CVE-2022-40000
+          value:
+            FixedVersion: 3.0-r0
+            Entries:
+              - Status: 2
+                Arches:
+                  - aarch64
+                VendorIDs:
+                  - CGA-8888-8888-8888
+              - FixedVersion: 3.0-r0
+                Arches:
+                  - x86_64
+                VendorIDs:
+                  - CGA-9999-9999-9999
+        # Applies to every architecture.
+        - key: CVE-2022-41000
+          value:
+            FixedVersion: 4.0-r0
+            Entries:
+              - FixedVersion: 4.0-r0
+                VendorIDs:
+                  - CGA-aaaa-aaaa-aaaa
+- bucket: data-source
+  pairs:
+    - key: chainguard
+      value:
+        ID: chainguard
+        Name: Chainguard Security Data
+        URL: https://advisories.cgr.dev/chainguard/v3/osv/all.json

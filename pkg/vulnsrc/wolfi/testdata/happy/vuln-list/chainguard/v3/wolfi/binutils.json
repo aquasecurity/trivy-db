@@ -1,0 +1,82 @@
+{
+  "ecosystem": "Wolfi",
+  "name": "binutils",
+  "advisories": [
+    {
+      "id": "CGA-2222-2222-2222",
+      "upstream": [
+        "CVE-2022-38126",
+        "GHSA-2222-2222-2222"
+      ],
+      "arch": "x86_64",
+      "events": [
+        {
+          "introduced": "0"
+        },
+        {
+          "fixed": "2.39-r1"
+        }
+      ],
+      "status": "fixed"
+    },
+    {
+      "id": "CGA-3333-3333-3333",
+      "upstream": [
+        "CVE-2022-38126"
+      ],
+      "arch": "aarch64",
+      "events": [
+        {
+          "introduced": "0"
+        },
+        {
+          "fixed": "2.39-r1"
+        }
+      ],
+      "status": "fixed"
+    },
+    {
+      "id": "CGA-4444-4444-4444",
+      "upstream": [
+        "CVE-2022-38533"
+      ],
+      "arch": "x86_64",
+      "events": [
+        {
+          "introduced": "0"
+        }
+      ],
+      "status": "pending_upstream_fix"
+    },
+    {
+      "id": "CGA-5555-5555-5555",
+      "upstream": [
+        "CVE-2022-99999"
+      ],
+      "arch": "x86_64",
+      "events": [
+        {
+          "introduced": "0"
+        },
+        {
+          "fixed": "0"
+        }
+      ],
+      "status": "false_positive_determination"
+    },
+    {
+      "id": "CGA-6666-6666-6666",
+      "upstream": [
+        "GHSA-6666-6666-6666",
+        "GO-2026-6666"
+      ],
+      "arch": "x86_64",
+      "events": [
+        {
+          "introduced": "0"
+        }
+      ],
+      "status": "detection"
+    }
+  ]
+}

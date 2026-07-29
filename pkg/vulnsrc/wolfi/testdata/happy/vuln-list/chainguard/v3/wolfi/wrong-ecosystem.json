@@ -1,0 +1,22 @@
+{
+  "ecosystem": "Chainguard",
+  "name": "wrong-ecosystem",
+  "advisories": [
+    {
+      "id": "CGA-7777-7777-7777",
+      "upstream": [
+        "CVE-2022-77777"
+      ],
+      "arch": "x86_64",
+      "events": [
+        {
+          "introduced": "0"
+        },
+        {
+          "fixed": "1.0.0-r0"
+        }
+      ],
+      "status": "fixed"
+    }
+  ]
+}

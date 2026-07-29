@@ -1,0 +1,13 @@
+- bucket: chainguard
+  pairs:
+    - bucket: binutils
+      pairs:
+        - key: CVE-2022-38126
+          value: not-an-advisory
+- bucket: data-source
+  pairs:
+    - key: chainguard
+      value:
+        ID: chainguard
+        Name: Chainguard Security Data
+        URL: https://advisories.cgr.dev/chainguard/v3/osv/all.json
