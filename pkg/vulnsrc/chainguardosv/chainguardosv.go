@@ -407,7 +407,7 @@ func statusRank(feedStatus string) int {
 			return i
 		}
 	}
-	// An unrecognised status still came with a range that says the package is
+	// An unrecognized status still came with a range that says the package is
 	// affected, so it is treated as such rather than being dropped.
 	return len(statusRanks)
 }
