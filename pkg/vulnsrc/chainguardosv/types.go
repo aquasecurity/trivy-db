@@ -34,6 +34,11 @@ type Advisory struct {
 }
 
 // Event is an OSV range event. Exactly one of the fields is set.
+//
+// OSV also defines "last_affected" and "limit" events, and the mirror carries
+// them through if the feed ever emits one. They are not declared here because
+// Trivy has no way to express them: an entry using them decodes as an event with
+// no fixed version, which fixedVersion reports as unresolved.
 type Event struct {
 	Introduced string `json:"introduced,omitempty"`
 	Fixed      string `json:"fixed,omitempty"`
@@ -47,17 +52,22 @@ type Event struct {
 //   - "fixed" with a real version: fixed in that version.
 //   - "fixed" with "0": a false positive determination, nothing is affected.
 //
-// Every record in the feed today is a single range starting at version "0", the
-// only shape a single fixed version can express. Anything else - a range that
-// starts partway through the version history, or several disjoint ranges - is
-// reported as unresolved rather than approximated, so that a change in the feed
-// costs a false positive rather than a missed vulnerability.
+// Only the upper bound of the range is used. Trivy compares an installed version
+// against a single fixed version and has no way to express a lower bound, so an
+// advisory whose range starts partway through the version history is reported
+// for versions below that start too. Every record in the feed carries
+// "introduced": "0", and over-reporting the versions that predate a
+// vulnerability is the safe direction if that ever changes.
+//
+// Several "fixed" events in one entry, which would mean disjoint affected
+// ranges, cannot be reduced to one fixed version at all: taking the lowest
+// would report the versions above it as safe. That shape is reported as
+// unresolved instead, so it costs a false positive rather than a miss. The feed
+// publishes exactly one range per affected entry, so this is a guard rather than
+// a case that occurs.
 func (a Advisory) fixedVersion() (version string, resolved bool) {
 	var fixed []string
 	for _, event := range a.Events {
-		if event.Introduced != "" && event.Introduced != introducedFromStart {
-			return "", false
-		}
 		if event.Fixed != "" {
 			fixed = append(fixed, event.Fixed)
 		}

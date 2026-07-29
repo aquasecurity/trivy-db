@@ -36,11 +36,6 @@ const (
 	// falsePositiveVersion is the fixed version Chainguard uses to record that
 	// a vulnerability does not apply to a package after all.
 	falsePositiveVersion = "0"
-
-	// introducedFromStart is the "introduced" version every record in the feed
-	// carries, meaning the vulnerability has been present since the first
-	// version of the package.
-	introducedFromStart = "0"
 )
 
 // Ecosystem describes one of the two ecosystems published in the feed.

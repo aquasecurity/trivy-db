@@ -1,6 +1,9 @@
-# An advisory as trivy-db wrote it before the v3 feed: a bare fixed version with
+# The advisory shape trivy-db wrote before the v3 feed: a bare fixed version with
 # no entries. A Trivy built against the v3 code can be pointed at a database
 # built before it, so these must still be readable.
+#
+# Only the advisory is legacy. The data source is the current one, so that this
+# fixture asserts the advisory shape and nothing else.
 - bucket: wolfi
   pairs:
     - bucket: binutils

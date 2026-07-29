@@ -479,10 +479,10 @@ func TestAggregate(t *testing.T) {
 			want: map[string]types.Advisories{},
 		},
 		{
-			// The feed has only ever published ranges that start at "0". A range
-			// starting anywhere else cannot be expressed as a single fixed
-			// version, so it is reported as affected rather than approximated.
-			name: "a range that does not start at the first version is affected",
+			// Trivy has no way to express the lower bound of a range, so only the
+			// fixed version is kept. Versions below "introduced" are reported as
+			// vulnerable too, which over-reports rather than missing anything.
+			name: "a range that does not start at the first version keeps its fix",
 			pkg: chainguardosv.Package{
 				Ecosystem: "Chainguard",
 				Name:      "curl",
@@ -501,11 +501,12 @@ func TestAggregate(t *testing.T) {
 			},
 			want: map[string]types.Advisories{
 				"CVE-2026-12000": {
+					FixedVersion: "8.4.0-r0",
 					Entries: []types.Advisory{
 						{
-							Status:    types.StatusAffected,
-							Arches:    []string{"x86_64"},
-							VendorIDs: []string{"CGA-0000-0000-000c"},
+							FixedVersion: "8.4.0-r0",
+							Arches:       []string{"x86_64"},
+							VendorIDs:    []string{"CGA-0000-0000-000c"},
 						},
 					},
 				},
