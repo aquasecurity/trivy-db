@@ -27,10 +27,14 @@ var ecosystem = chainguardosv.Ecosystem{
 	},
 }
 
-// VulnSrc stores Wolfi advisories.
-type VulnSrc = chainguardosv.VulnSrc
+// VulnSrc stores Wolfi advisories. It is a distinct type from the Chainguard
+// source it shares an implementation with, so that callers can still tell the
+// two apart.
+type VulnSrc struct {
+	chainguardosv.VulnSrc
+}
 
 // NewVulnSrc is the factory method for the Wolfi data source.
 func NewVulnSrc() VulnSrc {
-	return chainguardosv.NewVulnSrc(ecosystem)
+	return VulnSrc{chainguardosv.NewVulnSrc(ecosystem)}
 }

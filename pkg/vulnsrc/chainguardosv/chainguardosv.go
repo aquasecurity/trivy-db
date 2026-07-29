@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	apkver "github.com/knqyf263/go-apk-version"
+	"github.com/samber/lo"
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
 
@@ -27,12 +28,19 @@ import (
 )
 
 const (
-	// feedDir is where vuln-list-update writes the grouped v3 advisories.
-	feedDir = "chainguard/v3"
+	// feedDir is where vuln-list-update writes the grouped v3 advisories. It
+	// sits beside vuln-list/chainguard rather than inside it, because the secdb
+	// "chainguard" target removes that whole directory on every run.
+	feedDir = "chainguard-osv/v3"
 
 	// falsePositiveVersion is the fixed version Chainguard uses to record that
 	// a vulnerability does not apply to a package after all.
 	falsePositiveVersion = "0"
+
+	// introducedFromStart is the "introduced" version every record in the feed
+	// carries, meaning the vulnerability has been present since the first
+	// version of the package.
+	introducedFromStart = "0"
 )
 
 // Ecosystem describes one of the two ecosystems published in the feed.
@@ -177,14 +185,36 @@ func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
 			return nil, eb.With("vuln_id", vulnID).Wrapf(err, "json unmarshal error")
 		}
 
-		for _, entry := range stored.Entries {
-			advisory := entry
-			advisory.VulnerabilityID = vulnID
-			advisory.DataSource = &types.DataSource{
+		var dataSource *types.DataSource
+		if !lo.IsEmpty(v.Source) {
+			dataSource = &types.DataSource{
 				ID:     v.Source.ID,
 				Name:   v.Source.Name,
 				URL:    v.Source.URL,
 				BaseID: v.Source.BaseID,
+			}
+		}
+
+		// An advisory written before the v3 feed has no entries, only a fixed
+		// version. A Trivy built against this package can be pointed at a
+		// database built before it, and without this the advisory would be
+		// dropped silently.
+		if len(stored.Entries) == 0 {
+			advisories = append(advisories, types.Advisory{
+				VulnerabilityID: vulnID,
+				FixedVersion:    stored.FixedVersion,
+				DataSource:      dataSource,
+				Custom:          stored.Custom,
+			})
+			continue
+		}
+
+		for _, entry := range stored.Entries {
+			advisory := entry
+			advisory.VulnerabilityID = vulnID
+			advisory.DataSource = dataSource
+			if advisory.Custom == nil {
+				advisory.Custom = stored.Custom
 			}
 			advisories = append(advisories, advisory)
 		}

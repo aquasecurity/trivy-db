@@ -154,6 +154,21 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 		},
 		{
+			// A database built before the v3 feed stores a bare fixed version
+			// with no entries. Dropping those would silently report nothing at
+			// all for Chainguard packages.
+			name:     "advisory from a database built before the v3 feed",
+			fixtures: []string{"testdata/fixtures/legacy.yaml"},
+			params:   db.GetParams{PkgName: "binutils"},
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "CVE-2022-38126",
+					FixedVersion:    "2.39-r1",
+					DataSource:      &source,
+				},
+			},
+		},
+		{
 			name:     "unknown package",
 			fixtures: []string{"testdata/fixtures/happy.yaml"},
 			params:   db.GetParams{PkgName: "unknown"},

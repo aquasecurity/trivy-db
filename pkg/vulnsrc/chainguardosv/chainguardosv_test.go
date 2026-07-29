@@ -479,6 +479,71 @@ func TestAggregate(t *testing.T) {
 			want: map[string]types.Advisories{},
 		},
 		{
+			// The feed has only ever published ranges that start at "0". A range
+			// starting anywhere else cannot be expressed as a single fixed
+			// version, so it is reported as affected rather than approximated.
+			name: "a range that does not start at the first version is affected",
+			pkg: chainguardosv.Package{
+				Ecosystem: "Chainguard",
+				Name:      "curl",
+				Advisories: []chainguardosv.Advisory{
+					{
+						ID:       "CGA-0000-0000-000c",
+						Upstream: []string{"CVE-2026-12000"},
+						Arch:     "x86_64",
+						Events: []chainguardosv.Event{
+							{Introduced: "8.0.0-r0"},
+							{Fixed: "8.4.0-r0"},
+						},
+						Status: "fixed",
+					},
+				},
+			},
+			want: map[string]types.Advisories{
+				"CVE-2026-12000": {
+					Entries: []types.Advisory{
+						{
+							Status:    types.StatusAffected,
+							Arches:    []string{"x86_64"},
+							VendorIDs: []string{"CGA-0000-0000-000c"},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "several disjoint ranges are affected",
+			pkg: chainguardosv.Package{
+				Ecosystem: "Chainguard",
+				Name:      "curl",
+				Advisories: []chainguardosv.Advisory{
+					{
+						ID:       "CGA-0000-0000-000d",
+						Upstream: []string{"CVE-2026-13000"},
+						Arch:     "x86_64",
+						Events: []chainguardosv.Event{
+							{Introduced: "0"},
+							{Fixed: "1.0.0-r0"},
+							{Introduced: "0"},
+							{Fixed: "3.0.0-r0"},
+						},
+						Status: "fixed",
+					},
+				},
+			},
+			want: map[string]types.Advisories{
+				"CVE-2026-13000": {
+					Entries: []types.Advisory{
+						{
+							Status:    types.StatusAffected,
+							Arches:    []string{"x86_64"},
+							VendorIDs: []string{"CGA-0000-0000-000d"},
+						},
+					},
+				},
+			},
+		},
+		{
 			name: "a version that is not an APK version still yields a result",
 			pkg: chainguardosv.Package{
 				Ecosystem: "Chainguard",

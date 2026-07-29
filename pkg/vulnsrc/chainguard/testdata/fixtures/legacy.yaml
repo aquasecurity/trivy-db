@@ -1,0 +1,17 @@
+# An advisory as trivy-db wrote it before the v3 feed: a bare fixed version with
+# no entries. A Trivy built against the v3 code can be pointed at a database
+# built before it, so these must still be readable.
+- bucket: chainguard
+  pairs:
+    - bucket: binutils
+      pairs:
+        - key: CVE-2022-38126
+          value:
+            FixedVersion: 2.39-r1
+- bucket: data-source
+  pairs:
+    - key: chainguard
+      value:
+        ID: chainguard
+        Name: Chainguard Security Data
+        URL: https://advisories.cgr.dev/chainguard/v3/osv/all.json

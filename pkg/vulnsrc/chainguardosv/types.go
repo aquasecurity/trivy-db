@@ -46,16 +46,32 @@ type Event struct {
 //   - "introduced" only: unresolved, every version is affected, no fix exists.
 //   - "fixed" with a real version: fixed in that version.
 //   - "fixed" with "0": a false positive determination, nothing is affected.
+//
+// Every record in the feed today is a single range starting at version "0", the
+// only shape a single fixed version can express. Anything else - a range that
+// starts partway through the version history, or several disjoint ranges - is
+// reported as unresolved rather than approximated, so that a change in the feed
+// costs a false positive rather than a missed vulnerability.
 func (a Advisory) fixedVersion() (version string, resolved bool) {
+	var fixed []string
 	for _, event := range a.Events {
+		if event.Introduced != "" && event.Introduced != introducedFromStart {
+			return "", false
+		}
 		if event.Fixed != "" {
-			// "0" sorts below every real version, so it leaves an empty
-			// affected range.
-			if event.Fixed == falsePositiveVersion {
-				return "", true
-			}
-			return event.Fixed, true
+			fixed = append(fixed, event.Fixed)
 		}
 	}
-	return "", false
+
+	if len(fixed) != 1 {
+		// No fixed event means Chainguard has not resolved the advisory; more
+		// than one means a shape this cannot represent.
+		return "", false
+	}
+	if fixed[0] == falsePositiveVersion {
+		// "0" sorts below every real version, so it leaves an empty affected
+		// range.
+		return "", true
+	}
+	return fixed[0], true
 }
