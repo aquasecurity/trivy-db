@@ -29,6 +29,7 @@ const (
 	Alpine       Type = "alpine"
 	RedHat       Type = "redhat"
 	Debian       Type = "debian"
+	DHI          Type = "dhi"
 	Ubuntu       Type = "ubuntu"
 	CentOS       Type = "centos"
 	Rocky        Type = "rocky"
