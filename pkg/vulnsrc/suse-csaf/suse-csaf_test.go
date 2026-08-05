@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
@@ -113,9 +114,9 @@ func TestDecodeAdvisory_CSAF(t *testing.T) {
     "threats": [{"category": "impact", "details": "important"}]
   }]
 }`)
-	adv, err := decodeAdvisory(bytes.NewReader(data))
+	adv, err := parseAdvisory(bytes.NewReader(data))
 	require.NoError(t, err)
-	assert.Equal(t, "SUSE-SU-2019:0048-2", adv.Tracking.ID)
+	assert.Equal(t, "SUSE-SU-2019:0048-2", adv.ID)
 	assert.Equal(t, "Security update for helm-mirror", adv.Title)
 	assert.Len(t, adv.ProductTree.Relationships, 1)
 	assert.Equal(t, "helm-mirror-0.2.1-1.7.1.x86_64", adv.ProductTree.Relationships[0].ProductReference)
@@ -123,10 +124,68 @@ func TestDecodeAdvisory_CSAF(t *testing.T) {
 	assert.Equal(t, "important", adv.Vulnerabilities[0].Threats[0].Severity)
 }
 
+func TestVulnSrc_Get(t *testing.T) {
+	tests := []struct {
+		name     string
+		fixtures []string
+		version  string
+		pkgName  string
+		dist     Distribution
+		want     []types.Advisory
+		wantErr  string
+	}{
+		{
+			name:     "happy path",
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			version:  "13.1",
+			pkgName:  "bind",
+			dist:     OpenSUSE,
+			want: []types.Advisory{
+				{
+					VulnerabilityID: "openSUSE-SU-2019:0003-1",
+					FixedVersion:    "1.3.29-bp150.2.12.1",
+				},
+			},
+		},
+		{
+			name:     "no advisories are returned",
+			fixtures: []string{"testdata/fixtures/happy.yaml"},
+			version:  "15.1",
+			pkgName:  "bind",
+			dist:     OpenSUSE,
+			want:     nil,
+		},
+		{
+			name:     "GetAdvisories returns an error",
+			fixtures: []string{"testdata/fixtures/sad.yaml"},
+			version:  "13.1",
+			pkgName:  "bind",
+			dist:     OpenSUSE,
+			wantErr:  "json unmarshal error",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			vs := NewVulnSrc(tt.dist)
+			vulnsrctest.TestGet(t, vs, vulnsrctest.TestGetArgs{
+				Fixtures:   tt.fixtures,
+				WantValues: tt.want,
+				GetParams: db.GetParams{
+					Release: tt.version,
+					PkgName: tt.pkgName,
+				},
+				WantErr: tt.wantErr,
+			})
+		})
+	}
+}
+
 func TestStripArchSuffix(t *testing.T) {
 	tests := map[string]string{
 		"helm-mirror-0.2.1-1.7.1.x86_64": "helm-mirror-0.2.1-1.7.1",
 		"pkg-1.2.3.aarch64":              "pkg-1.2.3",
+		"pkg-1.0.noarch":                 "pkg-1.0",
+		"pkg-1.0.ia64":                   "pkg-1.0",
 		"pkg-1.2.3":                      "pkg-1.2.3",
 	}
 	for in, want := range tests {

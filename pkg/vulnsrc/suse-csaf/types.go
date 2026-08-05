@@ -1,19 +1,15 @@
 package susecsaf
 
-type SuseCvrf struct {
+type Advisory struct {
+	ID              string
 	Title           string
-	Tracking        DocumentTracking
-	Notes           []DocumentNote
+	Notes           []Note
 	ProductTree     ProductTree
 	References      []Reference
 	Vulnerabilities []Vulnerability
 }
 
-type DocumentTracking struct {
-	ID string
-}
-
-type DocumentNote struct {
+type Note struct {
 	Text  string
 	Title string
 	Type  string
@@ -33,7 +29,6 @@ type Vulnerability struct {
 }
 
 type Threat struct {
-	Type     string
 	Severity string
 }
 
@@ -51,47 +46,47 @@ type AffectedPackage struct {
 	OSVer   string
 }
 
-type SuseCSAF struct {
-	Document        CSAFDocument        `json:"document"`
-	ProductTree     CSAFProductTree     `json:"product_tree"`
-	Vulnerabilities []CSAFVulnerability `json:"vulnerabilities"`
+type rawAdvisory struct {
+	Document        rawDocument        `json:"document"`
+	ProductTree     rawProductTree     `json:"product_tree"`
+	Vulnerabilities []rawVulnerability `json:"vulnerabilities"`
 }
 
-type CSAFDocument struct {
+type rawDocument struct {
 	Title      string          `json:"title"`
-	Tracking   CSAFTracking    `json:"tracking"`
-	Notes      []CSAFNote      `json:"notes"`
-	References []CSAFReference `json:"references"`
+	Tracking   rawTracking     `json:"tracking"`
+	Notes      []rawNote       `json:"notes"`
+	References []rawReference  `json:"references"`
 }
 
-type CSAFTracking struct {
+type rawTracking struct {
 	ID string `json:"id"`
 }
 
-type CSAFNote struct {
+type rawNote struct {
 	Category string `json:"category"`
 	Text     string `json:"text"`
 	Title    string `json:"title"`
 }
 
-type CSAFReference struct {
+type rawReference struct {
 	URL string `json:"url"`
 }
 
-type CSAFProductTree struct {
-	Relationships []CSAFRelationship `json:"relationships"`
+type rawProductTree struct {
+	Relationships []rawRelationship `json:"relationships"`
 }
 
-type CSAFRelationship struct {
+type rawRelationship struct {
 	ProductReference          string `json:"product_reference"`
 	RelatesToProductReference string `json:"relates_to_product_reference"`
 }
 
-type CSAFVulnerability struct {
-	Threats []CSAFThreat `json:"threats"`
+type rawVulnerability struct {
+	Threats []rawThreat `json:"threats"`
 }
 
-type CSAFThreat struct {
+type rawThreat struct {
 	Category string `json:"category"`
 	Details  string `json:"details"`
 }
