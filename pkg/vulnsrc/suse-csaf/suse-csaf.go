@@ -2,6 +2,7 @@ package susecsaf
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -119,14 +120,14 @@ func parseAdvisory(r io.Reader) (Advisory, error) {
 		return Advisory{}, err
 	}
 	if raw.Document.Tracking.ID == "" {
-		return Advisory{}, fmt.Errorf("missing tracking id")
+		return Advisory{}, errors.New("missing tracking id")
 	}
 
 	adv := Advisory{
-		ID:              raw.Document.Tracking.ID,
-		Title:           raw.Document.Title,
-		References:      make([]Reference, 0, len(raw.Document.References)),
-		Notes:           make([]Note, 0, len(raw.Document.Notes)),
+		ID:         raw.Document.Tracking.ID,
+		Title:      raw.Document.Title,
+		References: make([]Reference, 0, len(raw.Document.References)),
+		Notes:      make([]Note, 0, len(raw.Document.Notes)),
 		ProductTree: ProductTree{
 			Relationships: make([]Relationship, 0, len(raw.ProductTree.Relationships)),
 		},
@@ -156,13 +157,10 @@ func parseAdvisory(r io.Reader) (Advisory, error) {
 	}
 
 	for _, ref := range raw.Document.References {
-		adv.References = append(adv.References, Reference{URL: ref.URL})
+		adv.References = append(adv.References, Reference(ref))
 	}
 	for _, rel := range raw.ProductTree.Relationships {
-		adv.ProductTree.Relationships = append(adv.ProductTree.Relationships, Relationship{
-			ProductReference:          rel.ProductReference,
-			RelatesToProductReference: rel.RelatesToProductReference,
-		})
+		adv.ProductTree.Relationships = append(adv.ProductTree.Relationships, Relationship(rel))
 	}
 	for _, v := range raw.Vulnerabilities {
 		vuln := Vulnerability{}

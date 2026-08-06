@@ -53,10 +53,10 @@ type rawAdvisory struct {
 }
 
 type rawDocument struct {
-	Title      string          `json:"title"`
-	Tracking   rawTracking     `json:"tracking"`
-	Notes      []rawNote       `json:"notes"`
-	References []rawReference  `json:"references"`
+	Title      string         `json:"title"`
+	Tracking   rawTracking    `json:"tracking"`
+	Notes      []rawNote      `json:"notes"`
+	References []rawReference `json:"references"`
 }
 
 type rawTracking struct {

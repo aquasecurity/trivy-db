@@ -195,9 +195,9 @@ func TestStripArchSuffix(t *testing.T) {
 
 func Test_splitPkgName(t *testing.T) {
 	tests := []struct {
-		pkgName         string
-		wantPkgName     string
-		wantPkgVersion  string
+		pkgName        string
+		wantPkgName    string
+		wantPkgVersion string
 	}{
 		{
 			pkgName:        "helm-mirror-0.2.1-1.7.1",
