@@ -1,0 +1,20 @@
+{
+  "package_name": "openssl",
+  "advisory": {
+    "12": {
+      "CVE-2024-5535": {
+        "cve_id": "CVE-2024-5535",
+        "title": "openssl: SSL_select_next_proto buffer overread",
+        "description": "Calling SSL_select_next_proto with an empty supported client protocols buffer may cause a crash or leak memory.",
+        "severity": "CRITICAL",
+        "status": "fixed",
+        "events": [
+          {
+            "introduced": "3.0.0",
+            "fixed": "3.0.14-1~deb12u2"
+          }
+        ]
+      }
+    }
+  }
+}

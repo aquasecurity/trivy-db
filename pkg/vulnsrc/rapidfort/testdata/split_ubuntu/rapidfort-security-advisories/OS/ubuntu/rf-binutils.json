@@ -1,0 +1,26 @@
+{
+  "package_name": "rf-binutils",
+  "advisory": {
+    "22.04": {
+      "CVE-2025-69648": {
+        "cve_id": "CVE-2025-69648",
+        "title": "binutils readelf DoS",
+        "description": "GNU Binutils readelf contains a denial-of-service vulnerability when processing crafted DWARF data.",
+        "severity": "MEDIUM",
+        "status": "fixed",
+        "events": [
+          {
+            "introduced": "0:0",
+            "fixed": "0:2.46-10rfubu",
+            "identifier": "rf"
+          },
+          {
+            "introduced": "0:2.42-4ubuntu2.10",
+            "fixed": "0:2.46-1ubuntu1",
+            "identifier": "ubuntu"
+          }
+        ]
+      }
+    }
+  }
+}

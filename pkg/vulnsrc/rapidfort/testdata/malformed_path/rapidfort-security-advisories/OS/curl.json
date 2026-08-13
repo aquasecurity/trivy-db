@@ -1,0 +1,20 @@
+{
+  "package_name": "curl",
+  "advisory": {
+    "20.04": {
+      "CVE-2020-8169": {
+        "cve_id": "CVE-2020-8169",
+        "title": "should not be processed",
+        "description": "This file is at security-advisories/OS/ directly with no {osName}/ level. The parser must skip it with a warning, not process it.",
+        "severity": "HIGH",
+        "status": "fixed",
+        "events": [
+          {
+            "introduced": "7.68.0",
+            "fixed": "7.68.0-1ubuntu2.1"
+          }
+        ]
+      }
+    }
+  }
+}

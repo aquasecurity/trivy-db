@@ -103,6 +103,9 @@ func NewDebian(version string) Bucket { return newOS(ecosystem.Debian, version) 
 // NewEcho creates a bucket for Echo
 func NewEcho(version string) Bucket { return newOS(ecosystem.Echo, version) }
 
+// NewFedora creates a bucket for Fedora
+func NewFedora(version string) Bucket { return newOS(ecosystem.Fedora, version) }
+
 // NewMinimOS creates a bucket for MinimOS
 func NewMinimOS(version string) Bucket { return newOS(ecosystem.MinimOS, version) }
 
