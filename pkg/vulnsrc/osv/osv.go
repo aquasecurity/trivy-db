@@ -337,7 +337,21 @@ func parseAffectedVersions(affected Affected) ([]string, []string, error) {
 			continue
 		}
 
-		var index int
+		// index points at the range opened by the most recent "introduced"
+		// event. -1 means no range is open yet in this events list.
+		index := -1
+		// ensureRange opens a range when a "fixed"/"last_affected" event arrives
+		// without a preceding "introduced". Per the OSV schema an "introduced"
+		// event should come first, but some feeds ship malformed ranges. Treat a
+		// leading "fixed"/"last_affected" as introduced at "0" so we neither
+		// panic on an out-of-range index nor clobber a range from a prior events
+		// list.
+		ensureRange := func() {
+			if index < 0 {
+				affectedRanges = append(affectedRanges, NewVersionRange(affected.Package.Ecosystem, "0"))
+				index = len(affectedRanges) - 1
+			}
+		}
 		for _, event := range affects.Events {
 			switch {
 			// Each "introduced" event implies a new version range
@@ -347,10 +361,12 @@ func parseAffectedVersions(affected Affected) ([]string, []string, error) {
 				index = len(affectedRanges) - 1
 			// e.g. {"introduced": "1.2.0"}, {"fixed": "1.2.5"}
 			case event.Fixed != "":
+				ensureRange()
 				affectedRanges[index].SetFixed(event.Fixed)
 				patchedVersions = append(patchedVersions, event.Fixed)
 			// e.g. {"introduced": "1.2.0"}, {"last_affected": "1.2.5"}
 			case event.LastAffected != "":
+				ensureRange()
 				affectedRanges[index].SetLastAffected(event.LastAffected)
 			}
 		}
