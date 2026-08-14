@@ -1,11 +1,12 @@
 package susecsaf
 
 import (
-	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/gocsaf/csaf/v3/csaf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -35,9 +36,9 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"data-source", "SUSE Linux Enterprise 15.1"},
 					Value: types.DataSource{
-						ID:   vulnerability.SuseCSAF,
-						Name: "SUSE CSAF",
-						URL:  "https://ftp.suse.com/pub/projects/security/csaf/",
+						ID:   vulnerability.SuseCVRF,
+						Name: "SUSE CVRF",
+						URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
 					},
 				},
 				{
@@ -49,7 +50,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"vulnerability-detail", "SUSE-SU-2019:0048-2", "suse-csaf"},
+					Key: []string{"vulnerability-detail", "SUSE-SU-2019:0048-2", "suse-cvrf"},
 					Value: types.VulnerabilityDetail{
 						Title:       "Security update for helm-mirror",
 						Description: "This update for helm-mirror to version 0.2.1 fixes the following issues:\n\n\nSecurity issues fixed:\n\n- CVE-2018-16873: Fixed a remote command execution (bsc#1118897)\n- CVE-2018-16874: Fixed a directory traversal in 'go get' via curly braces in import path (bsc#1118898)\n- CVE-2018-16875: Fixed a CPU denial of service (bsc#1118899)\n\nNon-security issue fixed:\n\n- Update to v0.2.1 (bsc#1120762)\n- Include helm-mirror into the containers module (bsc#1116182)\n",
@@ -96,7 +97,8 @@ func TestVulnSrc_Update(t *testing.T) {
 	}
 }
 
-func TestDecodeAdvisory_CSAF(t *testing.T) {
+func TestBuildInput(t *testing.T) {
+	vs := NewVulnSrc(SUSEEnterpriseLinux)
 	data := []byte(`{
   "document": {
     "title": "Security update for helm-mirror",
@@ -111,17 +113,23 @@ func TestDecodeAdvisory_CSAF(t *testing.T) {
     }]
   },
   "vulnerabilities": [{
+    "product_status": {
+      "recommended": ["SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0.2.1-1.7.1.x86_64"]
+    },
     "threats": [{"category": "impact", "details": "important"}]
   }]
 }`)
-	adv, err := parseAdvisory(bytes.NewReader(data))
+	var adv csaf.Advisory
+	require.NoError(t, json.Unmarshal(data, &adv))
+
+	input, err := vs.buildInput(adv)
 	require.NoError(t, err)
-	assert.Equal(t, "SUSE-SU-2019:0048-2", adv.ID)
-	assert.Equal(t, "Security update for helm-mirror", adv.Title)
-	assert.Len(t, adv.ProductTree.Relationships, 1)
-	assert.Equal(t, "helm-mirror-0.2.1-1.7.1.x86_64", adv.ProductTree.Relationships[0].ProductReference)
-	assert.Len(t, adv.Vulnerabilities, 1)
-	assert.Equal(t, "important", adv.Vulnerabilities[0].Threats[0].Severity)
+	assert.Equal(t, "SUSE-SU-2019:0048-2", input.VulnID)
+	assert.Equal(t, "Security update for helm-mirror", input.Vuln.Title)
+	assert.Equal(t, "details", input.Vuln.Description)
+	assert.Equal(t, types.SeverityHigh, input.Vuln.Severity)
+	require.Len(t, input.AffectedPkgs, 1)
+	assert.Equal(t, "helm-mirror", input.AffectedPkgs[0].Package.Name)
 }
 
 func TestVulnSrc_Get(t *testing.T) {
@@ -186,6 +194,8 @@ func TestStripArchSuffix(t *testing.T) {
 		"pkg-1.2.3.aarch64":              "pkg-1.2.3",
 		"pkg-1.0.noarch":                 "pkg-1.0",
 		"pkg-1.0.ia64":                   "pkg-1.0",
+		"pkg-1.0.aarch64_ilp32":          "pkg-1.0",
+		"pkg-1.0.i686":                   "pkg-1.0",
 		"pkg-1.2.3":                      "pkg-1.2.3",
 	}
 	for in, want := range tests {

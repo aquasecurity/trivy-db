@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gocsaf/csaf/v3/csaf"
+	"github.com/samber/lo"
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
 
@@ -39,10 +41,20 @@ var (
 		Name: "SUSE CSAF",
 		URL:  "https://ftp.suse.com/pub/projects/security/csaf/",
 	}
+	// cvrfSource keeps severitySource/primaryURL stable for existing Trivy releases during migration.
+	cvrfSource = types.DataSource{
+		ID:   vulnerability.SuseCVRF,
+		Name: "SUSE CVRF",
+		URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+	}
 )
 
 type PutInput struct {
-	Advisory     Advisory
+	VulnID string
+
+	// Advisory is the CSAF document the other fields were derived from.
+	Advisory csaf.Advisory
+
 	Vuln         types.VulnerabilityDetail
 	AffectedPkgs []AffectedPackage
 }
@@ -94,146 +106,156 @@ func (vs VulnSrc) Update(dir string) error {
 		return eb.Errorf("unknown distribution")
 	}
 
-	var advisories []Advisory
-	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-		adv, err := parseAdvisory(r)
-		if err != nil {
-			return eb.With("file_path", path).Wrapf(err, "json decode error")
+	err := vs.BatchUpdate(func(tx *bolt.Tx) error {
+		return vs.walk(tx, rootDir)
+	})
+	if err != nil {
+		return eb.Wrapf(err, "batch update error")
+	}
+
+	return nil
+}
+
+// walk writes each advisory to the database as soon as it is decoded, so only one
+// CSAF document is held in memory at a time.
+func (vs VulnSrc) walk(tx *bolt.Tx, rootDir string) error {
+	savedDataSources := make(map[string]struct{})
+
+	return utils.FileWalk(rootDir, func(r io.Reader, path string) error {
+		eb := oops.With("file_path", path)
+
+		var adv csaf.Advisory
+		if err := json.NewDecoder(r).Decode(&adv); err != nil {
+			return eb.Wrapf(err, "json decode error")
 		}
-		advisories = append(advisories, adv)
+
+		if err := vs.commit(tx, adv, savedDataSources); err != nil {
+			return eb.Wrapf(err, "commit error")
+		}
 		return nil
 	})
-	if err != nil {
-		return eb.Wrapf(err, "walk error")
-	}
-
-	if err = vs.save(advisories); err != nil {
-		return eb.Wrapf(err, "save error")
-	}
-
-	return nil
 }
 
-func parseAdvisory(r io.Reader) (Advisory, error) {
-	var raw rawAdvisory
-	if err := json.NewDecoder(r).Decode(&raw); err != nil {
-		return Advisory{}, err
-	}
-	if raw.Document.Tracking.ID == "" {
-		return Advisory{}, errors.New("missing tracking id")
+// buildInput extracts the values written to the database from a CSAF document.
+func (vs VulnSrc) buildInput(adv csaf.Advisory) (PutInput, error) {
+	doc := lo.FromPtr(adv.Document)
+	vulnID := string(lo.FromPtr(lo.FromPtr(doc.Tracking).ID))
+	if vulnID == "" {
+		return PutInput{}, errors.New("missing tracking id")
 	}
 
-	adv := Advisory{
-		ID:         raw.Document.Tracking.ID,
-		Title:      raw.Document.Title,
-		References: make([]Reference, 0, len(raw.Document.References)),
-		Notes:      make([]Note, 0, len(raw.Document.Notes)),
-		ProductTree: ProductTree{
-			Relationships: make([]Relationship, 0, len(raw.ProductTree.Relationships)),
+	references := make([]string, 0, len(doc.References))
+	for _, ref := range doc.References {
+		if ref == nil {
+			continue
+		}
+		references = append(references, lo.FromPtr(ref.URL))
+	}
+
+	return PutInput{
+		VulnID:   vulnID,
+		Advisory: adv,
+		Vuln: types.VulnerabilityDetail{
+			References:  references,
+			Title:       lo.FromPtr(doc.Title),
+			Description: description(doc.Notes),
+			Severity:    severityFromAdvisory(&doc, adv.Vulnerabilities),
 		},
-		Vulnerabilities: make([]Vulnerability, 0, len(raw.Vulnerabilities)),
-	}
-
-	for _, n := range raw.Document.Notes {
-		noteType := ""
-		noteTitle := n.Title
-		switch n.Category {
-		case "summary":
-			noteType = "Summary"
-			if noteTitle == "" {
-				noteTitle = "Topic"
-			}
-		case "description":
-			noteType = "General"
-			noteTitle = "Details"
-		default:
-			continue
-		}
-		adv.Notes = append(adv.Notes, Note{
-			Text:  n.Text,
-			Title: noteTitle,
-			Type:  noteType,
-		})
-	}
-
-	for _, ref := range raw.Document.References {
-		adv.References = append(adv.References, Reference(ref))
-	}
-	for _, rel := range raw.ProductTree.Relationships {
-		adv.ProductTree.Relationships = append(adv.ProductTree.Relationships, Relationship(rel))
-	}
-	for _, v := range raw.Vulnerabilities {
-		vuln := Vulnerability{}
-		for _, t := range v.Threats {
-			if t.Category != "impact" {
-				continue
-			}
-			vuln.Threats = append(vuln.Threats, Threat{Severity: t.Details})
-		}
-		adv.Vulnerabilities = append(adv.Vulnerabilities, vuln)
-	}
-
-	return adv, nil
+		AffectedPkgs: vs.getAffectedPackages(
+			lo.FromPtr(lo.FromPtr(adv.ProductTree).RelationShips),
+			adv.Vulnerabilities,
+		),
+	}, nil
 }
 
-func (vs VulnSrc) save(advisories []Advisory) error {
-	err := vs.BatchUpdate(func(tx *bolt.Tx) error {
-		return vs.commit(tx, advisories)
-	})
-	if err != nil {
-		return oops.Wrapf(err, "batch update error")
+// description returns the text of the "description" note, which SUSE uses for the advisory body.
+func description(notes csaf.Notes) string {
+	for _, n := range notes {
+		if n != nil && lo.FromPtr(n.NoteCategory) == csaf.CSAFNoteCategoryDescription {
+			return lo.FromPtr(n.Text)
+		}
 	}
-	return nil
+	return ""
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, advisories []Advisory) error {
-	var savedDataSources = make(map[string]struct{})
-	for _, adv := range advisories {
-		affectedPkgs := vs.getAffectedPackages(adv.ProductTree.Relationships)
-		if len(affectedPkgs) == 0 {
+// severityFromAdvisory prefers per-CVE impact threats and falls back to document.aggregate_severity.
+func severityFromAdvisory(doc *csaf.Document, vulns csaf.Vulnerabilities) types.Severity {
+	if sev := highestImpact(vulns); sev != types.SeverityUnknown {
+		return sev
+	}
+	if doc != nil && doc.AggregateSeverity != nil {
+		return severityFromThreat(lo.FromPtr(doc.AggregateSeverity.Text))
+	}
+	return types.SeverityUnknown
+}
+
+// highestImpact returns the most severe impact rating across all vulnerabilities in the advisory.
+func highestImpact(vulns csaf.Vulnerabilities) types.Severity {
+	severity := types.SeverityUnknown
+	for _, vuln := range vulns {
+		if vuln == nil {
 			continue
 		}
-
-		for _, affectedPkg := range affectedPkgs {
-			if _, ok := savedDataSources[affectedPkg.OSVer]; ok {
+		for _, threat := range vuln.Threats {
+			if threat == nil || lo.FromPtr(threat.Category) != csaf.CSAFThreatCategoryImpact {
 				continue
 			}
-
-			if err := vs.PutDataSource(tx, affectedPkg.OSVer, source); err != nil {
-				return oops.Wrapf(err, "failed to put data source")
+			if sev := severityFromThreat(lo.FromPtr(threat.Details)); severity < sev {
+				severity = sev
 			}
-			savedDataSources[affectedPkg.OSVer] = struct{}{}
 		}
+	}
+	return severity
+}
 
-		var references []string
-		for _, ref := range adv.References {
-			references = append(references, ref.URL)
+func allowedProductIDs(vulns csaf.Vulnerabilities) (map[string]struct{}, bool) {
+	allowed := make(map[string]struct{})
+	hasStatus := false
+	for _, vuln := range vulns {
+		if vuln == nil || vuln.ProductStatus == nil {
+			continue
 		}
-
-		severity := types.SeverityUnknown
-		for _, cvuln := range adv.Vulnerabilities {
-			for _, threat := range cvuln.Threats {
-				sev := severityFromThreat(threat.Severity)
-				if severity < sev {
-					severity = sev
+		for _, products := range []*csaf.Products{vuln.ProductStatus.Fixed, vuln.ProductStatus.Recommended} {
+			if products == nil {
+				continue
+			}
+			hasStatus = true
+			for _, pid := range *products {
+				if pid == nil {
+					continue
 				}
+				allowed[string(*pid)] = struct{}{}
 			}
 		}
+	}
+	return allowed, hasStatus
+}
 
-		input := PutInput{
-			Advisory: adv,
-			Vuln: types.VulnerabilityDetail{
-				References:  references,
-				Title:       adv.Title,
-				Description: getDetail(adv.Notes),
-				Severity:    severity,
-			},
-			AffectedPkgs: affectedPkgs,
+// commit writes a single advisory. savedDataSources is shared across the whole walk so
+// that each OS version's data source is written only once.
+func (vs VulnSrc) commit(tx *bolt.Tx, adv csaf.Advisory, savedDataSources map[string]struct{}) error {
+	input, err := vs.buildInput(adv)
+	if err != nil {
+		return oops.Wrapf(err, "invalid advisory")
+	}
+	if len(input.AffectedPkgs) == 0 {
+		return nil
+	}
+
+	eb := oops.With("tracking_id", input.VulnID)
+	for _, affectedPkg := range input.AffectedPkgs {
+		if _, ok := savedDataSources[affectedPkg.OSVer]; ok {
+			continue
 		}
 
-		if err := vs.Put(tx, input); err != nil {
-			return oops.Wrapf(err, "Put error")
+		if err := vs.PutDataSource(tx, affectedPkg.OSVer, cvrfSource); err != nil {
+			return eb.Wrapf(err, "failed to put data source")
 		}
+		savedDataSources[affectedPkg.OSVer] = struct{}{}
+	}
+
+	if err := vs.Put(tx, input); err != nil {
+		return eb.Wrapf(err, "Put error")
 	}
 	return nil
 }
@@ -244,35 +266,57 @@ func (vs *Suse) Put(tx *bolt.Tx, input PutInput) error {
 			FixedVersion: affectedPkg.Package.FixedVersion,
 		}
 
-		if err := vs.PutAdvisoryDetail(tx, input.Advisory.ID, affectedPkg.Package.Name,
+		if err := vs.PutAdvisoryDetail(tx, input.VulnID, affectedPkg.Package.Name,
 			[]string{affectedPkg.OSVer}, advisory); err != nil {
 			return oops.Wrapf(err, "unable to save CSAF advisory")
 		}
 	}
 
-	if err := vs.PutVulnerabilityDetail(tx, input.Advisory.ID, source.ID, input.Vuln); err != nil {
-		return oops.With("tracking_id", input.Advisory.ID).Wrapf(err, "failed to save SUSE CSAF vulnerability")
+	if err := vs.PutVulnerabilityDetail(tx, input.VulnID, cvrfSource.ID, input.Vuln); err != nil {
+		return oops.With("tracking_id", input.VulnID).Wrapf(err, "failed to save SUSE CSAF vulnerability")
 	}
 
-	if err := vs.PutVulnerabilityID(tx, input.Advisory.ID); err != nil {
-		return oops.With("tracking_id", input.Advisory.ID).Wrapf(err, "failed to save the vulnerability ID")
+	if err := vs.PutVulnerabilityID(tx, input.VulnID); err != nil {
+		return oops.With("tracking_id", input.VulnID).Wrapf(err, "failed to save the vulnerability ID")
 	}
 	return nil
 }
 
-func (vs VulnSrc) getAffectedPackages(relationships []Relationship) []AffectedPackage {
+func (vs VulnSrc) getAffectedPackages(relationships csaf.Relationships, vulns csaf.Vulnerabilities) []AffectedPackage {
+	allowed, filter := allowedProductIDs(vulns)
+	seen := make(map[string]struct{})
 	var pkgs []AffectedPackage
+
 	for _, relationship := range relationships {
-		osVer := vs.getOSVersion(relationship.RelatesToProductReference)
+		if relationship == nil {
+			continue
+		}
+
+		platform := string(lo.FromPtr(relationship.RelatesToProductReference))
+		productRef := string(lo.FromPtr(relationship.ProductReference))
+		if filter {
+			productID := platform + ":" + productRef
+			if _, ok := allowed[productID]; !ok {
+				continue
+			}
+		}
+
+		osVer := vs.getOSVersion(platform)
 		if osVer == "" {
 			continue
 		}
 
-		pkg := getPackage(stripArchSuffix(relationship.ProductReference))
+		pkg := getPackage(stripArchSuffix(productRef))
 		if pkg == nil {
-			vs.logger.Warn("Invalid package name", log.String("reference", relationship.ProductReference))
+			vs.logger.Warn("Invalid package name", log.String("reference", productRef))
 			continue
 		}
+
+		key := osVer + "\x00" + pkg.Name + "\x00" + pkg.FixedVersion
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
 
 		pkgs = append(pkgs, AffectedPackage{
 			OSVer:   osVer,
@@ -378,15 +422,6 @@ func (vs VulnSrc) getOSVersion(platformName string) string {
 	return ""
 }
 
-func getDetail(notes []Note) string {
-	for _, n := range notes {
-		if n.Type == "General" && n.Title == "Details" {
-			return n.Text
-		}
-	}
-	return ""
-}
-
 func getPackage(packVer string) *Package {
 	name, ver := splitPkgName(packVer)
 	if name == "" {
@@ -421,8 +456,8 @@ func splitPkgName(pkgName string) (string, string) {
 
 func stripArchSuffix(ref string) string {
 	archSuffixes := []string{
-		".aarch64", ".x86_64", ".ppc64le", ".s390x", ".i586", ".ia64",
-		".riscv64", ".armv7hl", ".armv7l", ".ppc64", ".arm64", ".noarch",
+		".aarch64_ilp32", ".x86_64", ".aarch64", ".ppc64le", ".s390x", ".i586", ".ia64",
+		".riscv64", ".armv7hl", ".armv7l", ".ppc64", ".arm64", ".noarch", ".i686", ".ppc", ".s390",
 	}
 	for _, sfx := range archSuffixes {
 		if strings.HasSuffix(ref, sfx) {
