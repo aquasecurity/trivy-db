@@ -1,0 +1,154 @@
+{
+  "npm": [
+    {
+      "distroversion": "",
+      "packages": [
+        {
+          "pkg": {
+            "name": "react",
+            "cves": {
+              "CVE-2024-REACT-001": {
+                "vulnerable_ranges": ["<18.2.0"],
+                "fixed_versions": ["18.2.0+root.io.1"]
+              },
+              "CVE-2024-REACT-002": {
+                "vulnerable_ranges": ["<18.3.0"],
+                "fixed_versions": ["18.3.0+root.io.2"]
+              }
+            }
+          }
+        },
+        {
+          "pkg": {
+            "name": "lodash",
+            "cves": {
+              "CVE-2024-LODASH-001": {
+                "vulnerable_ranges": ["<4.17.21"],
+                "fixed_versions": ["4.17.21+root.io.1"]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "pip": [
+    {
+      "distroversion": "",
+      "packages": [
+        {
+          "pkg": {
+            "name": "django",
+            "cves": {
+              "CVE-2024-DJANGO-001": {
+                "vulnerable_ranges": ["<4.2.0"],
+                "fixed_versions": ["4.2.0+root.io.1"]
+              }
+            }
+          }
+        },
+        {
+          "pkg": {
+            "name": "flask",
+            "cves": {
+              "CVE-2024-FLASK-001": {
+                "vulnerable_ranges": ["<2.3.0"],
+                "fixed_versions": ["2.3.0+root.io.1"]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "maven": [
+    {
+      "distroversion": "",
+      "packages": [
+        {
+          "pkg": {
+            "name": "org.springframework:spring-core",
+            "cves": {
+              "CVE-2024-SPRING-001": {
+                "vulnerable_ranges": ["<6.0.0"],
+                "fixed_versions": ["6.0.0+root.io.1"]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "go": [
+    {
+      "distroversion": "",
+      "packages": [
+        {
+          "pkg": {
+            "name": "github.com/gin-gonic/gin",
+            "cves": {
+              "CVE-2024-GIN-001": {
+                "vulnerable_ranges": ["<1.9.0"],
+                "fixed_versions": ["1.9.0+root.io.1"]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "rubygems": [
+    {
+      "distroversion": "",
+      "packages": [
+        {
+          "pkg": {
+            "name": "rails",
+            "cves": {
+              "CVE-2024-RAILS-001": {
+                "vulnerable_ranges": ["<7.0.0"],
+                "fixed_versions": ["7.0.0+root.io.1"]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "nuget": [
+    {
+      "distroversion": "",
+      "packages": [
+        {
+          "pkg": {
+            "name": "Newtonsoft.Json",
+            "cves": {
+              "CVE-2024-NEWTONSOFT-001": {
+                "vulnerable_ranges": ["<13.0.3"],
+                "fixed_versions": ["13.0.3+root.io.1"]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "cargo": [
+    {
+      "distroversion": "",
+      "packages": [
+        {
+          "pkg": {
+            "name": "tokio",
+            "cves": {
+              "CVE-2024-TOKIO-001": {
+                "vulnerable_ranges": ["<1.32.0"],
+                "fixed_versions": ["1.32.0+root.io.1"]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

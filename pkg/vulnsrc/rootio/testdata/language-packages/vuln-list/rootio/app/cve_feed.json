@@ -1,0 +1,56 @@
+{
+  "pip": [
+    {
+      "distroversion": "",
+      "packages": [
+        {
+          "pkg": {
+            "name": "django",
+            "cves": {
+              "CVE-2024-1234": {
+                "vulnerable_ranges": ["<4.0.2"],
+                "fixed_versions": ["4.0.2+root.io.1"]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "npm": [
+    {
+      "distroversion": "",
+      "packages": [
+        {
+          "pkg": {
+            "name": "express",
+            "cves": {
+              "CVE-2024-5678": {
+                "vulnerable_ranges": ["<4.18.0"],
+                "fixed_versions": ["4.18.0+root.io.2"]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "rubygems": [
+    {
+      "distroversion": "",
+      "packages": [
+        {
+          "pkg": {
+            "name": "rails",
+            "cves": {
+              "CVE-2024-RAILS": {
+                "vulnerable_ranges": ["<7.0.0"],
+                "fixed_versions": ["7.0.0+root.io.3"]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
