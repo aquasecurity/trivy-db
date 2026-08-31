@@ -53,12 +53,18 @@ type Advisory struct {
 type BucketResolver func(ecosystem string) (bucket.Bucket, error)
 
 type OSV struct {
-	dir             string
-	dbc             db.Operation
-	sourceID        types.SourceID
-	dataSources     map[ecosystem.Type]types.DataSource
-	transformer     Transformer
-	bucketResolvers map[string]BucketResolver
+	dir              string
+	dbc              db.Operation
+	sourceID         types.SourceID
+	dataSources      map[ecosystem.Type]types.DataSource
+	transformer      Transformer
+	bucketResolvers  map[string]BucketResolver
+	entryIDAsPrimary bool
+}
+
+// WithEntryIDAsPrimary preserves the OSV record ID instead of promoting a CVE alias.
+func WithEntryIDAsPrimary() func(*OSV) {
+	return func(o *OSV) { o.entryIDAsPrimary = true }
 }
 
 type Transformer interface {
@@ -164,7 +170,12 @@ func (o OSV) commit(tx *bolt.Tx, entry Entry) error {
 	// Upstream IDs are also considered as aliases
 	entryAliases := lo.Uniq(append(entry.Aliases, entry.Upstream...))
 	// Group IDs into primary vulnerability IDs and aliases.
-	vulnIDs, aliases := groupVulnIDs(entry.ID, entryAliases)
+	var vulnIDs, aliases []string
+	if o.entryIDAsPrimary {
+		vulnIDs, aliases = []string{entry.ID}, entryAliases
+	} else {
+		vulnIDs, aliases = groupVulnIDs(entry.ID, entryAliases)
+	}
 
 	references := lo.Map(entry.References, func(ref Reference, _ int) string {
 		return ref.URL
