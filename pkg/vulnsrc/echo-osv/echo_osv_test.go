@@ -75,11 +75,65 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: map[string]any{},
 				},
+				// An entry without a CVE is keyed by its upstream GHSA
+				// instead of being dropped.
+				{
+					Key: []string{
+						"advisory-detail",
+						"GHSA-1234-5678-9abc",
+						"echo pip::Echo OSV",
+						"gitpython",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"ECHO-2024-4321",
+						},
+						PatchedVersions:    []string{"3.1.57"},
+						VulnerableVersions: []string{">=3.1.0, <3.1.57"},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"GHSA-1234-5678-9abc",
+						string(vulnerability.EchoOSV),
+					},
+					Value: types.VulnerabilityDetail{
+						Title:       "Vulnerability with a GHSA but no CVE",
+						Description: "This entry has no CVE, so it is keyed by its upstream GHSA rather than dropped.",
+						References: []string{
+							"https://github.com/advisories/GHSA-1234-5678-9abc",
+						},
+						LastModifiedDate: utils.MustTimeParse("2024-12-10T09:00:00Z"),
+						PublishedDate:    utils.MustTimeParse("2024-12-01T08:00:00Z"),
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"GHSA-1234-5678-9abc",
+					},
+					Value: map[string]any{},
+				},
 			},
 			noBuckets: [][]string{
 				{
 					"advisory-detail",
 					"ECHO-2024-5678",
+				},
+				// The GHSA-keyed entry must not also be stored under its
+				// opaque ECHO ID.
+				{
+					"advisory-detail",
+					"ECHO-2024-4321",
+				},
+				{
+					"vulnerability-detail",
+					"ECHO-2024-4321",
+				},
+				{
+					"vulnerability-id",
+					"ECHO-2024-4321",
 				},
 				{
 					"vulnerability-detail",

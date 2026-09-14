@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.4.0",
+  "id": "ECHO-2024-4321",
+  "modified": "2024-12-10T09:00:00Z",
+  "published": "2024-12-01T08:00:00Z",
+  "upstream": [
+    "GHSA-1234-5678-9abc"
+  ],
+  "summary": "Vulnerability with a GHSA but no CVE",
+  "details": "This entry has no CVE, so it is keyed by its upstream GHSA rather than dropped.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Echo:PyPI",
+        "name": "gitpython",
+        "purl": "pkg:pypi/gitpython"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.1.0"
+            },
+            {
+              "fixed": "3.1.57"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/advisories/GHSA-1234-5678-9abc"
+    }
+  ]
+}

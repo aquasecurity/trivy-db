@@ -3,12 +3,12 @@
   "id": "ECHO-2024-5678",
   "modified": "2024-11-01T10:00:00Z",
   "published": "2024-10-01T08:00:00Z",
-  "summary": "Vulnerability without CVE alias",
-  "details": "This entry has no CVE alias and should be filtered out.",
+  "summary": "Vulnerability without CVE or GHSA",
+  "details": "This entry has neither a CVE nor an upstream GHSA, so it has no ID to be keyed by and should be dropped.",
   "affected": [
     {
       "package": {
-        "ecosystem": "Echo:PyPi",
+        "ecosystem": "Echo:PyPI",
         "name": "flask",
         "purl": "pkg:pypi/flask"
       },

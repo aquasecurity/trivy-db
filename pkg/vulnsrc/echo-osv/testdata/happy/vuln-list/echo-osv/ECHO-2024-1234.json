@@ -17,7 +17,7 @@
   "affected": [
     {
       "package": {
-        "ecosystem": "Echo:PyPi",
+        "ecosystem": "Echo:PyPI",
         "name": "requests",
         "purl": "pkg:pypi/requests"
       },

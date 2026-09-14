@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/samber/lo"
 	"github.com/samber/oops"
 
 	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
@@ -48,36 +49,49 @@ func (VulnSrc) Update(root string) error {
 }
 
 // resolveEcho dispatches Echo OSV ecosystems to the matching bucket.
-// The Echo OSV feed namespaces every entry under "Echo:*" (e.g. "Echo:PyPi"),
-// plus plain "Echo" for OS packages. resolveBucket lowercases and splits on ':',
-// so this is invoked with eco="echo" and the original suffix.
+// The Echo OSV feed namespaces language entries under "Echo:*" (e.g.
+// "Echo:PyPI"). resolveBucket lowercases and splits on ':', so this is
+// invoked with eco="echo" and the lowercased suffix.
 func resolveEcho(suffix string) (bucket.Bucket, error) {
 	switch suffix {
 	case "pypi":
 		return newPipBucket(source)
 	default:
-		// Plain "Echo" entries are OS packages and are handled by the
-		// existing `echo` source from vuln-list/echo/. Skip them here so
-		// we don't double-store them under a language bucket.
+		// Only PyPI is wired up for now; the OSV parser skips ecosystems we
+		// don't resolve. OS package advisories (plain "Echo") are filtered
+		// out in vuln-list-update, so they normally never reach this point.
 		return nil, oops.Errorf("unsupported Echo ecosystem suffix: %q", suffix)
 	}
 }
 
-// transformer filters out advisories that didn't resolve to a CVE ID.
-// The Echo OSV feed contains both ECHO-ID and CVE-ID entries for the same
-// vulnerability; keeping only CVE-keyed advisories avoids duplicates.
+// transformer re-keys advisories that didn't resolve to a CVE ID.
+// Every Echo OSV entry is keyed by an opaque ECHO ID and records the
+// authoritative IDs in `upstream`. The OSV parser promotes an upstream CVE to
+// the vulnerability ID, but when there is no CVE the advisory keeps its ECHO
+// ID, which nothing matches on. Fall back to the upstream GHSA in that case,
+// and drop entries that have neither.
 type transformer struct{}
 
 func (t *transformer) PostParseAffected(adv osv.Advisory, _ osv.Affected) (osv.Advisory, error) {
 	return adv, nil
 }
 
-func (t *transformer) TransformAdvisories(advisories []osv.Advisory, _ osv.Entry) ([]osv.Advisory, error) {
+func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.Entry) ([]osv.Advisory, error) {
 	var filtered []osv.Advisory
 	for _, adv := range advisories {
-		if strings.HasPrefix(adv.VulnerabilityID, "CVE-") {
-			filtered = append(filtered, adv)
+		if !strings.HasPrefix(adv.VulnerabilityID, "CVE-") {
+			ghsaID, ok := lo.Find(adv.Upstream, func(id string) bool {
+				return strings.HasPrefix(id, "GHSA-")
+			})
+			if !ok {
+				continue
+			}
+			// Key the advisory by the GHSA and keep the ECHO ID as a vendor
+			// ID, mirroring how CVE-keyed entries are stored.
+			adv.VulnerabilityID = ghsaID
+			adv.Aliases = lo.Uniq(append(lo.Without(adv.Aliases, ghsaID), entry.ID))
 		}
+		filtered = append(filtered, adv)
 	}
 	return filtered, nil
 }
