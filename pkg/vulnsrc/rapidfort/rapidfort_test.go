@@ -306,9 +306,10 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: map[string]any{},
 				},
-				// The oracle feed splits the same way the redhat one does: elN
-				// to the versioned Oracle buckets, fcNN to the shared fedora
-				// buckets asserted above, and rf to an Oracle-scoped bucket.
+				// Oracle tags its releases "elN" like the RHEL it rebuilds, so its
+				// feed splits the same way the redhat one does: elN to the versioned
+				// Oracle buckets, fcNN to the shared fedora buckets asserted above,
+				// and rf to an Oracle-scoped bucket.
 				{
 					Key: []string{
 						"data-source",
@@ -391,6 +392,312 @@ func TestVulnSrc_Update(t *testing.T) {
 						VulnerableVersions: []string{">=7.76.1-14.rf, <7.76.1-27.rf"},
 						Severity:           types.SeverityMedium,
 					},
+				},
+				// Alma tags its releases "elN" like the RHEL it rebuilds, so the
+				// dist tag names the release while the feed's directory still names
+				// the distribution.
+				{
+					Key: []string{
+						"data-source",
+						"rapidfort alma 9",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "alma",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-38546",
+						"rapidfort alma 9",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"7.76.1-29.el9_3.2"},
+						VulnerableVersions: []string{">=7.76.1-26.el9, <7.76.1-29.el9_3.2"},
+						Severity:           types.SeverityLow,
+					},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"rapidfort alma",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "alma",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-38546",
+						"rapidfort alma",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"7.76.1-29.rf"},
+						VulnerableVersions: []string{">=7.76.1-26.rf, <7.76.1-29.rf"},
+						Severity:           types.SeverityLow,
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2023-38546",
+						"rapidfort",
+					},
+					Value: types.VulnerabilityDetail{
+						Title:       "curl: cookie injection with none file",
+						Description: "libcurl can be tricked into injecting cookies into a running program when an application creates a new easy handle by duplicating an existing one.",
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2023-38546",
+					},
+					Value: map[string]any{},
+				},
+				// Rocky routes the same way alma does, from its own feed
+				// directory and under a different RHEL major.
+				{
+					Key: []string{
+						"data-source",
+						"rapidfort rocky 8",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "rocky",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2024-2398",
+						"rapidfort rocky 8",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"7.61.1-34.el8_9.3"},
+						VulnerableVersions: []string{">=7.61.1-30.el8, <7.61.1-34.el8_9.3"},
+						Severity:           types.SeverityMedium,
+					},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"rapidfort rocky",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "rocky",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2024-2398",
+						"rapidfort rocky",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"7.61.1-34.rf"},
+						VulnerableVersions: []string{">=7.61.1-30.rf, <7.61.1-34.rf"},
+						Severity:           types.SeverityMedium,
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2024-2398",
+						"rapidfort",
+					},
+					Value: types.VulnerabilityDetail{
+						Title:       "curl: HTTP/2 push headers memory leak",
+						Description: "When an application tells libcurl it wants to allow HTTP/2 server push, the amount of received headers for the push can exhaust memory.",
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2024-2398",
+					},
+					Value: map[string]any{},
+				},
+				// Amazon Linux tags its releases "amzn2"/"amzn2023" rather than
+				// elN, and the feed lists each under its own version key.
+				{
+					Key: []string{
+						"data-source",
+						"rapidfort amazon linux 2",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "amazon",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-46218",
+						"rapidfort amazon linux 2",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"8.3.0-1.amzn2.0.2"},
+						VulnerableVersions: []string{">=7.61.1-22.amzn2, <8.3.0-1.amzn2.0.2"},
+						Severity:           types.SeverityMedium,
+					},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"rapidfort amazon linux 2023",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "amazon",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-46218",
+						"rapidfort amazon linux 2023",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"8.5.0-1.amzn2023"},
+						VulnerableVersions: []string{">=8.4.0-1.amzn2023, <8.5.0-1.amzn2023"},
+						Severity:           types.SeverityMedium,
+					},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"rapidfort amazon linux",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "amazon",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-46218",
+						"rapidfort amazon linux",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"8.5.0-1.rf"},
+						VulnerableVersions: []string{">=8.4.0-1.rf, <8.5.0-1.rf"},
+						Severity:           types.SeverityMedium,
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2023-46218",
+						"rapidfort",
+					},
+					Value: types.VulnerabilityDetail{
+						Title:       "curl: information disclosure by exploiting a mixed case flaw",
+						Description: "A malicious HTTP server can set \"super cookies\" that are passed back to more origins than what is otherwise allowed or possible.",
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2023-46218",
+					},
+					Value: map[string]any{},
+				},
+				// The debian feed is dpkg like ubuntu: its own packages are
+				// tagged by ecosystem name, its rebuilds by "rf".
+				{
+					Key: []string{
+						"data-source",
+						"rapidfort debian 12",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "debian",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-38545",
+						"rapidfort debian 12",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"7.88.1-10+deb12u5"},
+						VulnerableVersions: []string{">=7.88.1-10, <7.88.1-10+deb12u5"},
+						Severity:           types.SeverityHigh,
+					},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"rapidfort debian",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "debian",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-38545",
+						"rapidfort debian",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"7.88.1-12.rf1"},
+						VulnerableVersions: []string{">=7.88.1-10.rf1, <7.88.1-12.rf1"},
+						Severity:           types.SeverityHigh,
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2023-38545",
+						"rapidfort",
+					},
+					Value: types.VulnerabilityDetail{
+						Title:       "curl: SOCKS5 heap buffer overflow",
+						Description: "curl overflows a heap based buffer in the SOCKS5 proxy handshake when the hostname is longer than 255 bytes.",
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2023-38545",
+					},
+					Value: map[string]any{},
 				},
 			},
 			noBuckets: [][]string{

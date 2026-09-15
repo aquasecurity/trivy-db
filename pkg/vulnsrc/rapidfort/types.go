@@ -21,7 +21,5 @@ type CVEEntry struct {
 type Event struct {
 	Introduced string `json:"introduced,omitempty"`
 	Fixed      string `json:"fixed,omitempty"`
-	// Identifier names the distribution a range targets; see resolveBucket for
-	// the values each feed uses and how an untagged range is attributed.
 	Identifier string `json:"identifier,omitempty"`
 }
