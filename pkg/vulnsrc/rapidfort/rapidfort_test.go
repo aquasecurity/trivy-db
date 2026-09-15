@@ -1197,6 +1197,225 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 		},
 		{
+			name:    "alma advisory found",
+			baseOS:  ecosystem.AlmaLinux,
+			osVer:   "9",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-38546",
+					VulnerableVersions: []string{">=7.76.1-26.el9, <7.76.1-29.el9_3.2"},
+					PatchedVersions:    []string{"7.76.1-29.el9_3.2"},
+					Severity:           types.SeverityLow,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "alma",
+					},
+				},
+			},
+		},
+		{
+			name:    "rocky advisory found",
+			baseOS:  ecosystem.Rocky,
+			osVer:   "8",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2024-2398",
+					VulnerableVersions: []string{">=7.61.1-30.el8, <7.61.1-34.el8_9.3"},
+					PatchedVersions:    []string{"7.61.1-34.el8_9.3"},
+					Severity:           types.SeverityMedium,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "rocky",
+					},
+				},
+			},
+		},
+		{
+			name:    "amazon linux 2 advisory found",
+			baseOS:  ecosystem.AmazonLinux,
+			osVer:   "2",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-46218",
+					VulnerableVersions: []string{">=7.61.1-22.amzn2, <8.3.0-1.amzn2.0.2"},
+					PatchedVersions:    []string{"8.3.0-1.amzn2.0.2"},
+					Severity:           types.SeverityMedium,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "amazon",
+					},
+				},
+			},
+		},
+		{
+			name:    "amazon linux 2023 advisory found",
+			baseOS:  ecosystem.AmazonLinux,
+			osVer:   "2023",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-46218",
+					VulnerableVersions: []string{">=8.4.0-1.amzn2023, <8.5.0-1.amzn2023"},
+					PatchedVersions:    []string{"8.5.0-1.amzn2023"},
+					Severity:           types.SeverityMedium,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "amazon",
+					},
+				},
+			},
+		},
+		{
+			name:    "debian advisory found",
+			baseOS:  ecosystem.Debian,
+			osVer:   "12",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-38545",
+					VulnerableVersions: []string{">=7.88.1-10, <7.88.1-10+deb12u5"},
+					PatchedVersions:    []string{"7.88.1-10+deb12u5"},
+					Severity:           types.SeverityHigh,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "debian",
+					},
+				},
+			},
+		},
+		{
+			// Each distro's rebuild bucket holds a fixed version unique to it, so
+			// the version returned shows which "rapidfort <distro>" bucket the
+			// empty release selected.
+			name:    "alma rf advisory found",
+			baseOS:  ecosystem.AlmaLinux,
+			osVer:   "",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-38546",
+					VulnerableVersions: []string{">=7.76.1-26.rf, <7.76.1-29.rf"},
+					PatchedVersions:    []string{"7.76.1-29.rf"},
+					Severity:           types.SeverityLow,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "alma",
+					},
+				},
+			},
+		},
+		{
+			name:    "rocky rf advisory found",
+			baseOS:  ecosystem.Rocky,
+			osVer:   "",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2024-2398",
+					VulnerableVersions: []string{">=7.61.1-30.rf, <7.61.1-34.rf"},
+					PatchedVersions:    []string{"7.61.1-34.rf"},
+					Severity:           types.SeverityMedium,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "rocky",
+					},
+				},
+			},
+		},
+		{
+			name:    "amazon rf advisory found",
+			baseOS:  ecosystem.AmazonLinux,
+			osVer:   "",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-46218",
+					VulnerableVersions: []string{">=8.4.0-1.rf, <8.5.0-1.rf"},
+					PatchedVersions:    []string{"8.5.0-1.rf"},
+					Severity:           types.SeverityMedium,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "amazon",
+					},
+				},
+			},
+		},
+		{
+			name:    "debian rf advisory found",
+			baseOS:  ecosystem.Debian,
+			osVer:   "",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-38545",
+					VulnerableVersions: []string{">=7.88.1-10.rf1, <7.88.1-12.rf1"},
+					PatchedVersions:    []string{"7.88.1-12.rf1"},
+					Severity:           types.SeverityHigh,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "debian",
+					},
+				},
+			},
+		},
+		{
 			name:    "no advisory for package",
 			baseOS:  ecosystem.Ubuntu,
 			osVer:   "22.04",

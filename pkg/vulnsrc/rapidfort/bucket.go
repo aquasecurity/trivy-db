@@ -18,6 +18,10 @@ type rapidFortBucket struct {
 }
 
 func (r rapidFortBucket) Name() string {
+	// bucket.NewOracle/NewAmazon append " "+version unconditionally, so at an
+	// empty version they return "Oracle Linux " with a trailing space while the
+	// other constructors return a bare name. Trim it so every distro spells its
+	// version-less rebuild bucket the same way.
 	return strings.TrimRight("rapidfort "+r.base.Name(), " ")
 }
 

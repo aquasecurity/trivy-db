@@ -57,3 +57,57 @@
         Name: RapidFort Security Advisories
         URL: https://github.com/rapidfort/security-advisories
         BaseID: oracle-oval
+    - key: rapidfort alma 9
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: alma
+    - key: rapidfort alma
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: alma
+    - key: rapidfort rocky 8
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: rocky
+    - key: rapidfort rocky
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: rocky
+    - key: rapidfort amazon linux 2
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: amazon
+    - key: rapidfort amazon linux 2023
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: amazon
+    - key: rapidfort amazon linux
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: amazon
+    - key: rapidfort debian 12
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: debian
+    - key: rapidfort debian
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: debian

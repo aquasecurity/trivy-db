@@ -82,3 +82,104 @@
             PatchedVersions:
               - "7.76.1-27.rf"
             Severity: 2
+- bucket: rapidfort alma 9
+  pairs:
+    - bucket: curl
+      pairs:
+        - key: CVE-2023-38546
+          value:
+            VulnerableVersions:
+              - ">=7.76.1-26.el9, <7.76.1-29.el9_3.2"
+            PatchedVersions:
+              - "7.76.1-29.el9_3.2"
+            Severity: 1
+- bucket: rapidfort rocky 8
+  pairs:
+    - bucket: curl
+      pairs:
+        - key: CVE-2024-2398
+          value:
+            VulnerableVersions:
+              - ">=7.61.1-30.el8, <7.61.1-34.el8_9.3"
+            PatchedVersions:
+              - "7.61.1-34.el8_9.3"
+            Severity: 2
+- bucket: rapidfort amazon linux 2
+  pairs:
+    - bucket: curl
+      pairs:
+        - key: CVE-2023-46218
+          value:
+            VulnerableVersions:
+              - ">=7.61.1-22.amzn2, <8.3.0-1.amzn2.0.2"
+            PatchedVersions:
+              - "8.3.0-1.amzn2.0.2"
+            Severity: 2
+- bucket: rapidfort amazon linux 2023
+  pairs:
+    - bucket: curl
+      pairs:
+        - key: CVE-2023-46218
+          value:
+            VulnerableVersions:
+              - ">=8.4.0-1.amzn2023, <8.5.0-1.amzn2023"
+            PatchedVersions:
+              - "8.5.0-1.amzn2023"
+            Severity: 2
+- bucket: rapidfort debian 12
+  pairs:
+    - bucket: curl
+      pairs:
+        - key: CVE-2023-38545
+          value:
+            VulnerableVersions:
+              - ">=7.88.1-10, <7.88.1-10+deb12u5"
+            PatchedVersions:
+              - "7.88.1-10+deb12u5"
+            Severity: 3
+# Every rebuild bucket below holds a fixed version unique to its distro, so a
+# lookup that lands in the wrong "rapidfort <distro>" bucket is visible.
+- bucket: rapidfort alma
+  pairs:
+    - bucket: curl
+      pairs:
+        - key: CVE-2023-38546
+          value:
+            VulnerableVersions:
+              - ">=7.76.1-26.rf, <7.76.1-29.rf"
+            PatchedVersions:
+              - "7.76.1-29.rf"
+            Severity: 1
+- bucket: rapidfort rocky
+  pairs:
+    - bucket: curl
+      pairs:
+        - key: CVE-2024-2398
+          value:
+            VulnerableVersions:
+              - ">=7.61.1-30.rf, <7.61.1-34.rf"
+            PatchedVersions:
+              - "7.61.1-34.rf"
+            Severity: 2
+- bucket: rapidfort amazon linux
+  pairs:
+    - bucket: curl
+      pairs:
+        - key: CVE-2023-46218
+          value:
+            VulnerableVersions:
+              - ">=8.4.0-1.rf, <8.5.0-1.rf"
+            PatchedVersions:
+              - "8.5.0-1.rf"
+            Severity: 2
+- bucket: rapidfort debian
+  pairs:
+    - bucket: curl
+      pairs:
+        - key: CVE-2023-38545
+          value:
+            VulnerableVersions:
+              - ">=7.88.1-10.rf1, <7.88.1-12.rf1"
+            PatchedVersions:
+              - "7.88.1-12.rf1"
+            Severity: 3
