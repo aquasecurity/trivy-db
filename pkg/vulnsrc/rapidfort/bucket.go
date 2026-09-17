@@ -1,6 +1,8 @@
 package rapidfort
 
 import (
+	"strings"
+
 	"github.com/samber/oops"
 
 	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
@@ -16,7 +18,10 @@ type rapidFortBucket struct {
 }
 
 func (r rapidFortBucket) Name() string {
-	return "rapidfort " + r.base.Name()
+	// Some base buckets append the version unconditionally, so a version-less
+	// rebuild comes back with a trailing space ("Oracle Linux "). Trim it so
+	// every distro spells its rebuild bucket the same way.
+	return strings.TrimRight("rapidfort "+r.base.Name(), " ")
 }
 
 func (r rapidFortBucket) Ecosystem() ecosystem.Type {
@@ -34,10 +39,20 @@ func newBucket(baseEcosystem ecosystem.Type, version string) (bucket.DataSourceB
 	switch baseEcosystem {
 	case ecosystem.Ubuntu:
 		base, ds.BaseID = bucket.NewUbuntu(version), vulnerability.Ubuntu
+	case ecosystem.Debian:
+		base, ds.BaseID = bucket.NewDebian(version), vulnerability.Debian
 	case ecosystem.Alpine:
 		base, ds.BaseID = bucket.NewAlpine(version), vulnerability.Alpine
 	case ecosystem.RedHat:
 		base, ds.BaseID = bucket.NewRedHat(version), vulnerability.RedHat
+	case ecosystem.OracleLinux:
+		base, ds.BaseID = bucket.NewOracle(version), vulnerability.OracleOVAL
+	case ecosystem.Rocky:
+		base, ds.BaseID = bucket.NewRocky(version), vulnerability.Rocky
+	case ecosystem.AlmaLinux:
+		base, ds.BaseID = bucket.NewAlma(version), vulnerability.Alma
+	case ecosystem.AmazonLinux:
+		base, ds.BaseID = bucket.NewAmazon(version), vulnerability.Amazon
 	case ecosystem.Fedora:
 		base, ds.BaseID = bucket.NewFedora(version), vulnerability.Fedora
 	default:
