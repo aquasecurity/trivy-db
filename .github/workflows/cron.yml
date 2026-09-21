@@ -50,6 +50,12 @@ jobs:
         run: make build
 
       - name: Build database
+        env:
+          # By default the GC lets the heap grow to twice the live data. The peak
+          # live heap is ~7GB, so the goal reaches ~14GB and the build is OOM-killed
+          # on the 16GB runner, which has no swap. The limit is soft: exceeding it
+          # makes the GC work harder rather than fail.
+          GOMEMLIMIT: 10GiB
         run: make db-build
 
       - name: Compact DB
