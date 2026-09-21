@@ -214,3 +214,18 @@ func TestParser_DetectStatus(t *testing.T) {
 		})
 	}
 }
+
+func TestParser_Description(t *testing.T) {
+	parser := NewParser()
+	require.NoError(t, parser.Parse(filepath.Join("testdata", "vuln-list-redhat")))
+
+	assert.Equal(t,
+		"A vulnerability was found in PAM. The secret information is stored in memory, where the attacker can trigger the victim program to execute.",
+		parser.Description("RHSA-2024:9941"),
+	)
+	// RHSA-2024:9999 is fixed by multiple CVEs; keep the description from the first document processed.
+	assert.Equal(t, "Description from CVE-2024-11111 (stored for RHSA-2024:9999)", parser.Description("RHSA-2024:9999"))
+	assert.Equal(t, "Description from CVE-2024-11111 (stored for RHSA-2024:9999)", parser.Description("CVE-2024-11111"))
+	assert.Equal(t, "Description from CVE-2024-22222 (not stored for RHSA-2024:9999)", parser.Description("CVE-2024-22222"))
+	assert.Empty(t, parser.Description("CVE-NONEXISTENT"))
+}

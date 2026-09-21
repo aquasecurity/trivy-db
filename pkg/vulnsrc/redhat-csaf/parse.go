@@ -35,6 +35,8 @@ type Parser struct {
 	// releaseDates holds the vendor_fix remediation timestamp per RHSA ID.
 	// CVE-only (unpatched) entries are not stored here.
 	releaseDates map[VulnerabilityID]time.Time
+	// descriptions holds vulnerability description from notes[category=description].
+	descriptions map[VulnerabilityID]string
 }
 
 func NewParser() Parser {
@@ -51,6 +53,7 @@ func NewParser() Parser {
 		advisories:   map[Package]map[VulnerabilityID]RawEntries{},
 		cpeSet:       set.NewOrdered[string](),
 		releaseDates: map[VulnerabilityID]time.Time{},
+		descriptions: map[VulnerabilityID]string{},
 	}
 }
 
@@ -201,163 +204,177 @@ func (p *Parser) parseVulnerability(adv CSAFAdvisory, vuln *csaf.Vulnerability) 
 		return nil
 	}
 
-	// Extract severities from Threats
 	severities := p.parseThreats(vuln.Threats)
 
 	cveID := VulnerabilityID(lo.FromPtr(vuln.CVE))
 	if cveID == "" {
 		return oops.Errorf("empty CVE ID")
 	}
-	eb := oops.With("cve_id", cveID)
+	desc := parseDescriptionNotes(vuln.Notes)
 
-	// Process remediations
 	// cf. https://redhatproductsecurity.github.io/security-data-guidelines/csaf-vex/#remediations
 	for _, remediation := range vuln.Remediations {
-		if remediation == nil {
-			continue
-		}
-
-		status := p.detectStatus(remediation)
-		if status == types.StatusUnknown {
-			continue
-		}
-		eb = eb.With("status", status)
-
-		// Note on CPE deduplication:
-		// Different product_ids within a single remediation may resolve to identical pairs of PURLs and CPEs.
-		// In such cases, we need to eliminate duplicate records to avoid redundancy.
-		//
-		// For example:
-		// - Product ID: 6Server-RHSCL-2.0-6.5.Z:rh-mariadb100-mariadb-1:10.0.20-1.el6.src
-		//    -> PURL: pkg:rpm/redhat/rh-mariadb100-mariadb@10.0.20-1.el6?arch=src\u0026epoch=1
-		//       CPE: cpe:/a:redhat:rhel_software_collections:2::el6
-		// - Product ID: 6Workstation-RHSCL-2.0:rh-mariadb100-mariadb-1:10.0.20-1.el6.src
-		//    -> PURL: pkg:rpm/redhat/rh-mariadb100-mariadb@10.0.20-1.el6?arch=src\u0026epoch=1
-		//       CPE: cpe:/a:redhat:rhel_software_collections:2::el6
-		//
-		// In this case, we only need to keep one record since they represent the same affected component.
-		type uniqKey struct {
-			Package
-			RawEntry
-		}
-		uniq := set.New[uniqKey]()
-
-		// For each remediation, iterate over product_ids
-		for _, productID := range lo.FromPtr(remediation.ProductIds) {
-			if productID == nil {
-				continue
-			}
-			product := adv.LookUpProduct(*productID)
-			if product == nil {
-				continue
-			}
-			if product.Package.Type != packageurl.TypeRPM {
-				// OCI images are not supported
-				// e.g.
-				//    Product: CERT-MANAGER-1.11-RHEL-9
-				//    Component: cert-manager/cert-manager-operator-rhel9
-				// cf. https://access.redhat.com/security/cve/CVE-2023-39325
-				continue
-			}
-
-			// Add CPEs to the set
-			p.cpeSet.Append(string(product.Stream))
-
-			// PURL format differs between patched and unpatched vulnerabilities:
-			//
-			// Patched (vendor_fix):
-			//   - Binary packages have version and arch: pkg:rpm/redhat/pam@1.5.1-21.el9_5?arch=x86_64
-			//   - Source packages have version and arch=src: pkg:rpm/redhat/pam@1.5.1-21.el9_5?arch=src
-			//
-			// Unpatched (none_available: "Affected"/"Fix deferred", no_fix_planned: "Out of support scope"/"Will not fix"):
-			//   - Binary packages have NO version and NO arch: pkg:rpm/redhat/vim-X11
-			//   - Source packages have arch=src only: pkg:rpm/redhat/vim?arch=src
-			//
-			// cf. https://security.access.redhat.com/data/csaf/v2/vex/2024/cve-2024-10041.json (patched)
-			// cf. https://security.access.redhat.com/data/csaf/v2/vex/2023/cve-2023-5344.json (unpatched)
-			arch := product.Package.Qualifiers.Map()["arch"]
-			if arch == "src" {
-				// Skip source packages to maintain backward compatibility with OVALv2,
-				// which only included binary package names.
-				// Now that SECDATA-1097 has been resolved, binary package names are also
-				// included for unpatched vulnerabilities, so we can safely skip source packages.
-				// cf. https://issues.redhat.com/browse/SECDATA-1097
-				//
-				// TODO(v3): In Trivy DB v3, consider storing only source package names instead
-				// of binary package names for better storage efficiency, as one source package
-				// typically produces multiple binary packages.
-				continue
-			}
-
-			// Log unexpected case: unpatched vulnerability with arch specified
-			// Based on investigation, unpatched binary packages should not have arch in PURL.
-			// If this happens, it may indicate a format change that needs attention.
-			if status != types.StatusFixed && arch != "" {
-				log.Warn("Unexpected arch for unpatched vulnerability",
-					log.String("arch", arch),
-					log.String("cve_id", string(cveID)),
-					log.String("package", product.Package.Name))
-			}
-
-			pkg := Package{
-				Module: product.Module,
-				Name:   product.Package.Name,
-			}
-
-			var vulnID, alias VulnerabilityID
-			if status == types.StatusFixed {
-				vulnID = p.extractRHSAID(remediation)
-				alias = cveID
-				// Store the RHSA release date (once per vulnID) from Remediation.Date.
-				if _, exists := p.releaseDates[vulnID]; !exists {
-					if remediation.Date != nil {
-						t, err := parseRemediationDateTime(*remediation.Date)
-						if err != nil {
-							log.Warn("Skipping invalid RHSA remediation date",
-								log.String("cve_id", string(cveID)),
-								log.String("vulnerability_id", string(vulnID)),
-								log.String("raw", *remediation.Date),
-								log.Err(err))
-						} else {
-							p.releaseDates[vulnID] = t
-						}
-					}
-				}
-			} else {
-				vulnID = cveID
-			}
-
-			fixedVersion := product.Package.Version
-			if epoch, ok := product.Package.Qualifiers.Map()["epoch"]; ok {
-				fixedVersion = epoch + ":" + fixedVersion
-			}
-
-			rawEntry := RawEntry{
-				FixedVersion: fixedVersion,
-				Severity:     severities[*productID],
-				Arch:         arch,
-				CPE:          product.Stream,
-				Alias:        alias,
-
-				// If the package has a non-empty FixedVersion, we omit the status
-				// to reduce DB size, because it's obviously "fixed".
-				Status: lo.Ternary(product.Package.Version == "", status, 0),
-			}
-
-			// Deduplicate raw entries
-			key := uniqKey{
-				Package:  pkg,
-				RawEntry: rawEntry,
-			}
-			if uniq.Contains(key) {
-				continue
-			}
-			uniq.Append(key)
-
-			p.addRawEntry(pkg, vulnID, rawEntry)
-		}
+		p.parseRemediation(adv, remediation, cveID, desc, severities)
 	}
 	return nil
+}
+
+func (p *Parser) parseRemediation(
+	adv CSAFAdvisory,
+	remediation *csaf.Remediation,
+	cveID VulnerabilityID,
+	desc string,
+	severities map[csaf.ProductID]types.Severity,
+) {
+	if remediation == nil {
+		return
+	}
+
+	status := p.detectStatus(remediation)
+	if status == types.StatusUnknown {
+		return
+	}
+
+	// Note on CPE deduplication:
+	// Different product_ids within a single remediation may resolve to identical pairs of PURLs and CPEs.
+	// In such cases, we need to eliminate duplicate records to avoid redundancy.
+	//
+	// For example:
+	// - Product ID: 6Server-RHSCL-2.0-6.5.Z:rh-mariadb100-mariadb-1:10.0.20-1.el6.src
+	//    -> PURL: pkg:rpm/redhat/rh-mariadb100-mariadb@10.0.20-1.el6?arch=src\u0026epoch=1
+	//       CPE: cpe:/a:redhat:rhel_software_collections:2::el6
+	// - Product ID: 6Workstation-RHSCL-2.0:rh-mariadb100-mariadb-1:10.0.20-1.el6.src
+	//    -> PURL: pkg:rpm/redhat/rh-mariadb100-mariadb@10.0.20-1.el6?arch=src\u0026epoch=1
+	//       CPE: cpe:/a:redhat:rhel_software_collections:2::el6
+	//
+	// In this case, we only need to keep one record since they represent the same affected component.
+	type uniqKey struct {
+		Package
+		RawEntry
+	}
+	uniq := set.New[uniqKey]()
+
+	// For each remediation, iterate over product_ids
+	for _, productID := range lo.FromPtr(remediation.ProductIds) {
+		if productID == nil {
+			continue
+		}
+		product := adv.LookUpProduct(*productID)
+		if product == nil {
+			continue
+		}
+		if product.Package.Type != packageurl.TypeRPM {
+			// OCI images are not supported
+			// e.g.
+			//    Product: CERT-MANAGER-1.11-RHEL-9
+			//    Component: cert-manager/cert-manager-operator-rhel9
+			// cf. https://access.redhat.com/security/cve/CVE-2023-39325
+			continue
+		}
+
+		// Add CPEs to the set
+		p.cpeSet.Append(string(product.Stream))
+
+		// PURL format differs between patched and unpatched vulnerabilities:
+		//
+		// Patched (vendor_fix):
+		//   - Binary packages have version and arch: pkg:rpm/redhat/pam@1.5.1-21.el9_5?arch=x86_64
+		//   - Source packages have version and arch=src: pkg:rpm/redhat/pam@1.5.1-21.el9_5?arch=src
+		//
+		// Unpatched (none_available: "Affected"/"Fix deferred", no_fix_planned: "Out of support scope"/"Will not fix"):
+		//   - Binary packages have NO version and NO arch: pkg:rpm/redhat/vim-X11
+		//   - Source packages have arch=src only: pkg:rpm/redhat/vim?arch=src
+		//
+		// cf. https://security.access.redhat.com/data/csaf/v2/vex/2024/cve-2024-10041.json (patched)
+		// cf. https://security.access.redhat.com/data/csaf/v2/vex/2023/cve-2023-5344.json (unpatched)
+		arch := product.Package.Qualifiers.Map()["arch"]
+		if arch == "src" {
+			// Skip source packages to maintain backward compatibility with OVALv2,
+			// which only included binary package names.
+			// Now that SECDATA-1097 has been resolved, binary package names are also
+			// included for unpatched vulnerabilities, so we can safely skip source packages.
+			// cf. https://issues.redhat.com/browse/SECDATA-1097
+			//
+			// TODO(v3): In Trivy DB v3, consider storing only source package names instead
+			// of binary package names for better storage efficiency, as one source package
+			// typically produces multiple binary packages.
+			continue
+		}
+
+		// Log unexpected case: unpatched vulnerability with arch specified
+		// Based on investigation, unpatched binary packages should not have arch in PURL.
+		// If this happens, it may indicate a format change that needs attention.
+		if status != types.StatusFixed && arch != "" {
+			log.Warn("Unexpected arch for unpatched vulnerability",
+				log.String("arch", arch),
+				log.String("cve_id", string(cveID)),
+				log.String("package", product.Package.Name))
+		}
+
+		pkg := Package{
+			Module: product.Module,
+			Name:   product.Package.Name,
+		}
+
+		var vulnID, alias VulnerabilityID
+		if status == types.StatusFixed {
+			vulnID = p.extractRHSAID(remediation)
+			alias = cveID
+			// Store the RHSA release date (once per vulnID) from Remediation.Date.
+			if _, exists := p.releaseDates[vulnID]; !exists {
+				if remediation.Date != nil {
+					t, err := parseRemediationDateTime(*remediation.Date)
+					if err != nil {
+						log.Warn("Skipping invalid RHSA remediation date",
+							log.String("cve_id", string(cveID)),
+							log.String("vulnerability_id", string(vulnID)),
+							log.String("raw", *remediation.Date),
+							log.Err(err))
+					} else {
+						p.releaseDates[vulnID] = t
+					}
+				}
+			}
+		} else {
+			vulnID = cveID
+		}
+
+		if desc != "" {
+			// One RHSA can fix multiple CVEs; keep the description from the first CVE document processed.
+			if _, exists := p.descriptions[vulnID]; !exists {
+				p.descriptions[vulnID] = desc
+			}
+		}
+
+		fixedVersion := product.Package.Version
+		if epoch, ok := product.Package.Qualifiers.Map()["epoch"]; ok {
+			fixedVersion = epoch + ":" + fixedVersion
+		}
+
+		rawEntry := RawEntry{
+			FixedVersion: fixedVersion,
+			Severity:     severities[*productID],
+			Arch:         arch,
+			CPE:          product.Stream,
+			Alias:        alias,
+
+			// If the package has a non-empty FixedVersion, we omit the status
+			// to reduce DB size, because it's obviously "fixed".
+			Status: lo.Ternary(product.Package.Version == "", status, 0),
+		}
+
+		// Deduplicate raw entries
+		key := uniqKey{
+			Package:  pkg,
+			RawEntry: rawEntry,
+		}
+		if uniq.Contains(key) {
+			continue
+		}
+		uniq.Append(key)
+
+		p.addRawEntry(pkg, vulnID, rawEntry)
+	}
 }
 
 func (p *Parser) detectStatus(remediation *csaf.Remediation) types.Status {
@@ -456,6 +473,23 @@ func (p *Parser) NVRToCPE() iter.Seq2[string, []string] {
 // or the zero value when no timestamp was recorded for it.
 func (p *Parser) ReleaseDate(vulnID VulnerabilityID) time.Time {
 	return p.releaseDates[vulnID]
+}
+
+// Description returns the vulnerability description from CSAF notes[category=description].
+func (p *Parser) Description(vulnID VulnerabilityID) string {
+	return p.descriptions[vulnID]
+}
+
+func parseDescriptionNotes(notes csaf.Notes) string {
+	for _, note := range notes {
+		if note == nil {
+			continue
+		}
+		if lo.FromPtr(note.NoteCategory) == csaf.CSAFNoteCategoryDescription {
+			return strings.TrimSpace(lo.FromPtr(note.Text))
+		}
+	}
+	return ""
 }
 
 // parseRemediationDateTime parses CSAF remediation date strings (expected RFC3339).

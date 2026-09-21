@@ -60,6 +60,8 @@ type PutInput struct {
 	// no RHSA (CVE-only rows) or when the feed omits Remediation.Date. Intended for
 	// Store implementations that want to expose an advisory publish date.
 	ReleaseDate time.Time
+	// Description is the vulnerability description from CSAF notes[category=description].
+	Description string
 }
 
 // defaultStore is the OSS default implementation of Store.
@@ -205,6 +207,7 @@ func (vs VulnSrc) update(tx *bolt.Tx, dir string) error {
 			Advisory:    advisory,
 			CPEList:     cpeList,
 			ReleaseDate: vs.parser.ReleaseDate(bkt.VulnerabilityID),
+			Description: vs.parser.Description(bkt.VulnerabilityID),
 		}
 		if err := vs.store.Put(vs.dbc, tx, input); err != nil {
 			return eb.Wrapf(err, "failed to put advisory")
