@@ -127,11 +127,11 @@ jobs:
             
           echo "Artifact upload process completed."
 
-      - name: Microsoft Teams Notification
-        uses: Skitionek/notify-microsoft-teams@e7a2493ac87dad8aa7a62f079f295e54ff511d88
+      - name: Slack Notification
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         if: failure()
         with:
-          webhook_url: ${{ secrets.TRIVY_MSTEAMS_WEBHOOK }}
-          needs: ${{ toJson(needs) }}
-          job: ${{ toJson(job) }}
-          steps: ${{ toJson(steps) }}
+          webhook: ${{ secrets.TRIVY_SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: ":x: *${{ github.workflow }}* workflow failed — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|view run>"
