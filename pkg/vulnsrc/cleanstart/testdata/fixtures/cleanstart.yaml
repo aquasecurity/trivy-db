@@ -1,0 +1,7 @@
+- bucket: cleanstart
+  pairs:
+    - bucket: linkerd2
+      pairs:
+        - key: GHSA-hr2v-4r36-88hr
+          value:
+            FixedVersion: "26.1.4-r0"
