@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.4.0",
+  "id": "ECHO-2024-9999",
+  "modified": "2024-12-01T10:00:00Z",
+  "published": "2024-11-01T08:00:00Z",
+  "upstream": [
+    "CVE-2024-77777"
+  ],
+  "summary": "OS-level Echo vulnerability that should be skipped",
+  "details": "This entry uses the plain Echo ecosystem and is handled by the `echo` source, not by `echo-osv`.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Echo",
+        "name": "openssl"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.0.2-1+e1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

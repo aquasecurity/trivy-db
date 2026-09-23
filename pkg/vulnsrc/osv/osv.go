@@ -29,6 +29,7 @@ type Advisory struct {
 	PkgName         string
 	VulnerabilityID string
 	Aliases         []string
+	Upstream        []string
 
 	// Advisory detail
 	VulnerableVersions []string
@@ -283,6 +284,7 @@ func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) (
 					PkgName:            pkgName,
 					VulnerabilityID:    vulnID,
 					Aliases:            aliases,
+					Upstream:           entry.Upstream,
 					VulnerableVersions: vulnerableVersions,
 					PatchedVersions:    patchedVersions,
 					Title:              entry.Summary,
