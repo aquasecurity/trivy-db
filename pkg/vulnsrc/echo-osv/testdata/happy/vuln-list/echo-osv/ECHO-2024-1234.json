@@ -1,19 +1,11 @@
 {
-  "schema_version": "1.4.0",
   "id": "ECHO-2024-1234",
-  "modified": "2024-10-15T12:00:00Z",
-  "published": "2024-09-01T08:00:00Z",
   "upstream": [
-    "CVE-2024-99999"
+    "CVE-2024-99999",
+    "GHSA-9999-9999-9999"
   ],
-  "summary": "Example vulnerability in requests library",
-  "details": "The requests library before 2.14.2+echo.999 has a vulnerability that allows an attacker to perform SSRF attacks.",
-  "severity": [
-    {
-      "type": "CVSS_V3",
-      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
-    }
-  ],
+  "severity": [],
+  "modified": "2024-10-15T12:00:00Z",
   "affected": [
     {
       "package": {

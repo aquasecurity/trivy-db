@@ -7,7 +7,6 @@ import (
 	"github.com/samber/lo"
 	"github.com/samber/oops"
 
-	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bucket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/osv"
@@ -20,7 +19,7 @@ var (
 	source = types.DataSource{
 		ID:   vulnerability.EchoOSV,
 		Name: "Echo OSV",
-		URL:  "https://advisory.echohq.com/osv",
+		URL:  "https://advisory.echohq.com/osv/all.zip",
 	}
 )
 
@@ -35,10 +34,7 @@ func (VulnSrc) Name() types.SourceID {
 }
 
 func (VulnSrc) Update(root string) error {
-	dataSources := map[ecosystem.Type]types.DataSource{
-		ecosystem.Pip: source,
-	}
-	o := osv.New(vulnsDir, source.ID, dataSources,
+	o := osv.New(vulnsDir, source.ID, nil,
 		osv.WithTransformer(&transformer{}),
 		osv.WithBucketResolver("echo", resolveEcho),
 	)
@@ -48,18 +44,16 @@ func (VulnSrc) Update(root string) error {
 	return nil
 }
 
-// resolveEcho dispatches Echo OSV ecosystems to the matching bucket.
-// The Echo OSV feed namespaces language entries under "Echo:*" (e.g.
-// "Echo:PyPI"). resolveBucket lowercases and splits on ':', so this is
-// invoked with eco="echo" and the lowercased suffix.
+// resolveEcho maps an Echo OSV ecosystem to a bucket.
+// resolveBucket lowercases the ecosystem and splits it on ':', so "Echo:PyPI"
+// arrives here as suffix "pypi" and plain "Echo" (OS packages) as "".
 func resolveEcho(suffix string) (bucket.Bucket, error) {
 	switch suffix {
 	case "pypi":
 		return newPipBucket(source)
 	default:
-		// Only PyPI is wired up for now; the OSV parser skips ecosystems we
-		// don't resolve. OS package advisories (plain "Echo") are filtered
-		// out in vuln-list-update, so they normally never reach this point.
+		// Only PyPI is supported for now. Plain "Echo" (OS packages, served by
+		// the `echo` source) and other suffixes are skipped by the OSV parser.
 		return nil, oops.Errorf("unsupported Echo ecosystem suffix: %q", suffix)
 	}
 }
@@ -77,17 +71,17 @@ func (t *transformer) PostParseAffected(adv osv.Advisory, _ osv.Affected) (osv.A
 }
 
 func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.Entry) ([]osv.Advisory, error) {
+	ghsaID, hasGHSA := lo.Find(entry.Upstream, func(id string) bool {
+		return strings.HasPrefix(id, "GHSA-")
+	})
+
 	var filtered []osv.Advisory
 	for _, adv := range advisories {
 		if !strings.HasPrefix(adv.VulnerabilityID, "CVE-") {
-			ghsaID, ok := lo.Find(adv.Upstream, func(id string) bool {
-				return strings.HasPrefix(id, "GHSA-")
-			})
-			if !ok {
+			if !hasGHSA {
 				continue
 			}
-			// Key the advisory by the GHSA and keep the ECHO ID as a vendor
-			// ID, mirroring how CVE-keyed entries are stored.
+			// Key the advisory by the GHSA and keep the ECHO ID as a vendor ID.
 			adv.VulnerabilityID = ghsaID
 			adv.Aliases = lo.Uniq(append(lo.Without(adv.Aliases, ghsaID), entry.ID))
 		}

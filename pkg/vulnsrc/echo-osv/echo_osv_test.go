@@ -31,7 +31,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.DataSource{
 						ID:   vulnerability.EchoOSV,
 						Name: "Echo OSV",
-						URL:  "https://advisory.echohq.com/osv",
+						URL:  "https://advisory.echohq.com/osv/all.zip",
 					},
 				},
 				{
@@ -43,6 +43,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: types.Advisory{
 						VendorIDs: []string{
+							"GHSA-9999-9999-9999",
 							"ECHO-2024-1234",
 						},
 						PatchedVersions:    []string{"2.14.2+echo.999"},
@@ -56,16 +57,11 @@ func TestVulnSrc_Update(t *testing.T) {
 						string(vulnerability.EchoOSV),
 					},
 					Value: types.VulnerabilityDetail{
-						Title:        "Example vulnerability in requests library",
-						Description:  "The requests library before 2.14.2+echo.999 has a vulnerability that allows an attacker to perform SSRF attacks.",
-						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
-						CvssScoreV3:  7.5,
 						References: []string{
 							"https://nvd.nist.gov/vuln/detail/CVE-2024-99999",
 							"https://github.com/psf/requests",
 						},
 						LastModifiedDate: utils.MustTimeParse("2024-10-15T12:00:00Z"),
-						PublishedDate:    utils.MustTimeParse("2024-09-01T08:00:00Z"),
 					},
 				},
 				{
@@ -99,13 +95,10 @@ func TestVulnSrc_Update(t *testing.T) {
 						string(vulnerability.EchoOSV),
 					},
 					Value: types.VulnerabilityDetail{
-						Title:       "Vulnerability with a GHSA but no CVE",
-						Description: "This entry has no CVE, so it is keyed by its upstream GHSA rather than dropped.",
 						References: []string{
 							"https://github.com/advisories/GHSA-1234-5678-9abc",
 						},
 						LastModifiedDate: utils.MustTimeParse("2024-12-10T09:00:00Z"),
-						PublishedDate:    utils.MustTimeParse("2024-12-01T08:00:00Z"),
 					},
 				},
 				{
@@ -117,6 +110,18 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 			},
 			noBuckets: [][]string{
+				{
+					"advisory-detail",
+					"GHSA-9999-9999-9999",
+				},
+				{
+					"vulnerability-detail",
+					"GHSA-9999-9999-9999",
+				},
+				{
+					"vulnerability-id",
+					"GHSA-9999-9999-9999",
+				},
 				{
 					"advisory-detail",
 					"ECHO-2024-5678",

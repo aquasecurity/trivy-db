@@ -1,10 +1,7 @@
 {
-  "schema_version": "1.4.0",
   "id": "ECHO-2024-5678",
+  "severity": [],
   "modified": "2024-11-01T10:00:00Z",
-  "published": "2024-10-01T08:00:00Z",
-  "summary": "Vulnerability without CVE or GHSA",
-  "details": "This entry has neither a CVE nor an upstream GHSA, so it has no ID to be keyed by and should be dropped.",
   "affected": [
     {
       "package": {
