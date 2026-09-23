@@ -46,7 +46,7 @@ type Vulnerability struct {
 	Threats         []Threat    `xml:"Threats>Threat"`
 	References      []Reference `xml:"References>Reference"`
 	ProductStatuses []Status    `xml:"ProductStatuses>Status"`
-	CVSSScoreSets   ScoreSet    `xml:"CVSSScoreSets>ScoreSet" json:",omitempty"`
+	CVSSScoreSets   []ScoreSet  `xml:"CVSSScoreSets>ScoreSet" json:",omitempty"`
 }
 
 type Threat struct {

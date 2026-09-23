@@ -92,8 +92,7 @@
             "openSUSE Tumbleweed:python3-logilab-common-1.2.2-1.2"
           ]
         }
-      ],
-      "CVSSScoreSets": {}
+      ]
     },
     {
       "CVE": "CVE-2014-1839",
@@ -122,8 +121,7 @@
             "openSUSE Tumbleweed:python3-logilab-common-1.2.2-1.2"
           ]
         }
-      ],
-      "CVSSScoreSets": {}
+      ]
     }
   ]
 }

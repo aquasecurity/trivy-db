@@ -104,8 +104,7 @@
             "SUSE Linux Micro 6.0:docker-buildx-0.22.0-3.1"
           ]
         }
-      ],
-      "CVSSScoreSets": {}
+      ]
     },
     {
       "CVE": "CVE-2025-22869",
@@ -134,8 +133,7 @@
             "SUSE Linux Micro 6.0:docker-buildx-0.22.0-3.1"
           ]
         }
-      ],
-      "CVSSScoreSets": {}
+      ]
     }
   ]
 }
