@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "0 */6 * * *"
   workflow_dispatch:
+    inputs:
+      skip_publish:
+        description: "Build the database without publishing"
+        type: boolean
+        default: false
 env:
   REPO_OWNER: ${{ github.repository_owner }} # used in 'make db-build'
   GH_USER: aqua-bot
@@ -49,12 +54,14 @@ jobs:
         run: mv assets/db.tar.gz .
 
       - name: Login to Docker Hub
+        if: ${{ !inputs.skip_publish }}
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Packages Container registry
+        if: ${{ !inputs.skip_publish }}
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           registry: ghcr.io
@@ -62,6 +69,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to ECR
+        if: ${{ !inputs.skip_publish }}
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           registry: public.ecr.aws
@@ -69,11 +77,13 @@ jobs:
           password: ${{ secrets.ECR_SECRET_ACCESS_KEY }}
 
       - name: Install oras
+        if: ${{ !inputs.skip_publish }}
         run: |
           curl -LO https://github.com/oras-project/oras/releases/download/v1.2.0/oras_1.2.0_linux_amd64.tar.gz
           tar -xvf ./oras_1.2.0_linux_amd64.tar.gz
 
       - name: Upload assets to registries
+        if: ${{ !inputs.skip_publish }}
         run: |
           lowercase_repo=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           echo "Starting artifact upload process..."
