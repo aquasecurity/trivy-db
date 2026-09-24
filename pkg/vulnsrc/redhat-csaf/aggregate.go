@@ -59,9 +59,6 @@ func (a *Aggregator) aggregateCVEs(entries RawEntries) (Entries, error) {
 
 	var result Entries
 	for key, group := range groups {
-		eb := oops.With("fixed_version", key.FixedVersion).With("status", key.Status.String()).
-			With("arch", key.Arch).With("cpe", key.CPE)
-
 		// Create CVE entries
 		cves := lo.Map(group, func(e RawEntry, _ int) CVEEntry {
 			return CVEEntry{
@@ -77,8 +74,11 @@ func (a *Aggregator) aggregateCVEs(entries RawEntries) (Entries, error) {
 
 		// CVEs should not be duplicated
 		if duplicated := lo.FindDuplicatesBy(cves, func(cve CVEEntry) string { return cve.ID }); len(duplicated) != 0 {
-			return nil, eb.With("entry_num", len(entries)).With("cve_num", len(cves)).
-				With("duplicated", duplicated).Wrapf(errUnexpectedRecord, "duplicated CVEs found")
+			log.Warn("Skipping entry with duplicated CVEs",
+				log.String("fixed_version", key.FixedVersion),
+				log.String("arch", key.Arch),
+				log.Any("duplicated", duplicated))
+			cves = lo.UniqBy(cves, func(cve CVEEntry) string { return cve.ID })
 		}
 
 		// Create entry using common fields
