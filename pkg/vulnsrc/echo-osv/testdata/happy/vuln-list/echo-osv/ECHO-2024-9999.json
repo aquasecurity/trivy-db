@@ -1,0 +1,29 @@
+{
+  "id": "ECHO-2024-9999",
+  "upstream": [
+    "CVE-2024-77777"
+  ],
+  "severity": [],
+  "modified": "2024-12-01T10:00:00Z",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Echo",
+        "name": "openssl"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.0.2-1+e1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

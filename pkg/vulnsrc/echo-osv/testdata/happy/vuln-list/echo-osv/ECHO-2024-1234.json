@@ -1,0 +1,41 @@
+{
+  "id": "ECHO-2024-1234",
+  "upstream": [
+    "CVE-2024-99999",
+    "GHSA-9999-9999-9999"
+  ],
+  "severity": [],
+  "modified": "2024-10-15T12:00:00Z",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Echo:PyPI",
+        "name": "requests",
+        "purl": "pkg:pypi/requests"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.14.2+echo.1"
+            },
+            {
+              "fixed": "2.14.2+echo.999"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-99999"
+    },
+    {
+      "type": "PACKAGE",
+      "url": "https://github.com/psf/requests"
+    }
+  ]
+}
