@@ -334,6 +334,11 @@ func NewNpm(dataSource types.DataSource) (DataSourceBucket, error) {
 	return newLang(ecosystem.Npm, dataSource)
 }
 
+// NewNode creates a bucket for the Node.js runtime ecosystem with data source.
+func NewNode(dataSource types.DataSource) (DataSourceBucket, error) {
+	return newLang(ecosystem.Node, dataSource)
+}
+
 // NewNuGet creates a bucket for NuGet ecosystem with data source
 func NewNuGet(dataSource types.DataSource) (DataSourceBucket, error) {
 	return newLang(ecosystem.NuGet, dataSource)
