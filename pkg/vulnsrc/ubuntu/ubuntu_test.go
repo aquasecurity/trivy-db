@@ -1,8 +1,12 @@
 package ubuntu_test
 
 import (
+	"errors"
 	"testing"
 
+	bolt "go.etcd.io/bbolt"
+
+	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ubuntu"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -13,10 +17,26 @@ func TestVulnSrc_Update(t *testing.T) {
 	tests := []struct {
 		name       string
 		dir        string
+		opts       []ubuntu.Option
 		wantValues []vulnsrctest.WantValues
 		noBuckets  [][]string
 		wantErr    string
 	}{
+		{
+			name:    "invalid JSON",
+			dir:     "testdata/invalid",
+			wantErr: "json decode error",
+		},
+		{
+			name: "write error stops iteration",
+			dir:  "testdata",
+			opts: []ubuntu.Option{
+				ubuntu.WithCustomPut(func(db.Operation, *bolt.Tx, any) error {
+					return errors.New("write failed")
+				}),
+			},
+			wantErr: "write failed",
+		},
 		{
 			name: "happy path",
 			dir:  "testdata",
@@ -69,7 +89,7 @@ func TestVulnSrc_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			vs := ubuntu.NewVulnSrc()
+			vs := ubuntu.NewVulnSrc(tt.opts...)
 			vulnsrctest.TestUpdate(t, vs, vulnsrctest.TestUpdateArgs{
 				Dir:        tt.dir,
 				WantValues: tt.wantValues,
