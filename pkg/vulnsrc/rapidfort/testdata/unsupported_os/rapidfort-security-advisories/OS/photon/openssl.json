@@ -1,7 +1,7 @@
 {
   "package_name": "openssl",
   "advisory": {
-    "12": {
+    "5.0": {
       "CVE-2024-5535": {
         "cve_id": "CVE-2024-5535",
         "title": "openssl: SSL_select_next_proto buffer overread",
@@ -11,7 +11,7 @@
         "events": [
           {
             "introduced": "3.0.0",
-            "fixed": "3.0.14-1~deb12u2"
+            "fixed": "3.0.14-1.ph5"
           }
         ]
       }
