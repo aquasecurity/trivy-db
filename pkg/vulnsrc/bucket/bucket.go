@@ -45,6 +45,14 @@ type langBucket struct {
 	dataSource types.DataSource
 }
 
+// sourcedOSBucket is an OS bucket supplied by an OSV data source.
+type sourcedOSBucket struct {
+	osBucket
+	dataSource types.DataSource
+}
+
+func (s sourcedOSBucket) DataSource() types.DataSource { return s.dataSource }
+
 func (l langBucket) Name() string {
 	return l.ecosystem.String() + separator + l.dataSource.Name
 }
@@ -99,6 +107,11 @@ func NewChainguard(version string) Bucket { return newOS(ecosystem.Chainguard, v
 
 // NewDebian creates a bucket for Debian
 func NewDebian(version string) Bucket { return newOS(ecosystem.Debian, version) }
+
+// NewDHI creates a release-scoped Docker Hardened Images bucket.
+func NewDHI(lineage, version string, dataSource types.DataSource) DataSourceBucket {
+	return sourcedOSBucket{osBucket: newOS(ecosystem.DHI, lineage+" "+version), dataSource: dataSource}
+}
 
 // NewEcho creates a bucket for Echo
 func NewEcho(version string) Bucket { return newOS(ecosystem.Echo, version) }

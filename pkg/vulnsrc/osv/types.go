@@ -31,6 +31,7 @@ type RangeType string
 type Package struct {
 	Name      string `json:"name"`
 	Ecosystem string `json:"ecosystem"`
+	PURL      string `json:"purl,omitempty"`
 }
 
 type RangeEvent struct {
