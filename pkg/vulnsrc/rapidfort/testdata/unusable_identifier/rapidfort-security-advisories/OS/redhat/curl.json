@@ -1,0 +1,26 @@
+{
+  "package_name": "curl",
+  "advisory": {
+    "9": {
+      "CVE-2023-27536": {
+        "cve_id": "CVE-2023-27536",
+        "title": "curl: GSS delegation too eager connection re-use",
+        "description": "libcurl would reuse a previously created connection even when a GSS delegation option had been changed.",
+        "severity": "MEDIUM",
+        "status": "fixed",
+        "events": [
+          {
+            "introduced": "7.76.1-14",
+            "fixed": "7.76.1-26",
+            "identifier": "el"
+          },
+          {
+            "introduced": "7.76.1-14",
+            "fixed": "7.76.1-26",
+            "identifier": "sles15"
+          }
+        ]
+      }
+    }
+  }
+}

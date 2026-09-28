@@ -24,6 +24,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/photon"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rapidfort"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat"
 	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rocky"
@@ -67,6 +68,7 @@ var (
 		minimos.NewVulnSrc(),
 		bottlerocket.NewVulnSrc(),
 
+		rapidfort.NewVulnSrc(),
 		rootio.NewVulnSrc(),
 		seal.NewVulnSrc(),
 

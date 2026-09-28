@@ -1,0 +1,31 @@
+{
+  "package_name": "rf-openssl",
+  "advisory": {
+    "22.04": {
+      "CVE-2026-9076": {
+        "cve_id": "CVE-2026-9076",
+        "title": "Issue summary: When CMS password-based decryption (RFC 3211 / PWR ...",
+        "description": "Issue summary: When CMS password-based decryption (RFC 3211 / PWRI key unwrap)\nprocesses attacker-supplied CMS data, an attacker-chosen stream-mode KEK\ncipher can trigger a heap out-of-bounds read.",
+        "severity": "LOW",
+        "status": "fixed",
+        "events": [
+          {
+            "introduced": "0:3.0.13-1rfubuntu3.1~rf.1",
+            "fixed": "0:3.5.7-10rfubu+rf.0",
+            "identifier": "rf"
+          },
+          {
+            "introduced": "0:3.0.14-0rfubu3.1+rf.2",
+            "fixed": "0:3.5.7-10rfubu+rf.0",
+            "identifier": "rf"
+          },
+          {
+            "introduced": "0:3.0.14-0rfubuntu3.1+rf.1",
+            "fixed": "0:3.5.7-10rfubu+rf.0",
+            "identifier": "rf"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -2,7 +2,10 @@ package ubuntu
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
+	"io/fs"
+	"iter"
 	"path/filepath"
 	"slices"
 
@@ -107,48 +110,40 @@ func (vs VulnSrc) Name() types.SourceID {
 func (vs VulnSrc) Update(dir string) error {
 	rootDir := filepath.Join(dir, "vuln-list", ubuntuDir)
 	eb := oops.In("ubuntu").With("root_dir", rootDir)
-	var cves []UbuntuCVE
-	err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
-		var cve UbuntuCVE
-		if err := json.NewDecoder(r).Decode(&cve); err != nil {
-			return eb.With("file_path", path).Wrapf(err, "json decode error")
-		}
-		cves = append(cves, cve)
-		return nil
-	})
-	if err != nil {
-		return eb.Wrapf(err, "walk error")
-	}
-
-	if err = vs.save(cves); err != nil {
-		return eb.Wrapf(err, "save error")
-	}
-
-	return nil
-}
-
-func (vs VulnSrc) save(cves []UbuntuCVE) error {
 	vs.logger.Info("Saving DB")
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		err := vs.commit(tx, cves)
-		if err != nil {
-			return err
+		for cve, err := range readCVEs(rootDir) {
+			if err != nil {
+				return err
+			}
+			if err := vs.put(vs.dbc, tx, cve); err != nil {
+				return eb.Wrapf(err, "put error")
+			}
 		}
 		return nil
 	})
 	if err != nil {
-		return oops.Wrapf(err, "batch update error")
+		return eb.Wrapf(err, "batch update error")
 	}
 	return nil
 }
 
-func (vs VulnSrc) commit(tx *bolt.Tx, cves []UbuntuCVE) error {
-	for _, cve := range cves {
-		if err := vs.put(vs.dbc, tx, cve); err != nil {
-			return oops.Wrapf(err, "put error")
+func readCVEs(rootDir string) iter.Seq2[UbuntuCVE, error] {
+	return func(yield func(UbuntuCVE, error) bool) {
+		err := utils.FileWalk(rootDir, func(r io.Reader, path string) error {
+			var cve UbuntuCVE
+			if err := json.NewDecoder(r).Decode(&cve); err != nil {
+				return oops.With("file_path", path).Wrapf(err, "json decode error")
+			}
+			if !yield(cve, nil) {
+				return fs.SkipAll
+			}
+			return nil
+		})
+		if err != nil && !errors.Is(err, fs.SkipAll) {
+			yield(UbuntuCVE{}, err)
 		}
 	}
-	return nil
 }
 
 func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
