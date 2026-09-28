@@ -83,6 +83,11 @@ func newLang(ecoType ecosystem.Type, dataSource types.DataSource) (DataSourceBuc
 // NewAlma creates a bucket for Alma Linux
 func NewAlma(version string) Bucket { return newOS(ecosystem.AlmaLinux, version) }
 
+// NewBottlerocket creates a bucket for Bottlerocket.
+// Unlike most OS buckets, it takes no version: Bottlerocket security advisories
+// are published for the OS as a whole and are not scoped to a release version.
+func NewBottlerocket() Bucket { return newOS(ecosystem.Bottlerocket, "") }
+
 // NewAlpine creates a bucket for Alpine Linux
 func NewAlpine(version string) Bucket { return newOS(ecosystem.Alpine, version) }
 
@@ -97,6 +102,9 @@ func NewDebian(version string) Bucket { return newOS(ecosystem.Debian, version) 
 
 // NewEcho creates a bucket for Echo
 func NewEcho(version string) Bucket { return newOS(ecosystem.Echo, version) }
+
+// NewFedora creates a bucket for Fedora
+func NewFedora(version string) Bucket { return newOS(ecosystem.Fedora, version) }
 
 // NewMinimOS creates a bucket for MinimOS
 func NewMinimOS(version string) Bucket { return newOS(ecosystem.MinimOS, version) }

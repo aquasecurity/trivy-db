@@ -4,28 +4,24 @@ on:
   schedule:
     - cron: "0 */6 * * *"
   workflow_dispatch:
+    inputs:
+      skip_publish:
+        description: "Build the database without publishing"
+        type: boolean
+        default: false
 env:
   REPO_OWNER: ${{ github.repository_owner }} # used in 'make db-build'
   GH_USER: aqua-bot
   VERSION: 2
+permissions:
+  contents: read
+  packages: write  # for pushing to ghcr.io
+
 jobs:
   build:
     name: Build DB
     runs-on: ubuntu-24.04
     steps:
-      # vuln-list dirs + language repositories use more than 31GB of storage
-      - name: Maximize build space
-        uses: AdityaGarg8/remove-unwanted-software@90e01b21170618765a73370fcc3abbd1684a7793
-        with:
-          remove-android: 'true'
-          remove-dotnet: 'true'
-          remove-haskell: 'true'
-          remove-codeql: 'true'
-          remove-docker-images: 'true'
-          remove-large-packages: 'true'
-          remove-cached-tools: 'true'
-          remove-swapfile: 'true'
-
       - name: Check out code into the Go module directory
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
@@ -38,6 +34,8 @@ jobs:
         run: go install go.etcd.io/bbolt/cmd/bbolt@v1.3.5
 
       - name: Download vuln-list and advisories
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: make db-fetch-langs db-fetch-vuln-list
 
       - name: Build the binary
@@ -56,12 +54,14 @@ jobs:
         run: mv assets/db.tar.gz .
 
       - name: Login to Docker Hub
+        if: ${{ !inputs.skip_publish }}
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Packages Container registry
+        if: ${{ !inputs.skip_publish }}
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           registry: ghcr.io
@@ -69,6 +69,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to ECR
+        if: ${{ !inputs.skip_publish }}
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           registry: public.ecr.aws
@@ -76,11 +77,13 @@ jobs:
           password: ${{ secrets.ECR_SECRET_ACCESS_KEY }}
 
       - name: Install oras
+        if: ${{ !inputs.skip_publish }}
         run: |
           curl -LO https://github.com/oras-project/oras/releases/download/v1.2.0/oras_1.2.0_linux_amd64.tar.gz
           tar -xvf ./oras_1.2.0_linux_amd64.tar.gz
 
       - name: Upload assets to registries
+        if: ${{ !inputs.skip_publish }}
         run: |
           lowercase_repo=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           echo "Starting artifact upload process..."
@@ -121,11 +124,11 @@ jobs:
             
           echo "Artifact upload process completed."
 
-      - name: Microsoft Teams Notification
-        uses: Skitionek/notify-microsoft-teams@e7a2493ac87dad8aa7a62f079f295e54ff511d88
-        if: failure()
+      - name: Slack Notification
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        if: ${{ failure() && !inputs.skip_publish }}
         with:
-          webhook_url: ${{ secrets.TRIVY_MSTEAMS_WEBHOOK }}
-          needs: ${{ toJson(needs) }}
-          job: ${{ toJson(job) }}
-          steps: ${{ toJson(steps) }}
+          webhook: ${{ secrets.TRIVY_SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: ":x: *${{ github.workflow }}* workflow failed — <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|view run>"

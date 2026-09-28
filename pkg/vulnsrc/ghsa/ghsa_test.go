@@ -507,6 +507,19 @@ func TestVulnSrc_Update(t *testing.T) {
 					"vulnerability-id",
 					"CVE-2023-45288",
 				},
+				// We shouldn't save golang.org/x/* vulnerabilities (sourced from govulndb)
+				{
+					"advisory-detail",
+					"CVE-2024-45337",
+				},
+				{
+					"vulnerability-detail",
+					"CVE-2024-45337",
+				},
+				{
+					"vulnerability-id",
+					"CVE-2024-45337",
+				},
 			},
 		},
 		{

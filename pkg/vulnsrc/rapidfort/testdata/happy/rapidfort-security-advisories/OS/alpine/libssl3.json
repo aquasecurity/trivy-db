@@ -1,0 +1,32 @@
+{
+  "package_name": "libssl3",
+  "advisory": {
+    "3.18": {
+      "CVE-2023-5678": {
+        "cve_id": "CVE-2023-5678",
+        "title": "openssl: X.400 address type confusion in X.509 GeneralName",
+        "description": "There is a type confusion vulnerability relating to X.400 address processing inside an X.509 GeneralName.",
+        "severity": "MEDIUM",
+        "status": "fixed",
+        "events": [
+          {
+            "introduced": "3.0.0",
+            "fixed": "3.1.4-r1"
+          }
+        ]
+      },
+      "CVE-2024-0001": {
+        "cve_id": "CVE-2024-0001",
+        "title": "openssl: hypothetical fix without a known introduced version",
+        "description": "A hypothetical openssl vulnerability whose fixed build is known but the introduced version is not.",
+        "severity": "LOW",
+        "status": "fixed",
+        "events": [
+          {
+            "fixed": "3.1.5-r0"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -315,11 +316,41 @@ func TestVulnSrc_Update_WithCustomStore(t *testing.T) {
 	// Verify the custom store was called with Put
 	assert.NotEmpty(t, store.putInputs, "custom Store.Put should have been called")
 
+	mustTime := func(s string) time.Time {
+		ts, err := time.Parse(time.RFC3339, s)
+		require.NoError(t, err)
+		return ts
+	}
+
 	// Verify the extra CPE was merged
 	// The merged list should contain both CSAF CPEs and the extra one
 	for _, input := range store.putInputs {
 		assert.Contains(t, []string(input.CPEList), "cpe:/o:redhat:enterprise_linux:7::server",
 			"merged CPE list should contain the extra CPE")
+
+		vid := string(input.Bucket.VulnerabilityID)
+		switch vid {
+		case "RHSA-2024:9941":
+			assert.True(t, input.ReleaseDate.Equal(mustTime("2024-11-19T04:46:55Z")), "ReleaseDate for %s", vid)
+			assert.Equal(t, "A vulnerability was found in PAM. The secret information is stored in memory, where the attacker can trigger the victim program to execute.", input.Description)
+		case "RHSA-2024:9999":
+			assert.True(t, input.ReleaseDate.Equal(mustTime("2024-11-19T04:46:55Z")), "ReleaseDate for %s", vid)
+			assert.Equal(t, "Description from CVE-2024-11111 (stored for RHSA-2024:9999)", input.Description)
+		case "RHSA-2025:0001":
+			assert.True(t, input.ReleaseDate.Equal(mustTime("2025-01-01T00:00:00Z")), "ReleaseDate for %s", vid)
+			assert.Equal(t, "Test vulnerability for new rpmmod qualifier format", input.Description)
+		case "CVE-2024-11111":
+			// Unpatched rows use the CVE as bucket ID; there is no RHSA remediation date.
+			assert.True(t, input.ReleaseDate.IsZero(), "ReleaseDate for %q", vid)
+			assert.Equal(t, "Description from CVE-2024-11111 (stored for RHSA-2024:9999)", input.Description)
+		case "CVE-2024-22222":
+			assert.True(t, input.ReleaseDate.IsZero(), "ReleaseDate for %q", vid)
+			assert.Equal(t, "Description from CVE-2024-22222 (not stored for RHSA-2024:9999)", input.Description)
+		default:
+			// Unpatched rows use the CVE as bucket ID; there is no RHSA remediation date.
+			assert.True(t, input.ReleaseDate.IsZero(), "ReleaseDate for %q", vid)
+			assert.Empty(t, input.Description, "Description for %q", vid)
+		}
 	}
 
 	// Verify repo/NVR mappings were NOT written (custom store skips them)

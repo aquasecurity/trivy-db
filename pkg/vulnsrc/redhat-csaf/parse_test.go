@@ -4,6 +4,7 @@ import (
 	"maps"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/gocsaf/csaf/v3/csaf"
 	"github.com/stretchr/testify/assert"
@@ -111,6 +112,52 @@ func TestParser_Parse(t *testing.T) {
 	}
 }
 
+func TestParseRemediationDateTime(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		want    time.Time
+		wantErr bool
+	}{
+		{
+			name:  "valid RFC3339 with Z",
+			input: "2024-12-18T09:14:23Z",
+			want:  time.Date(2024, 12, 18, 9, 14, 23, 0, time.UTC),
+		},
+		{
+			name:  "valid RFC3339 with timezone offset",
+			input: "2025-01-01T00:00:00+00:00",
+			want:  time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+		},
+		{
+			name:    "invalid timestamp",
+			input:   "not-a-date",
+			wantErr: true,
+		},
+		{
+			name:    "empty string",
+			input:   "",
+			wantErr: true,
+		},
+		{
+			name:    "wrong format (date only)",
+			input:   "2024-12-18",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parseRemediationDateTime(tt.input)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.True(t, got.Equal(tt.want), "got %v want %v", got, tt.want)
+		})
+	}
+}
+
 func TestParser_DetectStatus(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -166,4 +213,19 @@ func TestParser_DetectStatus(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 		})
 	}
+}
+
+func TestParser_Description(t *testing.T) {
+	parser := NewParser()
+	require.NoError(t, parser.Parse(filepath.Join("testdata", "vuln-list-redhat")))
+
+	assert.Equal(t,
+		"A vulnerability was found in PAM. The secret information is stored in memory, where the attacker can trigger the victim program to execute.",
+		parser.Description("RHSA-2024:9941"),
+	)
+	// RHSA-2024:9999 is fixed by multiple CVEs; keep the description from the first document processed.
+	assert.Equal(t, "Description from CVE-2024-11111 (stored for RHSA-2024:9999)", parser.Description("RHSA-2024:9999"))
+	assert.Equal(t, "Description from CVE-2024-11111 (stored for RHSA-2024:9999)", parser.Description("CVE-2024-11111"))
+	assert.Equal(t, "Description from CVE-2024-22222 (not stored for RHSA-2024:9999)", parser.Description("CVE-2024-22222"))
+	assert.Empty(t, parser.Description("CVE-NONEXISTENT"))
 }

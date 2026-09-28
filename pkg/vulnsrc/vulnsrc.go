@@ -8,6 +8,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/aqua"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/azure"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bitnami"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bottlerocket"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/bundler"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/chainguard"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/composer"
@@ -24,6 +25,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/nvd"
 	oracleoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/oracle-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/photon"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rapidfort"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat"
 	redhatoval "github.com/aquasecurity/trivy-db/pkg/vulnsrc/redhat-oval"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rocky"
@@ -66,7 +68,9 @@ var (
 		echo.NewVulnSrc(),
 		echoosv.NewVulnSrc(),
 		minimos.NewVulnSrc(),
+		bottlerocket.NewVulnSrc(),
 
+		rapidfort.NewVulnSrc(),
 		rootio.NewVulnSrc(),
 		seal.NewVulnSrc(),
 

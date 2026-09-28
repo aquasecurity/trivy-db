@@ -8,10 +8,11 @@ ASSET_DIR ?= assets
 # Download and extract function - separates download from extraction for stability
 # Usage: $(call download_and_extract,URL,TARGET_DIR)
 # This approach prevents pipe failures when wget encounters recoverable errors
+# GITHUB_TOKEN is optional but recommended to avoid rate limiting on archive downloads
 define download_and_extract
 	@echo "Downloading $(1)..." && \
 	TMP_FILE=$$(mktemp) && \
-	wget -q $(1) -O "$$TMP_FILE" && \
+	wget --no-verbose $(if $(GITHUB_TOKEN),--header="Authorization: token $(GITHUB_TOKEN)",) $(1) -O "$$TMP_FILE" && \
 	tar xzf "$$TMP_FILE" -C $(2) --strip-components=1 && \
 	rm -f "$$TMP_FILE"
 endef
@@ -75,7 +76,7 @@ trivy-db:
 
 .PHONY: db-fetch-langs
 db-fetch-langs:
-	mkdir -p $(CACHE_DIR)/{ruby-advisory-db,php-security-advisories,nodejs-security-wg,ghsa,cocoapods-specs,bitnami-vulndb,govulndb,k8s-cve-feed,julia}
+	mkdir -p $(CACHE_DIR)/{ruby-advisory-db,php-security-advisories,nodejs-security-wg,ghsa,cocoapods-specs,bitnami-vulndb,govulndb,k8s-cve-feed,julia,rapidfort-security-advisories}
 	$(call download_and_extract,https://github.com/rubysec/ruby-advisory-db/archive/master.tar.gz,$(CACHE_DIR)/ruby-advisory-db)
 	$(call download_and_extract,https://github.com/FriendsOfPHP/security-advisories/archive/master.tar.gz,$(CACHE_DIR)/php-security-advisories)
 	$(call download_and_extract,https://github.com/nodejs/security-wg/archive/main.tar.gz,$(CACHE_DIR)/nodejs-security-wg)
@@ -86,6 +87,7 @@ db-fetch-langs:
 	$(call download_and_extract,https://github.com/CocoaPods/Specs/archive/master.tar.gz,$(CACHE_DIR)/cocoapods-specs)
 	$(call download_and_extract,https://github.com/kubernetes-sigs/cve-feed-osv/archive/main.tar.gz,$(CACHE_DIR)/k8s-cve-feed)
 	$(call download_and_extract,https://github.com/JuliaLang/SecurityAdvisories.jl/archive/refs/heads/generated/osv.tar.gz,$(CACHE_DIR)/julia)
+	$(call download_and_extract,https://github.com/rapidfort/security-advisories/archive/refs/heads/main.tar.gz,$(CACHE_DIR)/rapidfort-security-advisories)
 
 .PHONY: db-build
 db-build: trivy-db

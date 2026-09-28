@@ -3,6 +3,7 @@ package govulndb
 import (
 	"encoding/json"
 	"path/filepath"
+	"strings"
 
 	"github.com/samber/lo"
 	"github.com/samber/oops"
@@ -67,8 +68,10 @@ func (t *transformer) TransformAdvisories(advisories []osv.Advisory, entry osv.E
 
 	var filtered []osv.Advisory
 	for _, adv := range advisories {
-		// Insert only stdlib advisories
-		if adv.PkgName != "stdlib" {
+		// Keep only stdlib and golang.org/x/* advisories. Other third-party modules
+		// come from GHSA; toolchain advisories are out of scope.
+		// cf. https://github.com/aquasecurity/trivy-db/issues/675
+		if adv.PkgName != "stdlib" && !strings.HasPrefix(adv.PkgName, "golang.org/x/") {
 			continue
 		}
 		// Add a reference

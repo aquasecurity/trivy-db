@@ -1,0 +1,38 @@
+- bucket: data-source
+  pairs:
+    - key: rapidfort ubuntu 20.04
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: ubuntu
+    - key: rapidfort alpine 3.18
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: alpine
+    - key: rapidfort Red Hat 9
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: redhat
+    - key: rapidfort fedora 39
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: fedora
+    - key: rapidfort Red Hat
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: redhat
+    - key: rapidfort ubuntu
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: ubuntu
