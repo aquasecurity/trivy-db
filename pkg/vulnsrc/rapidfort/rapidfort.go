@@ -163,7 +163,7 @@ func (vs VulnSrc) parse(rootDir string) ([]entry, error) {
 		}
 		eco := ecosystem.Type(parts[0])
 
-		// RapidFort owns which OSes its feed ships, so an OS this build doesn't ingest (e.g. debian) is expected rather than something to warn about on every file.
+		// RapidFort owns which OSes its feed ships, so an OS this build doesn't ingest (e.g. photon) is expected rather than something to warn about on every file.
 		if _, err := newBucket(eco, ""); err != nil {
 			return nil
 		}
@@ -277,7 +277,7 @@ func resolveBucket(eco ecosystem.Type, ecoVer, identifier string) (bucket.DataSo
 		return nil, eb.Errorf("unusable distribution identifier")
 	}
 
-	// Only the rebuilds are release-less; every other range has to name a release, so a bare dist tag ("el", "fc") or an empty version key is rejected rather than folded into a rebuild bucket.
+	// Only the rebuilds are release-less; every other range has to name a release, so a bare dist tag ("el", "fc", "amzn") or an empty version key is rejected rather than folded into a rebuild bucket.
 	if identifier != rapidFortIdentifier && !isVersionNumber(ecoVer) {
 		return nil, eb.With("version", ecoVer).Errorf("unusable distribution version")
 	}

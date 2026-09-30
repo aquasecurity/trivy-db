@@ -194,6 +194,13 @@ func TestResolveBucket(t *testing.T) {
 			wantErr: "unusable distribution version",
 		},
 		{
+			name:    "amzn with no release",
+			eco:     ecosystem.AmazonLinux,
+			ecoVer:  "2023",
+			event:   Event{Identifier: "amzn", Fixed: "8.5.0-1"},
+			wantErr: "unusable distribution version",
+		},
+		{
 			name:    "non-numeric el release",
 			eco:     ecosystem.RedHat,
 			ecoVer:  "9",
