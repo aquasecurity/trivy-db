@@ -13,9 +13,9 @@ import (
 )
 
 // TestNewBucket pins the platform name and BaseID for every base ecosystem
-// RapidFort dispatches to. The names are the keys Trivy queries at scan time, so
-// a change here silently stops matching; keep this aligned with
-// trivy/pkg/detector/ospkg/rapidfort.
+// RapidFort dispatches to, and the rejection path for the ones it does not.
+// The names are the keys Trivy queries at scan time, so a change here silently
+// stops matching; keep this aligned with trivy/pkg/detector/ospkg/rapidfort.
 func TestNewBucket(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -23,6 +23,7 @@ func TestNewBucket(t *testing.T) {
 		version    string
 		wantName   string
 		wantBaseID types.SourceID
+		wantErr    string
 	}{
 		{
 			name:       "ubuntu",
@@ -136,11 +137,38 @@ func TestNewBucket(t *testing.T) {
 			wantName:   "rapidfort alma",
 			wantBaseID: vulnerability.Alma,
 		},
+		// An OS RapidFort does not curate is rejected so parse skips the whole file.
+		{
+			name:      "unsupported - photon",
+			ecosystem: ecosystem.PhotonOS,
+			wantErr:   "unsupported base ecosystem",
+		},
+		{
+			name:      "unsupported - wolfi",
+			ecosystem: ecosystem.Wolfi,
+			wantErr:   "unsupported base ecosystem",
+		},
+		{
+			name:      "unsupported - chainguard",
+			ecosystem: ecosystem.Chainguard,
+			wantErr:   "unsupported base ecosystem",
+		},
+		{
+			name:      "unsupported - nonexistent",
+			ecosystem: ecosystem.Type("nonexistent"),
+			wantErr:   "unsupported base ecosystem",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := newBucket(tt.ecosystem, tt.version)
+			if tt.wantErr != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
+				assert.Nil(t, got)
+				return
+			}
 			require.NoError(t, err)
 			assert.Equal(t, tt.wantName, got.Name())
 			assert.Equal(t, tt.ecosystem, got.Ecosystem())
@@ -178,24 +206,6 @@ func TestNewBucket_DistinctRebuildBuckets(t *testing.T) {
 			prev, dup := seen[name]
 			assert.False(t, dup, "%s shares the %q bucket with %s", feed, name, prev)
 			seen[name] = feed
-		})
-	}
-}
-
-// TestNewBucket_UnsupportedEcosystem covers the default branch: an OS RapidFort
-// does not curate is rejected so parse skips the whole file.
-func TestNewBucket_UnsupportedEcosystem(t *testing.T) {
-	for _, eco := range []ecosystem.Type{
-		ecosystem.PhotonOS,
-		ecosystem.Wolfi,
-		ecosystem.Chainguard,
-		ecosystem.Type("nonexistent"),
-	} {
-		t.Run(string(eco), func(t *testing.T) {
-			got, err := newBucket(eco, "1")
-			require.Error(t, err)
-			assert.Nil(t, got)
-			assert.Contains(t, err.Error(), "unsupported base ecosystem")
 		})
 	}
 }

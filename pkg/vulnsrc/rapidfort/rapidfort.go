@@ -27,8 +27,9 @@ const rapidfortDir = "rapidfort-security-advisories"
 // repo that groups advisory JSON files by operating system.
 const osSubDir = "OS"
 
-// Supported `Event.Identifier` values. A feed's own distribution is named by
-// its ecosystem string ("ubuntu", "debian"), so it needs no constant here.
+// Supported `Event.Identifier` values that differ from the feed's ecosystem name.
+// Identifiers equal to the ecosystem name (e.g. "ubuntu", "debian") are matched
+// against the feed directly.
 const (
 	rapidFortIdentifier = "rf"
 	redHatIdentifier    = "el"

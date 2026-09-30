@@ -128,7 +128,11 @@ type amazonBucket struct {
 }
 
 func (a amazonBucket) Name() string {
-	return "amazon linux " + a.version
+	name := "amazon linux"
+	if a.version == "" {
+		return name
+	}
+	return name + " " + a.version
 }
 
 // NewAmazon creates a bucket for Amazon Linux
@@ -171,7 +175,11 @@ type oracleBucket struct {
 
 func (o oracleBucket) Name() string {
 	// cat /etc/os-release ORACLE_BUGZILLA_PRODUCT="Oracle Linux 8"
-	return "Oracle Linux " + o.version
+	name := "Oracle Linux"
+	if o.version == "" {
+		return name
+	}
+	return name + " " + o.version
 }
 
 // NewOracle creates a bucket for Oracle Linux

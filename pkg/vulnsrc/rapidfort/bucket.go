@@ -1,8 +1,6 @@
 package rapidfort
 
 import (
-	"strings"
-
 	"github.com/samber/oops"
 
 	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
@@ -18,10 +16,7 @@ type rapidFortBucket struct {
 }
 
 func (r rapidFortBucket) Name() string {
-	// Some base buckets append the version unconditionally, so a version-less
-	// rebuild comes back with a trailing space ("Oracle Linux "). Trim it so
-	// every distro spells its rebuild bucket the same way.
-	return strings.TrimRight("rapidfort "+r.base.Name(), " ")
+	return "rapidfort " + r.base.Name()
 }
 
 func (r rapidFortBucket) Ecosystem() ecosystem.Type {

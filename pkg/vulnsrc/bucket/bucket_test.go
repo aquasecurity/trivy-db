@@ -39,6 +39,26 @@ func TestBucket_Name(t *testing.T) {
 			want:   "Red Hat 8",
 		},
 		{
+			name:   "Oracle with version",
+			bucket: bucket.NewOracle("8"),
+			want:   "Oracle Linux 8",
+		},
+		{
+			name:   "Oracle without version",
+			bucket: bucket.NewOracle(""),
+			want:   "Oracle Linux",
+		},
+		{
+			name:   "Amazon with version",
+			bucket: bucket.NewAmazon("2023"),
+			want:   "amazon linux 2023",
+		},
+		{
+			name:   "Amazon without version",
+			bucket: bucket.NewAmazon(""),
+			want:   "amazon linux",
+		},
+		{
 			name:   "ArchLinux without version",
 			bucket: bucket.NewArchLinux(""),
 			want:   "archlinux",
