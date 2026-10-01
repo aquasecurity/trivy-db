@@ -1,0 +1,27 @@
+{
+  "id": "ECHO-2024-5678",
+  "severity": [],
+  "modified": "2024-11-01T10:00:00Z",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Echo:PyPI",
+        "name": "flask",
+        "purl": "pkg:pypi/flask"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "1.0.0"
+            },
+            {
+              "fixed": "2.0.0"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
