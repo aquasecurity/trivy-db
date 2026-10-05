@@ -119,8 +119,7 @@
             "SUSE Package Hub for SUSE Linux Enterprise 15:perl-GraphicsMagick-1.3.29-bp150.2.12.1"
           ]
         }
-      ],
-      "CVSSScoreSets": {}
+      ]
     },
     {
       "CVE": "CVE-2018-20189",
@@ -155,8 +154,7 @@
             "SUSE Package Hub for SUSE Linux Enterprise 15:perl-GraphicsMagick-1.3.29-bp150.2.12.1"
           ]
         }
-      ],
-      "CVSSScoreSets": {}
+      ]
     }
   ]
 }
