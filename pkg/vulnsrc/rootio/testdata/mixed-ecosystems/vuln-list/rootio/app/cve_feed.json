@@ -1,0 +1,38 @@
+{
+  "npm": [
+    {
+      "distroversion": "",
+      "packages": [
+        {
+          "pkg": {
+            "name": "react",
+            "cves": {
+              "CVE-2024-VALID-001": {
+                "vulnerable_ranges": ["<18.2.0"],
+                "fixed_versions": ["18.2.0+root.io.1"]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "pip": [
+    {
+      "distroversion": "",
+      "packages": [
+        {
+          "pkg": {
+            "name": "react",
+            "cves": {
+              "CVE-2024-PIP-REACT": {
+                "vulnerable_ranges": ["<1.0.0"],
+                "fixed_versions": ["1.0.0+root.io.1"]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
