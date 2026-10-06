@@ -51,11 +51,16 @@ type affected struct {
 }
 
 type affectedState struct {
+	// Resolution is the state of the last <resolution> block.
+	// Only used for vuln-list data written before Resolutions existed.
 	Resolution affectedResolution
+	// Resolutions has every <resolution> block with its components.
+	Resolutions []affectedResolution
 }
 
 type affectedResolution struct {
-	State string
+	State      string
+	Components []string // e.g. "pcre2" or "mariadb:10.11/mariadb" for modular packages
 }
 
 type reference struct {
