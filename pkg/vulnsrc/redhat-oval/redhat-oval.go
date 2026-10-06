@@ -344,6 +344,8 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 			continue
 		}
 
+		statuses := newResolutionStatuses(advisory.Metadata.Advisory.Affected)
+
 		// Parse criteria
 		affectedPkgs := walkCriterion(advisory.Criteria, tests)
 		for _, affectedPkg := range affectedPkgs {
@@ -385,6 +387,7 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 					},
 				}
 			} else { // For unpatched vulnerabilities
+				status := statuses.status(affectedPkg)
 				for _, cve := range cveEntries {
 					bkt := bucket{
 						pkgName: pkgName,
@@ -400,7 +403,7 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 							FixedVersion:    affectedPkg.FixedVersion,
 							AffectedCPEList: advisory.Metadata.Advisory.AffectedCpeList,
 							Arches:          affectedPkg.Arches,
-							Status:          newStatus(advisory.Metadata.Advisory.Affected.Resolution.State),
+							Status:          status,
 						},
 					}
 				}
@@ -517,6 +520,56 @@ func severityFromImpact(sev string) types.Severity {
 		return types.SeverityCritical
 	}
 	return types.SeverityUnknown
+}
+
+// resolutionStatuses holds the status of each <resolution> component
+// and the fallback status for packages that no block lists.
+type resolutionStatuses struct {
+	components map[string]types.Status
+	fallback   types.Status
+}
+
+// newResolutionStatuses maps each <resolution> component to its status.
+// One stream covers several products, so a component can be in more than one block,
+// e.g. kernel-rt is both "Affected" and "Will not fix" for CVE-2021-4204 on RHEL 9.
+// The most open status wins; for that CVE Red Hat's CSAF VEX also reports kernel-rt as "known_affected".
+// A package that no block lists gets the most open status across all blocks.
+func newResolutionStatuses(a affectedState) resolutionStatuses {
+	rs := resolutionStatuses{fallback: newStatus(a.Resolution.State)}
+	// No blocks: RHSA definitions or vuln-list data written before Resolutions existed.
+	if len(a.Resolutions) == 0 {
+		return rs
+	}
+	rs.components = make(map[string]types.Status)
+	for i, r := range a.Resolutions {
+		// The most open status wins. For every status newStatus returns,
+		// a lower types.Status value is more open:
+		// Affected < UnderInvestigation < WillNotFix < EndOfLife.
+		// Unknown (0) wins as well, so an unrecognized state never hides a package.
+		s := newStatus(r.State)
+		if i == 0 || s < rs.fallback {
+			rs.fallback = s
+		}
+		for _, c := range r.Components {
+			if old, ok := rs.components[c]; !ok || s < old {
+				rs.components[c] = s
+			}
+		}
+	}
+	return rs
+}
+
+// status returns the status of the <resolution> block that lists the package,
+// or the fallback status when no block lists it.
+func (rs resolutionStatuses) status(p pkg) types.Status {
+	component := p.Name
+	if p.Module != "" {
+		component = p.Module + "/" + p.Name
+	}
+	if s, ok := rs.components[component]; ok {
+		return s
+	}
+	return rs.fallback
 }
 
 func newStatus(s string) types.Status {
