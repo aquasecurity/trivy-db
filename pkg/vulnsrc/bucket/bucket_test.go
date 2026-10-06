@@ -73,6 +73,15 @@ func TestBucket_Name(t *testing.T) {
 			want: "npm::GitLab Advisory Database",
 		},
 		{
+			name: "Node.js runtime",
+			bucket: lo.Must(bucket.NewNode(types.DataSource{
+				ID:   vulnerability.NodejsSecurityWg,
+				Name: "Node.js Ecosystem Security Working Group",
+				URL:  "https://github.com/nodejs/security-wg",
+			})),
+			want: "node::Node.js Ecosystem Security Working Group",
+		},
+		{
 			name: "PyPI with GHSA",
 			bucket: lo.Must(bucket.NewPyPI(types.DataSource{
 				ID:   vulnerability.GHSA,

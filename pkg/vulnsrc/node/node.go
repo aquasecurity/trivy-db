@@ -27,7 +27,8 @@ var (
 		URL:  "https://github.com/nodejs/security-wg",
 	}
 
-	bucketName = lo.Must(bucket.NewNpm(source)).Name()
+	npmBucketName  = lo.Must(bucket.NewNpm(source)).Name()
+	nodeBucketName = lo.Must(bucket.NewNode(source)).Name()
 )
 
 type Number struct {
@@ -71,6 +72,34 @@ type RawAdvisory struct {
 	References         []string
 	CvssScoreNumber    Number `json:"cvss_score"`
 	CvssScore          float64
+
+	// Node.js core advisory fields.
+	Cve         []string
+	Vulnerable  string
+	Patched     string
+	Ref         string
+	Description string
+	Severity    string
+	CvssVector  string `json:"cvss"`
+}
+
+func (a *RawAdvisory) normalize() bool {
+	if a.ModuleName != "" {
+		return true
+	}
+	if len(a.Cve) == 0 {
+		return false
+	}
+
+	a.ModuleName = "node"
+	a.Cves = a.Cve
+	a.VulnerableVersions = a.Vulnerable
+	a.PatchedVersions = a.Patched
+	a.Title = a.Description
+	if a.Ref != "" {
+		a.References = []string{a.Ref}
+	}
+	return true
 }
 
 type VulnSrc struct {
@@ -102,8 +131,11 @@ func (vs VulnSrc) update(repoPath string) error {
 	eb := oops.With("repo_path", repoPath)
 
 	err := vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
-		if err := vs.dbc.PutDataSource(tx, bucketName, source); err != nil {
-			return eb.Wrapf(err, "failed to put data source")
+		if err := vs.dbc.PutDataSource(tx, npmBucketName, source); err != nil {
+			return eb.Wrapf(err, "failed to put npm data source")
+		}
+		if err := vs.dbc.PutDataSource(tx, nodeBucketName, source); err != nil {
+			return eb.Wrapf(err, "failed to put Node.js data source")
 		}
 		if err := vs.walk(tx, root); err != nil {
 			return eb.Wrapf(err, "failed to walk advisories")
@@ -143,18 +175,24 @@ func (vs VulnSrc) commit(tx *bolt.Tx, f *os.File) error {
 		return oops.Wrapf(err, "json decode error")
 	}
 
-	// Node.js itself
-	if advisory.ModuleName == "" {
+	nodeCore := advisory.ModuleName == "" && len(advisory.Cve) > 0
+	if !advisory.normalize() {
 		return nil
 	}
 	advisory.ModuleName = strings.ToLower(advisory.ModuleName)
+	bucketName := npmBucketName
+	if nodeCore {
+		bucketName = nodeBucketName
+	}
 
 	vulnerabilityIDs := advisory.Cves
 	if len(vulnerabilityIDs) == 0 {
 		vulnerabilityIDs = []string{fmt.Sprintf("NSWG-ECO-%d", advisory.ID)}
 	}
 
+	severity, _ := types.NewSeverity(strings.ToUpper(advisory.Severity))
 	adv := convertToGenericAdvisory(advisory)
+	adv.Severity = severity
 	for _, vulnID := range vulnerabilityIDs {
 		// for detecting vulnerabilities
 		if err = vs.dbc.PutAdvisoryDetail(tx, vulnID, advisory.ModuleName, []string{bucketName}, adv); err != nil {
@@ -169,11 +207,13 @@ func (vs VulnSrc) commit(tx *bolt.Tx, f *os.File) error {
 
 		// for displaying vulnerability detail
 		vuln := types.VulnerabilityDetail{
-			ID:          vulnID,
-			CvssScore:   advisory.CvssScoreNumber.Value,
-			References:  advisory.References,
-			Title:       advisory.Title,
-			Description: advisory.Overview,
+			ID:           vulnID,
+			CvssScore:    advisory.CvssScoreNumber.Value,
+			CvssVectorV3: advisory.CvssVector,
+			Severity:     severity,
+			References:   advisory.References,
+			Title:        advisory.Title,
+			Description:  advisory.Overview,
 		}
 		if err = vs.dbc.PutVulnerabilityDetail(tx, vulnID, source.ID, vuln); err != nil {
 			return oops.Wrapf(err, "failed to save vulnerability detail")
