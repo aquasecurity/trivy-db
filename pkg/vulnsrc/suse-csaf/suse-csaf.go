@@ -14,6 +14,8 @@ import (
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
 
+	rpmversion "github.com/knqyf263/go-rpm-version"
+
 	"github.com/aquasecurity/go-version/pkg/version"
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/log"
@@ -41,19 +43,42 @@ var (
 		Name: "SUSE CSAF",
 		URL:  "https://ftp.suse.com/pub/projects/security/csaf/",
 	}
-	// cvrfSource keeps severitySource/primaryURL stable for existing Trivy releases during migration.
-	cvrfSource = types.DataSource{
-		ID:   vulnerability.SuseCVRF,
-		Name: "SUSE CVRF",
-		URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
-	}
 )
+
+// Advisory is the subset of a SUSE CSAF document used by trivy-db.
+//
+// vuln-list-suse stores the documents as-is, and SUSE's feed is not always schema-conformant:
+// some CPEs in product_tree.branches carry unescaped characters (e.g. "cpe:/o:novell,inc:OES:23.4",
+// "cpe:2.3:a:qemu:qemu:1.0.0+:*:*:*:*:*:*:*"), and csaf.Advisory rejects the whole document
+// because of them. Only the parts that are needed are decoded, so these documents are still
+// processed.
+type Advisory struct {
+	Document        *csaf.Document       `json:"document"`
+	ProductTree     *ProductTree         `json:"product_tree"`
+	Vulnerabilities csaf.Vulnerabilities `json:"vulnerabilities"`
+}
+
+type ProductTree struct {
+	Relationships []Relationship `json:"relationships"`
+}
+
+// Relationship mirrors csaf.Relationship without full_product_name.product_identification_helper,
+// which may hold a CPE.
+type Relationship struct {
+	FullProductName           FullProductName `json:"full_product_name"`
+	ProductReference          csaf.ProductID  `json:"product_reference"`
+	RelatesToProductReference csaf.ProductID  `json:"relates_to_product_reference"`
+}
+
+type FullProductName struct {
+	ProductID csaf.ProductID `json:"product_id"`
+}
 
 type PutInput struct {
 	VulnID string
 
 	// Advisory is the CSAF document the other fields were derived from.
-	Advisory csaf.Advisory
+	Advisory Advisory
 
 	Vuln         types.VulnerabilityDetail
 	AffectedPkgs []AffectedPackage
@@ -124,7 +149,7 @@ func (vs VulnSrc) walk(tx *bolt.Tx, rootDir string) error {
 	return utils.FileWalk(rootDir, func(r io.Reader, path string) error {
 		eb := oops.With("file_path", path)
 
-		var adv csaf.Advisory
+		var adv Advisory
 		if err := json.NewDecoder(r).Decode(&adv); err != nil {
 			return eb.Wrapf(err, "json decode error")
 		}
@@ -137,7 +162,7 @@ func (vs VulnSrc) walk(tx *bolt.Tx, rootDir string) error {
 }
 
 // buildInput extracts the values written to the database from a CSAF document.
-func (vs VulnSrc) buildInput(adv csaf.Advisory) (PutInput, error) {
+func (vs VulnSrc) buildInput(adv Advisory) (PutInput, error) {
 	doc := lo.FromPtr(adv.Document)
 	vulnID := string(lo.FromPtr(lo.FromPtr(doc.Tracking).ID))
 	if vulnID == "" {
@@ -161,10 +186,7 @@ func (vs VulnSrc) buildInput(adv csaf.Advisory) (PutInput, error) {
 			Description: description(doc.Notes),
 			Severity:    severityFromAdvisory(&doc, adv.Vulnerabilities),
 		},
-		AffectedPkgs: vs.getAffectedPackages(
-			lo.FromPtr(lo.FromPtr(adv.ProductTree).RelationShips),
-			adv.Vulnerabilities,
-		),
+		AffectedPkgs: vs.getAffectedPackages(lo.FromPtr(adv.ProductTree).Relationships, adv.Vulnerabilities),
 	}, nil
 }
 
@@ -233,7 +255,7 @@ func allowedProductIDs(vulns csaf.Vulnerabilities) (map[string]struct{}, bool) {
 
 // commit writes a single advisory. savedDataSources is shared across the whole walk so
 // that each OS version's data source is written only once.
-func (vs VulnSrc) commit(tx *bolt.Tx, adv csaf.Advisory, savedDataSources map[string]struct{}) error {
+func (vs VulnSrc) commit(tx *bolt.Tx, adv Advisory, savedDataSources map[string]struct{}) error {
 	input, err := vs.buildInput(adv)
 	if err != nil {
 		return oops.Wrapf(err, "invalid advisory")
@@ -248,7 +270,7 @@ func (vs VulnSrc) commit(tx *bolt.Tx, adv csaf.Advisory, savedDataSources map[st
 			continue
 		}
 
-		if err := vs.PutDataSource(tx, affectedPkg.OSVer, cvrfSource); err != nil {
+		if err := vs.PutDataSource(tx, affectedPkg.OSVer, source); err != nil {
 			return eb.Wrapf(err, "failed to put data source")
 		}
 		savedDataSources[affectedPkg.OSVer] = struct{}{}
@@ -272,7 +294,7 @@ func (vs *Suse) Put(tx *bolt.Tx, input PutInput) error {
 		}
 	}
 
-	if err := vs.PutVulnerabilityDetail(tx, input.VulnID, cvrfSource.ID, input.Vuln); err != nil {
+	if err := vs.PutVulnerabilityDetail(tx, input.VulnID, source.ID, input.Vuln); err != nil {
 		return oops.With("tracking_id", input.VulnID).Wrapf(err, "failed to save SUSE CSAF vulnerability")
 	}
 
@@ -282,21 +304,18 @@ func (vs *Suse) Put(tx *bolt.Tx, input PutInput) error {
 	return nil
 }
 
-func (vs VulnSrc) getAffectedPackages(relationships csaf.Relationships, vulns csaf.Vulnerabilities) []AffectedPackage {
+func (vs VulnSrc) getAffectedPackages(relationships []Relationship, vulns csaf.Vulnerabilities) []AffectedPackage {
 	allowed, filter := allowedProductIDs(vulns)
 	seen := make(map[string]struct{})
 	var pkgs []AffectedPackage
 
 	for _, relationship := range relationships {
-		if relationship == nil {
-			continue
-		}
-
-		platform := string(lo.FromPtr(relationship.RelatesToProductReference))
-		productRef := string(lo.FromPtr(relationship.ProductReference))
+		platform := string(relationship.RelatesToProductReference)
+		productRef := string(relationship.ProductReference)
 		if filter {
-			productID := platform + ":" + productRef
-			if _, ok := allowed[productID]; !ok {
+			// Product IDs are opaque identifiers per the CSAF spec, so take the ID from
+			// the relationship instead of rebuilding it from the references.
+			if _, ok := allowed[string(relationship.FullProductName.ProductID)]; !ok {
 				continue
 			}
 		}
@@ -428,8 +447,10 @@ func getPackage(packVer string) *Package {
 		return nil
 	}
 	return &Package{
-		Name:         name,
-		FixedVersion: ver,
+		Name: name,
+		// CSAF versions carry an explicit zero epoch, which other RPM sources (and suse-cvrf) omit:
+		// "0:2.9.4-36.1" -> "2.9.4-36.1". A non-zero epoch is kept.
+		FixedVersion: rpmversion.NewVersion(ver).String(),
 	}
 }
 

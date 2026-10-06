@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gocsaf/csaf/v3/csaf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -36,9 +35,9 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{"data-source", "SUSE Linux Enterprise 15.1"},
 					Value: types.DataSource{
-						ID:   vulnerability.SuseCVRF,
-						Name: "SUSE CVRF",
-						URL:  "https://ftp.suse.com/pub/projects/security/cvrf/",
+						ID:   vulnerability.SuseCSAF,
+						Name: "SUSE CSAF",
+						URL:  "https://ftp.suse.com/pub/projects/security/csaf/",
 					},
 				},
 				{
@@ -50,7 +49,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					Key: []string{"vulnerability-detail", "SUSE-SU-2019:0048-2", "suse-cvrf"},
+					Key: []string{"vulnerability-detail", "SUSE-SU-2019:0048-2", "suse-csaf"},
 					Value: types.VulnerabilityDetail{
 						Title:       "Security update for helm-mirror",
 						Description: "This update for helm-mirror to version 0.2.1 fixes the following issues:\n\n\nSecurity issues fixed:\n\n- CVE-2018-16873: Fixed a remote command execution (bsc#1118897)\n- CVE-2018-16874: Fixed a directory traversal in 'go get' via curly braces in import path (bsc#1118898)\n- CVE-2018-16875: Fixed a CPU denial of service (bsc#1118899)\n\nNon-security issue fixed:\n\n- Update to v0.2.1 (bsc#1120762)\n- Include helm-mirror into the containers module (bsc#1116182)\n",
@@ -99,6 +98,8 @@ func TestVulnSrc_Update(t *testing.T) {
 
 func TestBuildInput(t *testing.T) {
 	vs := NewVulnSrc(SUSEEnterpriseLinux)
+	// product_tree.branches carries CPEs that csaf.Advisory rejects (unescaped "," and "+"),
+	// as found in the live SUSE feed. They must not prevent the advisory from being processed.
 	data := []byte(`{
   "document": {
     "title": "Security update for helm-mirror",
@@ -107,19 +108,65 @@ func TestBuildInput(t *testing.T) {
     "references": [{"url": "https://example.com/advisory"}]
   },
   "product_tree": {
-    "relationships": [{
-      "product_reference": "helm-mirror-0.2.1-1.7.1.x86_64",
-      "relates_to_product_reference": "SUSE Linux Enterprise Module for Containers 15 SP1"
-    }]
+    "branches": [{
+      "category": "vendor",
+      "name": "SUSE",
+      "branches": [
+        {
+          "category": "product_name",
+          "name": "OES",
+          "product": {
+            "name": "OES",
+            "product_id": "OES",
+            "product_identification_helper": {"cpe": "cpe:/o:novell,inc:OES:23.4"}
+          }
+        },
+        {
+          "category": "product_name",
+          "name": "qemu",
+          "product": {
+            "name": "qemu",
+            "product_id": "qemu",
+            "product_identification_helper": {"cpe": "cpe:2.3:a:qemu:qemu:1.0.0+:*:*:*:*:*:*:*"}
+          }
+        }
+      ]
+    }],
+    "relationships": [
+      {
+        "full_product_name": {"product_id": "SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0:0.2.1-1.7.1.x86_64"},
+        "product_reference": "helm-mirror-0:0.2.1-1.7.1.x86_64",
+        "relates_to_product_reference": "SUSE Linux Enterprise Module for Containers 15 SP1"
+      },
+      {
+        "full_product_name": {"product_id": "SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0:0.2.1-1.7.1.aarch64"},
+        "product_reference": "helm-mirror-0:0.2.1-1.7.1.aarch64",
+        "relates_to_product_reference": "SUSE Linux Enterprise Module for Containers 15 SP1"
+      },
+      {
+        "full_product_name": {"product_id": "sles-15-sp1-epoch-pkg"},
+        "product_reference": "epoch-pkg-2:1.0-1.1.noarch",
+        "relates_to_product_reference": "SUSE Linux Enterprise Server 15 SP1"
+      },
+      {
+        "full_product_name": {"product_id": "SUSE Linux Enterprise Server 15 SP1:not-listed-1.0-1.1.noarch"},
+        "product_reference": "not-listed-1.0-1.1.noarch",
+        "relates_to_product_reference": "SUSE Linux Enterprise Server 15 SP1"
+      }
+    ]
   },
   "vulnerabilities": [{
     "product_status": {
-      "recommended": ["SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0.2.1-1.7.1.x86_64"]
+      "recommended": [
+        "SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0:0.2.1-1.7.1.x86_64",
+        "SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0:0.2.1-1.7.1.aarch64",
+        "sles-15-sp1-epoch-pkg"
+      ]
     },
     "threats": [{"category": "impact", "details": "important"}]
   }]
 }`)
-	var adv csaf.Advisory
+	var adv Advisory
 	require.NoError(t, json.Unmarshal(data, &adv))
 
 	input, err := vs.buildInput(adv)
@@ -128,8 +175,52 @@ func TestBuildInput(t *testing.T) {
 	assert.Equal(t, "Security update for helm-mirror", input.Vuln.Title)
 	assert.Equal(t, "details", input.Vuln.Description)
 	assert.Equal(t, types.SeverityHigh, input.Vuln.Severity)
-	require.Len(t, input.AffectedPkgs, 1)
-	assert.Equal(t, "helm-mirror", input.AffectedPkgs[0].Package.Name)
+
+	// - arches are collapsed into one package and the zero epoch is dropped;
+	// - the product ID is taken from full_product_name, even when it isn't "<platform>:<reference>";
+	// - products missing from product_status are skipped.
+	assert.Equal(t, []AffectedPackage{
+		{
+			OSVer:   "SUSE Linux Enterprise 15.1",
+			Package: Package{Name: "helm-mirror", FixedVersion: "0.2.1-1.7.1"},
+		},
+		{
+			OSVer:   "SUSE Linux Enterprise 15.1",
+			Package: Package{Name: "epoch-pkg", FixedVersion: "2:1.0-1.1"},
+		},
+	}, input.AffectedPkgs)
+}
+
+func TestBuildInput_NoVulnerabilities(t *testing.T) {
+	vs := NewVulnSrc(SUSEEnterpriseLinux)
+	// Some advisories have no vulnerabilities section (e.g. SUSE-SU-2022:1714-1): every
+	// relationship is used and the severity falls back to document.aggregate_severity.
+	data := []byte(`{
+  "document": {
+    "title": "Security update for php72",
+    "tracking": {"id": "SUSE-SU-2022:1714-1"},
+    "aggregate_severity": {"text": "moderate"}
+  },
+  "product_tree": {
+    "relationships": [{
+      "full_product_name": {"product_id": "SUSE Linux Enterprise Server 12 SP5:php72-7.2.5-1.81.1.x86_64"},
+      "product_reference": "php72-7.2.5-1.81.1.x86_64",
+      "relates_to_product_reference": "SUSE Linux Enterprise Server 12 SP5"
+    }]
+  }
+}`)
+	var adv Advisory
+	require.NoError(t, json.Unmarshal(data, &adv))
+
+	input, err := vs.buildInput(adv)
+	require.NoError(t, err)
+	assert.Equal(t, types.SeverityMedium, input.Vuln.Severity)
+	assert.Equal(t, []AffectedPackage{
+		{
+			OSVer:   "SUSE Linux Enterprise 12.5",
+			Package: Package{Name: "php72", FixedVersion: "7.2.5-1.81.1"},
+		},
+	}, input.AffectedPkgs)
 }
 
 func TestVulnSrc_Get(t *testing.T) {
