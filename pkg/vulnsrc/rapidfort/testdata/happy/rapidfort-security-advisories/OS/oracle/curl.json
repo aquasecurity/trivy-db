@@ -1,0 +1,47 @@
+{
+  "package_name": "curl",
+  "advisory": {
+    "9": {
+      "CVE-2023-27536": {
+        "cve_id": "CVE-2023-27536",
+        "title": "curl: GSS delegation too eager connection re-use",
+        "description": "An authentication bypass vulnerability exists in libcurl prior to v8.0.0 where it reuses a previously established GSS-negotiate connection.",
+        "severity": "MEDIUM",
+        "status": "fixed",
+        "events": [
+          {
+            "introduced": "7.76.1-14.el9",
+            "fixed": "7.76.1-26.el9_3.3",
+            "identifier": "el9"
+          },
+          {
+            "introduced": "0",
+            "fixed": "7.76.1-26.fc39",
+            "identifier": "fc39"
+          },
+          {
+            "introduced": "7.76.1-14.rf",
+            "fixed": "7.76.1-27.rf",
+            "identifier": "rf"
+          }
+        ]
+      }
+    },
+    "el5": {
+      "CVE-2024-EL5KEY": {
+        "cve_id": "CVE-2024-EL5KEY",
+        "title": "curl: hypothetical vulnerability filed under a malformed top-level key",
+        "description": "The Oracle feed sometimes keys a release as \"el5\" instead of \"5\". The range identifier decides the bucket, so the malformed key is ignored rather than producing one.",
+        "severity": "HIGH",
+        "status": "fixed",
+        "events": [
+          {
+            "introduced": "0",
+            "fixed": "7.19.7-54.el5",
+            "identifier": "el5"
+          }
+        ]
+      }
+    }
+  }
+}

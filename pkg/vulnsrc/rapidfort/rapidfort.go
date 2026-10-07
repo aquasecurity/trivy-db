@@ -27,12 +27,14 @@ const rapidfortDir = "rapidfort-security-advisories"
 // repo that groups advisory JSON files by operating system.
 const osSubDir = "OS"
 
-// Supported `Event.Identifier` values.
+// Supported `Event.Identifier` values that differ from the feed's ecosystem name.
+// Identifiers equal to the ecosystem name (e.g. "ubuntu", "debian") are matched
+// against the feed directly.
 const (
 	rapidFortIdentifier = "rf"
 	redHatIdentifier    = "el"
+	amazonIdentifier    = "amzn"
 	fedoraIdentifier    = "fc"
-	ubuntuIdentifier    = "ubuntu"
 )
 
 var source = types.DataSource{
@@ -73,10 +75,64 @@ func (vs VulnSrc) Update(dir string) error {
 	if err != nil {
 		return eb.Wrap(err)
 	}
-	if err = vs.put(entries); err != nil {
+	if err = vs.put(mergeEntries(entries)); err != nil {
 		return eb.Wrap(err)
 	}
 	return nil
+}
+
+// mergeEntries folds entries targeting the same (platform, package, CVE) into
+// one. split already collapses the ranges within a single file, but two files
+// can still describe the same artifact: every RPM feed carries fcNN ranges, and
+// those all resolve to the shared "rapidfort fedora NN" buckets. put writes one
+// entry after another, so without this only whichever file the walk visited last
+// would survive. Feeds with no such overlap pass through unchanged.
+func mergeEntries(entries []entry) []entry {
+	type key struct{ platform, pkgName, cveID string }
+
+	// Preserve first-seen order so the resulting DB does not depend on Go's map iteration order.
+	index := make(map[key]int, len(entries))
+	merged := make([]entry, 0, len(entries))
+	for _, e := range entries {
+		// Name() concatenates the platform string, so compute it once per entry.
+		k := key{e.bucket.Name(), e.pkgName, e.cveID}
+		i, seen := index[k]
+		if !seen {
+			index[k] = len(merged)
+			merged = append(merged, e)
+			continue
+		}
+		merged[i].advisory = mergeAdvisory(merged[i].advisory, e.advisory)
+	}
+	return merged
+}
+
+// mergeAdvisory unions two advisories for the same platform, package and CVE
+// onto the first-seen one. The two version lists are independent (no per-range
+// identifier is stored), so each is unioned on its own. Severity takes the
+// higher of the two: the constants are ordered, so a feed that left it Unknown
+// never overrides one that rated it.
+func mergeAdvisory(a, b types.Advisory) types.Advisory {
+	a.PatchedVersions = unionSorted(a.PatchedVersions, b.PatchedVersions)
+	a.VulnerableVersions = unionSorted(a.VulnerableVersions, b.VulnerableVersions)
+	a.Severity = max(a.Severity, b.Severity)
+	return a
+}
+
+// unionSorted concatenates two version lists, then sorts and de-duplicates
+// them. It returns nil rather than an empty slice so a merged Advisory stays
+// identical to an unmerged one when both inputs are empty.
+func unionSorted(a, b []string) []string {
+	if len(a) == 0 && len(b) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(a)+len(b))
+	out = append(out, a...)
+	out = append(out, b...)
+	// Compact only removes adjacent duplicates, hence the sort first — which
+	// buildAdvisory already relies on for a stable on-disk DB.
+	slices.Sort(out)
+	return slices.Compact(out)
 }
 
 type entry struct {
@@ -108,7 +164,7 @@ func (vs VulnSrc) parse(rootDir string) ([]entry, error) {
 		}
 		eco := ecosystem.Type(parts[0])
 
-		// RapidFort owns which OSes its feed ships, so an OS this build doesn't ingest (e.g. debian) is expected rather than something to warn about on every file.
+		// RapidFort owns which OSes its feed ships, so an OS this build doesn't ingest (e.g. photon) is expected rather than something to warn about on every file.
 		if _, err := newBucket(eco, ""); err != nil {
 			return nil
 		}
@@ -204,24 +260,25 @@ func resolveBucket(eco ecosystem.Type, ecoVer, identifier string) (bucket.DataSo
 	// RapidFort's rebuilds are not tied to a distro release: they keep the feed's OS but drop the version.
 	case identifier == rapidFortIdentifier:
 		ecoVer = ""
+	// A feed tags its own distribution's packages by name ("ubuntu", "debian") or
+	// not at all (alpine): either way they belong to the release the file lists them under.
+	case identifier == string(eco), identifier == "":
+		// Keep eco and ecoVer as the feed listed them.
 	// "elN" is the dist tag of the Enterprise Linux family, which RedHat, Oracle and the other rebuilds all share, so it names the release while the feed still names the distribution.
 	case strings.HasPrefix(identifier, redHatIdentifier):
 		ecoVer = strings.TrimPrefix(identifier, redHatIdentifier)
+	// Amazon Linux tags its releases "amzn2"/"amzn2023" instead of elN, and likewise only names the release.
+	case strings.HasPrefix(identifier, amazonIdentifier):
+		ecoVer = strings.TrimPrefix(identifier, amazonIdentifier)
 	// "fcNN" names Fedora itself, which the RPM feeds carry alongside their own ranges.
 	case strings.HasPrefix(identifier, fedoraIdentifier):
 		eco, ecoVer = ecosystem.Fedora, strings.TrimPrefix(identifier, fedoraIdentifier)
-	// The Ubuntu feed tags the distribution's own packages with "ubuntu": they belong to the release the file lists them under.
-	case identifier == ubuntuIdentifier:
-		// Keep eco and ecoVer as the feed listed them.
-	// The feeds that don't tag their ranges yet (alpine, and most of the Ubuntu files) list nothing but the distribution's own packages, so an untagged range belongs to the file's release as well.
-	case identifier == "":
-		// Keep eco and ecoVer as the feed listed them.
 	// The identifiers of the other feeds have to be added above as they appear — an unknown one is dropped rather than guessed.
 	default:
 		return nil, eb.Errorf("unusable distribution identifier")
 	}
 
-	// Only the rebuilds are release-less; every other range has to name a release, so a bare dist tag ("el", "fc") or an empty version key is rejected rather than folded into a rebuild bucket.
+	// Only the rebuilds are release-less; every other range has to name a release, so a bare dist tag ("el", "fc", "amzn") or an empty version key is rejected rather than folded into a rebuild bucket.
 	if identifier != rapidFortIdentifier && !isVersionNumber(ecoVer) {
 		return nil, eb.With("version", ecoVer).Errorf("unusable distribution version")
 	}
@@ -261,6 +318,10 @@ func (vs VulnSrc) put(entries []entry) error {
 	return vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		// Register the data source once per platform.
 		addedDataSources := map[string]struct{}{}
+		// VulnerabilityDetail and VulnerabilityID are keyed by cveID alone, so
+		// writing them once per CVE avoids re-overwriting the same key as the
+		// same CVE appears across packages, buckets and feeds.
+		savedVulns := map[string]struct{}{}
 		for _, e := range entries {
 			// Name() concatenates the platform string, so compute it once and reuse.
 			platform := e.bucket.Name()
@@ -276,12 +337,17 @@ func (vs VulnSrc) put(entries []entry) error {
 			if err := vs.dbc.PutAdvisoryDetail(tx, e.cveID, e.pkgName, []string{platform}, e.advisory); err != nil {
 				return eb.Wrapf(err, "failed to save advisory")
 			}
+
+			if _, ok := savedVulns[e.cveID]; ok {
+				continue
+			}
 			if err := vs.dbc.PutVulnerabilityDetail(tx, e.cveID, source.ID, e.detail); err != nil {
 				return eb.Wrapf(err, "failed to save vulnerability detail")
 			}
 			if err := vs.dbc.PutVulnerabilityID(tx, e.cveID); err != nil {
 				return eb.Wrapf(err, "failed to save vulnerability ID")
 			}
+			savedVulns[e.cveID] = struct{}{}
 		}
 		return nil
 	})

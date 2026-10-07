@@ -1,0 +1,26 @@
+{
+  "package_name": "curl",
+  "advisory": {
+    "9": {
+      "CVE-2023-38546": {
+        "cve_id": "CVE-2023-38546",
+        "title": "curl: cookie injection with none file",
+        "description": "libcurl can be tricked into injecting cookies into a running program when an application creates a new easy handle by duplicating an existing one.",
+        "severity": "LOW",
+        "status": "fixed",
+        "events": [
+          {
+            "introduced": "7.76.1-26.el9",
+            "fixed": "7.76.1-29.el9_3.2",
+            "identifier": "el9"
+          },
+          {
+            "introduced": "7.76.1-26.rf",
+            "fixed": "7.76.1-29.rf",
+            "identifier": "rf"
+          }
+        ]
+      }
+    }
+  }
+}

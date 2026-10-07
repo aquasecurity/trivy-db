@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
@@ -209,6 +210,11 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
+					// The redhat and oracle feeds both carry an fc39 range for
+					// this CVE, and both land in the shared fedora bucket. The
+					// ranges differ, so they are unioned rather than letting the
+					// last file walked overwrite the other. The identical fixed
+					// version is de-duplicated.
 					Key: []string{
 						"advisory-detail",
 						"CVE-2023-27536",
@@ -216,9 +222,12 @@ func TestVulnSrc_Update(t *testing.T) {
 						"curl",
 					},
 					Value: types.Advisory{
-						PatchedVersions:    []string{"7.76.1-26.fc39"},
-						VulnerableVersions: []string{">=7.76.1-14.fc39, <7.76.1-26.fc39"},
-						Severity:           types.SeverityMedium,
+						PatchedVersions: []string{"7.76.1-26.fc39"},
+						VulnerableVersions: []string{
+							"<7.76.1-26.fc39",
+							">=7.76.1-14.fc39, <7.76.1-26.fc39",
+						},
+						Severity: types.SeverityMedium,
 					},
 				},
 				{
@@ -295,6 +304,399 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{
 						"vulnerability-id",
 						"CVE-2024-99999",
+					},
+					Value: map[string]any{},
+				},
+				// Oracle tags its releases "elN" like the RHEL it rebuilds, so its
+				// feed splits the same way the redhat one does: elN to the versioned
+				// Oracle buckets, fcNN to the shared fedora buckets asserted above,
+				// and rf to an Oracle-scoped bucket.
+				{
+					Key: []string{
+						"data-source",
+						"rapidfort Oracle Linux 9",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "oracle-oval",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-27536",
+						"rapidfort Oracle Linux 9",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"7.76.1-26.el9_3.3"},
+						VulnerableVersions: []string{">=7.76.1-14.el9, <7.76.1-26.el9_3.3"},
+						Severity:           types.SeverityMedium,
+					},
+				},
+				{
+					// The el5 range is filed under a malformed top-level key
+					// ("el5" where a bare "5" was meant). Splitting re-keys by
+					// the range identifier, so the release still comes out as 5.
+					Key: []string{
+						"data-source",
+						"rapidfort Oracle Linux 5",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "oracle-oval",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2024-EL5KEY",
+						"rapidfort Oracle Linux 5",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"7.19.7-54.el5"},
+						VulnerableVersions: []string{"<7.19.7-54.el5"},
+						Severity:           types.SeverityHigh,
+					},
+				},
+				{
+					// RapidFort's own rebuilds from the oracle feed: the feed's
+					// ecosystem with the release dropped, kept apart from the
+					// "rapidfort Red Hat" rebuild bucket the redhat feed writes.
+					// The two hold different fixed versions for the same CVE and
+					// package, which is exactly why they must not share.
+					Key: []string{
+						"data-source",
+						"rapidfort Oracle Linux",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "oracle-oval",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-27536",
+						"rapidfort Oracle Linux",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"7.76.1-27.rf"},
+						VulnerableVersions: []string{">=7.76.1-14.rf, <7.76.1-27.rf"},
+						Severity:           types.SeverityMedium,
+					},
+				},
+				// Alma tags its releases "elN" like the RHEL it rebuilds, so the
+				// dist tag names the release while the feed's directory still names
+				// the distribution.
+				{
+					Key: []string{
+						"data-source",
+						"rapidfort alma 9",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "alma",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-38546",
+						"rapidfort alma 9",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"7.76.1-29.el9_3.2"},
+						VulnerableVersions: []string{">=7.76.1-26.el9, <7.76.1-29.el9_3.2"},
+						Severity:           types.SeverityLow,
+					},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"rapidfort alma",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "alma",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-38546",
+						"rapidfort alma",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"7.76.1-29.rf"},
+						VulnerableVersions: []string{">=7.76.1-26.rf, <7.76.1-29.rf"},
+						Severity:           types.SeverityLow,
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2023-38546",
+						"rapidfort",
+					},
+					Value: types.VulnerabilityDetail{
+						Title:       "curl: cookie injection with none file",
+						Description: "libcurl can be tricked into injecting cookies into a running program when an application creates a new easy handle by duplicating an existing one.",
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2023-38546",
+					},
+					Value: map[string]any{},
+				},
+				// Rocky routes the same way alma does, from its own feed
+				// directory and under a different RHEL major.
+				{
+					Key: []string{
+						"data-source",
+						"rapidfort rocky 8",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "rocky",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2024-2398",
+						"rapidfort rocky 8",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"7.61.1-34.el8_9.3"},
+						VulnerableVersions: []string{">=7.61.1-30.el8, <7.61.1-34.el8_9.3"},
+						Severity:           types.SeverityMedium,
+					},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"rapidfort rocky",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "rocky",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2024-2398",
+						"rapidfort rocky",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"7.61.1-34.rf"},
+						VulnerableVersions: []string{">=7.61.1-30.rf, <7.61.1-34.rf"},
+						Severity:           types.SeverityMedium,
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2024-2398",
+						"rapidfort",
+					},
+					Value: types.VulnerabilityDetail{
+						Title:       "curl: HTTP/2 push headers memory leak",
+						Description: "When an application tells libcurl it wants to allow HTTP/2 server push, the amount of received headers for the push can exhaust memory.",
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2024-2398",
+					},
+					Value: map[string]any{},
+				},
+				// Amazon Linux tags its releases "amzn2"/"amzn2023" rather than
+				// elN, and the feed lists each under its own version key.
+				{
+					Key: []string{
+						"data-source",
+						"rapidfort amazon linux 2",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "amazon",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-46218",
+						"rapidfort amazon linux 2",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"8.3.0-1.amzn2.0.2"},
+						VulnerableVersions: []string{">=7.61.1-22.amzn2, <8.3.0-1.amzn2.0.2"},
+						Severity:           types.SeverityMedium,
+					},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"rapidfort amazon linux 2023",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "amazon",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-46218",
+						"rapidfort amazon linux 2023",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"8.5.0-1.amzn2023"},
+						VulnerableVersions: []string{">=8.4.0-1.amzn2023, <8.5.0-1.amzn2023"},
+						Severity:           types.SeverityMedium,
+					},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"rapidfort amazon linux",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "amazon",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-46218",
+						"rapidfort amazon linux",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"8.5.0-1.rf"},
+						VulnerableVersions: []string{">=8.4.0-1.rf, <8.5.0-1.rf"},
+						Severity:           types.SeverityMedium,
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2023-46218",
+						"rapidfort",
+					},
+					Value: types.VulnerabilityDetail{
+						Title:       "curl: information disclosure by exploiting a mixed case flaw",
+						Description: "A malicious HTTP server can set \"super cookies\" that are passed back to more origins than what is otherwise allowed or possible.",
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2023-46218",
+					},
+					Value: map[string]any{},
+				},
+				// The debian feed is dpkg like ubuntu: its own packages are
+				// tagged by ecosystem name, its rebuilds by "rf".
+				{
+					Key: []string{
+						"data-source",
+						"rapidfort debian 12",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "debian",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-38545",
+						"rapidfort debian 12",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"7.88.1-10+deb12u5"},
+						VulnerableVersions: []string{">=7.88.1-10, <7.88.1-10+deb12u5"},
+						Severity:           types.SeverityHigh,
+					},
+				},
+				{
+					Key: []string{
+						"data-source",
+						"rapidfort debian",
+					},
+					Value: types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "debian",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-38545",
+						"rapidfort debian",
+						"curl",
+					},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"7.88.1-12.rf1"},
+						VulnerableVersions: []string{">=7.88.1-10.rf1, <7.88.1-12.rf1"},
+						Severity:           types.SeverityHigh,
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2023-38545",
+						"rapidfort",
+					},
+					Value: types.VulnerabilityDetail{
+						Title:       "curl: SOCKS5 heap buffer overflow",
+						Description: "curl overflows a heap based buffer in the SOCKS5 proxy handshake when the hostname is longer than 255 bytes.",
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2023-38545",
 					},
 					Value: map[string]any{},
 				},
@@ -737,6 +1139,278 @@ func TestVulnSrc_Get(t *testing.T) {
 			},
 		},
 		{
+			name:    "oracle advisory found",
+			baseOS:  ecosystem.OracleLinux,
+			osVer:   "9",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-27536",
+					VulnerableVersions: []string{">=7.76.1-14.el9, <7.76.1-26.el9_3.3"},
+					PatchedVersions:    []string{"7.76.1-26.el9_3.3"},
+					Severity:           types.SeverityMedium,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "oracle-oval",
+					},
+				},
+			},
+		},
+		{
+			// The oracle feed's rf rebuilds get their own bucket
+			// ("rapidfort Oracle Linux"), separate from the redhat feed's
+			// ("rapidfort Red Hat"), which the empty release selects. The
+			// fixture holds a different fixed version in each, so 7.76.1-27.rf
+			// shows which one the lookup landed in.
+			name:    "oracle rf advisory found",
+			baseOS:  ecosystem.OracleLinux,
+			osVer:   "",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-27536",
+					VulnerableVersions: []string{">=7.76.1-14.rf, <7.76.1-27.rf"},
+					PatchedVersions:    []string{"7.76.1-27.rf"},
+					Severity:           types.SeverityMedium,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "oracle-oval",
+					},
+				},
+			},
+		},
+		{
+			name:    "alma advisory found",
+			baseOS:  ecosystem.AlmaLinux,
+			osVer:   "9",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-38546",
+					VulnerableVersions: []string{">=7.76.1-26.el9, <7.76.1-29.el9_3.2"},
+					PatchedVersions:    []string{"7.76.1-29.el9_3.2"},
+					Severity:           types.SeverityLow,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "alma",
+					},
+				},
+			},
+		},
+		{
+			name:    "rocky advisory found",
+			baseOS:  ecosystem.Rocky,
+			osVer:   "8",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2024-2398",
+					VulnerableVersions: []string{">=7.61.1-30.el8, <7.61.1-34.el8_9.3"},
+					PatchedVersions:    []string{"7.61.1-34.el8_9.3"},
+					Severity:           types.SeverityMedium,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "rocky",
+					},
+				},
+			},
+		},
+		{
+			name:    "amazon linux 2 advisory found",
+			baseOS:  ecosystem.AmazonLinux,
+			osVer:   "2",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-46218",
+					VulnerableVersions: []string{">=7.61.1-22.amzn2, <8.3.0-1.amzn2.0.2"},
+					PatchedVersions:    []string{"8.3.0-1.amzn2.0.2"},
+					Severity:           types.SeverityMedium,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "amazon",
+					},
+				},
+			},
+		},
+		{
+			name:    "amazon linux 2023 advisory found",
+			baseOS:  ecosystem.AmazonLinux,
+			osVer:   "2023",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-46218",
+					VulnerableVersions: []string{">=8.4.0-1.amzn2023, <8.5.0-1.amzn2023"},
+					PatchedVersions:    []string{"8.5.0-1.amzn2023"},
+					Severity:           types.SeverityMedium,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "amazon",
+					},
+				},
+			},
+		},
+		{
+			name:    "debian advisory found",
+			baseOS:  ecosystem.Debian,
+			osVer:   "12",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-38545",
+					VulnerableVersions: []string{">=7.88.1-10, <7.88.1-10+deb12u5"},
+					PatchedVersions:    []string{"7.88.1-10+deb12u5"},
+					Severity:           types.SeverityHigh,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "debian",
+					},
+				},
+			},
+		},
+		{
+			// Each distro's rebuild bucket holds a fixed version unique to it, so
+			// the version returned shows which "rapidfort <distro>" bucket the
+			// empty release selected.
+			name:    "alma rf advisory found",
+			baseOS:  ecosystem.AlmaLinux,
+			osVer:   "",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-38546",
+					VulnerableVersions: []string{">=7.76.1-26.rf, <7.76.1-29.rf"},
+					PatchedVersions:    []string{"7.76.1-29.rf"},
+					Severity:           types.SeverityLow,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "alma",
+					},
+				},
+			},
+		},
+		{
+			name:    "rocky rf advisory found",
+			baseOS:  ecosystem.Rocky,
+			osVer:   "",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2024-2398",
+					VulnerableVersions: []string{">=7.61.1-30.rf, <7.61.1-34.rf"},
+					PatchedVersions:    []string{"7.61.1-34.rf"},
+					Severity:           types.SeverityMedium,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "rocky",
+					},
+				},
+			},
+		},
+		{
+			name:    "amazon rf advisory found",
+			baseOS:  ecosystem.AmazonLinux,
+			osVer:   "",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-46218",
+					VulnerableVersions: []string{">=8.4.0-1.rf, <8.5.0-1.rf"},
+					PatchedVersions:    []string{"8.5.0-1.rf"},
+					Severity:           types.SeverityMedium,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "amazon",
+					},
+				},
+			},
+		},
+		{
+			name:    "debian rf advisory found",
+			baseOS:  ecosystem.Debian,
+			osVer:   "",
+			pkgName: "curl",
+			fixtures: []string{
+				"testdata/fixtures/happy.yaml",
+				"testdata/fixtures/data-source.yaml",
+			},
+			want: []types.Advisory{
+				{
+					VulnerabilityID:    "CVE-2023-38545",
+					VulnerableVersions: []string{">=7.88.1-10.rf1, <7.88.1-12.rf1"},
+					PatchedVersions:    []string{"7.88.1-12.rf1"},
+					Severity:           types.SeverityHigh,
+					DataSource: &types.DataSource{
+						ID:     vulnerability.RapidFort,
+						Name:   "RapidFort Security Advisories",
+						URL:    "https://github.com/rapidfort/security-advisories",
+						BaseID: "debian",
+					},
+				},
+			},
+		},
+		{
 			name:    "no advisory for package",
 			baseOS:  ecosystem.Ubuntu,
 			osVer:   "22.04",
@@ -752,8 +1426,8 @@ func TestVulnSrc_Get(t *testing.T) {
 			// for any other one has no bucket to read and must say so rather than
 			// report the package as clean.
 			name:    "sad path - base OS RapidFort doesn't dispatch to",
-			baseOS:  ecosystem.Debian,
-			osVer:   "12",
+			baseOS:  ecosystem.PhotonOS,
+			osVer:   "5.0",
 			pkgName: "curl",
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
@@ -782,4 +1456,274 @@ func TestVulnSrc_Get(t *testing.T) {
 func TestVulnSrc_Name(t *testing.T) {
 	vs := rapidfort.NewVulnSrc()
 	assert.Equal(t, vulnerability.RapidFort, vs.Name())
+}
+
+// TestResolveBucket pins which bucket a single range lands in. One feed file can
+// mix distributions, so the range's identifier — not the version key it sits
+// under — decides, and the feed's own OS supplies whatever the identifier leaves
+// unsaid. These bucket names are the keys Trivy queries at scan time, so a
+// change here silently stops matching.
+func TestResolveBucket(t *testing.T) {
+	tests := []struct {
+		name       string
+		eco        ecosystem.Type
+		ecoVer     string
+		identifier string
+		wantName   string
+		wantErr    string
+	}{
+		// "elN" is the whole Enterprise Linux family's dist tag, so it names the
+		// release only: the distribution still comes from the feed that shipped it.
+		{
+			name:       "el9 on the redhat feed",
+			eco:        ecosystem.RedHat,
+			ecoVer:     "9",
+			identifier: "el9",
+			wantName:   "rapidfort Red Hat 9",
+		},
+		{
+			name:       "el9 on the oracle feed",
+			eco:        ecosystem.OracleLinux,
+			ecoVer:     "9",
+			identifier: "el9",
+			wantName:   "rapidfort Oracle Linux 9",
+		},
+		{
+			name:       "el8 on the rocky feed",
+			eco:        ecosystem.Rocky,
+			ecoVer:     "8",
+			identifier: "el8",
+			wantName:   "rapidfort rocky 8",
+		},
+		{
+			name:       "el9 on the alma feed",
+			eco:        ecosystem.AlmaLinux,
+			ecoVer:     "9",
+			identifier: "el9",
+			wantName:   "rapidfort alma 9",
+		},
+		// The identifier overrides the version key: an el8 range listed under
+		// the "9" key belongs to the 8 bucket.
+		{
+			name:       "el8 range listed under the 9 key",
+			eco:        ecosystem.RedHat,
+			ecoVer:     "9",
+			identifier: "el8",
+			wantName:   "rapidfort Red Hat 8",
+		},
+		// Amazon Linux tags releases "amznN" rather than "elN".
+		{
+			name:       "amzn2023 on the amazon feed",
+			eco:        ecosystem.AmazonLinux,
+			ecoVer:     "2023",
+			identifier: "amzn2023",
+			wantName:   "rapidfort amazon linux 2023",
+		},
+		{
+			name:       "amzn2 on the amazon feed",
+			eco:        ecosystem.AmazonLinux,
+			ecoVer:     "2",
+			identifier: "amzn2",
+			wantName:   "rapidfort amazon linux 2",
+		},
+		{
+			name:       "amzn1 on the amazon feed",
+			eco:        ecosystem.AmazonLinux,
+			ecoVer:     "2023",
+			identifier: "amzn1",
+			wantName:   "rapidfort amazon linux 1",
+		},
+		// "fcNN" names Fedora itself, so it overrides the feed's OS as well.
+		// Every RPM feed carries these, and mergeEntries unions the copies.
+		{
+			name:       "fc43 on the redhat feed",
+			eco:        ecosystem.RedHat,
+			ecoVer:     "9",
+			identifier: "fc43",
+			wantName:   "rapidfort fedora 43",
+		},
+		{
+			name:       "fc43 on the oracle feed",
+			eco:        ecosystem.OracleLinux,
+			ecoVer:     "9",
+			identifier: "fc43",
+			wantName:   "rapidfort fedora 43",
+		},
+		// A rebuild keeps the feed's OS and drops the release.
+		{
+			name:       "rf on the redhat feed",
+			eco:        ecosystem.RedHat,
+			ecoVer:     "9",
+			identifier: "rf",
+			wantName:   "rapidfort Red Hat",
+		},
+		{
+			name:       "rf on the oracle feed",
+			eco:        ecosystem.OracleLinux,
+			ecoVer:     "9",
+			identifier: "rf",
+			wantName:   "rapidfort Oracle Linux",
+		},
+		{
+			name:       "rf on the amazon feed",
+			eco:        ecosystem.AmazonLinux,
+			ecoVer:     "2023",
+			identifier: "rf",
+			wantName:   "rapidfort amazon linux",
+		},
+		{
+			name:       "rf on the ubuntu feed",
+			eco:        ecosystem.Ubuntu,
+			ecoVer:     "22.04",
+			identifier: "rf",
+			wantName:   "rapidfort ubuntu",
+		},
+		{
+			name:       "rf on the debian feed",
+			eco:        ecosystem.Debian,
+			ecoVer:     "12",
+			identifier: "rf",
+			wantName:   "rapidfort debian",
+		},
+		// A feed names its own distribution's packages by ecosystem name.
+		{
+			name:       "ubuntu identifier on the ubuntu feed",
+			eco:        ecosystem.Ubuntu,
+			ecoVer:     "22.04",
+			identifier: "ubuntu",
+			wantName:   "rapidfort ubuntu 22.04",
+		},
+		{
+			name:       "debian identifier on the debian feed",
+			eco:        ecosystem.Debian,
+			ecoVer:     "12",
+			identifier: "debian",
+			wantName:   "rapidfort debian 12",
+		},
+		{
+			name:       "redhat identifier on the redhat feed",
+			eco:        ecosystem.RedHat,
+			ecoVer:     "9",
+			identifier: "redhat",
+			wantName:   "rapidfort Red Hat 9",
+		},
+		{
+			name:     "unannotated distro fix stays on the base OS",
+			eco:      ecosystem.Debian,
+			ecoVer:   "13",
+			wantName: "rapidfort debian 13",
+		},
+		{
+			name:     "unannotated distro fix on the ubuntu feed stays on the base OS",
+			eco:      ecosystem.Ubuntu,
+			ecoVer:   "20.04",
+			wantName: "rapidfort ubuntu 20.04",
+		},
+		// Alpine annotates nothing and ships no rebuilds, so its ranges belong
+		// to the release the file lists them under.
+		{
+			name:     "untagged alpine range",
+			eco:      ecosystem.Alpine,
+			ecoVer:   "3.18",
+			wantName: "rapidfort alpine 3.18",
+		},
+
+		// Anything that can't be attributed is dropped rather than guessed, so
+		// the caller logs and skips the range instead of inventing a platform.
+		{
+			name:       "el with no release",
+			eco:        ecosystem.RedHat,
+			ecoVer:     "9",
+			identifier: "el",
+			wantErr:    "unusable distribution version",
+		},
+		{
+			name:       "amzn with no release",
+			eco:        ecosystem.AmazonLinux,
+			ecoVer:     "2023",
+			identifier: "amzn",
+			wantErr:    "unusable distribution version",
+		},
+		{
+			name:       "non-numeric el release",
+			eco:        ecosystem.RedHat,
+			ecoVer:     "9",
+			identifier: "el9beta",
+			wantErr:    "unusable distribution version",
+		},
+		{
+			name:       "non-numeric amzn release",
+			eco:        ecosystem.AmazonLinux,
+			ecoVer:     "2023",
+			identifier: "amznX",
+			wantErr:    "unusable distribution version",
+		},
+		{
+			name:       "el release with a trailing dot",
+			eco:        ecosystem.RedHat,
+			ecoVer:     "9",
+			identifier: "el9.",
+			wantErr:    "unusable distribution version",
+		},
+		{
+			name:       "fc with no release",
+			eco:        ecosystem.RedHat,
+			ecoVer:     "9",
+			identifier: "fcrawhide",
+			wantErr:    "unusable distribution version",
+		},
+		// An empty version key must not fold a distribution range into the
+		// release-less rebuild bucket.
+		{
+			name:    "untagged range under an empty version key",
+			eco:     ecosystem.Ubuntu,
+			ecoVer:  "",
+			wantErr: "unusable distribution version",
+		},
+		// A feed must not claim another distribution's ranges: the buckets are
+		// keyed by version, and "12" means nothing on the Ubuntu side.
+		{
+			name:       "debian identifier on the ubuntu feed",
+			eco:        ecosystem.Ubuntu,
+			ecoVer:     "22.04",
+			identifier: "debian",
+			wantErr:    "unusable distribution identifier",
+		},
+		{
+			name:       "ubuntu identifier on the debian feed",
+			eco:        ecosystem.Debian,
+			ecoVer:     "12",
+			identifier: "ubuntu",
+			wantErr:    "unusable distribution identifier",
+		},
+		{
+			name:       "unknown distribution prefix",
+			eco:        ecosystem.RedHat,
+			ecoVer:     "9",
+			identifier: "sles15",
+			wantErr:    "unusable distribution identifier",
+		},
+		// A rebuild on a feed this build does not ingest has no bucket to go to.
+		{
+			name:       "rf on an unsupported feed",
+			eco:        ecosystem.PhotonOS,
+			ecoVer:     "5.0",
+			identifier: "rf",
+			wantErr:    "unsupported base ecosystem",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := rapidfort.ResolveBucket(tt.eco, tt.ecoVer, tt.identifier)
+			if tt.wantErr != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
+				assert.Nil(t, got)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.wantName, got.Name())
+		})
+	}
 }

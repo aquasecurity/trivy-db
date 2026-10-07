@@ -1,0 +1,26 @@
+{
+  "package_name": "curl",
+  "advisory": {
+    "12": {
+      "CVE-2023-38545": {
+        "cve_id": "CVE-2023-38545",
+        "title": "curl: SOCKS5 heap buffer overflow",
+        "description": "curl overflows a heap based buffer in the SOCKS5 proxy handshake when the hostname is longer than 255 bytes.",
+        "severity": "HIGH",
+        "status": "fixed",
+        "events": [
+          {
+            "introduced": "7.88.1-10",
+            "fixed": "7.88.1-10+deb12u5",
+            "identifier": "debian"
+          },
+          {
+            "introduced": "7.88.1-10.rf1",
+            "fixed": "7.88.1-12.rf1",
+            "identifier": "rf"
+          }
+        ]
+      }
+    }
+  }
+}

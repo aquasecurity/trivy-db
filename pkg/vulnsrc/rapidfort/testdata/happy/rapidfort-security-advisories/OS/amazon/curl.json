@@ -1,0 +1,42 @@
+{
+  "package_name": "curl",
+  "advisory": {
+    "2": {
+      "CVE-2023-46218": {
+        "cve_id": "CVE-2023-46218",
+        "title": "curl: information disclosure by exploiting a mixed case flaw",
+        "description": "A malicious HTTP server can set \"super cookies\" that are passed back to more origins than what is otherwise allowed or possible.",
+        "severity": "MEDIUM",
+        "status": "fixed",
+        "events": [
+          {
+            "introduced": "7.61.1-22.amzn2",
+            "fixed": "8.3.0-1.amzn2.0.2",
+            "identifier": "amzn2"
+          }
+        ]
+      }
+    },
+    "2023": {
+      "CVE-2023-46218": {
+        "cve_id": "CVE-2023-46218",
+        "title": "curl: information disclosure by exploiting a mixed case flaw",
+        "description": "A malicious HTTP server can set \"super cookies\" that are passed back to more origins than what is otherwise allowed or possible.",
+        "severity": "MEDIUM",
+        "status": "fixed",
+        "events": [
+          {
+            "introduced": "8.4.0-1.amzn2023",
+            "fixed": "8.5.0-1.amzn2023",
+            "identifier": "amzn2023"
+          },
+          {
+            "introduced": "8.4.0-1.rf",
+            "fixed": "8.5.0-1.rf",
+            "identifier": "rf"
+          }
+        ]
+      }
+    }
+  }
+}

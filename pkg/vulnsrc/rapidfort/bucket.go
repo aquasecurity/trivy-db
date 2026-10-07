@@ -34,10 +34,20 @@ func newBucket(baseEcosystem ecosystem.Type, version string) (bucket.DataSourceB
 	switch baseEcosystem {
 	case ecosystem.Ubuntu:
 		base, ds.BaseID = bucket.NewUbuntu(version), vulnerability.Ubuntu
+	case ecosystem.Debian:
+		base, ds.BaseID = bucket.NewDebian(version), vulnerability.Debian
 	case ecosystem.Alpine:
 		base, ds.BaseID = bucket.NewAlpine(version), vulnerability.Alpine
 	case ecosystem.RedHat:
 		base, ds.BaseID = bucket.NewRedHat(version), vulnerability.RedHat
+	case ecosystem.OracleLinux:
+		base, ds.BaseID = bucket.NewOracle(version), vulnerability.OracleOVAL
+	case ecosystem.Rocky:
+		base, ds.BaseID = bucket.NewRocky(version), vulnerability.Rocky
+	case ecosystem.AlmaLinux:
+		base, ds.BaseID = bucket.NewAlma(version), vulnerability.Alma
+	case ecosystem.AmazonLinux:
+		base, ds.BaseID = bucket.NewAmazon(version), vulnerability.Amazon
 	case ecosystem.Fedora:
 		base, ds.BaseID = bucket.NewFedora(version), vulnerability.Fedora
 	default:
