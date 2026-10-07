@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.7.3",
+  "id": "CLEANSTART-2026-BB00001",
+  "summary": "Security fix for cve-2026-1111 applied in: redis 7.4.6-r0",
+  "details": "cve-2026-1111 affects redis. This issue is resolved in later releases.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "cleanstart",
+        "name": "redis"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "7.4.6-r0"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "upstream": [
+    "ghsa-aaaa-bbbb-cccc",
+    "cve-2026-1111"
+  ],
+  "references": [
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/cleanstart-dev/cleanstart-security-advisories/tree/main/advisories/2026/CLEANSTART-2026-BB00001.json"
+    }
+  ],
+  "published": "2026-09-18T10:18:47.732134Z",
+  "modified": "2026-05-01T09:05:07Z",
+  "related": [],
+  "credits": [],
+  "database_specific": {}
+}

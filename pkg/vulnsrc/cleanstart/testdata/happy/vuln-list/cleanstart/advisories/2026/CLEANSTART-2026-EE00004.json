@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.7.3",
+  "id": "CLEANSTART-2026-EE00004",
+  "summary": "Upstream-only advisory with no CleanStart package",
+  "details": "Every affected package belongs to another ecosystem, so nothing is stored.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Go",
+        "name": "github.com/example/only-upstream"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.2.3"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "upstream": [
+    "cve-2026-2222"
+  ],
+  "references": [],
+  "published": "2026-09-18T10:18:47.732134Z",
+  "modified": "2026-05-01T09:05:07Z",
+  "related": [],
+  "credits": [],
+  "database_specific": {}
+}
