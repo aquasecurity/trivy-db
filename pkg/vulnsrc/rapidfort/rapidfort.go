@@ -318,6 +318,10 @@ func (vs VulnSrc) put(entries []entry) error {
 	return vs.dbc.BatchUpdate(func(tx *bolt.Tx) error {
 		// Register the data source once per platform.
 		addedDataSources := map[string]struct{}{}
+		// VulnerabilityDetail and VulnerabilityID are keyed by cveID alone, so
+		// writing them once per CVE avoids re-overwriting the same key as the
+		// same CVE appears across packages, buckets and feeds.
+		savedVulns := map[string]struct{}{}
 		for _, e := range entries {
 			// Name() concatenates the platform string, so compute it once and reuse.
 			platform := e.bucket.Name()
@@ -333,12 +337,17 @@ func (vs VulnSrc) put(entries []entry) error {
 			if err := vs.dbc.PutAdvisoryDetail(tx, e.cveID, e.pkgName, []string{platform}, e.advisory); err != nil {
 				return eb.Wrapf(err, "failed to save advisory")
 			}
+
+			if _, ok := savedVulns[e.cveID]; ok {
+				continue
+			}
 			if err := vs.dbc.PutVulnerabilityDetail(tx, e.cveID, source.ID, e.detail); err != nil {
 				return eb.Wrapf(err, "failed to save vulnerability detail")
 			}
 			if err := vs.dbc.PutVulnerabilityID(tx, e.cveID); err != nil {
 				return eb.Wrapf(err, "failed to save vulnerability ID")
 			}
+			savedVulns[e.cveID] = struct{}{}
 		}
 		return nil
 	})
