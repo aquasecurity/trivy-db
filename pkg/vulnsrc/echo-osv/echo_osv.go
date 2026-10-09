@@ -46,15 +46,16 @@ func (VulnSrc) Update(root string) error {
 
 // resolveEcho maps an Echo OSV ecosystem to a bucket.
 // resolveBucket lowercases the ecosystem and splits it on ':', so "Echo:PyPI"
-// arrives here as suffix "pypi" and plain "Echo" (OS packages) as "".
+// "Echo:Maven" and "Echo:npm" arrive here as suffixes "pypi", "maven" and "npm",
+// and plain "Echo" (OS packages) as "".
 func resolveEcho(suffix string) (bucket.Bucket, error) {
 	switch suffix {
 	case "pypi":
-		return newPipBucket(source)
+		return newEchoBucket(bucket.NewPyPI, source)
 	case "maven":
-		return newMavenBucket(source)
+		return newEchoBucket(bucket.NewMaven, source)
 	case "npm":
-		return newNpmBucket(source)
+		return newEchoBucket(bucket.NewNpm, source)
 	default:
 		// Plain "Echo" (OS packages, served by the `echo` source) and
 		// unsupported suffixes are skipped by the OSV parser.

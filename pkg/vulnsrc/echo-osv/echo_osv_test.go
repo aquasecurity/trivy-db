@@ -124,22 +124,23 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"advisory-detail",
-						"CVE-2024-88888",
+						"CVE-2025-41249",
 						"echo maven::Echo OSV",
-						"org.apache.commons:commons-lang3",
+						"org.springframework:spring-core",
 					},
 					Value: types.Advisory{
 						VendorIDs: []string{
-							"ECHO-mvn1-0000-0001",
+							"GHSA-jmp9-x22r-554x",
+							"ECHO-57ea-7cc7-5775",
 						},
-						PatchedVersions:    []string{"3.14.0+echo.999"},
-						VulnerableVersions: []string{">=3.14.0+echo.1, <3.14.0+echo.999"},
+						PatchedVersions:    []string{"6.1.21+echo.1"},
+						VulnerableVersions: []string{"<6.1.21+echo.1"},
 					},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
-						"CVE-2024-88888",
+						"CVE-2025-41249",
 					},
 					Value: map[string]any{},
 				},
@@ -160,22 +161,48 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"advisory-detail",
-						"CVE-2024-66666",
+						"CVE-2026-73086",
 						"echo npm::Echo OSV",
-						"@babel/traverse",
+						"nanoid",
 					},
 					Value: types.Advisory{
 						VendorIDs: []string{
-							"ECHO-2024-2468",
+							"GHSA-xwg4-73v4-xw9w",
+							"ECHO-bc75-657e-24f9",
 						},
-						PatchedVersions:    []string{"7.23.2+echo.999"},
-						VulnerableVersions: []string{">=7.23.2+echo.1, <7.23.2+echo.999"},
+						PatchedVersions:    []string{"3.3.6+echo.2"},
+						VulnerableVersions: []string{"<3.3.6+echo.2"},
 					},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
-						"CVE-2024-66666",
+						"CVE-2026-73086",
+					},
+					Value: map[string]any{},
+				},
+				// Scoped npm packages are discovered in nested directories and
+				// retain their "@scope/name" package key.
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2026-54285",
+						"echo npm::Echo OSV",
+						"@opentelemetry/core",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-8988-4f7v-96qf",
+							"ECHO-0b54-337c-5581",
+						},
+						PatchedVersions:    []string{"2.8.0"},
+						VulnerableVersions: []string{"<2.8.0"},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2026-54285",
 					},
 					Value: map[string]any{},
 				},
