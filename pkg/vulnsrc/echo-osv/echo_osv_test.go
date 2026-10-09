@@ -108,6 +108,104 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: map[string]any{},
 				},
+				// Maven (Echo:Maven) advisories are stored under the
+				// "echo maven::Echo OSV" bucket, keyed by groupId:artifactId.
+				{
+					Key: []string{
+						"data-source",
+						"echo maven::Echo OSV",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.EchoOSV,
+						Name: "Echo OSV",
+						URL:  "https://advisory.echohq.com/osv/all.zip",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2025-41249",
+						"echo maven::Echo OSV",
+						"org.springframework:spring-core",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-jmp9-x22r-554x",
+							"ECHO-57ea-7cc7-5775",
+						},
+						PatchedVersions:    []string{"6.1.21+echo.1"},
+						VulnerableVersions: []string{"<6.1.21+echo.1"},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2025-41249",
+					},
+					Value: map[string]any{},
+				},
+				// npm (Echo:npm) advisories are stored under the
+				// "echo npm::Echo OSV" bucket; scoped names keep the
+				// "@scope/name" form.
+				{
+					Key: []string{
+						"data-source",
+						"echo npm::Echo OSV",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.EchoOSV,
+						Name: "Echo OSV",
+						URL:  "https://advisory.echohq.com/osv/all.zip",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2026-73086",
+						"echo npm::Echo OSV",
+						"nanoid",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-xwg4-73v4-xw9w",
+							"ECHO-bc75-657e-24f9",
+						},
+						PatchedVersions:    []string{"3.3.6+echo.2"},
+						VulnerableVersions: []string{"<3.3.6+echo.2"},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2026-73086",
+					},
+					Value: map[string]any{},
+				},
+				// Scoped npm packages are discovered in nested directories and
+				// retain their "@scope/name" package key.
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2026-54285",
+						"echo npm::Echo OSV",
+						"@opentelemetry/core",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-8988-4f7v-96qf",
+							"ECHO-0b54-337c-5581",
+						},
+						PatchedVersions:    []string{"2.8.0"},
+						VulnerableVersions: []string{"<2.8.0"},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2026-54285",
+					},
+					Value: map[string]any{},
+				},
 			},
 			noBuckets: [][]string{
 				{
