@@ -344,6 +344,8 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 			continue
 		}
 
+		statuses := resolutionStatuses(advisory.Metadata.Advisory.Affected)
+
 		// Parse criteria
 		affectedPkgs := walkCriterion(advisory.Criteria, tests)
 		for _, affectedPkg := range affectedPkgs {
@@ -400,7 +402,7 @@ func parseDefinitions(advisories []redhatOVAL, tests map[string]rpmInfoTest, uni
 							FixedVersion:    affectedPkg.FixedVersion,
 							AffectedCPEList: advisory.Metadata.Advisory.AffectedCpeList,
 							Arches:          affectedPkg.Arches,
-							Status:          newStatus(advisory.Metadata.Advisory.Affected.Resolution.State),
+							Status:          pkgStatus(affectedPkg, statuses, advisory.Metadata.Advisory.Affected),
 						},
 					}
 				}
@@ -517,6 +519,45 @@ func severityFromImpact(sev string) types.Severity {
 		return types.SeverityCritical
 	}
 	return types.SeverityUnknown
+}
+
+// statusRank orders statuses from least to most open.
+var statusRank = map[types.Status]int{
+	types.StatusEndOfLife:          1,
+	types.StatusWillNotFix:         2,
+	types.StatusUnderInvestigation: 3,
+	types.StatusAffected:           4,
+}
+
+// resolutionStatuses maps each <resolution> component to its status.
+// One stream covers several products, so a component can be in more than one block,
+// e.g. kernel-rt is both "Affected" and "Will not fix" for CVE-2021-4204 on RHEL 9.
+// The most open status wins, matching Red Hat's CSAF VEX, which says "known_affected".
+func resolutionStatuses(a affectedState) map[string]types.Status {
+	statuses := make(map[string]types.Status)
+	for _, r := range a.Resolutions {
+		s := newStatus(r.State)
+		for _, c := range r.Components {
+			if old, ok := statuses[c]; !ok || statusRank[s] > statusRank[old] {
+				statuses[c] = s
+			}
+		}
+	}
+	return statuses
+}
+
+// pkgStatus returns the status of the <resolution> block that lists the package.
+// It falls back to the last block's state when no block lists it,
+// e.g. vuln-list data written before Resolutions existed.
+func pkgStatus(p pkg, statuses map[string]types.Status, a affectedState) types.Status {
+	component := p.Name
+	if p.Module != "" {
+		component = p.Module + "/" + p.Name
+	}
+	if s, ok := statuses[component]; ok {
+		return s
+	}
+	return newStatus(a.Resolution.State)
 }
 
 func newStatus(s string) types.Status {

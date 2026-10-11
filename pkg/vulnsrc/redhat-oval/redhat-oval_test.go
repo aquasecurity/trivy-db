@@ -326,7 +326,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: redhat.Advisory{
 						Entries: []redhat.Entry{
 							{
-								Status:             types.StatusAffected,
+								Status:             types.StatusWillNotFix,
 								AffectedCPEIndices: []int{1, 2, 6},
 								Cves: []redhat.CveEntry{
 									{
@@ -368,7 +368,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: redhat.Advisory{
 						Entries: []redhat.Entry{
 							{
-								Status:             types.StatusAffected,
+								Status:             types.StatusUnderInvestigation,
 								AffectedCPEIndices: []int{1, 2, 6},
 								Cves: []redhat.CveEntry{
 									{
