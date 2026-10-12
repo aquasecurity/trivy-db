@@ -75,64 +75,10 @@ func (vs VulnSrc) Update(dir string) error {
 	if err != nil {
 		return eb.Wrap(err)
 	}
-	if err = vs.put(mergeEntries(entries)); err != nil {
+	if err := vs.put(entries); err != nil {
 		return eb.Wrap(err)
 	}
 	return nil
-}
-
-// mergeEntries folds entries targeting the same (platform, package, CVE) into
-// one. split already collapses the ranges within a single file, but two files
-// can still describe the same artifact: every RPM feed carries fcNN ranges, and
-// those all resolve to the shared "rapidfort fedora NN" buckets. put writes one
-// entry after another, so without this only whichever file the walk visited last
-// would survive. Feeds with no such overlap pass through unchanged.
-func mergeEntries(entries []entry) []entry {
-	type key struct{ platform, pkgName, cveID string }
-
-	// Preserve first-seen order so the resulting DB does not depend on Go's map iteration order.
-	index := make(map[key]int, len(entries))
-	merged := make([]entry, 0, len(entries))
-	for _, e := range entries {
-		// Name() concatenates the platform string, so compute it once per entry.
-		k := key{e.bucket.Name(), e.pkgName, e.cveID}
-		i, seen := index[k]
-		if !seen {
-			index[k] = len(merged)
-			merged = append(merged, e)
-			continue
-		}
-		merged[i].advisory = mergeAdvisory(merged[i].advisory, e.advisory)
-	}
-	return merged
-}
-
-// mergeAdvisory unions two advisories for the same platform, package and CVE
-// onto the first-seen one. The two version lists are independent (no per-range
-// identifier is stored), so each is unioned on its own. Severity takes the
-// higher of the two: the constants are ordered, so a feed that left it Unknown
-// never overrides one that rated it.
-func mergeAdvisory(a, b types.Advisory) types.Advisory {
-	a.PatchedVersions = unionSorted(a.PatchedVersions, b.PatchedVersions)
-	a.VulnerableVersions = unionSorted(a.VulnerableVersions, b.VulnerableVersions)
-	a.Severity = max(a.Severity, b.Severity)
-	return a
-}
-
-// unionSorted concatenates two version lists, then sorts and de-duplicates
-// them. It returns nil rather than an empty slice so a merged Advisory stays
-// identical to an unmerged one when both inputs are empty.
-func unionSorted(a, b []string) []string {
-	if len(a) == 0 && len(b) == 0 {
-		return nil
-	}
-	out := make([]string, 0, len(a)+len(b))
-	out = append(out, a...)
-	out = append(out, b...)
-	// Compact only removes adjacent duplicates, hence the sort first — which
-	// buildAdvisory already relies on for a stable on-disk DB.
-	slices.Sort(out)
-	return slices.Compact(out)
 }
 
 type entry struct {

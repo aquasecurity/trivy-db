@@ -210,11 +210,10 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
-					// The redhat and oracle feeds both carry an fc39 range for
-					// this CVE, and both land in the shared fedora bucket. The
-					// ranges differ, so they are unioned rather than letting the
-					// last file walked overwrite the other. The identical fixed
-					// version is de-duplicated.
+					// Both redhat and oracle carry an fc39 range for this CVE in
+					// the shared fedora bucket. put overwrites by (CVE, pkg,
+					// platform) and FileWalk visits in lexical order, so the
+					// redhat range is the one that survives.
 					Key: []string{
 						"advisory-detail",
 						"CVE-2023-27536",
@@ -222,12 +221,9 @@ func TestVulnSrc_Update(t *testing.T) {
 						"curl",
 					},
 					Value: types.Advisory{
-						PatchedVersions: []string{"7.76.1-26.fc39"},
-						VulnerableVersions: []string{
-							"<7.76.1-26.fc39",
-							">=7.76.1-14.fc39, <7.76.1-26.fc39",
-						},
-						Severity: types.SeverityMedium,
+						PatchedVersions:    []string{"7.76.1-26.fc39"},
+						VulnerableVersions: []string{">=7.76.1-14.fc39, <7.76.1-26.fc39"},
+						Severity:           types.SeverityMedium,
 					},
 				},
 				{
@@ -1533,8 +1529,8 @@ func TestResolveBucket(t *testing.T) {
 			identifier: "amzn1",
 			wantName:   "rapidfort amazon linux 1",
 		},
-		// "fcNN" names Fedora itself, so it overrides the feed's OS as well.
-		// Every RPM feed carries these, and mergeEntries unions the copies.
+		// "fcNN" names Fedora itself, so an RPM feed carrying it routes to
+		// the Fedora bucket regardless of which feed owns the file.
 		{
 			name:       "fc43 on the redhat feed",
 			eco:        ecosystem.RedHat,
