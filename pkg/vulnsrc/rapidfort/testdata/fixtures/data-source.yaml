@@ -36,3 +36,78 @@
         Name: RapidFort Security Advisories
         URL: https://github.com/rapidfort/security-advisories
         BaseID: ubuntu
+    - key: rapidfort Oracle Linux 9
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: oracle-oval
+    - key: rapidfort Oracle Linux 5
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: oracle-oval
+    # RapidFort's own rebuilds from the oracle feed. They keep the feed's
+    # ecosystem and drop the release, so they stay clear of the redhat feed's
+    # rebuild bucket ("rapidfort Red Hat") even though both hold RPM ranges.
+    - key: rapidfort Oracle Linux
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: oracle-oval
+    - key: rapidfort alma 9
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: alma
+    - key: rapidfort alma
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: alma
+    - key: rapidfort rocky 8
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: rocky
+    - key: rapidfort rocky
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: rocky
+    - key: rapidfort amazon linux 2
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: amazon
+    - key: rapidfort amazon linux 2023
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: amazon
+    - key: rapidfort amazon linux
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: amazon
+    - key: rapidfort debian 12
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: debian
+    - key: rapidfort debian
+      value:
+        ID: rapidfort
+        Name: RapidFort Security Advisories
+        URL: https://github.com/rapidfort/security-advisories
+        BaseID: debian
