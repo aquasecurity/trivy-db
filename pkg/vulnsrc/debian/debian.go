@@ -206,6 +206,13 @@ func (vs VulnSrc) parseCVE(dir string) error {
 				vulnID:   cveID,
 			}
 
+			// The tracker has "- zziplib undetermined" without angle brackets for CVE-2026-111142, which is parsed as the fixed version "undetermined".
+			// Treat it as "<undetermined>" so that the entry is skipped like other undetermined ones.
+			// TODO: remove once the tracker data is fixed (upstream commit 417e238c1edb in data/CVE/list).
+			if cveID == "CVE-2026-111142" && ann.Package == "zziplib" && ann.Version == "undetermined" {
+				ann.Kind = "undetermined"
+			}
+
 			// Skip not-affected, removed or undetermined advisories
 			if slices.Contains(skipStatuses, ann.Kind) {
 				vs.notAffected[key] = struct{}{}
