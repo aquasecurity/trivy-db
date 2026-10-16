@@ -39,19 +39,19 @@ func TestVulnSrc_Update(t *testing.T) {
 						FixedVersion: "2.4.0-r3",
 					},
 				},
-				// Listed twice, at 0.8.11-r0 and 0.8.10-r1 in that order. The lowest wins,
-				// so this also proves it is not simply the first entry that is kept.
+				// Listed twice, at 0.8.11-r0 and 0.8.10-r1 in that order. The highest wins,
+				// so this also proves it is not simply the last entry that is kept.
 				{
 					Key: []string{"advisory-detail", "GHSA-hr2v-4r36-88hr", "cleanstart", "k8ssandra-client-fips"},
 					Value: types.Advisory{
-						FixedVersion: "0.8.10-r1",
+						FixedVersion: "0.8.11-r0",
 					},
 				},
 				// Listed twice, at 26.4.2 and 26.1.4-r0.
 				{
 					Key: []string{"advisory-detail", "GHSA-hr2v-4r36-88hr", "cleanstart", "linkerd2"},
 					Value: types.Advisory{
-						FixedVersion: "26.1.4-r0",
+						FixedVersion: "26.4.2",
 					},
 				},
 				{
@@ -81,6 +81,15 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key:   []string{"vulnerability-id", "CVE-2026-1111"},
 					Value: map[string]any{},
+				},
+
+				// One CVE fixed on four maintained branches. Keeping a lower branch's fix
+				// would report an unpatched build on a newer branch (e.g. 2.14.1) as fixed.
+				{
+					Key: []string{"advisory-detail", "CVE-2021-3538", "cleanstart", "harbor"},
+					Value: types.Advisory{
+						FixedVersion: "2.15.0-r0",
+					},
 				},
 
 				// No upstream at all, so the CleanStart ID is used. The Go package in the

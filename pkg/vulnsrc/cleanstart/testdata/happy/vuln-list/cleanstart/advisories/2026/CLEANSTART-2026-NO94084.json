@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.7.3",
+  "id": "CLEANSTART-2026-NO94084",
+  "summary": "Security fix for CVE-2021-3538 applied in: harbor 2.12.4-r0, harbor 2.13.5-r0, harbor 2.14.3-r0, harbor 2.15.0-r0",
+  "details": "CVE-2021-3538 affects multiple packages. This issue is resolved in later releases. See references for individual vulnerability details.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "CleanStart",
+        "name": "harbor",
+        "purl": "pkg:apk/cleanstart/harbor"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.12.4-r0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "package": {
+        "ecosystem": "CleanStart",
+        "name": "harbor",
+        "purl": "pkg:apk/cleanstart/harbor"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.13.5-r0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "package": {
+        "ecosystem": "CleanStart",
+        "name": "harbor",
+        "purl": "pkg:apk/cleanstart/harbor"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.14.3-r0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "package": {
+        "ecosystem": "CleanStart",
+        "name": "harbor",
+        "purl": "pkg:apk/cleanstart/harbor"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.15.0-r0"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "upstream": [
+    "CVE-2021-3538"
+  ],
+  "published": "2026-09-18T10:26:25.449162Z",
+  "modified": "2026-10-09T04:06:30Z"
+}
