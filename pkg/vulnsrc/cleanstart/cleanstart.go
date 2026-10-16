@@ -158,11 +158,11 @@ func (vs VulnSrc) convert(osvEntry osv.Entry) []entry {
 
 // fixedVersions returns the fixed version per package.
 //
-// An advisory may list the same package more than once, once per build that carried the
-// fix (e.g. linkerd2 at both 26.1.4-r0 and 26.4.2). trivy-db stores a single fixed
-// version per (vulnerability, package) and the CleanStart bucket has no version
-// dimension, so the lowest one wins: CleanStart is a single rolling stream, so every
-// build at or above the first fixed version already contains the fix.
+// An advisory may list the same package more than once, once per maintained branch that
+// carried the fix (e.g. harbor at 2.12.4-r0, 2.13.5-r0, 2.14.3-r0 and 2.15.0-r0).
+// trivy-db stores a single fixed version per (vulnerability, package) and the CleanStart
+// bucket has no version dimension, so the highest one wins: keeping a lower branch's fix
+// would report an unpatched build on a newer branch (e.g. harbor 2.14.1) as fixed.
 func (vs VulnSrc) fixedVersions(osvEntry osv.Entry) map[string]string {
 	fixed := make(map[string]string)
 	for _, affected := range osvEntry.Affected {
@@ -176,7 +176,7 @@ func (vs VulnSrc) fixedVersions(osvEntry osv.Entry) map[string]string {
 			continue
 		}
 		for _, ver := range fixedVersionsInRanges(affected.Ranges) {
-			if cur, ok := fixed[pkgName]; !ok || lessThan(ver, cur) {
+			if cur, ok := fixed[pkgName]; !ok || lessThan(cur, ver) {
 				fixed[pkgName] = ver
 			}
 		}
@@ -199,7 +199,7 @@ func fixedVersionsInRanges(ranges []osv.Range) []string {
 	return versions
 }
 
-// lessThan compares two APK versions. Versions that fail to parse sort last, so a valid
+// lessThan compares two APK versions. Versions that fail to parse sort first, so a valid
 // version is always preferred over a malformed one.
 func lessThan(a, b string) bool {
 	av, aErr := apkver.NewVersion(a)
@@ -208,9 +208,9 @@ func lessThan(a, b string) bool {
 	case aErr != nil && bErr != nil:
 		return a < b
 	case aErr != nil:
-		return false
-	case bErr != nil:
 		return true
+	case bErr != nil:
+		return false
 	}
 	return av.LessThan(bv)
 }
