@@ -1,8 +1,12 @@
 package debian_test
 
 import (
+	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
@@ -10,6 +14,54 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
 )
+
+func TestVulnSrc_UpdateSidVersion(t *testing.T) {
+	tests := []struct {
+		name        string
+		version     string
+		wantVersion string
+		wantErr     string
+	}{
+		{name: "undetermined retains vulnerability", version: "undetermined"},
+		{name: "unfixed retains vulnerability"},
+		{name: "valid fixed version", version: "0.13.72+dfsg.1-1.1", wantVersion: "0.13.72+dfsg.1-1.1"},
+		{name: "other invalid version fails", version: "invalid", wantErr: "upstream_version must start with digit"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dir := t.TempDir()
+			tracker := filepath.Join(dir, "vuln-list-debian", "tracker")
+			for _, subdir := range []string{"CVE", "source/bookworm/main/z", "updates-source", "DLA", "DSA"} {
+				require.NoError(t, os.MkdirAll(filepath.Join(tracker, subdir), 0o755))
+			}
+			files := map[string]string{
+				"distributions.json":                  `{"bookworm":{"major-version":"12","support":"security"}}`,
+				"source/bookworm/main/z/zziplib.json": `{"Package":["zziplib"],"Version":["0.13.72+dfsg.1-1.1"]}`,
+				"CVE/CVE-2026-111142.json": fmt.Sprintf(`{
+					"Header":{"ID":"CVE-2026-111142","Description":"Zziplib out-of-bounds read"},
+					"Annotations":[{"Type":"package","Package":"zziplib","Kind":"fixed","Version":%q}]
+				}`, tt.version),
+			}
+			for name, content := range files {
+				require.NoError(t, os.WriteFile(filepath.Join(tracker, name), []byte(content), 0o600))
+			}
+			vulnsrctest.TestUpdate(t, debian.NewVulnSrc(), vulnsrctest.TestUpdateArgs{
+				Dir:     dir,
+				WantErr: tt.wantErr,
+				WantValues: []vulnsrctest.WantValues{
+					{
+						Key:   []string{"advisory-detail", "CVE-2026-111142", "debian 12", "zziplib"},
+						Value: &types.Advisory{FixedVersion: tt.wantVersion, Status: types.StatusUnknown},
+					},
+					{
+						Key:   []string{"vulnerability-id", "CVE-2026-111142"},
+						Value: map[string]any{},
+					},
+				},
+			})
+		})
+	}
+}
 
 func TestVulnSrc_Update(t *testing.T) {
 	tests := []struct {

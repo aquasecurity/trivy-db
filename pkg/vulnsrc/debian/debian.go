@@ -223,6 +223,10 @@ func (vs VulnSrc) parseCVE(dir string) error {
 					sidKey.severity = ann.Severity
 				}
 
+				// A bare status token can be serialized as a fixed version by the tracker.
+				if ann.Version == "undetermined" {
+					ann.Version = ""
+				}
 				vs.sidFixedVersions[sidKey] = ann.Version // it may be empty for unfixed vulnerabilities
 
 				continue
