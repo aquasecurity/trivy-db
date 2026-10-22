@@ -10,11 +10,10 @@ import (
 	"strings"
 
 	"github.com/gocsaf/csaf/v3/csaf"
+	rpmversion "github.com/knqyf263/go-rpm-version"
 	"github.com/samber/lo"
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
-
-	rpmversion "github.com/knqyf263/go-rpm-version"
 
 	"github.com/aquasecurity/go-version/pkg/version"
 	"github.com/aquasecurity/trivy-db/pkg/db"
