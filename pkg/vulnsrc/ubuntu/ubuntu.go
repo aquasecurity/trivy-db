@@ -54,6 +54,7 @@ var (
 		"plucky":   "25.04",
 		"questing": "25.10",
 		"resolute": "26.04",
+		"stonking": "26.10",
 		// ESM versions:
 		"precise/esm": "12.04-ESM",
 		"trusty/esm":  "14.04-ESM",
