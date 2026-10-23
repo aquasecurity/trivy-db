@@ -206,6 +206,66 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: map[string]any{},
 				},
+				// NuGet (Echo:NuGet) advisories are stored under the
+				// "echo nuget::Echo OSV" bucket, keyed by the lowercase id.
+				// One is fixed in an Echo build, the other upstream.
+				{
+					Key: []string{
+						"data-source",
+						"echo nuget::Echo OSV",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.EchoOSV,
+						Name: "Echo OSV",
+						URL:  "https://advisory.echohq.com/osv/all.zip",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2026-26171",
+						"echo nuget::Echo OSV",
+						"system.security.cryptography.xml",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-w3x6-4m5h-cxqf",
+							"ECHO-08ee-db76-1049",
+						},
+						PatchedVersions:    []string{"8.0.0+echo.1"},
+						VulnerableVersions: []string{"<8.0.0+echo.1"},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2026-26171",
+					},
+					Value: map[string]any{},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2026-96959",
+						"echo nuget::Echo OSV",
+						"system.security.cryptography.xml",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-c399-9853-6jmj",
+							"ECHO-a9c4-3288-b534",
+						},
+						PatchedVersions:    []string{"8.0.5"},
+						VulnerableVersions: []string{"<8.0.5"},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2026-96959",
+					},
+					Value: map[string]any{},
+				},
 			},
 			noBuckets: [][]string{
 				{
