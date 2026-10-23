@@ -11,7 +11,8 @@
     ],
     "2.9.6-r0": [
       "CVE-2020-1737",
-      "CVE-2026-109618, GHSA-w8hw-w9fx-j79w"
+      "CVE-2026-109618, GHSA-w8hw-w9fx-j79w",
+      "GHSA-3m86-c9x3-vwm9,CVE-2026-45076"
     ]
   },
   "apkurl": "{{urlprefix}}/{{distroversion}}/{{reponame}}/{{arch}}/{{pkg.name}}-{{pkg.ver}}.apk",

@@ -95,10 +95,10 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 			// See https://gitlab.alpinelinux.org/alpine/infra/docker/secdb/-/issues/3
 			// e.g. CVE-2017-2616 (+ regression fix)
 			// e.g. GHSA-h6cc-rc6q-23j4 (+regression fix)
+			//
+			// Entries may also list several IDs separated by commas,
 			// e.g. CVE-2026-109618, GHSA-w8hw-w9fx-j79w
-			ids := strings.FieldsFunc(vulnID, func(r rune) bool {
-				return r == ',' || unicode.IsSpace(r)
-			})
+			ids := strings.FieldsFunc(vulnID, isIDSeparator)
 			// Find CVE-ID first, if not found, use GHSA-ID
 			var selectedID string
 			for _, id := range ids {
@@ -127,6 +127,11 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 		}
 	}
 	return nil
+}
+
+// isIDSeparator reports whether r separates vulnerability IDs in a secfixes entry.
+func isIDSeparator(r rune) bool {
+	return r == ',' || unicode.IsSpace(r)
 }
 
 func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
