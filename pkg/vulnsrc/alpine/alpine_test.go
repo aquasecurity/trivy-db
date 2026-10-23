@@ -72,6 +72,12 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 				},
 				{
+					Key: []string{"advisory-detail", "CVE-2026-109618", "alpine 3.12", "ansible"},
+					Value: types.Advisory{
+						FixedVersion: "2.9.6-r0",
+					},
+				},
+				{
 					Key: []string{
 						"vulnerability-id",
 						"CVE-2019-14904",
@@ -117,6 +123,13 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{
 						"vulnerability-id",
 						"CVE-2020-1737",
+					},
+					Value: map[string]any{},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2026-109618",
 					},
 					Value: map[string]any{},
 				},

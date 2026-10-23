@@ -10,7 +10,8 @@
       "GHSA-h6cc-rc6q-23j4 (+regression fix)"
     ],
     "2.9.6-r0": [
-      "CVE-2020-1737"
+      "CVE-2020-1737",
+      "CVE-2026-109618, GHSA-w8hw-w9fx-j79w"
     ]
   },
   "apkurl": "{{urlprefix}}/{{distroversion}}/{{reponame}}/{{arch}}/{{pkg.name}}-{{pkg.ver}}.apk",
