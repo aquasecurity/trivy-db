@@ -97,6 +97,11 @@ func NewArchLinux(version string) Bucket { return newOS(ecosystem.ArchLinux, ver
 // NewChainguard creates a bucket for Chainguard
 func NewChainguard(version string) Bucket { return newOS(ecosystem.Chainguard, version) }
 
+// NewCleanStart creates a bucket for CleanStart.
+// CleanStart is a rolling release, so advisories are published for the distro as a
+// whole and the version is always empty.
+func NewCleanStart(version string) Bucket { return newOS(ecosystem.CleanStart, version) }
+
 // NewDebian creates a bucket for Debian
 func NewDebian(version string) Bucket { return newOS(ecosystem.Debian, version) }
 

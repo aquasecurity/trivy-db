@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.7.3",
+  "id": "CLEANSTART-2026-CC00002",
+  "summary": "Security fix applied in: nginx 1.29.3-r0",
+  "details": "A CleanStart-specific issue with no upstream identifier.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "CleanStart",
+        "name": "nginx"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.29.3-r0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "package": {
+        "ecosystem": "Go",
+        "name": "github.com/example/upstream"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.2.3"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "upstream": [],
+  "references": [],
+  "published": "2026-09-18T10:18:47.732134Z",
+  "modified": "2026-05-01T09:05:07Z",
+  "related": [],
+  "credits": [],
+  "database_specific": {}
+}
