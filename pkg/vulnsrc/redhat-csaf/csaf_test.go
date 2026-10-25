@@ -43,7 +43,7 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.DataSource{
 						ID:   vulnerability.RedHatCSAFVEX,
 						Name: "Red Hat CSAF VEX",
-						URL:  "https://access.redhat.com/security/data/csaf/v2/vex/",
+						URL:  "https://security.access.redhat.com/data/csaf/v2/vex/",
 					},
 				},
 				{
