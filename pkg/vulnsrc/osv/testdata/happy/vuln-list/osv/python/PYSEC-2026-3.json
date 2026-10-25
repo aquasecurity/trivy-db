@@ -1,0 +1,38 @@
+{
+  "id": "PYSEC-2026-3",
+  "modified": "2026-04-01T00:00:00Z",
+  "published": "2026-03-01T00:00:00Z",
+  "aliases": [
+    "CVE-2026-88881",
+    "CVE-2026-88882"
+  ],
+  "summary": "Test advisory with multiple CVE-IDs",
+  "details": "Some vulnerability details.",
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "PyPI",
+        "name": "multicve"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.2.3"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://example.com/advisory"
+    }
+  ]
+}
