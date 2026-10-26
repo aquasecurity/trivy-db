@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aquasecurity/trivy-db/pkg/types"
+	"github.com/aquasecurity/trivy-db/pkg/utils"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/govulndb"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrctest"
@@ -128,8 +129,161 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: map[string]any{},
 				},
+				// An entry with several CVE-IDs saves an advisory for each CVE-ID.
+				// golang.org/x/net is repeated in the entry, so its ranges are merged.
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2019-9512",
+						"go::The Go Vulnerability Database",
+						"stdlib",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-39qc-96h7-956f",
+							"GHSA-hgr8-6h9x-f7q9",
+							"GO-2022-0536",
+						},
+						PatchedVersions: []string{
+							"1.11.13",
+							"1.12.8",
+						},
+						VulnerableVersions: []string{
+							"<1.11.13",
+							">=1.12.0-0, <1.12.8",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2019-9512",
+						"go::The Go Vulnerability Database",
+						"golang.org/x/net",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-39qc-96h7-956f",
+							"GHSA-hgr8-6h9x-f7q9",
+							"GO-2022-0536",
+						},
+						PatchedVersions: []string{
+							"0.0.0-20190813141303-74dc4d7220e7",
+							"0.1.1",
+						},
+						VulnerableVersions: []string{
+							"<0.0.0-20190813141303-74dc4d7220e7",
+							">=0.1.0, <0.1.1",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2019-9512",
+						"govulndb",
+					},
+					Value: types.VulnerabilityDetail{
+						Title:       "Reset flood in net/http and golang.org/x/net/http",
+						Description: "Some HTTP/2 implementations are vulnerable to a reset flood, potentially leading to a denial of service.",
+						References: []string{
+							"https://go.dev/cl/190137",
+							"https://go.dev/issue/33606",
+							"https://pkg.go.dev/vuln/GO-2022-0536",
+						},
+						LastModifiedDate: utils.MustTimeParse("2024-05-20T16:03:47Z"),
+						PublishedDate:    utils.MustTimeParse("2022-08-01T22:20:53Z"),
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2019-9512",
+					},
+					Value: map[string]any{},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2019-9514",
+						"go::The Go Vulnerability Database",
+						"stdlib",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-39qc-96h7-956f",
+							"GHSA-hgr8-6h9x-f7q9",
+							"GO-2022-0536",
+						},
+						PatchedVersions: []string{
+							"1.11.13",
+							"1.12.8",
+						},
+						VulnerableVersions: []string{
+							"<1.11.13",
+							">=1.12.0-0, <1.12.8",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2019-9514",
+						"go::The Go Vulnerability Database",
+						"golang.org/x/net",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-39qc-96h7-956f",
+							"GHSA-hgr8-6h9x-f7q9",
+							"GO-2022-0536",
+						},
+						PatchedVersions: []string{
+							"0.0.0-20190813141303-74dc4d7220e7",
+							"0.1.1",
+						},
+						VulnerableVersions: []string{
+							"<0.0.0-20190813141303-74dc4d7220e7",
+							">=0.1.0, <0.1.1",
+						},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2019-9514",
+						"govulndb",
+					},
+					Value: types.VulnerabilityDetail{
+						Title:       "Reset flood in net/http and golang.org/x/net/http",
+						Description: "Some HTTP/2 implementations are vulnerable to a reset flood, potentially leading to a denial of service.",
+						References: []string{
+							"https://go.dev/cl/190137",
+							"https://go.dev/issue/33606",
+							"https://pkg.go.dev/vuln/GO-2022-0536",
+						},
+						LastModifiedDate: utils.MustTimeParse("2024-05-20T16:03:47Z"),
+						PublishedDate:    utils.MustTimeParse("2022-08-01T22:20:53Z"),
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2019-9514",
+					},
+					Value: map[string]any{},
+				},
 			},
 			noBuckets: [][]string{
+				// The CVE-IDs are saved instead of the Go vulnerability ID
+				{
+					"advisory-detail",
+					"GO-2022-0536",
+				},
+				{
+					"vulnerability-id",
+					"GO-2022-0536",
+				},
 				// We should not save third-party modules other than golang.org/x/*
 				{
 					"advisory-detail",
