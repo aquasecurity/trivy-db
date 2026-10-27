@@ -266,11 +266,13 @@ func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) (
 			sev.VectorV40, sev.ScoreV40 = affSev.VectorV40, affSev.ScoreV40
 		}
 
-		// Use bkt.Name() instead of bkt.Ecosystem() to distinguish between
-		// different OS versions of the same ecosystem (e.g. "Red Hat 6" vs "Red Hat 7"),
-		// which share the same Ecosystem() value but have different bucket names.
-		key := fmt.Sprintf("%s/%s", bkt.Name(), pkgName)
 		for _, vulnID := range vulnIDs {
+			// Use bkt.Name() instead of bkt.Ecosystem() to distinguish between
+			// different OS versions of the same ecosystem (e.g. "Red Hat 6" vs "Red Hat 7"),
+			// which share the same Ecosystem() value but have different bucket names.
+			// Include the vulnerability ID so that each ID returned by groupVulnIDs
+			// gets its own advisory.
+			key := fmt.Sprintf("%s/%s/%s", bkt.Name(), pkgName, vulnID)
 			adv, ok := uniqAdvisories[key]
 			if ok {
 				// The same package could be repeated with different version ranges.
