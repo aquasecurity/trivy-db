@@ -206,6 +206,42 @@ func TestVulnSrc_Update(t *testing.T) {
 					},
 					Value: map[string]any{},
 				},
+				// Go (Echo:Go) advisories are stored under the
+				// "echo go::Echo OSV" bucket and retain module paths.
+				{
+					Key: []string{
+						"data-source",
+						"echo go::Echo OSV",
+					},
+					Value: types.DataSource{
+						ID:   vulnerability.EchoOSV,
+						Name: "Echo OSV",
+						URL:  "https://advisory.echohq.com/osv/all.zip",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail",
+						"CVE-2023-45288",
+						"echo go::Echo OSV",
+						"golang.org/x/net",
+					},
+					Value: types.Advisory{
+						VendorIDs: []string{
+							"GHSA-4v7x-pqxf-cx7m",
+							"ECHO-326d-6f7d-c967",
+						},
+						PatchedVersions:    []string{"v0.22.0+echo.1"},
+						VulnerableVersions: []string{"<v0.22.0+echo.1"},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-id",
+						"CVE-2023-45288",
+					},
+					Value: map[string]any{},
+				},
 			},
 			noBuckets: [][]string{
 				{
