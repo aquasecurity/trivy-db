@@ -101,54 +101,72 @@ func (vs *VulnSrc) save(cves []Cve) error {
 	return nil
 }
 
-// getCvssV2 selects vector, score and severity from V2 metrics
+// getCvssV2 selects vector, score and severity from V2 metrics.
+// NVD's own metric wins; when NVD has not analyzed the CVE (common since the
+// 2024 NVD backlog), fall back to the first CNA/ADP-provided metric.
 func getCvssV2(metricsV2 []CvssMetricV2) (score float64, vector string, severity types.Severity) {
-	for _, metricV2 := range metricsV2 {
-		// save only NVD metric
-		if metricV2.Source == nvdSource {
-			score = metricV2.CvssData.BaseScore
-			vector = metricV2.CvssData.VectorString
-			severity, _ = types.NewSeverity(metricV2.BaseSeverity)
-			return
+	if len(metricsV2) == 0 {
+		return
+	}
+	m := metricsV2[0]
+	for _, candidate := range metricsV2 {
+		if candidate.Source == nvdSource {
+			m = candidate
+			break
 		}
 	}
+	score = m.CvssData.BaseScore
+	vector = m.CvssData.VectorString
+	severity, _ = types.NewSeverity(m.BaseSeverity)
 	return
 }
 
-// getCvssV3 selects vector, score and severity from V3* metrics
+// getCvssV3 selects vector, score and severity from V3* metrics.
+// NVD's own metric wins; when NVD has not analyzed the CVE (common since the
+// 2024 NVD backlog), fall back to the first CNA/ADP-provided metric.
 func getCvssV3(metricsV31, metricsV30 []CvssMetricV3) (score float64, vector string, severity types.Severity) {
 	// order: v3.1 metrics => v3.0 metrics
-	// save the first NVD metric
-	for _, metricV3 := range append(metricsV31, metricsV30...) {
-		if metricV3.Source == nvdSource {
-			score = metricV3.CvssData.BaseScore
-			vector = metricV3.CvssData.VectorString
-			severity, _ = types.NewSeverity(metricV3.CvssData.BaseSeverity)
-			return
+	metrics := append(metricsV31, metricsV30...)
+	if len(metrics) == 0 {
+		return
+	}
+	m := metrics[0]
+	for _, candidate := range metrics {
+		if candidate.Source == nvdSource {
+			m = candidate
+			break
 		}
 	}
+	score = m.CvssData.BaseScore
+	vector = m.CvssData.VectorString
+	severity, _ = types.NewSeverity(m.CvssData.BaseSeverity)
 	return
 }
 
-// getCvssV40 selects vector, score and severity from V40 metrics
+// getCvssV40 selects vector, score and severity from V40 metrics.
+// NVD's own metric wins; when NVD has not analyzed the CVE (common since the
+// 2024 NVD backlog), fall back to the first CNA/ADP-provided metric.
 func getCvssV40(metricsV40 []CvssMetricV40) (score float64, vector string, severity types.Severity) {
-	for _, metricV40 := range metricsV40 {
-		// save only NVD metric
-		if metricV40.Source != nvdSource {
-			continue
-		}
-		score = metricV40.CvssData.BaseScore
-		cvss40, err := gocvss40.ParseVector(strings.TrimSuffix(metricV40.CvssData.VectorString, "/"))
-		if err != nil {
-			log.WithPrefix("nvd").Warn("Failed to parse CVSSv4.0 vector",
-				log.String("vector", metricV40.CvssData.VectorString),
-				log.Err(err))
-			return 0, "", types.SeverityUnknown
-		}
-		severity, _ = types.NewSeverity(metricV40.CvssData.BaseSeverity)
-		return score, cvss40.Vector(), severity
+	if len(metricsV40) == 0 {
+		return
 	}
-	return
+	m := metricsV40[0]
+	for _, candidate := range metricsV40 {
+		if candidate.Source == nvdSource {
+			m = candidate
+			break
+		}
+	}
+	score = m.CvssData.BaseScore
+	cvss40, err := gocvss40.ParseVector(strings.TrimSuffix(m.CvssData.VectorString, "/"))
+	if err != nil {
+		log.WithPrefix("nvd").Warn("Failed to parse CVSSv4.0 vector",
+			log.String("vector", m.CvssData.VectorString),
+			log.Err(err))
+		return 0, "", types.SeverityUnknown
+	}
+	severity, _ = types.NewSeverity(m.CvssData.BaseSeverity)
+	return score, cvss40.Vector(), severity
 }
 
 // Put saves a single CVE entry to the database.
