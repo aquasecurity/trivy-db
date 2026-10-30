@@ -13,6 +13,7 @@ import (
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/chainguard"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/composer"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/debian"
+	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/dhi"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/echo"
 	echoosv "github.com/aquasecurity/trivy-db/pkg/vulnsrc/echo-osv"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/ghsa"
@@ -53,6 +54,7 @@ var (
 		redhat.NewVulnSrc(),
 		redhatoval.NewVulnSrc(),
 		debian.NewVulnSrc(),
+		dhi.NewVulnSrc(),
 		ubuntu.NewVulnSrc(),
 		amazon.NewVulnSrc(),
 		oracleoval.NewVulnSrc(),
