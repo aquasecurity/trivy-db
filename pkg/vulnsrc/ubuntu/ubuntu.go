@@ -63,6 +63,7 @@ var (
 		// cf. https://wiki.ubuntu.com/SecurityTeam/BuildEnvironment#line867
 		"esm-infra/xenial": "16.04-ESM",
 		"esm-apps/xenial":  "16.04-ESM",
+		"esm-infra-legacy/xenial": "16.04-ESM",
 		"esm-infra/bionic": "18.04-ESM",
 		"esm-apps/bionic":  "18.04-ESM",
 		"esm-infra/focal":  "20.04-ESM",
