@@ -305,12 +305,388 @@ func Test_splitPkgName(t *testing.T) {
 			wantPkgName:    "helm-mirror",
 			wantPkgVersion: "0.2.1-1.7.1",
 		},
+		{
+			pkgName:        "python3-setuptools-58.2.0-1.1",
+			wantPkgName:    "python3-setuptools",
+			wantPkgVersion: "58.2.0-1.1",
+		},
+		{
+			pkgName:        "helm-mirror-0:0.2.1-1.7.1",
+			wantPkgName:    "helm-mirror",
+			wantPkgVersion: "0:0.2.1-1.7.1",
+		},
+		{
+			pkgName:        "bash-5.1.8-150400.9.1",
+			wantPkgName:    "bash",
+			wantPkgVersion: "5.1.8-150400.9.1",
+		},
+		{
+			pkgName:        "libcurl4_32bit-7.66.0-150200.4.39.1",
+			wantPkgName:    "libcurl4_32bit",
+			wantPkgVersion: "7.66.0-150200.4.39.1",
+		},
+		{
+			pkgName:        "pkg-with-many-dashes-in-name-1.0.0-1",
+			wantPkgName:    "pkg-with-many-dashes-in-name",
+			wantPkgVersion: "1.0.0-1",
+		},
+		{
+			pkgName:        "pkg-1.0",
+			wantPkgName:    "",
+			wantPkgVersion: "",
+		},
+		{
+			pkgName:        "pkg",
+			wantPkgName:    "",
+			wantPkgVersion: "",
+		},
+		{
+			pkgName:        "",
+			wantPkgName:    "",
+			wantPkgVersion: "",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.pkgName, func(t *testing.T) {
 			gotPkgName, gotPkgVersion := splitPkgName(tt.pkgName)
 			assert.Equal(t, tt.wantPkgName, gotPkgName)
 			assert.Equal(t, tt.wantPkgVersion, gotPkgVersion)
+		})
+	}
+}
+
+func TestGetOSVersion(t *testing.T) {
+	testCases := []struct {
+		inputPlatformName    string
+		expectedPlatformName string
+	}{
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Workstation Extension 12 SP4",
+			expectedPlatformName: "SUSE Linux Enterprise 12.4",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Module for Basesystem 15 SP1",
+			expectedPlatformName: "SUSE Linux Enterprise 15.1",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server for SAP Applications 12 SP3-LTSS",
+			expectedPlatformName: "SUSE Linux Enterprise 12.3",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Module for Containers 12",
+			expectedPlatformName: "SUSE Linux Enterprise 12",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise High Availability 12 SP1",
+			expectedPlatformName: "SUSE Linux Enterprise 12.1",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server for SAP Applications 12 SP1-LTSS",
+			expectedPlatformName: "SUSE Linux Enterprise 12.1",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Module for High Performance Computing 12",
+			expectedPlatformName: "SUSE Linux Enterprise 12",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Module for Live Patching 15",
+			expectedPlatformName: "SUSE Linux Enterprise 15",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Module for Development Tools 15 SP1",
+			expectedPlatformName: "SUSE Linux Enterprise 15.1",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Live Patching 12 SP5",
+			expectedPlatformName: "SUSE Linux Enterprise 12.5",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Desktop 11 SP3",
+			expectedPlatformName: "SUSE Linux Enterprise 11.3",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Module for Public Cloud 15 SP1",
+			expectedPlatformName: "SUSE Linux Enterprise 15.1",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server 11-SECURITY",
+			expectedPlatformName: "SUSE Linux Enterprise 11",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server for SAP Applications 11 SP4-CLIENT-TOOLS",
+			expectedPlatformName: "SUSE Linux Enterprise 11.4",
+		},
+		{
+			inputPlatformName:    "SUSE Package Hub for SUSE Linux Enterprise 12",
+			expectedPlatformName: "SUSE Linux Enterprise 12",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Module for Open Buildservice Development Tools 15",
+			expectedPlatformName: "SUSE Linux Enterprise 15",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Desktop 11 SP4",
+			expectedPlatformName: "SUSE Linux Enterprise 11.4",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Module for CAP 15 SP1",
+			expectedPlatformName: "SUSE Linux Enterprise 15.1",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server 12 SP5",
+			expectedPlatformName: "SUSE Linux Enterprise 12.5",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Workstation Extension 15",
+			expectedPlatformName: "SUSE Linux Enterprise 15",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Module for additional PackageHub packages 15",
+			expectedPlatformName: "SUSE Linux Enterprise 15",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise High Availability 15 SP1",
+			expectedPlatformName: "SUSE Linux Enterprise 15.1",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server 12 SP2-LTSS",
+			expectedPlatformName: "SUSE Linux Enterprise 12.2",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise High Availability 12",
+			expectedPlatformName: "SUSE Linux Enterprise 12",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Real Time Extension 12 SP1",
+			expectedPlatformName: "SUSE Linux Enterprise 12.1",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Module for Advanced Systems Management 12",
+			expectedPlatformName: "SUSE Linux Enterprise 12",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server 11 SP2-LTSS",
+			expectedPlatformName: "SUSE Linux Enterprise 11.2",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server 11-LTSS",
+			expectedPlatformName: "SUSE Linux Enterprise 11",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server 11-TERADATA",
+			expectedPlatformName: "SUSE Linux Enterprise 11",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Module for Web Scripting 12",
+			expectedPlatformName: "SUSE Linux Enterprise 12",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server 12 SP1-LTSS",
+			expectedPlatformName: "SUSE Linux Enterprise 12.1",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Live Patching 12 SP3",
+			expectedPlatformName: "SUSE Linux Enterprise 12.3",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server 12 SP3-LTSS",
+			expectedPlatformName: "SUSE Linux Enterprise 12.3",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server 11 SP4",
+			expectedPlatformName: "SUSE Linux Enterprise 11.4",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server for SAP Applications 12 SP2-BCL",
+			expectedPlatformName: "SUSE Linux Enterprise 12.2",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Module for Python2 packages 15 SP1",
+			expectedPlatformName: "SUSE Linux Enterprise 15.1",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server for SAP Applications 11 SP1-TERADATA",
+			expectedPlatformName: "SUSE Linux Enterprise 11.1",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server for SAP Applications 11 SP3-CLIENT-TOOLS",
+			expectedPlatformName: "SUSE Linux Enterprise 11.3",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Module for Web Scripting 15",
+			expectedPlatformName: "SUSE Linux Enterprise 15",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server 11 SP3-TERADATA",
+			expectedPlatformName: "SUSE Linux Enterprise 11.3",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Desktop 12 SP5",
+			expectedPlatformName: "SUSE Linux Enterprise 12.5",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server 12 SP2-BCL",
+			expectedPlatformName: "SUSE Linux Enterprise 12.2",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Workstation Extension 15 SP1",
+			expectedPlatformName: "SUSE Linux Enterprise 15.1",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Software Development Kit 12 SP5",
+			expectedPlatformName: "SUSE Linux Enterprise 12.5",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server 12",
+			expectedPlatformName: "SUSE Linux Enterprise 12",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server 11 SP3-LTSS",
+			expectedPlatformName: "SUSE Linux Enterprise 11.3",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise High Availability 12 SP5",
+			expectedPlatformName: "SUSE Linux Enterprise 12.5",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Build System Kit 12",
+			expectedPlatformName: "SUSE Linux Enterprise 12",
+		},
+		{
+			inputPlatformName:    "SUSE Cloud Compute Node for SUSE Linux Enterprise 12 5",
+			expectedPlatformName: "SUSE Linux Enterprise 12.5",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server 11-PUBCLOUD",
+			expectedPlatformName: "SUSE Linux Enterprise 11",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise High Performance Computing 15-ESPOS",
+			expectedPlatformName: "SUSE Linux Enterprise 15",
+		},
+		{
+			inputPlatformName:    "openSUSE Leap 42.3",
+			expectedPlatformName: "openSUSE Leap 42.3",
+		},
+		{
+			inputPlatformName:    "openSUSE Leap 42.3 NonFree",
+			expectedPlatformName: "openSUSE Leap 42.3",
+		},
+		{
+			inputPlatformName:    "openSUSE Leap 15.1",
+			expectedPlatformName: "openSUSE Leap 15.1",
+		},
+		{
+			inputPlatformName:    "openSUSE Leap 15.1 NonFree",
+			expectedPlatformName: "openSUSE Leap 15.1",
+		},
+		{
+			inputPlatformName:    "openSUSE Leap Micro 15.1 NonFree",
+			expectedPlatformName: "openSUSE Leap Micro 15.1",
+		},
+		{
+			inputPlatformName:    "openSUSE Leap Micro 15.1",
+			expectedPlatformName: "openSUSE Leap Micro 15.1",
+		},
+		{
+			inputPlatformName:    "openSUSE Tumbleweed",
+			expectedPlatformName: "openSUSE Tumbleweed",
+		},
+		// Below tests exclude platformNames
+		{
+			inputPlatformName:    "openSUSE Leap NonFree 15.1",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Module for SUSE Manager Server 4.0",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "HPE Helion Openstack 8",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "Openstack Cloud Magnum Orchestration 7",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "SUSE CaaS Platform ALL",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "SUSE Enterprise Storage 2.1",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "SUSE Enterprise Storage 6",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "SUSE Lifecycle Management Server 1.3",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "SUSE OpenStack Cloud 6-LTSS",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "SUSE OpenStack Cloud 9",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "SUSE OpenStack Cloud Crowbar 9",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "SUSE Studio Onsite 1.3",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "SUSE Studio Onsite Runner 1.3",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "SUSE WebYast 1.3",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "Subscription Management Tool 11 SP3",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "openSUSE 13.2",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "openSUSE 13.2 NonFree",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "openSUSE Evergreen 11.4",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Storage 7",
+			expectedPlatformName: "",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Micro 5.1",
+			expectedPlatformName: "SUSE Linux Enterprise Micro 5.1",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Micro 5.3",
+			expectedPlatformName: "SUSE Linux Enterprise Micro 5.3",
+		},
+		{
+			inputPlatformName:    "SUSE Linux Enterprise Server 16.0",
+			expectedPlatformName: "SUSE Linux Enterprise 16.0",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.inputPlatformName, func(t *testing.T) {
+			vs := NewVulnSrc(OpenSUSE)
+			actual := vs.getOSVersion(tc.inputPlatformName)
+			assert.Equal(t, tc.expectedPlatformName, actual, "input data: %s", tc.inputPlatformName)
 		})
 	}
 }

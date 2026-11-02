@@ -44,35 +44,6 @@ var (
 	}
 )
 
-// Advisory is the subset of a SUSE CSAF document used by trivy-db.
-//
-// vuln-list-suse stores the documents as-is, and SUSE's feed is not always schema-conformant:
-// some CPEs in product_tree.branches carry unescaped characters (e.g. "cpe:/o:novell,inc:OES:23.4",
-// "cpe:2.3:a:qemu:qemu:1.0.0+:*:*:*:*:*:*:*"), and csaf.Advisory rejects the whole document
-// because of them. Only the parts that are needed are decoded, so these documents are still
-// processed.
-type Advisory struct {
-	Document        *csaf.Document       `json:"document"`
-	ProductTree     *ProductTree         `json:"product_tree"`
-	Vulnerabilities csaf.Vulnerabilities `json:"vulnerabilities"`
-}
-
-type ProductTree struct {
-	Relationships []Relationship `json:"relationships"`
-}
-
-// Relationship mirrors csaf.Relationship without full_product_name.product_identification_helper,
-// which may hold a CPE.
-type Relationship struct {
-	FullProductName           FullProductName `json:"full_product_name"`
-	ProductReference          csaf.ProductID  `json:"product_reference"`
-	RelatesToProductReference csaf.ProductID  `json:"relates_to_product_reference"`
-}
-
-type FullProductName struct {
-	ProductID csaf.ProductID `json:"product_id"`
-}
-
 type PutInput struct {
 	VulnID string
 
@@ -229,9 +200,10 @@ func highestImpact(vulns csaf.Vulnerabilities) types.Severity {
 	return severity
 }
 
-func allowedProductIDs(vulns csaf.Vulnerabilities) (map[string]struct{}, bool) {
+// allowedProductIDs collects product IDs marked as fixed or recommended across all
+// vulnerabilities to filter remediated packages.
+func allowedProductIDs(vulns csaf.Vulnerabilities) map[string]struct{} {
 	allowed := make(map[string]struct{})
-	hasStatus := false
 	for _, vuln := range vulns {
 		if vuln == nil || vuln.ProductStatus == nil {
 			continue
@@ -240,7 +212,6 @@ func allowedProductIDs(vulns csaf.Vulnerabilities) (map[string]struct{}, bool) {
 			if products == nil {
 				continue
 			}
-			hasStatus = true
 			for _, pid := range *products {
 				if pid == nil {
 					continue
@@ -249,7 +220,7 @@ func allowedProductIDs(vulns csaf.Vulnerabilities) (map[string]struct{}, bool) {
 			}
 		}
 	}
-	return allowed, hasStatus
+	return allowed
 }
 
 // commit writes a single advisory. savedDataSources is shared across the whole walk so
@@ -304,16 +275,17 @@ func (vs *Suse) Put(tx *bolt.Tx, input PutInput) error {
 }
 
 func (vs VulnSrc) getAffectedPackages(relationships []Relationship, vulns csaf.Vulnerabilities) []AffectedPackage {
-	allowed, filter := allowedProductIDs(vulns)
-	seen := make(map[string]struct{})
+	allowed := allowedProductIDs(vulns)
+	seen := make(map[AffectedPackage]struct{})
 	var pkgs []AffectedPackage
 
 	for _, relationship := range relationships {
 		platform := string(relationship.RelatesToProductReference)
 		productRef := string(relationship.ProductReference)
-		if filter {
-			// Product IDs are opaque identifiers per the CSAF spec, so take the ID from
-			// the relationship instead of rebuilding it from the references.
+		// When vulnerabilities are present, keep only packages remediated by this advisory.
+		// When an advisory omits vulnerabilities altogether (non-CVE security updates e.g. SUSE-SU-2022:1714-1),
+		// all packages in product_tree represent updates delivered by the advisory.
+		if len(vulns) > 0 {
 			if _, ok := allowed[string(relationship.FullProductName.ProductID)]; !ok {
 				continue
 			}
@@ -330,21 +302,24 @@ func (vs VulnSrc) getAffectedPackages(relationships []Relationship, vulns csaf.V
 			continue
 		}
 
-		key := osVer + "\x00" + pkg.Name + "\x00" + pkg.FixedVersion
-		if _, ok := seen[key]; ok {
-			continue
-		}
-		seen[key] = struct{}{}
-
-		pkgs = append(pkgs, AffectedPackage{
+		affectedPkg := AffectedPackage{
 			OSVer:   osVer,
 			Package: *pkg,
-		})
+		}
+		if _, ok := seen[affectedPkg]; ok {
+			continue
+		}
+		seen[affectedPkg] = struct{}{}
+
+		pkgs = append(pkgs, affectedPkg)
 	}
 
 	return pkgs
 }
 
+// TODO: getOSVersion logic is duplicated from suse-cvrf so that suse-csaf remains
+// self-contained when suse-cvrf is removed in the future.
+//
 //nolint:gocyclo
 func (vs VulnSrc) getOSVersion(platformName string) string {
 	if strings.Contains(platformName, "SUSE Manager") {
@@ -474,14 +449,15 @@ func splitPkgName(pkgName string) (string, string) {
 	return pkgName, ver
 }
 
+var archSuffixes = []string{
+	".aarch64_ilp32", ".x86_64", ".aarch64", ".ppc64le", ".s390x", ".i586", ".ia64",
+	".riscv64", ".armv7hl", ".armv7l", ".ppc64", ".arm64", ".noarch", ".i686", ".ppc", ".s390",
+}
+
 func stripArchSuffix(ref string) string {
-	archSuffixes := []string{
-		".aarch64_ilp32", ".x86_64", ".aarch64", ".ppc64le", ".s390x", ".i586", ".ia64",
-		".riscv64", ".armv7hl", ".armv7l", ".ppc64", ".arm64", ".noarch", ".i686", ".ppc", ".s390",
-	}
 	for _, sfx := range archSuffixes {
-		if strings.HasSuffix(ref, sfx) {
-			return strings.TrimSuffix(ref, sfx)
+		if before, ok := strings.CutSuffix(ref, sfx); ok {
+			return before
 		}
 	}
 	return ref
@@ -511,7 +487,7 @@ func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
 }
 
 func severityFromThreat(sev string) types.Severity {
-	switch sev {
+	switch strings.ToLower(strings.TrimSpace(sev)) {
 	case "low":
 		return types.SeverityLow
 	case "moderate":
