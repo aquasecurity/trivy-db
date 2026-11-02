@@ -3,6 +3,12 @@
   "id": "CLEANSTART-2026-NO94084",
   "summary": "Security fix for CVE-2021-3538 applied in: harbor 2.12.4-r0, harbor 2.13.5-r0, harbor 2.14.3-r0, harbor 2.15.0-r0",
   "details": "CVE-2021-3538 affects multiple packages. This issue is resolved in later releases. See references for individual vulnerability details.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:INVALID"
+    }
+  ],
   "affected": [
     {
       "package": {

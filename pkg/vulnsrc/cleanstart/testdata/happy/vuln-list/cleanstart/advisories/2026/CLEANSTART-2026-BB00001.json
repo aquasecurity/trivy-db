@@ -3,6 +3,16 @@
   "id": "CLEANSTART-2026-BB00001",
   "summary": "Security fix for cve-2026-1111 applied in: redis 7.4.6-r0",
   "details": "cve-2026-1111 affects redis. This issue is resolved in later releases.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+    },
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+    }
+  ],
   "affected": [
     {
       "package": {

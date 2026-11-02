@@ -240,7 +240,7 @@ func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) (
 	eb := oops.With("entry_id", entry.ID).With("vuln_ids", vulnIDs).With("aliases", aliases)
 
 	// Severities can be found both in severity and affected[].severity fields.
-	sev := parseSeverities(entry.Severities)
+	sev := ParseSeverities(entry.Severities)
 
 	uniqAdvisories := map[string]Advisory{}
 	for _, affected := range entry.Affected {
@@ -258,7 +258,7 @@ func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) (
 		}
 
 		// Parse affected[].severity
-		affSev := parseSeverities(affected.Severities)
+		affSev := ParseSeverities(affected.Severities)
 		if affSev.VectorV3 != "" {
 			sev.VectorV3, sev.ScoreV3 = affSev.VectorV3, affSev.ScoreV3
 		}
@@ -378,19 +378,20 @@ func parseAffectedVersions(affected Affected) ([]string, []string, error) {
 	return vulnerableVersions, patchedVersions, nil
 }
 
-type severityResult struct {
+// SeverityResult holds the CVSS vectors and scores parsed from an OSV severity field.
+type SeverityResult struct {
 	VectorV3  string
 	ScoreV3   float64
 	VectorV40 string
 	ScoreV40  float64
 }
 
-// parseSeverities parses the severity field and returns CVSSv3 and CVSSv4 vectors and scores
+// ParseSeverities parses an OSV severity field and returns CVSSv3 and CVSSv4 vectors and scores
 // cf.
 // - https://ossf.github.io/osv-schema/#severity-field
 // - https://ossf.github.io/osv-schema/#affectedseverity-field
-func parseSeverities(severities []Severity) severityResult {
-	var result severityResult
+func ParseSeverities(severities []Severity) SeverityResult {
+	var result SeverityResult
 	for _, s := range severities {
 		if s.Score == "" {
 			continue

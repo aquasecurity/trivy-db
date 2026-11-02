@@ -133,10 +133,18 @@ func (vs VulnSrc) convert(osvEntry osv.Entry) []entry {
 		return nil
 	}
 
+	// Without CVSS here, trivy falls back to NVD or GHSA severity, so a CVE that NVD has
+	// not scored yet shows as UNKNOWN even though CleanStart published a score for it.
+	// Malformed vectors are skipped with a warning rather than failing the advisory.
+	sev := osv.ParseSeverities(osvEntry.Severities)
 	detail := types.VulnerabilityDetail{
-		Title:       osvEntry.Summary,
-		Description: osvEntry.Details,
-		References:  references(osvEntry),
+		Title:         osvEntry.Summary,
+		Description:   osvEntry.Details,
+		References:    references(osvEntry),
+		CvssScoreV3:   sev.ScoreV3,
+		CvssVectorV3:  sev.VectorV3,
+		CvssScoreV40:  sev.ScoreV40,
+		CvssVectorV40: sev.VectorV40,
 	}
 
 	// Sorted so that rebuilding the DB produces the same bucket contents every time.

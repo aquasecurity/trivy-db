@@ -78,6 +78,20 @@ func TestVulnSrc_Update(t *testing.T) {
 						FixedVersion: "7.4.6-r0",
 					},
 				},
+				// CleanStart's own CVSS is stored, so trivy can report a severity for a CVE
+				// that NVD has not scored yet.
+				{
+					Key: []string{"vulnerability-detail", "CVE-2026-1111", string(vulnerability.CleanStart)},
+					Value: types.VulnerabilityDetail{
+						Title:         "Security fix for cve-2026-1111 applied in: redis 7.4.6-r0",
+						Description:   "cve-2026-1111 affects redis. This issue is resolved in later releases.",
+						References:    []string{"https://github.com/cleanstart-dev/cleanstart-security-advisories/tree/main/advisories/2026/CLEANSTART-2026-BB00001.json"},
+						CvssScoreV3:   9.8,
+						CvssVectorV3:  "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+						CvssScoreV40:  9.3,
+						CvssVectorV40: "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+					},
+				},
 				{
 					Key:   []string{"vulnerability-id", "CVE-2026-1111"},
 					Value: map[string]any{},
@@ -89,6 +103,14 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"advisory-detail", "CVE-2021-3538", "cleanstart", "harbor"},
 					Value: types.Advisory{
 						FixedVersion: "2.15.0-r0",
+					},
+				},
+				// The CVSS vector is malformed, so it is dropped and the advisory is still stored.
+				{
+					Key: []string{"vulnerability-detail", "CVE-2021-3538", string(vulnerability.CleanStart)},
+					Value: types.VulnerabilityDetail{
+						Title:       "Security fix for CVE-2021-3538 applied in: harbor 2.12.4-r0, harbor 2.13.5-r0, harbor 2.14.3-r0, harbor 2.15.0-r0",
+						Description: "CVE-2021-3538 affects multiple packages. This issue is resolved in later releases. See references for individual vulnerability details.",
 					},
 				},
 
