@@ -1,0 +1,45 @@
+{
+  "document": {
+    "title": "Security update for curl",
+    "tracking": {
+      "id": "openSUSE-SU-2024:10400-1"
+    },
+    "notes": [
+      {
+        "category": "description",
+        "text": "Security update for curl"
+      }
+    ],
+    "references": [
+      {
+        "url": "https://www.suse.com/support/update/announcement/openSUSE-SU-2024:10400-1/"
+      }
+    ]
+  },
+  "product_tree": {
+    "relationships": [
+      {
+        "full_product_name": {
+          "product_id": "openSUSE Tumbleweed:curl-8.5.0-1.1.x86_64"
+        },
+        "product_reference": "curl-8.5.0-1.1.x86_64",
+        "relates_to_product_reference": "openSUSE Tumbleweed"
+      }
+    ]
+  },
+  "vulnerabilities": [
+    {
+      "product_status": {
+        "recommended": [
+          "openSUSE Tumbleweed:curl-8.5.0-1.1.x86_64"
+        ]
+      },
+      "threats": [
+        {
+          "category": "impact",
+          "details": "moderate"
+        }
+      ]
+    }
+  ]
+}

@@ -170,6 +170,140 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
+			name: "happy path with openSUSE Leap",
+			dir:  filepath.Join("testdata", "happy", "openSUSE Leap"),
+			dist: OpenSUSE,
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "openSUSE Leap 15.5"},
+					Value: types.DataSource{
+						ID:   vulnerability.SuseCSAF,
+						Name: "SUSE CSAF",
+						URL:  "https://ftp.suse.com/pub/projects/security/csaf/",
+					},
+				},
+				{
+					Key: []string{"data-source", "openSUSE Leap Micro 5.5"},
+					Value: types.DataSource{
+						ID:   vulnerability.SuseCSAF,
+						Name: "SUSE CSAF",
+						URL:  "https://ftp.suse.com/pub/projects/security/csaf/",
+					},
+				},
+				{
+					Key:   []string{"advisory-detail", "openSUSE-SU-2024:0001-1", "openSUSE Leap 15.5", "curl"},
+					Value: types.Advisory{FixedVersion: "8.0.1-150400.5.41.1"},
+				},
+				{
+					Key:   []string{"advisory-detail", "openSUSE-SU-2024:0001-1", "openSUSE Leap Micro 5.5", "curl"},
+					Value: types.Advisory{FixedVersion: "8.0.1-150400.5.41.1"},
+				},
+				{
+					Key: []string{"vulnerability-detail", "openSUSE-SU-2024:0001-1", "suse-csaf"},
+					Value: types.VulnerabilityDetail{
+						Title:       "Security update for curl",
+						Description: "Security update for curl",
+						References:  []string{"https://www.suse.com/support/update/announcement/openSUSE-SU-2024:0001-1/"},
+						Severity:    types.SeverityMedium,
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "openSUSE-SU-2024:0001-1"},
+					Value: map[string]any{},
+				},
+			},
+		},
+		{
+			name: "happy path with openSUSE Tumbleweed",
+			dir:  filepath.Join("testdata", "happy", "openSUSE Tumbleweed"),
+			dist: OpenSUSETumbleweed,
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "openSUSE Tumbleweed"},
+					Value: types.DataSource{
+						ID:   vulnerability.SuseCSAF,
+						Name: "SUSE CSAF",
+						URL:  "https://ftp.suse.com/pub/projects/security/csaf/",
+					},
+				},
+				{
+					Key:   []string{"advisory-detail", "openSUSE-SU-2024:10400-1", "openSUSE Tumbleweed", "curl"},
+					Value: types.Advisory{FixedVersion: "8.5.0-1.1"},
+				},
+				{
+					Key: []string{"vulnerability-detail", "openSUSE-SU-2024:10400-1", "suse-csaf"},
+					Value: types.VulnerabilityDetail{
+						Title:       "Security update for curl",
+						Description: "Security update for curl",
+						References:  []string{"https://www.suse.com/support/update/announcement/openSUSE-SU-2024:10400-1/"},
+						Severity:    types.SeverityMedium,
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "openSUSE-SU-2024:10400-1"},
+					Value: map[string]any{},
+				},
+			},
+		},
+		{
+			// Both "SUSE Linux Enterprise Micro" and its successor "SUSE Linux Micro" are stored in the SLE Micro bucket.
+			name: "happy path with SUSE Linux Enterprise Micro",
+			dir:  filepath.Join("testdata", "happy", "SUSE Linux Enterprise Micro"),
+			dist: SUSEEnterpriseLinuxMicro,
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "SUSE Linux Enterprise Micro 5.3"},
+					Value: types.DataSource{
+						ID:   vulnerability.SuseCSAF,
+						Name: "SUSE CSAF",
+						URL:  "https://ftp.suse.com/pub/projects/security/csaf/",
+					},
+				},
+				{
+					Key: []string{"data-source", "SUSE Linux Enterprise Micro 6.0"},
+					Value: types.DataSource{
+						ID:   vulnerability.SuseCSAF,
+						Name: "SUSE CSAF",
+						URL:  "https://ftp.suse.com/pub/projects/security/csaf/",
+					},
+				},
+				{
+					Key:   []string{"advisory-detail", "SUSE-SU-2024:2546-1", "SUSE Linux Enterprise Micro 5.3", "curl"},
+					Value: types.Advisory{FixedVersion: "7.79.1-150400.5.24.1"},
+				},
+				{
+					Key:   []string{"advisory-detail", "SUSE-SU-2024:2546-1", "SUSE Linux Enterprise Micro 6.0", "curl"},
+					Value: types.Advisory{FixedVersion: "8.6.0-1.3"},
+				},
+				{
+					Key: []string{"vulnerability-detail", "SUSE-SU-2024:2546-1", "suse-csaf"},
+					Value: types.VulnerabilityDetail{
+						Title:       "Security update for curl",
+						Description: "Security update for curl",
+						References:  []string{"https://www.suse.com/support/update/announcement/SUSE-SU-2024:2546-1/"},
+						Severity:    types.SeverityMedium,
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "SUSE-SU-2024:2546-1"},
+					Value: map[string]any{},
+				},
+			},
+		},
+		{
+			name:    "sad path (failed to decode)",
+			dir:     filepath.Join("testdata", "sad", "broken json"),
+			dist:    SUSEEnterpriseLinux,
+			wantErr: "json decode error",
+		},
+		{
+			// The tracking ID is the advisory ID in the database, so the document can't be saved without it.
+			name:    "sad path (missing tracking id)",
+			dir:     filepath.Join("testdata", "sad", "missing tracking id"),
+			dist:    SUSEEnterpriseLinux,
+			wantErr: "missing tracking id",
+		},
+		{
 			name:    "sad path (dir doesn't exist)",
 			dir:     filepath.Join("testdata", "badPath"),
 			dist:    OpenSUSE,
