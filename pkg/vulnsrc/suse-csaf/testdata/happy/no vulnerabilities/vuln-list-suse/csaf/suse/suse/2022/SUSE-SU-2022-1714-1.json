@@ -1,0 +1,22 @@
+{
+  "document": {
+    "title": "Security update for php72",
+    "tracking": {
+      "id": "SUSE-SU-2022:1714-1"
+    },
+    "aggregate_severity": {
+      "text": "moderate"
+    }
+  },
+  "product_tree": {
+    "relationships": [
+      {
+        "full_product_name": {
+          "product_id": "SUSE Linux Enterprise Server 12 SP5:php72-7.2.5-1.81.1.x86_64"
+        },
+        "product_reference": "php72-7.2.5-1.81.1.x86_64",
+        "relates_to_product_reference": "SUSE Linux Enterprise Server 12 SP5"
+      }
+    ]
+  }
+}

@@ -1,13 +1,11 @@
 package susecsaf
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
@@ -25,6 +23,7 @@ func TestVulnSrc_Update(t *testing.T) {
 		dir        string
 		dist       Distribution
 		wantValues []vulnsrctest.WantValues
+		noBuckets  [][]string
 		wantErr    string
 	}{
 		{
@@ -77,6 +76,98 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
+			// The document carries values that the csaf package rejects while decoding:
+			// CPEs with unescaped "," and "+" in product_tree.branches (as found in the live SUSE feed),
+			// and an invalid language, tracking status, CVE ID, CVSS vector and remediation category in fields that trivy-db doesn't read.
+			// It also checks that:
+			// - arches are collapsed into one package and the zero epoch is dropped;
+			// - the product ID is taken from full_product_name, even when it isn't "<platform>:<reference>";
+			// - products missing from product_status are skipped;
+			// - references without a URL are skipped.
+			name: "happy path with non-conformant document",
+			dir:  filepath.Join("testdata", "happy", "non-conformant document"),
+			dist: SUSEEnterpriseLinux,
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "SUSE Linux Enterprise 15.1"},
+					Value: types.DataSource{
+						ID:   vulnerability.SuseCSAF,
+						Name: "SUSE CSAF",
+						URL:  "https://ftp.suse.com/pub/projects/security/csaf/",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail", "SUSE-SU-2019:0048-2", "SUSE Linux Enterprise 15.1", "helm-mirror",
+					},
+					Value: types.Advisory{
+						FixedVersion: "0.2.1-1.7.1",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail", "SUSE-SU-2019:0048-2", "SUSE Linux Enterprise 15.1", "epoch-pkg",
+					},
+					Value: types.Advisory{
+						FixedVersion: "2:1.0-1.1",
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "SUSE-SU-2019:0048-2", "suse-csaf"},
+					Value: types.VulnerabilityDetail{
+						Title:       "Security update for helm-mirror",
+						Description: "details",
+						References:  []string{"https://example.com/advisory"},
+						Severity:    types.SeverityHigh,
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "SUSE-SU-2019:0048-2"},
+					Value: map[string]any{},
+				},
+			},
+			noBuckets: [][]string{
+				// "not-listed" is the only package for SLE 12.5, and it isn't in product_status.
+				{"advisory-detail", "SUSE-SU-2019:0048-2", "SUSE Linux Enterprise 12.5"},
+			},
+		},
+		{
+			// Some advisories have no vulnerabilities section (e.g. SUSE-SU-2022:1714-1):
+			// every relationship is used and the severity falls back to document.aggregate_severity.
+			name: "happy path without vulnerabilities",
+			dir:  filepath.Join("testdata", "happy", "no vulnerabilities"),
+			dist: SUSEEnterpriseLinux,
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "SUSE Linux Enterprise 12.5"},
+					Value: types.DataSource{
+						ID:   vulnerability.SuseCSAF,
+						Name: "SUSE CSAF",
+						URL:  "https://ftp.suse.com/pub/projects/security/csaf/",
+					},
+				},
+				{
+					Key: []string{
+						"advisory-detail", "SUSE-SU-2022:1714-1", "SUSE Linux Enterprise 12.5", "php72",
+					},
+					Value: types.Advisory{
+						FixedVersion: "7.2.5-1.81.1",
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "SUSE-SU-2022:1714-1", "suse-csaf"},
+					Value: types.VulnerabilityDetail{
+						Title:    "Security update for php72",
+						Severity: types.SeverityMedium,
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "SUSE-SU-2022:1714-1"},
+					Value: map[string]any{},
+				},
+			},
+		},
+		{
 			name:    "sad path (dir doesn't exist)",
 			dir:     filepath.Join("testdata", "badPath"),
 			dist:    OpenSUSE,
@@ -90,147 +181,11 @@ func TestVulnSrc_Update(t *testing.T) {
 			vulnsrctest.TestUpdate(t, vs, vulnsrctest.TestUpdateArgs{
 				Dir:        tt.dir,
 				WantValues: tt.wantValues,
+				NoBuckets:  tt.noBuckets,
 				WantErr:    tt.wantErr,
 			})
 		})
 	}
-}
-
-func TestBuildInput(t *testing.T) {
-	vs := NewVulnSrc(SUSEEnterpriseLinux)
-	// The document carries values that the csaf package rejects while decoding:
-	// CPEs with unescaped "," and "+" in product_tree.branches (as found in the live SUSE feed),
-	// and an invalid language, tracking status, CVE ID, CVSS vector and remediation category in fields that trivy-db doesn't read.
-	// They must not prevent the advisory from being processed.
-	data := []byte(`{
-  "document": {
-    "title": "Security update for helm-mirror",
-    "lang": "not a language",
-    "tracking": {"id": "SUSE-SU-2019:0048-2", "status": "bogus"},
-    "notes": [{"category": "description", "text": "details"}],
-    "references": [{"url": "https://example.com/advisory"}, {"category": "self", "summary": "no URL"}]
-  },
-  "product_tree": {
-    "branches": [{
-      "category": "vendor",
-      "name": "SUSE",
-      "branches": [
-        {
-          "category": "product_name",
-          "name": "OES",
-          "product": {
-            "name": "OES",
-            "product_id": "OES",
-            "product_identification_helper": {"cpe": "cpe:/o:novell,inc:OES:23.4"}
-          }
-        },
-        {
-          "category": "product_name",
-          "name": "qemu",
-          "product": {
-            "name": "qemu",
-            "product_id": "qemu",
-            "product_identification_helper": {"cpe": "cpe:2.3:a:qemu:qemu:1.0.0+:*:*:*:*:*:*:*"}
-          }
-        }
-      ]
-    }],
-    "relationships": [
-      {
-        "full_product_name": {"product_id": "SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0:0.2.1-1.7.1.x86_64"},
-        "product_reference": "helm-mirror-0:0.2.1-1.7.1.x86_64",
-        "relates_to_product_reference": "SUSE Linux Enterprise Module for Containers 15 SP1"
-      },
-      {
-        "full_product_name": {"product_id": "SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0:0.2.1-1.7.1.aarch64"},
-        "product_reference": "helm-mirror-0:0.2.1-1.7.1.aarch64",
-        "relates_to_product_reference": "SUSE Linux Enterprise Module for Containers 15 SP1"
-      },
-      {
-        "full_product_name": {"product_id": "sles-15-sp1-epoch-pkg"},
-        "product_reference": "epoch-pkg-2:1.0-1.1.noarch",
-        "relates_to_product_reference": "SUSE Linux Enterprise Server 15 SP1"
-      },
-      {
-        "full_product_name": {"product_id": "SUSE Linux Enterprise Server 15 SP1:not-listed-1.0-1.1.noarch"},
-        "product_reference": "not-listed-1.0-1.1.noarch",
-        "relates_to_product_reference": "SUSE Linux Enterprise Server 15 SP1"
-      }
-    ]
-  },
-  "vulnerabilities": [{
-    "cve": "CVE-bogus",
-    "scores": [{
-      "products": ["sles-15-sp1-epoch-pkg"],
-      "cvss_v3": {"version": "3.1", "vectorString": "bogus", "baseScore": 7.5, "baseSeverity": "HIGH"}
-    }],
-    "remediations": [{"category": "bogus", "details": "update", "product_ids": ["sles-15-sp1-epoch-pkg"]}],
-    "product_status": {
-      "recommended": [
-        "SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0:0.2.1-1.7.1.x86_64",
-        "SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0:0.2.1-1.7.1.aarch64",
-        "sles-15-sp1-epoch-pkg"
-      ]
-    },
-    "threats": [{"category": "impact", "details": "important"}]
-  }]
-}`)
-	var adv Advisory
-	require.NoError(t, json.Unmarshal(data, &adv))
-
-	input, err := vs.buildInput(adv)
-	require.NoError(t, err)
-	assert.Equal(t, "SUSE-SU-2019:0048-2", input.VulnID)
-	assert.Equal(t, "Security update for helm-mirror", input.Vuln.Title)
-	assert.Equal(t, "details", input.Vuln.Description)
-	assert.Equal(t, []string{"https://example.com/advisory"}, input.Vuln.References)
-	assert.Equal(t, types.SeverityHigh, input.Vuln.Severity)
-
-	// - arches are collapsed into one package and the zero epoch is dropped;
-	// - the product ID is taken from full_product_name, even when it isn't "<platform>:<reference>";
-	// - products missing from product_status are skipped.
-	assert.Equal(t, []AffectedPackage{
-		{
-			OSVer:   "SUSE Linux Enterprise 15.1",
-			Package: Package{Name: "helm-mirror", FixedVersion: "0.2.1-1.7.1"},
-		},
-		{
-			OSVer:   "SUSE Linux Enterprise 15.1",
-			Package: Package{Name: "epoch-pkg", FixedVersion: "2:1.0-1.1"},
-		},
-	}, input.AffectedPkgs)
-}
-
-func TestBuildInput_NoVulnerabilities(t *testing.T) {
-	vs := NewVulnSrc(SUSEEnterpriseLinux)
-	// Some advisories have no vulnerabilities section (e.g. SUSE-SU-2022:1714-1): every
-	// relationship is used and the severity falls back to document.aggregate_severity.
-	data := []byte(`{
-  "document": {
-    "title": "Security update for php72",
-    "tracking": {"id": "SUSE-SU-2022:1714-1"},
-    "aggregate_severity": {"text": "moderate"}
-  },
-  "product_tree": {
-    "relationships": [{
-      "full_product_name": {"product_id": "SUSE Linux Enterprise Server 12 SP5:php72-7.2.5-1.81.1.x86_64"},
-      "product_reference": "php72-7.2.5-1.81.1.x86_64",
-      "relates_to_product_reference": "SUSE Linux Enterprise Server 12 SP5"
-    }]
-  }
-}`)
-	var adv Advisory
-	require.NoError(t, json.Unmarshal(data, &adv))
-
-	input, err := vs.buildInput(adv)
-	require.NoError(t, err)
-	assert.Equal(t, types.SeverityMedium, input.Vuln.Severity)
-	assert.Equal(t, []AffectedPackage{
-		{
-			OSVer:   "SUSE Linux Enterprise 12.5",
-			Package: Package{Name: "php72", FixedVersion: "7.2.5-1.81.1"},
-		},
-	}, input.AffectedPkgs)
 }
 
 func TestVulnSrc_Get(t *testing.T) {
