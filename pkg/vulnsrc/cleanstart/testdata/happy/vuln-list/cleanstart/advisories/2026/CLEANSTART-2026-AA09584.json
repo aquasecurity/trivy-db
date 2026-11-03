@@ -3,6 +3,12 @@
   "id": "CLEANSTART-2026-AA09584",
   "summary": "Security fix for ghsa-hr2v-4r36-88hr applied in: cert-manager-cmctl-fips 2.4.0-r3, k8ssandra-client-fips 0.8.10-r1, k8ssandra-client-fips 0.8.11-r0, linkerd2 26.1.4-r0, linkerd2 26.4.2",
   "details": "ghsa-hr2v-4r36-88hr affects multiple packages. This issue is resolved in later releases. See references for individual vulnerability details.",
+  "severity": [
+    {
+      "type": "CVSS_V2",
+      "score": "AV:N/AC:L/Au:N/C:P/I:P/A:P"
+    }
+  ],
   "affected": [
     {
       "package": {

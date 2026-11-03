@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	gocvss20 "github.com/pandatix/go-cvss/20"
 	gocvss30 "github.com/pandatix/go-cvss/30"
 	gocvss31 "github.com/pandatix/go-cvss/31"
 	gocvss40 "github.com/pandatix/go-cvss/40"
@@ -380,13 +381,15 @@ func parseAffectedVersions(affected Affected) ([]string, []string, error) {
 
 // SeverityResult holds the CVSS vectors and scores parsed from an OSV severity field.
 type SeverityResult struct {
+	VectorV2  string
+	ScoreV2   float64
 	VectorV3  string
 	ScoreV3   float64
 	VectorV40 string
 	ScoreV40  float64
 }
 
-// ParseSeverities parses an OSV severity field and returns CVSSv3 and CVSSv4 vectors and scores
+// ParseSeverities parses an OSV severity field and returns CVSSv2, CVSSv3 and CVSSv4 vectors and scores
 // cf.
 // - https://ossf.github.io/osv-schema/#severity-field
 // - https://ossf.github.io/osv-schema/#affectedseverity-field
@@ -397,6 +400,16 @@ func ParseSeverities(severities []Severity) SeverityResult {
 			continue
 		}
 		switch s.Type {
+		case "CVSS_V2":
+			vec, score, err := parseSeverityV2(s.Score)
+			if err != nil {
+				log.WithPrefix("osv").Warn(
+					"Failed to parse CVSSv2 vector",
+					log.String("vector", s.Score), log.Err(err))
+				continue
+			}
+			result.VectorV2 = vec
+			result.ScoreV2 = score
 		case "CVSS_V3":
 			vec, score, err := parseSeverityV3(s.Score)
 			if err != nil {
@@ -420,6 +433,18 @@ func ParseSeverities(severities []Severity) SeverityResult {
 		}
 	}
 	return result
+}
+
+// parseSeverityV2 parses a CVSSv2 vector string and returns the vector and base score.
+// CVSSv2 vectors have no version prefix, but some feeds add "CVSS:2.0/" anyway, so it is
+// stripped. The vector is returned bare, the same way the NVD source stores CVSSv2 vectors.
+func parseSeverityV2(score string) (string, float64, error) {
+	vector := strings.TrimPrefix(strings.TrimSuffix(score, "/"), "CVSS:2.0/")
+	cvss, err := gocvss20.ParseVector(vector)
+	if err != nil {
+		return "", 0, oops.With("cvss_vector_v2", vector).Wrapf(err, "failed to parse CVSSv2 vector")
+	}
+	return cvss.Vector(), cvss.BaseScore(), nil
 }
 
 // parseSeverityV3 parses a CVSSv3 vector string and returns the vector and score

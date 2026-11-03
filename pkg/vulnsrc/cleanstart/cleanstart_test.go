@@ -63,6 +63,9 @@ func TestVulnSrc_Update(t *testing.T) {
 							"https://github.com/cleanstart-dev/cleanstart-security-advisories/tree/main/advisories/2026/CLEANSTART-2026-AA09584.json",
 							"https://osv.dev/vulnerability/ghsa-hr2v-4r36-88hr",
 						},
+						// The feed writes CVSSv2 vectors bare, with no "CVSS:2.0/" prefix.
+						CvssScore:  7.5,
+						CvssVector: "AV:N/AC:L/Au:N/C:P/I:P/A:P",
 					},
 				},
 				{

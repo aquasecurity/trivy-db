@@ -141,6 +141,8 @@ func (vs VulnSrc) convert(osvEntry osv.Entry) []entry {
 		Title:         osvEntry.Summary,
 		Description:   osvEntry.Details,
 		References:    references(osvEntry),
+		CvssScore:     sev.ScoreV2,
+		CvssVector:    sev.VectorV2,
 		CvssScoreV3:   sev.ScoreV3,
 		CvssVectorV3:  sev.VectorV3,
 		CvssScoreV40:  sev.ScoreV40,
