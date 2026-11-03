@@ -3,12 +3,15 @@ package wolfi
 import (
 	"encoding/json"
 	"io"
+	"maps"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
 
+	"github.com/aquasecurity/go-version/pkg/version"
 	"github.com/aquasecurity/trivy-db/pkg/db"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
@@ -84,10 +87,14 @@ func (vs VulnSrc) save(advisories []advisory) error {
 }
 
 func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes map[string][]string) error {
+	// The same CVE can be listed under more than one fixed version in the secdb
+	// feed, and every write lands on the same (CVE, package) key, overwriting the
+	// previous value. Keep the highest version, and write the advisories in a
+	// deterministic order, so the stored value no longer depends on map
+	// iteration order.
+	// See https://github.com/aquasecurity/trivy-db/issues/699
+	fixedVersions := make(map[string]string)
 	for fixedVersion, vulnIDs := range secfixes {
-		advisory := types.Advisory{
-			FixedVersion: fixedVersion,
-		}
 		for _, vulnID := range vulnIDs {
 			// See https://gitlab.alpinelinux.org/alpine/infra/docker/secdb/-/issues/3
 			// e.g. CVE-2017-2616 (+ regression fix)
@@ -97,20 +104,48 @@ func (vs VulnSrc) saveSecFixes(tx *bolt.Tx, platform, pkgName string, secfixes m
 				if !strings.HasPrefix(cveID, "CVE-") {
 					continue
 				}
-				if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkgName, []string{platform}, advisory); err != nil {
-					return oops.Wrapf(err, "failed to save advisory detail")
-				}
-
-				// for optimization
-				if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
-					return oops.Wrapf(err, "failed to save the vulnerability ID")
+				if cur, ok := fixedVersions[cveID]; ok {
+					fixedVersions[cveID] = higherFixedVersion(cur, fixedVersion)
+				} else {
+					fixedVersions[cveID] = fixedVersion
 				}
 			}
+		}
+	}
+
+	for _, cveID := range slices.Sorted(maps.Keys(fixedVersions)) {
+		advisory := types.Advisory{
+			FixedVersion: fixedVersions[cveID],
+		}
+		if err := vs.dbc.PutAdvisoryDetail(tx, cveID, pkgName, []string{platform}, advisory); err != nil {
+			return oops.Wrapf(err, "failed to save advisory detail")
+		}
+
+		// for optimization
+		if err := vs.dbc.PutVulnerabilityID(tx, cveID); err != nil {
+			return oops.Wrapf(err, "failed to save the vulnerability ID")
 		}
 	}
 	return nil
 }
 
+// higherFixedVersion returns the fixed version to keep when the same CVE is
+// listed under both a and b. Versions the parser rejects fall back to
+// lexicographic order so the result never depends on map iteration order.
+func higherFixedVersion(a, b string) string {
+	pa, errA := version.Parse(a)
+	pb, errB := version.Parse(b)
+	if errA != nil || errB != nil {
+		if a >= b {
+			return a
+		}
+		return b
+	}
+	if pa.LessThan(pb) {
+		return b
+	}
+	return a
+}
 func (vs VulnSrc) Get(params db.GetParams) ([]types.Advisory, error) {
 	eb := oops.In(string(source.ID))
 	advisories, err := vs.dbc.GetAdvisories(platformName, params.PkgName)
