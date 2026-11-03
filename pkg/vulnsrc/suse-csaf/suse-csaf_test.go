@@ -82,7 +82,9 @@ func TestVulnSrc_Update(t *testing.T) {
 			// It also checks that:
 			// - arches are collapsed into one package and the zero epoch is dropped;
 			// - the product ID is taken from full_product_name, even when it isn't "<platform>:<reference>";
+			// - products from both product_status.fixed and product_status.recommended are used;
 			// - products missing from product_status are skipped;
+			// - the severity is the highest impact threat, and other threat categories are ignored;
 			// - references without a URL are skipped.
 			name: "happy path with non-conformant document",
 			dir:  filepath.Join("testdata", "happy", "non-conformant document"),

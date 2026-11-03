@@ -112,11 +112,21 @@
       "product_status": {
         "recommended": [
           "SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0:0.2.1-1.7.1.x86_64",
-          "SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0:0.2.1-1.7.1.aarch64",
+          "SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0:0.2.1-1.7.1.aarch64"
+        ],
+        "fixed": [
           "sles-15-sp1-epoch-pkg"
         ]
       },
       "threats": [
+        {
+          "category": "exploit_status",
+          "details": "critical"
+        },
+        {
+          "category": "impact",
+          "details": "moderate"
+        },
         {
           "category": "impact",
           "details": "important"
