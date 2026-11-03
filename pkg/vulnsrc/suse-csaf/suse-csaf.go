@@ -49,7 +49,8 @@ var (
 type PutInput struct {
 	VulnID string
 
-	// Advisory is the CSAF document the other fields were derived from.
+	// Advisory is the decoded subset of the CSAF document the other fields were derived from.
+	// It is kept for extensibility and is not used in trivy-db.
 	Advisory Advisory
 
 	Vuln         types.VulnerabilityDetail
@@ -196,7 +197,8 @@ func highestImpact(vulns []Vulnerability) types.Severity {
 	return severity
 }
 
-// allowedProductIDs collects product IDs marked as fixed or recommended across all vulnerabilities to filter remediated packages.
+// allowedProductIDs collects product IDs marked as fixed or recommended across all vulnerabilities.
+// Only relationships with these product IDs are remediated by the advisory and saved.
 func allowedProductIDs(vulns []Vulnerability) map[string]struct{} {
 	allowed := make(map[string]struct{})
 	for _, vuln := range vulns {
@@ -301,15 +303,16 @@ func (vs VulnSrc) getAffectedPackages(relationships []Relationship, vulns []Vuln
 	return pkgs
 }
 
-// TODO: getOSVersion logic is duplicated from suse-cvrf so that suse-csaf remains
-// self-contained when suse-cvrf is removed in the future.
+// getOSVersion is duplicated from suse-cvrf so that suse-csaf remains self-contained when suse-cvrf is removed in the future.
 //
 //nolint:gocyclo
 func (vs VulnSrc) getOSVersion(platformName string) string {
 	if strings.Contains(platformName, "SUSE Manager") {
+		// SUSE Linux Enterprise Module for SUSE Manager Server 4.0
 		return ""
 	}
 	if strings.HasPrefix(platformName, "openSUSE Tumbleweed") {
+		// Tumbleweed has no version, it is a rolling release
 		return bucket.NewOpenSUSETumbleweed().Name()
 	}
 	if strings.HasPrefix(platformName, "openSUSE Leap Micro") {
@@ -327,6 +330,7 @@ func (vs VulnSrc) getOSVersion(platformName string) string {
 		return bucket.NewOpenSUSELeapMicro(ss[3]).Name()
 	}
 	if strings.HasPrefix(platformName, "openSUSE Leap") {
+		// openSUSE Leap 15.0
 		ss := strings.Split(platformName, " ")
 		if len(ss) < 3 {
 			vs.logger.Warn("Invalid version", log.String("platform", platformName))
@@ -341,6 +345,7 @@ func (vs VulnSrc) getOSVersion(platformName string) string {
 		return bucket.NewOpenSUSE(ss[2]).Name()
 	}
 	if strings.HasPrefix(platformName, "SUSE Linux Enterprise Micro") {
+		// SUSE Linux Enterprise Micro 5.3
 		ss := strings.Split(platformName, " ")
 		if len(ss) < 5 {
 			vs.logger.Warn("Invalid version", log.String("platform", platformName))
@@ -355,6 +360,7 @@ func (vs VulnSrc) getOSVersion(platformName string) string {
 		return bucket.NewSUSELinuxEnterpriseMicro(ss[4]).Name()
 	}
 	if strings.HasPrefix(platformName, "SUSE Linux Micro") {
+		// SUSE Linux Micro 6.0
 		ss := strings.Split(platformName, " ")
 		if len(ss) < 4 {
 			vs.logger.Warn("Invalid version", log.String("platform", platformName))
@@ -370,9 +376,11 @@ func (vs VulnSrc) getOSVersion(platformName string) string {
 	}
 	if strings.Contains(platformName, "SUSE Linux Enterprise") {
 		if strings.HasPrefix(platformName, "SUSE Linux Enterprise Storage") {
+			// e.g. SUSE Linux Enterprise Storage 7
 			return ""
 		}
 
+		// Handle both 15-SP7 and 16.0
 		ss := strings.Fields(strings.ReplaceAll(strings.ReplaceAll(platformName, "-", " "), ".", " "))
 		versions := make([]string, 0, 2)
 		for i := len(ss) - 1; i > 0; i-- {
