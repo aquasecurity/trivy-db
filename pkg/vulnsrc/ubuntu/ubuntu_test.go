@@ -87,7 +87,7 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
-			name: "esm-infra-legacy release",
+			name: "legacy ESM streams",
 			dir:  "testdata",
 			wantValues: []vulnsrctest.WantValues{
 				{
@@ -116,6 +116,12 @@ func TestVulnSrc_Update(t *testing.T) {
 					Key: []string{"advisory-detail", "CVE-2026-109618", "ubuntu 14.04-ESM", "php5"},
 					Value: types.Advisory{
 						FixedVersion: "5.5.9+dfsg-1ubuntu4.29+esm18",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2026-12246", "ubuntu 16.04-ESM", "nsd"},
+					Value: types.Advisory{
+						FixedVersion: "4.1.7-1ubuntu0.1~esm1",
 					},
 				},
 			},
