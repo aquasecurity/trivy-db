@@ -98,14 +98,17 @@ func TestVulnSrc_Update(t *testing.T) {
 
 func TestBuildInput(t *testing.T) {
 	vs := NewVulnSrc(SUSEEnterpriseLinux)
-	// product_tree.branches carries CPEs that csaf.Advisory rejects (unescaped "," and "+"),
-	// as found in the live SUSE feed. They must not prevent the advisory from being processed.
+	// The document carries values that the csaf package rejects while decoding:
+	// CPEs with unescaped "," and "+" in product_tree.branches (as found in the live SUSE feed),
+	// and an invalid language, tracking status, CVE ID, CVSS vector and remediation category in fields that trivy-db doesn't read.
+	// They must not prevent the advisory from being processed.
 	data := []byte(`{
   "document": {
     "title": "Security update for helm-mirror",
-    "tracking": {"id": "SUSE-SU-2019:0048-2"},
+    "lang": "not a language",
+    "tracking": {"id": "SUSE-SU-2019:0048-2", "status": "bogus"},
     "notes": [{"category": "description", "text": "details"}],
-    "references": [{"url": "https://example.com/advisory"}]
+    "references": [{"url": "https://example.com/advisory"}, {"category": "self", "summary": "no URL"}]
   },
   "product_tree": {
     "branches": [{
@@ -156,6 +159,12 @@ func TestBuildInput(t *testing.T) {
     ]
   },
   "vulnerabilities": [{
+    "cve": "CVE-bogus",
+    "scores": [{
+      "products": ["sles-15-sp1-epoch-pkg"],
+      "cvss_v3": {"version": "3.1", "vectorString": "bogus", "baseScore": 7.5, "baseSeverity": "HIGH"}
+    }],
+    "remediations": [{"category": "bogus", "details": "update", "product_ids": ["sles-15-sp1-epoch-pkg"]}],
     "product_status": {
       "recommended": [
         "SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0:0.2.1-1.7.1.x86_64",
@@ -174,6 +183,7 @@ func TestBuildInput(t *testing.T) {
 	assert.Equal(t, "SUSE-SU-2019:0048-2", input.VulnID)
 	assert.Equal(t, "Security update for helm-mirror", input.Vuln.Title)
 	assert.Equal(t, "details", input.Vuln.Description)
+	assert.Equal(t, []string{"https://example.com/advisory"}, input.Vuln.References)
 	assert.Equal(t, types.SeverityHigh, input.Vuln.Severity)
 
 	// - arches are collapsed into one package and the zero epoch is dropped;

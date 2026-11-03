@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/gocsaf/csaf/v3/csaf"
 	rpmversion "github.com/knqyf263/go-rpm-version"
-	"github.com/samber/lo"
 	"github.com/samber/oops"
 	bolt "go.etcd.io/bbolt"
 
@@ -135,18 +135,18 @@ func (vs VulnSrc) walk(tx *bolt.Tx, rootDir string) error {
 
 // buildInput extracts the values written to the database from a CSAF document.
 func (vs VulnSrc) buildInput(adv Advisory) (PutInput, error) {
-	doc := lo.FromPtr(adv.Document)
-	vulnID := string(lo.FromPtr(lo.FromPtr(doc.Tracking).ID))
+	doc := adv.Document
+	vulnID := doc.Tracking.ID
 	if vulnID == "" {
 		return PutInput{}, errors.New("missing tracking id")
 	}
 
 	references := make([]string, 0, len(doc.References))
 	for _, ref := range doc.References {
-		if ref == nil {
+		if ref.URL == "" {
 			continue
 		}
-		references = append(references, lo.FromPtr(ref.URL))
+		references = append(references, ref.URL)
 	}
 
 	return PutInput{
@@ -154,47 +154,41 @@ func (vs VulnSrc) buildInput(adv Advisory) (PutInput, error) {
 		Advisory: adv,
 		Vuln: types.VulnerabilityDetail{
 			References:  references,
-			Title:       lo.FromPtr(doc.Title),
+			Title:       doc.Title,
 			Description: description(doc.Notes),
-			Severity:    severityFromAdvisory(&doc, adv.Vulnerabilities),
+			Severity:    severityFromAdvisory(doc, adv.Vulnerabilities),
 		},
-		AffectedPkgs: vs.getAffectedPackages(lo.FromPtr(adv.ProductTree).Relationships, adv.Vulnerabilities),
+		AffectedPkgs: vs.getAffectedPackages(adv.ProductTree.Relationships, adv.Vulnerabilities),
 	}, nil
 }
 
 // description returns the text of the "description" note, which SUSE uses for the advisory body.
-func description(notes csaf.Notes) string {
+func description(notes []Note) string {
 	for _, n := range notes {
-		if n != nil && lo.FromPtr(n.NoteCategory) == csaf.CSAFNoteCategoryDescription {
-			return lo.FromPtr(n.Text)
+		if n.Category == string(csaf.CSAFNoteCategoryDescription) {
+			return n.Text
 		}
 	}
 	return ""
 }
 
 // severityFromAdvisory prefers per-CVE impact threats and falls back to document.aggregate_severity.
-func severityFromAdvisory(doc *csaf.Document, vulns csaf.Vulnerabilities) types.Severity {
+func severityFromAdvisory(doc Document, vulns []Vulnerability) types.Severity {
 	if sev := highestImpact(vulns); sev != types.SeverityUnknown {
 		return sev
 	}
-	if doc != nil && doc.AggregateSeverity != nil {
-		return severityFromThreat(lo.FromPtr(doc.AggregateSeverity.Text))
-	}
-	return types.SeverityUnknown
+	return severityFromThreat(doc.AggregateSeverity.Text)
 }
 
 // highestImpact returns the most severe impact rating across all vulnerabilities in the advisory.
-func highestImpact(vulns csaf.Vulnerabilities) types.Severity {
+func highestImpact(vulns []Vulnerability) types.Severity {
 	severity := types.SeverityUnknown
 	for _, vuln := range vulns {
-		if vuln == nil {
-			continue
-		}
 		for _, threat := range vuln.Threats {
-			if threat == nil || lo.FromPtr(threat.Category) != csaf.CSAFThreatCategoryImpact {
+			if threat.Category != string(csaf.CSAFThreatCategoryImpact) {
 				continue
 			}
-			if sev := severityFromThreat(lo.FromPtr(threat.Details)); severity < sev {
+			if sev := severityFromThreat(threat.Details); severity < sev {
 				severity = sev
 			}
 		}
@@ -202,24 +196,12 @@ func highestImpact(vulns csaf.Vulnerabilities) types.Severity {
 	return severity
 }
 
-// allowedProductIDs collects product IDs marked as fixed or recommended across all
-// vulnerabilities to filter remediated packages.
-func allowedProductIDs(vulns csaf.Vulnerabilities) map[string]struct{} {
+// allowedProductIDs collects product IDs marked as fixed or recommended across all vulnerabilities to filter remediated packages.
+func allowedProductIDs(vulns []Vulnerability) map[string]struct{} {
 	allowed := make(map[string]struct{})
 	for _, vuln := range vulns {
-		if vuln == nil || vuln.ProductStatus == nil {
-			continue
-		}
-		for _, products := range []*csaf.Products{vuln.ProductStatus.Fixed, vuln.ProductStatus.Recommended} {
-			if products == nil {
-				continue
-			}
-			for _, pid := range *products {
-				if pid == nil {
-					continue
-				}
-				allowed[string(*pid)] = struct{}{}
-			}
+		for _, pid := range slices.Concat(vuln.ProductStatus.Fixed, vuln.ProductStatus.Recommended) {
+			allowed[pid] = struct{}{}
 		}
 	}
 	return allowed
@@ -276,19 +258,19 @@ func (vs *Suse) Put(tx *bolt.Tx, input PutInput) error {
 	return nil
 }
 
-func (vs VulnSrc) getAffectedPackages(relationships []Relationship, vulns csaf.Vulnerabilities) []AffectedPackage {
+func (vs VulnSrc) getAffectedPackages(relationships []Relationship, vulns []Vulnerability) []AffectedPackage {
 	allowed := allowedProductIDs(vulns)
 	seen := make(map[AffectedPackage]struct{})
 	var pkgs []AffectedPackage
 
 	for _, relationship := range relationships {
-		platform := string(relationship.RelatesToProductReference)
-		productRef := string(relationship.ProductReference)
+		platform := relationship.RelatesToProductReference
+		productRef := relationship.ProductReference
 		// When vulnerabilities are present, keep only packages remediated by this advisory.
 		// When an advisory omits vulnerabilities altogether (non-CVE security updates e.g. SUSE-SU-2022:1714-1),
 		// all packages in product_tree represent updates delivered by the advisory.
 		if len(vulns) > 0 {
-			if _, ok := allowed[string(relationship.FullProductName.ProductID)]; !ok {
+			if _, ok := allowed[relationship.FullProductName.ProductID]; !ok {
 				continue
 			}
 		}
