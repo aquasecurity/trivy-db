@@ -31,7 +31,9 @@ const (
 	SUSEEnterpriseLinuxMicro
 	OpenSUSE
 	OpenSUSETumbleweed
+)
 
+const (
 	vulnListDir = "vuln-list-suse"
 	csafDir     = "csaf/suse"
 )

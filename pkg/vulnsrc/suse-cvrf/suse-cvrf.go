@@ -29,6 +29,8 @@ const (
 	OpenSUSETumbleweed
 )
 
+const vulnListDir = "vuln-list-suse"
+
 var (
 	suseDir = filepath.Join("cvrf", "suse")
 
@@ -80,7 +82,7 @@ func (vs VulnSrc) Name() types.SourceID {
 
 func (vs VulnSrc) Update(dir string) error {
 	vs.logger.Info("Saving SUSE CVRF")
-	rootDir := filepath.Join(dir, "vuln-list", suseDir)
+	rootDir := filepath.Join(dir, vulnListDir, suseDir)
 	eb := oops.In("suse").Tags("cvrf").With("root_dir", rootDir)
 
 	switch vs.dist {
