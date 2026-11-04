@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/aquasecurity/trivy-db/pkg/db"
+	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/rootio"
 	"github.com/aquasecurity/trivy-db/pkg/vulnsrc/vulnerability"
@@ -18,7 +19,6 @@ func TestVulnSrc_Update(t *testing.T) {
 		name       string
 		dir        string
 		wantValues []vulnsrctest.WantValues
-		noBuckets  [][]string
 		wantErr    string
 	}{
 		{
@@ -28,39 +28,7 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"data-source",
-						"root.io debian 12",
-					},
-					Value: types.DataSource{
-						ID:     vulnerability.RootIO,
-						Name:   "Root.io Security Patches (debian)",
-						URL:    "https://api.root.io/external/patch_feed",
-						BaseID: vulnerability.Debian,
-					},
-				},
-				{
-					Key: []string{
-						"advisory-detail",
-						"CVE-2025-29088",
-						"root.io debian 12",
-						"sqlite3",
-					},
-					Value: types.Advisory{
-						VulnerableVersions: []string{"<3.40.1-2+deb12u1.root.io.2"},
-						PatchedVersions:    []string{"3.40.1-2+deb12u1.root.io.2"},
-						Severity:           types.SeverityMedium,
-					},
-				},
-				{
-					Key: []string{
-						"vulnerability-id",
-						"CVE-2025-29088",
-					},
-					Value: map[string]any{},
-				},
-				{
-					Key: []string{
-						"data-source",
-						"root.io alpine 3.17",
+						"root.io alpine 3.18",
 					},
 					Value: types.DataSource{
 						ID:     vulnerability.RootIO,
@@ -72,64 +40,34 @@ func TestVulnSrc_Update(t *testing.T) {
 				{
 					Key: []string{
 						"advisory-detail",
-						"CVE-2023-46853",
-						"root.io alpine 3.17",
-						"memcached",
+						"CVE-2023-38473",
+						"root.io alpine 3.18",
+						"rootio-curl",
 					},
 					Value: types.Advisory{
-						VulnerableVersions: []string{"<1.6.17-r00071"},
-						PatchedVersions:    []string{"1.6.17-r00071"},
-						Severity:           types.SeverityHigh,
+						VendorIDs:          []string{"ROOT-OS-ALPINE-318-CVE-2023-38473"},
+						VulnerableVersions: []string{"<8.4.0-r0.root.io.1"},
+						PatchedVersions:    []string{"8.4.0-r0.root.io.1"},
+					},
+				},
+				{
+					Key: []string{
+						"vulnerability-detail",
+						"CVE-2023-38473",
+						string(vulnerability.RootIO),
+					},
+					Value: types.VulnerabilityDetail{
+						CvssVectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+						CvssScoreV3:  9.8,
 					},
 				},
 				{
 					Key: []string{
 						"vulnerability-id",
-						"CVE-2023-46853",
+						"CVE-2023-38473",
 					},
 					Value: map[string]any{},
 				},
-				{
-					Key: []string{
-						"data-source",
-						"root.io ubuntu 22.04",
-					},
-					Value: types.DataSource{
-						ID:     vulnerability.RootIO,
-						Name:   "Root.io Security Patches (ubuntu)",
-						URL:    "https://api.root.io/external/patch_feed",
-						BaseID: vulnerability.Ubuntu,
-					},
-				},
-				{
-					Key: []string{
-						"advisory-detail",
-						"CVE-2023-29383",
-						"root.io ubuntu 22.04",
-						"shadow",
-					},
-					Value: types.Advisory{
-						VulnerableVersions: []string{"<1:4.8.1-2ubuntu2.2.root.io.2"},
-						PatchedVersions:    []string{"1:4.8.1-2ubuntu2.2.root.io.2"},
-						Severity:           types.SeverityCritical,
-					},
-				},
-				{
-					Key: []string{
-						"vulnerability-id",
-						"CVE-2023-29383",
-					},
-					Value: map[string]any{},
-				},
-			},
-		},
-		{
-			name: "happy path with unsupported OS",
-			dir:  filepath.Join("testdata", "unsupported-os"),
-			noBuckets: [][]string{
-				{"advisory-detail"},
-				{"vulnerability-id"},
-				{"vulnerability-detail"},
 			},
 		},
 		{
@@ -145,7 +83,6 @@ func TestVulnSrc_Update(t *testing.T) {
 			vulnsrctest.TestUpdate(t, vs, vulnsrctest.TestUpdateArgs{
 				Dir:        tt.dir,
 				WantValues: tt.wantValues,
-				NoBuckets:  tt.noBuckets,
 				WantErr:    tt.wantErr,
 			})
 		})
@@ -159,7 +96,7 @@ func TestVulnSrc_Get(t *testing.T) {
 	}
 	tests := []struct {
 		name     string
-		baseOS   types.SourceID
+		baseOS   ecosystem.Type
 		fixtures []string
 		args     args
 		want     []types.Advisory
@@ -167,7 +104,7 @@ func TestVulnSrc_Get(t *testing.T) {
 	}{
 		{
 			name:   "only Root.io debian advisories",
-			baseOS: vulnerability.Debian,
+			baseOS: ecosystem.Debian,
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/data-source.yaml",
@@ -192,7 +129,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:   "only Root.io debian advisories (with fixed version by Root.io and Debian)",
-			baseOS: vulnerability.Debian,
+			baseOS: ecosystem.Debian,
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/data-source.yaml",
@@ -223,7 +160,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:   "only Root.io ubuntu advisories",
-			baseOS: vulnerability.Ubuntu,
+			baseOS: ecosystem.Ubuntu,
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/data-source.yaml",
@@ -248,7 +185,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:   "only Root.io alpine advisories",
-			baseOS: vulnerability.Alpine,
+			baseOS: ecosystem.Alpine,
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/data-source.yaml",
@@ -273,7 +210,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:   "Root.io and Debian have advisories",
-			baseOS: vulnerability.Debian,
+			baseOS: ecosystem.Debian,
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/data-source.yaml",
@@ -312,7 +249,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:   "only debian advisories",
-			baseOS: vulnerability.Debian,
+			baseOS: ecosystem.Debian,
 			fixtures: []string{
 				"testdata/fixtures/happy.yaml",
 				"testdata/fixtures/data-source.yaml",
@@ -346,7 +283,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:     "Root.io and Debian don't have advisories",
-			baseOS:   vulnerability.Debian,
+			baseOS:   ecosystem.Debian,
 			fixtures: []string{"testdata/fixtures/broken.yaml"},
 			args: args{
 				osVer:   "12",
@@ -355,7 +292,7 @@ func TestVulnSrc_Get(t *testing.T) {
 		},
 		{
 			name:     "broken bucket",
-			baseOS:   vulnerability.Debian,
+			baseOS:   ecosystem.Debian,
 			fixtures: []string{"testdata/fixtures/broken.yaml"},
 			args: args{
 				osVer:   "11",
