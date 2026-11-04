@@ -1,0 +1,20 @@
+{
+  "debian": [
+    {
+      "distroversion": "12",
+      "packages": [
+        {
+          "pkg": {
+            "name": "nginx",
+            "cves": {
+              "CVE-2024-OS-001": {
+                "vulnerable_ranges": ["<1.24.0"],
+                "fixed_versions": ["1.24.0.root.io"]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
