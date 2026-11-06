@@ -1,0 +1,42 @@
+{
+  "document": {
+    "title": "Security update for helm-mirror",
+    "notes": [
+      {
+        "category": "description",
+        "text": "Security update for helm-mirror"
+      }
+    ],
+    "references": [
+      {
+        "url": "https://www.suse.com/support/update/announcement/SUSE-SU-2019:0048-2/"
+      }
+    ]
+  },
+  "product_tree": {
+    "relationships": [
+      {
+        "full_product_name": {
+          "product_id": "SUSE Linux Enterprise Server 15 SP1:helm-mirror-0.2.1-1.7.1.x86_64"
+        },
+        "product_reference": "helm-mirror-0.2.1-1.7.1.x86_64",
+        "relates_to_product_reference": "SUSE Linux Enterprise Server 15 SP1"
+      }
+    ]
+  },
+  "vulnerabilities": [
+    {
+      "product_status": {
+        "recommended": [
+          "SUSE Linux Enterprise Server 15 SP1:helm-mirror-0.2.1-1.7.1.x86_64"
+        ]
+      },
+      "threats": [
+        {
+          "category": "impact",
+          "details": "moderate"
+        }
+      ]
+    }
+  ]
+}

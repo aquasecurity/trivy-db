@@ -1,0 +1,7 @@
+- bucket: openSUSE Leap 13.1
+  pairs:
+    - bucket: bind
+      pairs:
+        - key: openSUSE-SU-2019:0003-1
+          value:
+            FixedVersion: "1.3.29-bp150.2.12.1"
