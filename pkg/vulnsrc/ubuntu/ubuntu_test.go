@@ -86,6 +86,40 @@ func TestVulnSrc_Update(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "esm-infra-legacy release",
+			dir:  "testdata",
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "ubuntu 16.04-ESM"},
+					Value: types.DataSource{
+						ID:   vulnerability.Ubuntu,
+						Name: "Ubuntu CVE Tracker",
+						URL:  "https://git.launchpad.net/ubuntu-cve-tracker",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2026-109618", "ubuntu 16.04-ESM", "php7.0"},
+					Value: types.Advisory{
+						FixedVersion: "7.0.33-0ubuntu0.16.04.16+esm22",
+					},
+				},
+				{
+					Key: []string{"data-source", "ubuntu 14.04-ESM"},
+					Value: types.DataSource{
+						ID:   vulnerability.Ubuntu,
+						Name: "Ubuntu CVE Tracker",
+						URL:  "https://git.launchpad.net/ubuntu-cve-tracker",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2026-109618", "ubuntu 14.04-ESM", "php5"},
+					Value: types.Advisory{
+						FixedVersion: "5.5.9+dfsg-1ubuntu4.29+esm18",
+					},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
