@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	targetPlatforms = []string{"Oracle Linux 5", "Oracle Linux 6", "Oracle Linux 7", "Oracle Linux 8", "Oracle Linux 9"}
+	targetPlatforms = []string{"Oracle Linux 5", "Oracle Linux 6", "Oracle Linux 7", "Oracle Linux 8", "Oracle Linux 9", "Oracle Linux 10"}
 	oracleDir       = filepath.Join("oval", "oracle")
 
 	source = types.DataSource{
