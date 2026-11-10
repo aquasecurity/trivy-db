@@ -1,0 +1,183 @@
+{
+  "Title": "ELSA-2026-9693:  java-25-openjdk security update (IMPORTANT)",
+  "Description": "[1:25.0.3.0.9-1.0.1]\n- Add Oracle vendor bug URL [Orabug: 34340155]",
+  "Platform": [
+    "Oracle Linux 9",
+    "Oracle Linux 10"
+  ],
+  "References": [
+    {
+      "Source": "elsa",
+      "URI": "https://linux.oracle.com/errata/ELSA-2026-9693.html",
+      "ID": "ELSA-2026-9693"
+    },
+    {
+      "Source": "CVE",
+      "URI": "https://linux.oracle.com/cve/CVE-2026-22007.html",
+      "ID": "CVE-2026-22007"
+    }
+  ],
+  "Criteria": {
+    "Operator": "OR",
+    "Criterias": [
+      {
+        "Operator": "AND",
+        "Criterias": [
+          {
+            "Operator": "OR",
+            "Criterias": [
+              {
+                "Operator": "AND",
+                "Criterias": [
+                  {
+                    "Operator": "OR",
+                    "Criterias": [
+                      {
+                        "Operator": "AND",
+                        "Criterias": null,
+                        "Criterions": [
+                          {
+                            "Comment": "java-25-openjdk is earlier than 1:25.0.3.0.9-1.0.1.el9"
+                          },
+                          {
+                            "Comment": "java-25-openjdk is signed with the Oracle Linux 9 key"
+                          }
+                        ]
+                      }
+                    ],
+                    "Criterions": null
+                  }
+                ],
+                "Criterions": [
+                  {
+                    "Comment": "Oracle Linux arch is aarch64"
+                  }
+                ]
+              },
+              {
+                "Operator": "AND",
+                "Criterias": [
+                  {
+                    "Operator": "OR",
+                    "Criterias": [
+                      {
+                        "Operator": "AND",
+                        "Criterias": null,
+                        "Criterions": [
+                          {
+                            "Comment": "java-25-openjdk is earlier than 1:25.0.3.0.9-1.0.1.el9"
+                          },
+                          {
+                            "Comment": "java-25-openjdk is signed with the Oracle Linux 9 key"
+                          }
+                        ]
+                      }
+                    ],
+                    "Criterions": null
+                  }
+                ],
+                "Criterions": [
+                  {
+                    "Comment": "Oracle Linux arch is x86_64"
+                  }
+                ]
+              }
+            ],
+            "Criterions": null
+          }
+        ],
+        "Criterions": [
+          {
+            "Comment": "Oracle Linux 9 is installed"
+          }
+        ]
+      },
+      {
+        "Operator": "AND",
+        "Criterias": [
+          {
+            "Operator": "OR",
+            "Criterias": [
+              {
+                "Operator": "AND",
+                "Criterias": [
+                  {
+                    "Operator": "OR",
+                    "Criterias": [
+                      {
+                        "Operator": "AND",
+                        "Criterias": null,
+                        "Criterions": [
+                          {
+                            "Comment": "java-25-openjdk is earlier than 1:25.0.3.0.9-1.0.1.el10_2"
+                          },
+                          {
+                            "Comment": "java-25-openjdk is signed with the Oracle Linux 10 key"
+                          }
+                        ]
+                      }
+                    ],
+                    "Criterions": null
+                  }
+                ],
+                "Criterions": [
+                  {
+                    "Comment": "Oracle Linux arch is aarch64"
+                  }
+                ]
+              },
+              {
+                "Operator": "AND",
+                "Criterias": [
+                  {
+                    "Operator": "OR",
+                    "Criterias": [
+                      {
+                        "Operator": "AND",
+                        "Criterias": null,
+                        "Criterions": [
+                          {
+                            "Comment": "java-25-openjdk is earlier than 1:25.0.3.0.9-1.0.1.el10_2"
+                          },
+                          {
+                            "Comment": "java-25-openjdk is signed with the Oracle Linux 10 key"
+                          }
+                        ]
+                      }
+                    ],
+                    "Criterions": null
+                  }
+                ],
+                "Criterions": [
+                  {
+                    "Comment": "Oracle Linux arch is x86_64"
+                  }
+                ]
+              }
+            ],
+            "Criterions": null
+          }
+        ],
+        "Criterions": [
+          {
+            "Comment": "Oracle Linux 10 is installed"
+          }
+        ]
+      }
+    ],
+    "Criterions": null
+  },
+  "Severity": "IMPORTANT",
+  "Cves": [
+    {
+      "Impact": "",
+      "Href": "https://linux.oracle.com/cve/CVE-2026-22007.html",
+      "Public": "20260421",
+      "CVSS3": "2.9/CVSS:3.1/AV:L/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+      "ID": "CVE-2026-22007"
+    }
+  ],
+  "Issued": {
+    "Date": "2026-04-23"
+  }
+}

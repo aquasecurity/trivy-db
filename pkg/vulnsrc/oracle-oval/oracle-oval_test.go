@@ -294,6 +294,74 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
+			name: "happy path Oracle Linux 10",
+			dir:  filepath.Join("testdata", "oracle-linux-10"),
+			wantValues: []vulnsrctest.WantValues{
+				{
+					Key: []string{"data-source", "Oracle Linux 9"},
+					Value: types.DataSource{
+						ID:   vulnerability.OracleOVAL,
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
+				},
+				{
+					Key: []string{"data-source", "Oracle Linux 10"},
+					Value: types.DataSource{
+						ID:   vulnerability.OracleOVAL,
+						Name: "Oracle Linux OVAL definitions",
+						URL:  "https://linux.oracle.com/security/oval/",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2026-22007", "Oracle Linux 9", "java-25-openjdk"},
+					Value: types.Advisories{
+						FixedVersion: "1:25.0.3.0.9-1.0.1.el9",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "1:25.0.3.0.9-1.0.1.el9",
+								Arches: []string{
+									"aarch64",
+									"x86_64",
+								},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2026-22007", "Oracle Linux 10", "java-25-openjdk"},
+					Value: types.Advisories{
+						FixedVersion: "1:25.0.3.0.9-1.0.1.el10_2",
+						Entries: []types.Advisory{
+							{
+								FixedVersion: "1:25.0.3.0.9-1.0.1.el10_2",
+								Arches: []string{
+									"aarch64",
+									"x86_64",
+								},
+							},
+						},
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "CVE-2026-22007", "oracle-oval"},
+					Value: types.VulnerabilityDetail{
+						Title:       "ELSA-2026-9693:  java-25-openjdk security update (IMPORTANT)",
+						Description: "[1:25.0.3.0.9-1.0.1]\n- Add Oracle vendor bug URL [Orabug: 34340155]",
+						References: []string{
+							"https://linux.oracle.com/cve/CVE-2026-22007.html",
+							"https://linux.oracle.com/errata/ELSA-2026-9693.html",
+						},
+						Severity: types.SeverityHigh,
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-2026-22007"},
+					Value: map[string]any{},
+				},
+			},
+		},
+		{
 			name: "happy path multi flavors",
 			dir:  filepath.Join("testdata", "multi-flavor"),
 			wantValues: []vulnsrctest.WantValues{
