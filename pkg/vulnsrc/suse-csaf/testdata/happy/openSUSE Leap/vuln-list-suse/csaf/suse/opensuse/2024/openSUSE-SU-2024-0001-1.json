@@ -1,0 +1,53 @@
+{
+  "document": {
+    "title": "Security update for curl",
+    "tracking": {
+      "id": "openSUSE-SU-2024:0001-1"
+    },
+    "notes": [
+      {
+        "category": "description",
+        "text": "Security update for curl"
+      }
+    ],
+    "references": [
+      {
+        "url": "https://www.suse.com/support/update/announcement/openSUSE-SU-2024:0001-1/"
+      }
+    ]
+  },
+  "product_tree": {
+    "relationships": [
+      {
+        "full_product_name": {
+          "product_id": "openSUSE Leap 15.5:curl-8.0.1-150400.5.41.1.x86_64"
+        },
+        "product_reference": "curl-8.0.1-150400.5.41.1.x86_64",
+        "relates_to_product_reference": "openSUSE Leap 15.5"
+      },
+      {
+        "full_product_name": {
+          "product_id": "openSUSE Leap Micro 5.5:curl-8.0.1-150400.5.41.1.aarch64"
+        },
+        "product_reference": "curl-8.0.1-150400.5.41.1.aarch64",
+        "relates_to_product_reference": "openSUSE Leap Micro 5.5"
+      }
+    ]
+  },
+  "vulnerabilities": [
+    {
+      "product_status": {
+        "recommended": [
+          "openSUSE Leap 15.5:curl-8.0.1-150400.5.41.1.x86_64",
+          "openSUSE Leap Micro 5.5:curl-8.0.1-150400.5.41.1.aarch64"
+        ]
+      },
+      "threats": [
+        {
+          "category": "impact",
+          "details": "moderate"
+        }
+      ]
+    }
+  ]
+}

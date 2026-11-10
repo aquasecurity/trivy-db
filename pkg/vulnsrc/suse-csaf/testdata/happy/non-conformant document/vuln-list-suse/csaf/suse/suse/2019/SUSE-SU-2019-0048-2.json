@@ -1,0 +1,137 @@
+{
+  "document": {
+    "title": "Security update for helm-mirror",
+    "lang": "not a language",
+    "tracking": {
+      "id": "SUSE-SU-2019:0048-2",
+      "status": "bogus"
+    },
+    "notes": [
+      {
+        "category": "description",
+        "text": "details"
+      }
+    ],
+    "references": [
+      {
+        "url": "https://example.com/advisory"
+      },
+      {
+        "category": "self",
+        "summary": "no URL"
+      }
+    ]
+  },
+  "product_tree": {
+    "branches": [
+      {
+        "category": "vendor",
+        "name": "SUSE",
+        "branches": [
+          {
+            "category": "product_name",
+            "name": "OES",
+            "product": {
+              "name": "OES",
+              "product_id": "OES",
+              "product_identification_helper": {
+                "cpe": "cpe:/o:novell,inc:OES:23.4"
+              }
+            }
+          },
+          {
+            "category": "product_name",
+            "name": "qemu",
+            "product": {
+              "name": "qemu",
+              "product_id": "qemu",
+              "product_identification_helper": {
+                "cpe": "cpe:2.3:a:qemu:qemu:1.0.0+:*:*:*:*:*:*:*"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "full_product_name": {
+          "product_id": "SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0:0.2.1-1.7.1.x86_64"
+        },
+        "product_reference": "helm-mirror-0:0.2.1-1.7.1.x86_64",
+        "relates_to_product_reference": "SUSE Linux Enterprise Module for Containers 15 SP1"
+      },
+      {
+        "full_product_name": {
+          "product_id": "SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0:0.2.1-1.7.1.aarch64"
+        },
+        "product_reference": "helm-mirror-0:0.2.1-1.7.1.aarch64",
+        "relates_to_product_reference": "SUSE Linux Enterprise Module for Containers 15 SP1"
+      },
+      {
+        "full_product_name": {
+          "product_id": "sles-15-sp1-epoch-pkg"
+        },
+        "product_reference": "epoch-pkg-2:1.0-1.1.noarch",
+        "relates_to_product_reference": "SUSE Linux Enterprise Server 15 SP1"
+      },
+      {
+        "full_product_name": {
+          "product_id": "SUSE Linux Enterprise Server 12 SP5:not-listed-1.0-1.1.noarch"
+        },
+        "product_reference": "not-listed-1.0-1.1.noarch",
+        "relates_to_product_reference": "SUSE Linux Enterprise Server 12 SP5"
+      }
+    ]
+  },
+  "vulnerabilities": [
+    {
+      "cve": "CVE-bogus",
+      "scores": [
+        {
+          "products": [
+            "sles-15-sp1-epoch-pkg"
+          ],
+          "cvss_v3": {
+            "version": "3.1",
+            "vectorString": "bogus",
+            "baseScore": 7.5,
+            "baseSeverity": "HIGH"
+          }
+        }
+      ],
+      "remediations": [
+        {
+          "category": "bogus",
+          "details": "update",
+          "product_ids": [
+            "sles-15-sp1-epoch-pkg"
+          ]
+        }
+      ],
+      "product_status": {
+        "recommended": [
+          "SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0:0.2.1-1.7.1.x86_64",
+          "SUSE Linux Enterprise Module for Containers 15 SP1:helm-mirror-0:0.2.1-1.7.1.aarch64"
+        ],
+        "fixed": [
+          "sles-15-sp1-epoch-pkg"
+        ]
+      },
+      "threats": [
+        {
+          "category": "exploit_status",
+          "details": "critical"
+        },
+        {
+          "category": "impact",
+          "details": "moderate"
+        },
+        {
+          "category": "impact",
+          "details": "important"
+        }
+      ]
+    }
+  ]
+}
