@@ -87,7 +87,7 @@ func TestVulnSrc_Update(t *testing.T) {
 			},
 		},
 		{
-			name: "happy-(ish) path, node.js core is skipped",
+			name: "happy path, Node.js core",
 			dir:  filepath.Join("testdata", "happy", "core"),
 			wantValues: []vulnsrctest.WantValues{
 				{
@@ -97,6 +97,40 @@ func TestVulnSrc_Update(t *testing.T) {
 						Name: "Node.js Ecosystem Security Working Group",
 						URL:  "https://github.com/nodejs/security-wg",
 					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2016-5325", "node::Node.js Ecosystem Security Working Group", "node"},
+					Value: types.Advisory{
+						PatchedVersions:    []string{"^6.7.0", "^4.6.0"},
+						VulnerableVersions: []string{"6.x", "4.x", "5.x"},
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2026-48933", "node::Node.js Ecosystem Security Working Group", "node"},
+					Value: types.Advisory{
+						Severity:           types.SeverityHigh,
+						PatchedVersions:    []string{"^22.23.0", "^24.17.0", "^26.3.1"},
+						VulnerableVersions: []string{"22.x", "24.x", "26.x"},
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "CVE-2026-48933", "nodejs-security-wg"},
+					Value: types.VulnerabilityDetail{
+						ID:          "CVE-2026-48933",
+						Title:       "Node.js WebCrypto AES Integer Overflow Leads to Remote Process Abort (DoS)",
+						Description: "A flaw in Node.js WebCrypto implementation can crash the process.",
+						References:  []string{"https://nodejs.org/en/blog/vulnerability/june-2026-security-releases"},
+						CvssScore:   -1,
+						Severity:    types.SeverityHigh,
+					},
+				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-2016-5325"},
+					Value: map[string]any{},
+				},
+				{
+					Key:   []string{"vulnerability-id", "CVE-2026-48933"},
+					Value: map[string]any{},
 				},
 			},
 		},
