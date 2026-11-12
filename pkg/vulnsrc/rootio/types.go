@@ -9,7 +9,7 @@ type Feed struct {
 	Patch           types.Advisory
 }
 
-// RawFeed represents the actual Root.io API feed format
+// RawFeed represents the actual Root.io API feed format (unified for both OS and app feeds)
 type RawFeed map[string][]RawDistroData
 
 // RawDistroData represents distribution data from the API
