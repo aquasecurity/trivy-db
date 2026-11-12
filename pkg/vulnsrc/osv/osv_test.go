@@ -4,6 +4,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/aquasecurity/trivy-db/pkg/ecosystem"
 	"github.com/aquasecurity/trivy-db/pkg/types"
 	"github.com/aquasecurity/trivy-db/pkg/utils"
@@ -224,6 +226,52 @@ func TestVulnSrc_Update(t *testing.T) {
 				WantErr:    tt.wantErr,
 				NoBuckets:  tt.noBuckets,
 			})
+		})
+	}
+}
+
+func TestParseSeverities(t *testing.T) {
+	tests := []struct {
+		name       string
+		severities []osv.Severity
+		want       osv.SeverityResult
+	}{
+		{
+			name: "bare CVSSv2 vector",
+			severities: []osv.Severity{
+				{Type: "CVSS_V2", Score: "AV:N/AC:L/Au:N/C:P/I:P/A:P"},
+			},
+			want: osv.SeverityResult{
+				VectorV2: "AV:N/AC:L/Au:N/C:P/I:P/A:P",
+				ScoreV2:  7.5,
+			},
+		},
+		{
+			name: "CVSSv2 vector with a version prefix",
+			severities: []osv.Severity{
+				{Type: "CVSS_V2", Score: "CVSS:2.0/AV:N/AC:M/Au:N/C:N/I:P/A:N"},
+			},
+			want: osv.SeverityResult{
+				VectorV2: "AV:N/AC:M/Au:N/C:N/I:P/A:N",
+				ScoreV2:  4.3,
+			},
+		},
+		{
+			name: "malformed CVSSv2 vector is skipped",
+			severities: []osv.Severity{
+				{Type: "CVSS_V2", Score: "AV:INVALID"},
+				{Type: "CVSS_V3", Score: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"},
+			},
+			want: osv.SeverityResult{
+				VectorV3: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+				ScoreV3:  9.8,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := osv.ParseSeverities(tt.severities)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

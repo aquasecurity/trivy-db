@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	gocvss20 "github.com/pandatix/go-cvss/20"
 	gocvss30 "github.com/pandatix/go-cvss/30"
 	gocvss31 "github.com/pandatix/go-cvss/31"
 	gocvss40 "github.com/pandatix/go-cvss/40"
@@ -240,7 +241,7 @@ func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) (
 	eb := oops.With("entry_id", entry.ID).With("vuln_ids", vulnIDs).With("aliases", aliases)
 
 	// Severities can be found both in severity and affected[].severity fields.
-	sev := parseSeverities(entry.Severities)
+	sev := ParseSeverities(entry.Severities)
 
 	uniqAdvisories := map[string]Advisory{}
 	for _, affected := range entry.Affected {
@@ -258,7 +259,7 @@ func (o OSV) parseAffected(entry Entry, vulnIDs, aliases, references []string) (
 		}
 
 		// Parse affected[].severity
-		affSev := parseSeverities(affected.Severities)
+		affSev := ParseSeverities(affected.Severities)
 		if affSev.VectorV3 != "" {
 			sev.VectorV3, sev.ScoreV3 = affSev.VectorV3, affSev.ScoreV3
 		}
@@ -380,24 +381,37 @@ func parseAffectedVersions(affected Affected) ([]string, []string, error) {
 	return vulnerableVersions, patchedVersions, nil
 }
 
-type severityResult struct {
+// SeverityResult holds the CVSS vectors and scores parsed from an OSV severity field.
+type SeverityResult struct {
+	VectorV2  string
+	ScoreV2   float64
 	VectorV3  string
 	ScoreV3   float64
 	VectorV40 string
 	ScoreV40  float64
 }
 
-// parseSeverities parses the severity field and returns CVSSv3 and CVSSv4 vectors and scores
+// ParseSeverities parses an OSV severity field and returns CVSSv2, CVSSv3 and CVSSv4 vectors and scores
 // cf.
 // - https://ossf.github.io/osv-schema/#severity-field
 // - https://ossf.github.io/osv-schema/#affectedseverity-field
-func parseSeverities(severities []Severity) severityResult {
-	var result severityResult
+func ParseSeverities(severities []Severity) SeverityResult {
+	var result SeverityResult
 	for _, s := range severities {
 		if s.Score == "" {
 			continue
 		}
 		switch s.Type {
+		case "CVSS_V2":
+			vec, score, err := parseSeverityV2(s.Score)
+			if err != nil {
+				log.WithPrefix("osv").Warn(
+					"Failed to parse CVSSv2 vector",
+					log.String("vector", s.Score), log.Err(err))
+				continue
+			}
+			result.VectorV2 = vec
+			result.ScoreV2 = score
 		case "CVSS_V3":
 			vec, score, err := parseSeverityV3(s.Score)
 			if err != nil {
@@ -421,6 +435,18 @@ func parseSeverities(severities []Severity) severityResult {
 		}
 	}
 	return result
+}
+
+// parseSeverityV2 parses a CVSSv2 vector string and returns the vector and base score.
+// CVSSv2 vectors have no version prefix, but some feeds add "CVSS:2.0/" anyway, so it is
+// stripped. The vector is returned bare, the same way the NVD source stores CVSSv2 vectors.
+func parseSeverityV2(score string) (string, float64, error) {
+	vector := strings.TrimPrefix(strings.TrimSuffix(score, "/"), "CVSS:2.0/")
+	cvss, err := gocvss20.ParseVector(vector)
+	if err != nil {
+		return "", 0, oops.With("cvss_vector_v2", vector).Wrapf(err, "failed to parse CVSSv2 vector")
+	}
+	return cvss.Vector(), cvss.BaseScore(), nil
 }
 
 // parseSeverityV3 parses a CVSSv3 vector string and returns the vector and score
