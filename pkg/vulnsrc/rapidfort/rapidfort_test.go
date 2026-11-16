@@ -50,6 +50,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"7.68.0-1ubuntu2.1"},
 						VulnerableVersions: []string{">=7.68.0, <7.68.0-1ubuntu2.1"},
 						Severity:           types.SeverityHigh,
+						Title:              "curl: partial password leak over DNS on HTTP redirect",
+						Description:        "curl 7.62.0 through 7.70.0 is vulnerable to an information disclosure vulnerability.",
 					},
 				},
 				{
@@ -63,6 +65,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.Advisory{
 						VulnerableVersions: []string{">=7.68.0"},
 						Severity:           types.SeverityMedium,
+						Title:              "curl: Automatic referer leaks credentials",
+						Description:        "curl does not strip off user credentials from the URL when automatically populating the Referer: HTTP request header field.",
 					},
 				},
 				{
@@ -117,6 +121,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"3.1.4-r1"},
 						VulnerableVersions: []string{">=3.0.0, <3.1.4-r1"},
 						Severity:           types.SeverityMedium,
+						Title:              "openssl: X.400 address type confusion in X.509 GeneralName",
+						Description:        "There is a type confusion vulnerability relating to X.400 address processing inside an X.509 GeneralName.",
 					},
 				},
 				{
@@ -150,6 +156,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"3.1.5-r0"},
 						VulnerableVersions: []string{"<3.1.5-r0"},
 						Severity:           types.SeverityLow,
+						Title:              "openssl: hypothetical fix without a known introduced version",
+						Description:        "A hypothetical openssl vulnerability whose fixed build is known but the introduced version is not.",
 					},
 				},
 				{
@@ -195,6 +203,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"7.76.1-26.el9_3.3"},
 						VulnerableVersions: []string{">=7.76.1-14.el9, <7.76.1-26.el9_3.3"},
 						Severity:           types.SeverityMedium,
+						Title:              "curl: GSS delegation too eager connection re-use",
+						Description:        "An authentication bypass vulnerability exists in libcurl prior to v8.0.0 where it reuses a previously established GSS-negotiate connection.",
 					},
 				},
 				{
@@ -224,6 +234,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"7.76.1-26.fc39"},
 						VulnerableVersions: []string{">=7.76.1-14.fc39, <7.76.1-26.fc39"},
 						Severity:           types.SeverityMedium,
+						Title:              "curl: GSS delegation too eager connection re-use",
+						Description:        "An authentication bypass vulnerability exists in libcurl prior to v8.0.0 where it reuses a previously established GSS-negotiate connection.",
 					},
 				},
 				{
@@ -249,6 +261,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"7.76.1-26.rf"},
 						VulnerableVersions: []string{">=7.76.1-14.rf, <7.76.1-26.rf"},
 						Severity:           types.SeverityMedium,
+						Title:              "curl: GSS delegation too eager connection re-use",
+						Description:        "An authentication bypass vulnerability exists in libcurl prior to v8.0.0 where it reuses a previously established GSS-negotiate connection.",
 					},
 				},
 				{
@@ -265,6 +279,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.Advisory{
 						VulnerableVersions: []string{">=1.0", ">=7.76.1-14.el9"},
 						Severity:           types.SeverityHigh,
+						Title:              "curl: hypothetical unfixed vulnerability",
+						Description:        "A hypothetical vulnerability in curl that has not yet been fixed.",
 					},
 				},
 				{
@@ -330,6 +346,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"7.76.1-26.el9_3.3"},
 						VulnerableVersions: []string{">=7.76.1-14.el9, <7.76.1-26.el9_3.3"},
 						Severity:           types.SeverityMedium,
+						Title:              "curl: GSS delegation too eager connection re-use",
+						Description:        "An authentication bypass vulnerability exists in libcurl prior to v8.0.0 where it reuses a previously established GSS-negotiate connection.",
 					},
 				},
 				{
@@ -358,6 +376,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"7.19.7-54.el5"},
 						VulnerableVersions: []string{"<7.19.7-54.el5"},
 						Severity:           types.SeverityHigh,
+						Title:              "curl: hypothetical vulnerability filed under a malformed top-level key",
+						Description:        "The Oracle feed sometimes keys a release as \"el5\" instead of \"5\". The range identifier decides the bucket, so the malformed key is ignored rather than producing one.",
 					},
 				},
 				{
@@ -388,6 +408,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"7.76.1-27.rf"},
 						VulnerableVersions: []string{">=7.76.1-14.rf, <7.76.1-27.rf"},
 						Severity:           types.SeverityMedium,
+						Title:              "curl: GSS delegation too eager connection re-use",
+						Description:        "An authentication bypass vulnerability exists in libcurl prior to v8.0.0 where it reuses a previously established GSS-negotiate connection.",
 					},
 				},
 				// Alma tags its releases "elN" like the RHEL it rebuilds, so the
@@ -416,6 +438,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"7.76.1-29.el9_3.2"},
 						VulnerableVersions: []string{">=7.76.1-26.el9, <7.76.1-29.el9_3.2"},
 						Severity:           types.SeverityLow,
+						Title:              "curl: cookie injection with none file",
+						Description:        "libcurl can be tricked into injecting cookies into a running program when an application creates a new easy handle by duplicating an existing one.",
 					},
 				},
 				{
@@ -441,6 +465,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"7.76.1-29.rf"},
 						VulnerableVersions: []string{">=7.76.1-26.rf, <7.76.1-29.rf"},
 						Severity:           types.SeverityLow,
+						Title:              "curl: cookie injection with none file",
+						Description:        "libcurl can be tricked into injecting cookies into a running program when an application creates a new easy handle by duplicating an existing one.",
 					},
 				},
 				{
@@ -486,6 +512,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"7.61.1-34.el8_9.3"},
 						VulnerableVersions: []string{">=7.61.1-30.el8, <7.61.1-34.el8_9.3"},
 						Severity:           types.SeverityMedium,
+						Title:              "curl: HTTP/2 push headers memory leak",
+						Description:        "When an application tells libcurl it wants to allow HTTP/2 server push, the amount of received headers for the push can exhaust memory.",
 					},
 				},
 				{
@@ -511,6 +539,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"7.61.1-34.rf"},
 						VulnerableVersions: []string{">=7.61.1-30.rf, <7.61.1-34.rf"},
 						Severity:           types.SeverityMedium,
+						Title:              "curl: HTTP/2 push headers memory leak",
+						Description:        "When an application tells libcurl it wants to allow HTTP/2 server push, the amount of received headers for the push can exhaust memory.",
 					},
 				},
 				{
@@ -556,6 +586,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"8.3.0-1.amzn2.0.2"},
 						VulnerableVersions: []string{">=7.61.1-22.amzn2, <8.3.0-1.amzn2.0.2"},
 						Severity:           types.SeverityMedium,
+						Title:              "curl: information disclosure by exploiting a mixed case flaw",
+						Description:        "A malicious HTTP server can set \"super cookies\" that are passed back to more origins than what is otherwise allowed or possible.",
 					},
 				},
 				{
@@ -581,6 +613,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"8.5.0-1.amzn2023"},
 						VulnerableVersions: []string{">=8.4.0-1.amzn2023, <8.5.0-1.amzn2023"},
 						Severity:           types.SeverityMedium,
+						Title:              "curl: information disclosure by exploiting a mixed case flaw",
+						Description:        "A malicious HTTP server can set \"super cookies\" that are passed back to more origins than what is otherwise allowed or possible.",
 					},
 				},
 				{
@@ -606,6 +640,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"8.5.0-1.rf"},
 						VulnerableVersions: []string{">=8.4.0-1.rf, <8.5.0-1.rf"},
 						Severity:           types.SeverityMedium,
+						Title:              "curl: information disclosure by exploiting a mixed case flaw",
+						Description:        "A malicious HTTP server can set \"super cookies\" that are passed back to more origins than what is otherwise allowed or possible.",
 					},
 				},
 				{
@@ -651,6 +687,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"7.88.1-10+deb12u5"},
 						VulnerableVersions: []string{">=7.88.1-10, <7.88.1-10+deb12u5"},
 						Severity:           types.SeverityHigh,
+						Title:              "curl: SOCKS5 heap buffer overflow",
+						Description:        "curl overflows a heap based buffer in the SOCKS5 proxy handshake when the hostname is longer than 255 bytes.",
 					},
 				},
 				{
@@ -676,6 +714,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"7.88.1-12.rf1"},
 						VulnerableVersions: []string{">=7.88.1-10.rf1, <7.88.1-12.rf1"},
 						Severity:           types.SeverityHigh,
+						Title:              "curl: SOCKS5 heap buffer overflow",
+						Description:        "curl overflows a heap based buffer in the SOCKS5 proxy handshake when the hostname is longer than 255 bytes.",
 					},
 				},
 				{
@@ -725,6 +765,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"7.68.0-1ubuntu2.1"},
 						VulnerableVersions: []string{">=7.68.0, <7.68.0-1ubuntu2.1"},
 						Severity:           types.SeverityHigh,
+						Title:              "curl: partial password leak over DNS on HTTP redirect",
+						Description:        "curl 7.62.0 through 7.70.0 is vulnerable to an information disclosure vulnerability.",
 					},
 				},
 				{
@@ -762,6 +804,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"7.81.0-1ubuntu1.14"},
 						VulnerableVersions: []string{">=7.81.0, <7.81.0-1ubuntu1.14"},
 						Severity:           types.SeverityMedium,
+						Title:              "curl: out of heap memory issue due to missing limit on header quantity",
+						Description:        "When curl retrieves an HTTP response, it stores the incoming headers so that they can be accessed later via the libcurl headers API.",
 					},
 				},
 				{
@@ -801,6 +845,8 @@ func TestVulnSrc_Update(t *testing.T) {
 					Value: types.Advisory{
 						VulnerableVersions: []string{">=7.61.1-14.el8"},
 						Severity:           types.SeverityMedium,
+						Title:              "curl: GSS delegation too eager connection re-use",
+						Description:        "An authentication bypass vulnerability exists in libcurl prior to v8.0.0 where it reuses a previously established GSS-negotiate connection.",
 					},
 				},
 				{
@@ -814,6 +860,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"7.76.1-26.el9_3.3"},
 						VulnerableVersions: []string{">=7.76.1-14.el9, <7.76.1-26.el9_3.3"},
 						Severity:           types.SeverityMedium,
+						Title:              "curl: GSS delegation too eager connection re-use",
+						Description:        "An authentication bypass vulnerability exists in libcurl prior to v8.0.0 where it reuses a previously established GSS-negotiate connection.",
 					},
 				},
 				{
@@ -827,6 +875,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"7.76.1-26.fc39"},
 						VulnerableVersions: []string{">=7.76.1-14.fc39, <7.76.1-26.fc39"},
 						Severity:           types.SeverityMedium,
+						Title:              "curl: GSS delegation too eager connection re-use",
+						Description:        "An authentication bypass vulnerability exists in libcurl prior to v8.0.0 where it reuses a previously established GSS-negotiate connection.",
 					},
 				},
 			},
@@ -870,6 +920,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"0:2.46-1ubuntu1"},
 						VulnerableVersions: []string{">=0:2.42-4ubuntu2.10, <0:2.46-1ubuntu1"},
 						Severity:           types.SeverityMedium,
+						Title:              "binutils readelf DoS",
+						Description:        "GNU Binutils readelf contains a denial-of-service vulnerability when processing crafted DWARF data.",
 					},
 				},
 				{
@@ -883,6 +935,8 @@ func TestVulnSrc_Update(t *testing.T) {
 						PatchedVersions:    []string{"0:2.46-10rfubu"},
 						VulnerableVersions: []string{"<0:2.46-10rfubu"},
 						Severity:           types.SeverityMedium,
+						Title:              "binutils readelf DoS",
+						Description:        "GNU Binutils readelf contains a denial-of-service vulnerability when processing crafted DWARF data.",
 					},
 				},
 				{
@@ -932,7 +986,9 @@ func TestVulnSrc_Update(t *testing.T) {
 							">=0:3.0.14-0rfubu3.1+rf.2, <0:3.5.7-10rfubu+rf.0",
 							">=0:3.0.14-0rfubuntu3.1+rf.1, <0:3.5.7-10rfubu+rf.0",
 						},
-						Severity: types.SeverityLow,
+						Severity:    types.SeverityLow,
+						Title:       "Issue summary: When CMS password-based decryption (RFC 3211 / PWR ...",
+						Description: "Issue summary: When CMS password-based decryption (RFC 3211 / PWRI key unwrap)\nprocesses attacker-supplied CMS data, an attacker-chosen stream-mode KEK\ncipher can trigger a heap out-of-bounds read.",
 					},
 				},
 				{
