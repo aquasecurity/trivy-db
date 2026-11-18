@@ -79,6 +79,16 @@ func TestParser_Parse(t *testing.T) {
 			wantErr: "invalid number of vulnerabilities",
 		},
 		{
+			name:    "corrupt gzip",
+			dir:     filepath.Join("testdata", "corrupt-gzip"),
+			wantErr: "gzip open error",
+		},
+		{
+			name:    "corrupt gzip checksum",
+			dir:     filepath.Join("testdata", "corrupt-gzip-checksum"),
+			wantErr: "gzip read error",
+		},
+		{
 			name:    "no CSAF VEX dir",
 			dir:     filepath.Join("testdata", "no-csaf-vex"),
 			wantErr: "no such file or directory",
