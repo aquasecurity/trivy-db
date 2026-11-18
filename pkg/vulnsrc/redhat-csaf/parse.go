@@ -1,8 +1,10 @@
 package redhatcsaf
 
 import (
+	"compress/gzip"
 	"encoding/gob"
 	"encoding/json"
+	"io"
 	"iter"
 	"maps"
 	"os"
@@ -26,6 +28,13 @@ import (
 // Fixed path for temporary data file
 // This file will be automatically removed when Clean() is called
 const dataPath = "redhat-csaf.data"
+
+const (
+	// jsonExt is the extension of plain CSAF VEX documents.
+	jsonExt = ".json"
+	// gzipJSONExt is the extension of gzip-compressed CSAF VEX documents.
+	gzipJSONExt = jsonExt + ".gz"
+)
 
 type Parser struct {
 	repoToCPE  map[string][]string
@@ -86,7 +95,7 @@ func (p *Parser) parseCSAF(dir string) error {
 	rootDir := filepath.Join(dir, csafDir)
 	eb := oops.Tags("parse_csaf_vex").With("root", rootDir)
 
-	// Collect all JSON files for the progress bar
+	// Collect all CSAF VEX documents (.json and .json.gz) for the progress bar
 	filePaths, err := p.collectFilePaths(rootDir)
 	if err != nil {
 		return eb.Wrap(err)
@@ -106,15 +115,9 @@ func (p *Parser) parseCSAF(dir string) error {
 
 func (p *Parser) parseCSAFFile(filePath string) error {
 	eb := oops.Code("walk_error").With("path", filePath)
-	f, err := os.Open(filePath)
+	raw, err := decodeDocument(filePath)
 	if err != nil {
-		return eb.Wrapf(err, "file open error")
-	}
-	defer f.Close()
-
-	var raw csaf.Advisory
-	if err := json.NewDecoder(f).Decode(&raw); err != nil {
-		return eb.Wrapf(err, "JSON decode error")
+		return eb.Wrap(err)
 	}
 	adv := NewCSAFAdvisory(raw)
 
@@ -124,13 +127,64 @@ func (p *Parser) parseCSAFFile(filePath string) error {
 	return nil
 }
 
+// decodeDocument decodes a CSAF VEX document.
+// vuln-list-redhat stores documents too large for GitHub gzip-compressed.
+// Whether a file is decompressed depends only on its extension.
+func decodeDocument(filePath string) (csaf.Advisory, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return csaf.Advisory{}, oops.Wrapf(err, "file open error")
+	}
+	defer f.Close()
+
+	if strings.HasSuffix(filePath, gzipJSONExt) {
+		return decodeGzipJSON(f)
+	}
+	return decodeJSON(f)
+}
+
+// decodeGzipJSON decodes a gzip-compressed CSAF VEX document and verifies the gzip checksum.
+func decodeGzipJSON(r io.Reader) (csaf.Advisory, error) {
+	zr, err := gzip.NewReader(r)
+	if err != nil {
+		return csaf.Advisory{}, oops.Wrapf(err, "gzip open error")
+	}
+	defer zr.Close()
+
+	adv, err := decodeJSON(zr)
+	if err != nil {
+		return csaf.Advisory{}, err
+	}
+	// The JSON decoder stops at the end of the document.
+	// Read the rest of the stream so that gzip verifies its checksum.
+	//nolint:gosec // G110: the remainder is discarded, so it cannot exhaust memory, and the input comes from vuln-list-redhat.
+	if _, err = io.Copy(io.Discard, zr); err != nil {
+		return csaf.Advisory{}, oops.Wrapf(err, "gzip read error")
+	}
+	return adv, nil
+}
+
+// decodeJSON decodes a plain CSAF VEX document.
+func decodeJSON(r io.Reader) (csaf.Advisory, error) {
+	var adv csaf.Advisory
+	if err := json.NewDecoder(r).Decode(&adv); err != nil {
+		return csaf.Advisory{}, oops.Wrapf(err, "JSON decode error")
+	}
+	return adv, nil
+}
+
 func (p *Parser) collectFilePaths(rootDir string) ([]string, error) {
 	var filePaths []string
 	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
 		eb := oops.Code("walk_error").With("path", path)
 		if err != nil {
 			return eb.Wrapf(err, "walk error")
-		} else if info.IsDir() || filepath.Ext(info.Name()) != ".json" {
+		} else if info.IsDir() {
+			return nil
+		}
+		// Accept both plain and gzip-compressed CSAF VEX documents.
+		// vuln-list-redhat keeps only one of them per CVE, so the same CVE is never collected twice.
+		if name := info.Name(); !strings.HasSuffix(name, jsonExt) && !strings.HasSuffix(name, gzipJSONExt) {
 			return nil
 		}
 		filePaths = append(filePaths, path)
