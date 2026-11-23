@@ -91,6 +91,31 @@ func TestVulnSrc_Update(t *testing.T) {
 						FixedVersion: "2.15.0-1.amzn2022.0.1",
 					},
 				},
+				{
+					Key: []string{"data-source", "amazon linux 2027"},
+					Value: types.DataSource{
+						ID:   vulnerability.Amazon,
+						Name: "Amazon Linux Security Center",
+						URL:  "https://alas.aws.amazon.com/",
+					},
+				},
+				{
+					Key: []string{"advisory-detail", "CVE-2026-56132", "amazon linux 2027", "expat"},
+					Value: types.Advisory{
+						FixedVersion: "2.8.1-1.amzn2027",
+					},
+				},
+				{
+					Key: []string{"vulnerability-detail", "CVE-2026-56132", "amazon"},
+					Value: types.VulnerabilityDetail{
+						Severity:    3,
+						Description: "In libexpat before 2.8.2, there is a heap-based buffer overflow in doProlog in xmlparse.c because scaffold backing array reallocation is mishandled when there is data-structure sharing across parsers. (CVE-2026-56132)",
+						References: []string{
+							"http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-56132",
+							"http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-56406",
+						},
+					},
+				},
 			},
 		},
 		{

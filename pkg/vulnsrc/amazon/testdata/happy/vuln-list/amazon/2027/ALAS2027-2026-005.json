@@ -1,0 +1,110 @@
+{
+  "id": "ALAS2027-2026-005",
+  "title": "Amazon Linux 2027 - ALAS2027-2026-005: Important priority package update for expat",
+  "issued": {
+    "date": "2026-09-18 09:00:00"
+  },
+  "updated": {
+    "date": "2026-11-02 23:48:51"
+  },
+  "severity": "Important",
+  "description": "In libexpat before 2.8.2, there is a heap-based buffer overflow in doProlog in xmlparse.c because scaffold backing array reallocation is mishandled when there is data-structure sharing across parsers. (CVE-2026-56132)",
+  "packages": [
+    {
+      "name": "expat",
+      "epoch": "0",
+      "version": "2.8.1",
+      "release": "1.amzn2027",
+      "arch": "aarch64",
+      "filename": "Packages/expat-2.8.1-1.amzn2027.aarch64.rpm"
+    },
+    {
+      "name": "expat",
+      "epoch": "0",
+      "version": "2.8.1",
+      "release": "1.amzn2027",
+      "arch": "x86_64",
+      "filename": "Packages/expat-2.8.1-1.amzn2027.x86_64.rpm"
+    },
+    {
+      "name": "expat-debuginfo",
+      "epoch": "0",
+      "version": "2.8.1",
+      "release": "1.amzn2027",
+      "arch": "aarch64",
+      "filename": "Packages/expat-debuginfo-2.8.1-1.amzn2027.aarch64.rpm"
+    },
+    {
+      "name": "expat-debuginfo",
+      "epoch": "0",
+      "version": "2.8.1",
+      "release": "1.amzn2027",
+      "arch": "x86_64",
+      "filename": "Packages/expat-debuginfo-2.8.1-1.amzn2027.x86_64.rpm"
+    },
+    {
+      "name": "expat-debugsource",
+      "epoch": "0",
+      "version": "2.8.1",
+      "release": "1.amzn2027",
+      "arch": "aarch64",
+      "filename": "Packages/expat-debugsource-2.8.1-1.amzn2027.aarch64.rpm"
+    },
+    {
+      "name": "expat-debugsource",
+      "epoch": "0",
+      "version": "2.8.1",
+      "release": "1.amzn2027",
+      "arch": "x86_64",
+      "filename": "Packages/expat-debugsource-2.8.1-1.amzn2027.x86_64.rpm"
+    },
+    {
+      "name": "expat-devel",
+      "epoch": "0",
+      "version": "2.8.1",
+      "release": "1.amzn2027",
+      "arch": "aarch64",
+      "filename": "Packages/expat-devel-2.8.1-1.amzn2027.aarch64.rpm"
+    },
+    {
+      "name": "expat-devel",
+      "epoch": "0",
+      "version": "2.8.1",
+      "release": "1.amzn2027",
+      "arch": "x86_64",
+      "filename": "Packages/expat-devel-2.8.1-1.amzn2027.x86_64.rpm"
+    },
+    {
+      "name": "expat-static",
+      "epoch": "0",
+      "version": "2.8.1",
+      "release": "1.amzn2027",
+      "arch": "aarch64",
+      "filename": "Packages/expat-static-2.8.1-1.amzn2027.aarch64.rpm"
+    },
+    {
+      "name": "expat-static",
+      "epoch": "0",
+      "version": "2.8.1",
+      "release": "1.amzn2027",
+      "arch": "x86_64",
+      "filename": "Packages/expat-static-2.8.1-1.amzn2027.x86_64.rpm"
+    }
+  ],
+  "references": [
+    {
+      "href": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-56132",
+      "id": "CVE-2026-56132",
+      "type": "cve"
+    },
+    {
+      "href": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-56406",
+      "id": "CVE-2026-56406",
+      "type": "cve"
+    }
+  ],
+  "cveids": [
+    "CVE-2026-56132",
+    "CVE-2026-56406"
+  ]
+}
