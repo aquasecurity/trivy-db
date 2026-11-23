@@ -26,6 +26,7 @@ var (
 		"2",
 		"2022",
 		"2023",
+		"2027",
 	}
 
 	source = types.DataSource{
