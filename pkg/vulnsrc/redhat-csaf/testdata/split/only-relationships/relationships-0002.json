@@ -1,0 +1,56 @@
+[
+  {
+    "category": "default_component_of",
+    "full_product_name": {
+      "name": "kernel-0:5.14.0-1.el9.ppc64le as a component of Red Hat Enterprise Linux 9",
+      "product_id": "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.ppc64le"
+    },
+    "product_reference": "kernel-0:5.14.0-1.el9.ppc64le",
+    "relates_to_product_reference": "red_hat_enterprise_linux_9"
+  },
+  {
+    "category": "default_component_of",
+    "full_product_name": {
+      "name": "kernel-core-0:5.14.0-1.el9.ppc64le as a component of Red Hat Enterprise Linux 9",
+      "product_id": "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.ppc64le"
+    },
+    "product_reference": "kernel-core-0:5.14.0-1.el9.ppc64le",
+    "relates_to_product_reference": "red_hat_enterprise_linux_9"
+  },
+  {
+    "category": "default_component_of",
+    "full_product_name": {
+      "name": "kernel-modules-0:5.14.0-1.el9.ppc64le as a component of Red Hat Enterprise Linux 9",
+      "product_id": "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.ppc64le"
+    },
+    "product_reference": "kernel-modules-0:5.14.0-1.el9.ppc64le",
+    "relates_to_product_reference": "red_hat_enterprise_linux_9"
+  },
+  {
+    "category": "default_component_of",
+    "full_product_name": {
+      "name": "kernel-0:5.14.0-1.el9.s390x as a component of Red Hat Enterprise Linux 9",
+      "product_id": "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.s390x"
+    },
+    "product_reference": "kernel-0:5.14.0-1.el9.s390x",
+    "relates_to_product_reference": "red_hat_enterprise_linux_9"
+  },
+  {
+    "category": "default_component_of",
+    "full_product_name": {
+      "name": "kernel-core-0:5.14.0-1.el9.s390x as a component of Red Hat Enterprise Linux 9",
+      "product_id": "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.s390x"
+    },
+    "product_reference": "kernel-core-0:5.14.0-1.el9.s390x",
+    "relates_to_product_reference": "red_hat_enterprise_linux_9"
+  },
+  {
+    "category": "default_component_of",
+    "full_product_name": {
+      "name": "kernel-modules-0:5.14.0-1.el9.s390x as a component of Red Hat Enterprise Linux 9",
+      "product_id": "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.s390x"
+    },
+    "product_reference": "kernel-modules-0:5.14.0-1.el9.s390x",
+    "relates_to_product_reference": "red_hat_enterprise_linux_9"
+  }
+]

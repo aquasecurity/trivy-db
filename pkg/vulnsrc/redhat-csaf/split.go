@@ -1,6 +1,7 @@
 package redhatcsaf
 
 import (
+	"os"
 	"path/filepath"
 
 	"github.com/gocsaf/csaf/v3/csaf"
@@ -38,10 +39,14 @@ func decodeSplitDocument(dir string) (csaf.Advisory, error) {
 		return csaf.Advisory{}, eb.Wrap(err)
 	}
 
-	// The part numbers are zero-padded, so the lexical order of the names is the order of the parts.
-	branchFiles, err := filepath.Glob(filepath.Join(dir, splitBranchesPattern))
+	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return csaf.Advisory{}, eb.Wrapf(err, "glob error")
+		return csaf.Advisory{}, eb.Wrapf(err, "read dir error")
+	}
+
+	branchFiles, err := partFiles(dir, entries, splitBranchesPattern)
+	if err != nil {
+		return csaf.Advisory{}, eb.Wrap(err)
 	}
 	var branches csaf.Branches
 	for _, f := range branchFiles {
@@ -52,9 +57,9 @@ func decodeSplitDocument(dir string) (csaf.Advisory, error) {
 		branches = mergeBranches(branches, part)
 	}
 
-	relationshipFiles, err := filepath.Glob(filepath.Join(dir, splitRelationshipsPattern))
+	relationshipFiles, err := partFiles(dir, entries, splitRelationshipsPattern)
 	if err != nil {
-		return csaf.Advisory{}, eb.Wrapf(err, "glob error")
+		return csaf.Advisory{}, eb.Wrap(err)
 	}
 	var relationships csaf.Relationships
 	for _, f := range relationshipFiles {
@@ -78,10 +83,31 @@ func decodeSplitDocument(dir string) (csaf.Advisory, error) {
 	return adv, nil
 }
 
+// partFiles returns the paths of the part files in dir whose names match pattern, in the order of the parts.
+// Only the names are matched, since dir itself may contain characters that are special in patterns.
+// os.ReadDir sorts the entries by name, and the part numbers are zero-padded, so the order of the names is the order of the parts.
+func partFiles(dir string, entries []os.DirEntry, pattern string) ([]string, error) {
+	var paths []string
+	for _, e := range entries {
+		if !e.Type().IsRegular() {
+			continue
+		}
+		ok, err := filepath.Match(pattern, e.Name())
+		if err != nil {
+			return nil, oops.With("pattern", pattern).Wrapf(err, "pattern error")
+		} else if ok {
+			paths = append(paths, filepath.Join(dir, e.Name()))
+		}
+	}
+	return paths, nil
+}
+
 // mergeBranches appends the branches of the next part to the branches read so far.
 // When a branch is split, its parts are wrapped in copies of the branch, so the last branch read so far and the first branch of the next part are copies of the same branch.
 // They are merged into one, recursively, since a branch with a single child branch wraps the parts of that child as well.
 // Only this boundary is merged: branches within one part are never copies of each other.
+// Two different adjacent branches with the same category and name that both have child branches are merged as well if they meet at a boundary.
+// The parser looks products up by product ID across all branches, so this does not change the result.
 func mergeBranches(dst, src csaf.Branches) csaf.Branches {
 	if len(dst) == 0 || len(src) == 0 || !sameBranch(dst[len(dst)-1], src[0]) {
 		return append(dst, src...)

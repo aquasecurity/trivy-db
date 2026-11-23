@@ -1,0 +1,47 @@
+[
+  {
+    "branches": [
+      {
+        "branches": [
+          {
+            "category": "product_version",
+            "name": "kernel-0:5.14.0-1.el9.aarch64",
+            "product": {
+              "name": "kernel-0:5.14.0-1.el9.aarch64",
+              "product_id": "kernel-0:5.14.0-1.el9.aarch64",
+              "product_identification_helper": {
+                "purl": "pkg:rpm/redhat/kernel@5.14.0-1.el9?arch=aarch64"
+              }
+            }
+          },
+          {
+            "category": "product_version",
+            "name": "kernel-core-0:5.14.0-1.el9.aarch64",
+            "product": {
+              "name": "kernel-core-0:5.14.0-1.el9.aarch64",
+              "product_id": "kernel-core-0:5.14.0-1.el9.aarch64",
+              "product_identification_helper": {
+                "purl": "pkg:rpm/redhat/kernel-core@5.14.0-1.el9?arch=aarch64"
+              }
+            }
+          },
+          {
+            "category": "product_version",
+            "name": "kernel-modules-0:5.14.0-1.el9.aarch64",
+            "product": {
+              "name": "kernel-modules-0:5.14.0-1.el9.aarch64",
+              "product_id": "kernel-modules-0:5.14.0-1.el9.aarch64",
+              "product_identification_helper": {
+                "purl": "pkg:rpm/redhat/kernel-modules@5.14.0-1.el9?arch=aarch64"
+              }
+            }
+          }
+        ],
+        "category": "architecture",
+        "name": "aarch64"
+      }
+    ],
+    "category": "vendor",
+    "name": "Red Hat"
+  }
+]
