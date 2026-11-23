@@ -1,0 +1,47 @@
+[
+  {
+    "branches": [
+      {
+        "branches": [
+          {
+            "category": "product_version",
+            "name": "kernel-0:5.14.0-1.el9.ppc64le",
+            "product": {
+              "name": "kernel-0:5.14.0-1.el9.ppc64le",
+              "product_id": "kernel-0:5.14.0-1.el9.ppc64le",
+              "product_identification_helper": {
+                "purl": "pkg:rpm/redhat/kernel@5.14.0-1.el9?arch=ppc64le"
+              }
+            }
+          },
+          {
+            "category": "product_version",
+            "name": "kernel-core-0:5.14.0-1.el9.ppc64le",
+            "product": {
+              "name": "kernel-core-0:5.14.0-1.el9.ppc64le",
+              "product_id": "kernel-core-0:5.14.0-1.el9.ppc64le",
+              "product_identification_helper": {
+                "purl": "pkg:rpm/redhat/kernel-core@5.14.0-1.el9?arch=ppc64le"
+              }
+            }
+          },
+          {
+            "category": "product_version",
+            "name": "kernel-modules-0:5.14.0-1.el9.ppc64le",
+            "product": {
+              "name": "kernel-modules-0:5.14.0-1.el9.ppc64le",
+              "product_id": "kernel-modules-0:5.14.0-1.el9.ppc64le",
+              "product_identification_helper": {
+                "purl": "pkg:rpm/redhat/kernel-modules@5.14.0-1.el9?arch=ppc64le"
+              }
+            }
+          }
+        ],
+        "category": "architecture",
+        "name": "ppc64le"
+      }
+    ],
+    "category": "vendor",
+    "name": "Red Hat"
+  }
+]

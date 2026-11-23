@@ -1,0 +1,38 @@
+[
+  {
+    "branches": [
+      {
+        "branches": [
+          {
+            "category": "product_version",
+            "name": "p3"
+          }
+        ],
+        "category": "architecture",
+        "name": "x86_64"
+      },
+      {
+        "branches": [
+          {
+            "category": "product_version",
+            "name": "p4"
+          }
+        ],
+        "category": "architecture",
+        "name": "aarch64"
+      }
+    ],
+    "category": "vendor",
+    "name": "Red Hat"
+  },
+  {
+    "branches": [
+      {
+        "category": "product_version",
+        "name": "p5"
+      }
+    ],
+    "category": "vendor",
+    "name": "Other"
+  }
+]

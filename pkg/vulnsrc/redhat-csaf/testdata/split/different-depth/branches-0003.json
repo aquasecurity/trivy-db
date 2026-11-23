@@ -1,0 +1,12 @@
+[
+  {
+    "branches": [
+      {
+        "category": "product_version",
+        "name": "p5"
+      }
+    ],
+    "category": "vendor",
+    "name": "Red Hat"
+  }
+]

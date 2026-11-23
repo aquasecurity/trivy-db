@@ -1,0 +1,64 @@
+[
+  {
+    "branches": [
+      {
+        "branches": [
+          {
+            "category": "product_name",
+            "name": "Red Hat Enterprise Linux 9",
+            "product": {
+              "name": "Red Hat Enterprise Linux 9",
+              "product_id": "red_hat_enterprise_linux_9",
+              "product_identification_helper": {
+                "cpe": "cpe:/o:redhat:enterprise_linux:9"
+              }
+            }
+          }
+        ],
+        "category": "product_family",
+        "name": "Red Hat Enterprise Linux 9"
+      },
+      {
+        "branches": [
+          {
+            "category": "product_version",
+            "name": "kernel-0:5.14.0-1.el9.x86_64",
+            "product": {
+              "name": "kernel-0:5.14.0-1.el9.x86_64",
+              "product_id": "kernel-0:5.14.0-1.el9.x86_64",
+              "product_identification_helper": {
+                "purl": "pkg:rpm/redhat/kernel@5.14.0-1.el9?arch=x86_64"
+              }
+            }
+          },
+          {
+            "category": "product_version",
+            "name": "kernel-core-0:5.14.0-1.el9.x86_64",
+            "product": {
+              "name": "kernel-core-0:5.14.0-1.el9.x86_64",
+              "product_id": "kernel-core-0:5.14.0-1.el9.x86_64",
+              "product_identification_helper": {
+                "purl": "pkg:rpm/redhat/kernel-core@5.14.0-1.el9?arch=x86_64"
+              }
+            }
+          },
+          {
+            "category": "product_version",
+            "name": "kernel-modules-0:5.14.0-1.el9.x86_64",
+            "product": {
+              "name": "kernel-modules-0:5.14.0-1.el9.x86_64",
+              "product_id": "kernel-modules-0:5.14.0-1.el9.x86_64",
+              "product_identification_helper": {
+                "purl": "pkg:rpm/redhat/kernel-modules@5.14.0-1.el9?arch=x86_64"
+              }
+            }
+          }
+        ],
+        "category": "architecture",
+        "name": "x86_64"
+      }
+    ],
+    "category": "vendor",
+    "name": "Red Hat"
+  }
+]

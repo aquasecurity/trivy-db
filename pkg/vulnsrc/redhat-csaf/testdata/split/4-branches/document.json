@@ -1,0 +1,108 @@
+{
+  "document": {
+    "aggregate_severity": {
+      "namespace": "https://access.redhat.com/security/updates/classification/",
+      "text": "important"
+    },
+    "category": "csaf_vex",
+    "csaf_version": "2.0",
+    "distribution": {
+      "text": "Copyright Red Hat, Inc. All rights reserved.",
+      "tlp": {
+        "label": "WHITE",
+        "url": "https://www.first.org/tlp/"
+      }
+    },
+    "lang": "en",
+    "notes": [
+      {
+        "category": "legal_disclaimer",
+        "text": "This content is licensed under the Creative Commons Attribution 4.0 International License.",
+        "title": "Terms of Use"
+      }
+    ],
+    "publisher": {
+      "category": "vendor",
+      "contact_details": "https://access.redhat.com/security/team/contact/",
+      "issuing_authority": "Red Hat Product Security",
+      "name": "Red Hat Product Security",
+      "namespace": "https://www.redhat.com"
+    },
+    "references": [
+      {
+        "category": "self",
+        "summary": "Canonical URL",
+        "url": "https://access.redhat.com/security/data/csaf/v2/vex/2024/cve-2024-0002.json"
+      }
+    ],
+    "title": "CVE-2024-0002",
+    "tracking": {
+      "current_release_date": "2025-12-10T10:00:00+00:00",
+      "generator": {
+        "date": "2025-12-10T10:00:00+00:00",
+        "engine": {
+          "name": "Red Hat SDEngine",
+          "version": "3.32.1"
+        }
+      },
+      "id": "CVE-2024-0002",
+      "initial_release_date": "2024-01-03T00:00:00+00:00",
+      "revision_history": [
+        {
+          "date": "2024-01-03T00:00:00+00:00",
+          "number": "1",
+          "summary": "Initial version"
+        }
+      ],
+      "status": "final",
+      "version": "1"
+    }
+  },
+  "product_tree": {},
+  "vulnerabilities": [
+    {
+      "cve": "CVE-2024-0002",
+      "cwe": {
+        "id": "CWE-79",
+        "name": "Cross-site Scripting"
+      },
+      "discovery_date": "2024-01-03T00:00:00+00:00",
+      "flags": [
+        {
+          "label": "vulnerable_code_not_present",
+          "product_ids": [
+            "red_hat_enterprise_linux_9"
+          ]
+        }
+      ],
+      "notes": [
+        {
+          "category": "description",
+          "text": "Test vulnerability from delta update.",
+          "title": "Vulnerability description"
+        }
+      ],
+      "product_status": {
+        "known_not_affected": [
+          "red_hat_enterprise_linux_9"
+        ]
+      },
+      "references": [
+        {
+          "category": "self",
+          "summary": "Canonical URL",
+          "url": "https://access.redhat.com/security/cve/CVE-2024-0002"
+        }
+      ],
+      "release_date": "2024-01-03T00:00:00+00:00",
+      "scores": [
+        {
+          "products": [
+            "red_hat_enterprise_linux_9"
+          ]
+        }
+      ],
+      "title": "CVE-2024-0002"
+    }
+  ]
+}
