@@ -1,0 +1,73 @@
+-- branches-0001.json --
+[
+  {
+    "branches": [
+      {
+        "branches": [
+          {
+            "category": "product_version",
+            "name": "p1"
+          },
+          {
+            "category": "product_version",
+            "name": "p2"
+          }
+        ],
+        "category": "architecture",
+        "name": "x86_64"
+      }
+    ],
+    "category": "vendor",
+    "name": "Red Hat"
+  }
+]
+-- branches-0002.json --
+[
+  {
+    "branches": [
+      {
+        "branches": [
+          {
+            "category": "product_version",
+            "name": "p3"
+          }
+        ],
+        "category": "architecture",
+        "name": "x86_64"
+      },
+      {
+        "branches": [
+          {
+            "category": "product_version",
+            "name": "p4"
+          }
+        ],
+        "category": "architecture",
+        "name": "aarch64"
+      }
+    ],
+    "category": "vendor",
+    "name": "Red Hat"
+  },
+  {
+    "branches": [
+      {
+        "category": "product_version",
+        "name": "p5"
+      }
+    ],
+    "category": "vendor",
+    "name": "Other"
+  }
+]
+-- document.json --
+{
+  "document": {
+    "category": "csaf_vex",
+    "csaf_version": "2.0",
+    "publisher": null,
+    "title": "CVE-2024-0003",
+    "tracking": null
+  },
+  "product_tree": {}
+}

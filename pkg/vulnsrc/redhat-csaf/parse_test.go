@@ -69,6 +69,39 @@ func TestParser_Parse(t *testing.T) {
 			},
 		},
 		{
+			// cve-2024-10041 from testdata/happy, split by the vuln-list-update algorithm with smaller limits for branches, relationships and the product arrays of the vulnerability than for document.json.
+			// Its document.json is the largest part, so with a single limit, every other part would stay in one file, and the remediations used by the parser would not be split.
+			// The parts are merged back, so the advisories are the same as for this CVE in the happy path.
+			name: "split document",
+			dir:  filepath.Join("testdata", "split-document"),
+			wantCPEs: []string{
+				"cpe:/o:redhat:enterprise_linux:9::baseos",
+			},
+			wantAdvisories: map[Bucket]RawEntries{
+				{
+					Package: Package{
+						Name: "pam",
+					},
+					VulnerabilityID: "RHSA-2024:9941",
+				}: {
+					{
+						FixedVersion: "1.5.1-21.el9_5",
+						Arch:         "x86_64",
+						Alias:        "CVE-2024-10041",
+						Severity:     types.SeverityMedium,
+						CPE:          csaf.CPE("cpe:/o:redhat:enterprise_linux:9::baseos"),
+					},
+					{
+						FixedVersion: "1.5.1-21.el9_5",
+						Arch:         "aarch64",
+						Alias:        "CVE-2024-10041",
+						Severity:     types.SeverityMedium,
+						CPE:          csaf.CPE("cpe:/o:redhat:enterprise_linux:9::baseos"),
+					},
+				},
+			},
+		},
+		{
 			name:    "empty CVE ID",
 			dir:     filepath.Join("testdata", "empty-cve"),
 			wantErr: "does not match ^CVE-[0-9]{4}-[0-9]{4,}",

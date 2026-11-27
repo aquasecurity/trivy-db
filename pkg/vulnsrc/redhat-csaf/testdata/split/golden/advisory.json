@@ -1,0 +1,477 @@
+{
+  "document": {
+    "aggregate_severity": {
+      "namespace": "https://access.redhat.com/security/updates/classification/",
+      "text": "important"
+    },
+    "category": "csaf_vex",
+    "csaf_version": "2.0",
+    "distribution": {
+      "text": "Copyright Red Hat, Inc. All rights reserved.",
+      "tlp": {
+        "label": "WHITE",
+        "url": "https://www.first.org/tlp/"
+      }
+    },
+    "lang": "en",
+    "notes": [
+      {
+        "category": "legal_disclaimer",
+        "text": "This content is licensed under the Creative Commons Attribution 4.0 International License.",
+        "title": "Terms of Use"
+      }
+    ],
+    "publisher": {
+      "category": "vendor",
+      "contact_details": "https://access.redhat.com/security/team/contact/",
+      "issuing_authority": "Red Hat Product Security",
+      "name": "Red Hat Product Security",
+      "namespace": "https://www.redhat.com"
+    },
+    "references": [
+      {
+        "category": "self",
+        "summary": "Canonical URL",
+        "url": "https://access.redhat.com/security/data/csaf/v2/vex/2024/cve-2024-0002.json"
+      }
+    ],
+    "title": "CVE-2024-0002",
+    "tracking": {
+      "current_release_date": "2025-12-10T10:00:00+00:00",
+      "generator": {
+        "date": "2025-12-10T10:00:00+00:00",
+        "engine": {
+          "name": "Red Hat SDEngine",
+          "version": "3.32.1"
+        }
+      },
+      "id": "CVE-2024-0002",
+      "initial_release_date": "2024-01-03T00:00:00+00:00",
+      "revision_history": [
+        {
+          "date": "2024-01-03T00:00:00+00:00",
+          "number": "1",
+          "summary": "Initial version"
+        }
+      ],
+      "status": "final",
+      "version": "1"
+    }
+  },
+  "product_tree": {
+    "branches": [
+      {
+        "branches": [
+          {
+            "branches": [
+              {
+                "category": "product_name",
+                "name": "Red Hat Enterprise Linux 9",
+                "product": {
+                  "name": "Red Hat Enterprise Linux 9",
+                  "product_id": "red_hat_enterprise_linux_9",
+                  "product_identification_helper": {
+                    "cpe": "cpe:/o:redhat:enterprise_linux:9"
+                  }
+                }
+              }
+            ],
+            "category": "product_family",
+            "name": "Red Hat Enterprise Linux 9"
+          },
+          {
+            "branches": [
+              {
+                "category": "product_version",
+                "name": "kernel-0:5.14.0-1.el9.x86_64",
+                "product": {
+                  "name": "kernel-0:5.14.0-1.el9.x86_64",
+                  "product_id": "kernel-0:5.14.0-1.el9.x86_64",
+                  "product_identification_helper": {
+                    "purl": "pkg:rpm/redhat/kernel@5.14.0-1.el9?arch=x86_64"
+                  }
+                }
+              },
+              {
+                "category": "product_version",
+                "name": "kernel-core-0:5.14.0-1.el9.x86_64",
+                "product": {
+                  "name": "kernel-core-0:5.14.0-1.el9.x86_64",
+                  "product_id": "kernel-core-0:5.14.0-1.el9.x86_64",
+                  "product_identification_helper": {
+                    "purl": "pkg:rpm/redhat/kernel-core@5.14.0-1.el9?arch=x86_64"
+                  }
+                }
+              },
+              {
+                "category": "product_version",
+                "name": "kernel-modules-0:5.14.0-1.el9.x86_64",
+                "product": {
+                  "name": "kernel-modules-0:5.14.0-1.el9.x86_64",
+                  "product_id": "kernel-modules-0:5.14.0-1.el9.x86_64",
+                  "product_identification_helper": {
+                    "purl": "pkg:rpm/redhat/kernel-modules@5.14.0-1.el9?arch=x86_64"
+                  }
+                }
+              }
+            ],
+            "category": "architecture",
+            "name": "x86_64"
+          },
+          {
+            "branches": [
+              {
+                "category": "product_version",
+                "name": "kernel-0:5.14.0-1.el9.aarch64",
+                "product": {
+                  "name": "kernel-0:5.14.0-1.el9.aarch64",
+                  "product_id": "kernel-0:5.14.0-1.el9.aarch64",
+                  "product_identification_helper": {
+                    "purl": "pkg:rpm/redhat/kernel@5.14.0-1.el9?arch=aarch64"
+                  }
+                }
+              },
+              {
+                "category": "product_version",
+                "name": "kernel-core-0:5.14.0-1.el9.aarch64",
+                "product": {
+                  "name": "kernel-core-0:5.14.0-1.el9.aarch64",
+                  "product_id": "kernel-core-0:5.14.0-1.el9.aarch64",
+                  "product_identification_helper": {
+                    "purl": "pkg:rpm/redhat/kernel-core@5.14.0-1.el9?arch=aarch64"
+                  }
+                }
+              },
+              {
+                "category": "product_version",
+                "name": "kernel-modules-0:5.14.0-1.el9.aarch64",
+                "product": {
+                  "name": "kernel-modules-0:5.14.0-1.el9.aarch64",
+                  "product_id": "kernel-modules-0:5.14.0-1.el9.aarch64",
+                  "product_identification_helper": {
+                    "purl": "pkg:rpm/redhat/kernel-modules@5.14.0-1.el9?arch=aarch64"
+                  }
+                }
+              }
+            ],
+            "category": "architecture",
+            "name": "aarch64"
+          },
+          {
+            "branches": [
+              {
+                "category": "product_version",
+                "name": "kernel-0:5.14.0-1.el9.ppc64le",
+                "product": {
+                  "name": "kernel-0:5.14.0-1.el9.ppc64le",
+                  "product_id": "kernel-0:5.14.0-1.el9.ppc64le",
+                  "product_identification_helper": {
+                    "purl": "pkg:rpm/redhat/kernel@5.14.0-1.el9?arch=ppc64le"
+                  }
+                }
+              },
+              {
+                "category": "product_version",
+                "name": "kernel-core-0:5.14.0-1.el9.ppc64le",
+                "product": {
+                  "name": "kernel-core-0:5.14.0-1.el9.ppc64le",
+                  "product_id": "kernel-core-0:5.14.0-1.el9.ppc64le",
+                  "product_identification_helper": {
+                    "purl": "pkg:rpm/redhat/kernel-core@5.14.0-1.el9?arch=ppc64le"
+                  }
+                }
+              },
+              {
+                "category": "product_version",
+                "name": "kernel-modules-0:5.14.0-1.el9.ppc64le",
+                "product": {
+                  "name": "kernel-modules-0:5.14.0-1.el9.ppc64le",
+                  "product_id": "kernel-modules-0:5.14.0-1.el9.ppc64le",
+                  "product_identification_helper": {
+                    "purl": "pkg:rpm/redhat/kernel-modules@5.14.0-1.el9?arch=ppc64le"
+                  }
+                }
+              }
+            ],
+            "category": "architecture",
+            "name": "ppc64le"
+          },
+          {
+            "branches": [
+              {
+                "category": "product_version",
+                "name": "kernel-0:5.14.0-1.el9.s390x",
+                "product": {
+                  "name": "kernel-0:5.14.0-1.el9.s390x",
+                  "product_id": "kernel-0:5.14.0-1.el9.s390x",
+                  "product_identification_helper": {
+                    "purl": "pkg:rpm/redhat/kernel@5.14.0-1.el9?arch=s390x"
+                  }
+                }
+              },
+              {
+                "category": "product_version",
+                "name": "kernel-core-0:5.14.0-1.el9.s390x",
+                "product": {
+                  "name": "kernel-core-0:5.14.0-1.el9.s390x",
+                  "product_id": "kernel-core-0:5.14.0-1.el9.s390x",
+                  "product_identification_helper": {
+                    "purl": "pkg:rpm/redhat/kernel-core@5.14.0-1.el9?arch=s390x"
+                  }
+                }
+              },
+              {
+                "category": "product_version",
+                "name": "kernel-modules-0:5.14.0-1.el9.s390x",
+                "product": {
+                  "name": "kernel-modules-0:5.14.0-1.el9.s390x",
+                  "product_id": "kernel-modules-0:5.14.0-1.el9.s390x",
+                  "product_identification_helper": {
+                    "purl": "pkg:rpm/redhat/kernel-modules@5.14.0-1.el9?arch=s390x"
+                  }
+                }
+              }
+            ],
+            "category": "architecture",
+            "name": "s390x"
+          }
+        ],
+        "category": "vendor",
+        "name": "Red Hat"
+      }
+    ],
+    "relationships": [
+      {
+        "category": "default_component_of",
+        "full_product_name": {
+          "name": "kernel-0:5.14.0-1.el9.x86_64 as a component of Red Hat Enterprise Linux 9",
+          "product_id": "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.x86_64"
+        },
+        "product_reference": "kernel-0:5.14.0-1.el9.x86_64",
+        "relates_to_product_reference": "red_hat_enterprise_linux_9"
+      },
+      {
+        "category": "default_component_of",
+        "full_product_name": {
+          "name": "kernel-core-0:5.14.0-1.el9.x86_64 as a component of Red Hat Enterprise Linux 9",
+          "product_id": "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.x86_64"
+        },
+        "product_reference": "kernel-core-0:5.14.0-1.el9.x86_64",
+        "relates_to_product_reference": "red_hat_enterprise_linux_9"
+      },
+      {
+        "category": "default_component_of",
+        "full_product_name": {
+          "name": "kernel-modules-0:5.14.0-1.el9.x86_64 as a component of Red Hat Enterprise Linux 9",
+          "product_id": "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.x86_64"
+        },
+        "product_reference": "kernel-modules-0:5.14.0-1.el9.x86_64",
+        "relates_to_product_reference": "red_hat_enterprise_linux_9"
+      },
+      {
+        "category": "default_component_of",
+        "full_product_name": {
+          "name": "kernel-0:5.14.0-1.el9.aarch64 as a component of Red Hat Enterprise Linux 9",
+          "product_id": "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.aarch64"
+        },
+        "product_reference": "kernel-0:5.14.0-1.el9.aarch64",
+        "relates_to_product_reference": "red_hat_enterprise_linux_9"
+      },
+      {
+        "category": "default_component_of",
+        "full_product_name": {
+          "name": "kernel-core-0:5.14.0-1.el9.aarch64 as a component of Red Hat Enterprise Linux 9",
+          "product_id": "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.aarch64"
+        },
+        "product_reference": "kernel-core-0:5.14.0-1.el9.aarch64",
+        "relates_to_product_reference": "red_hat_enterprise_linux_9"
+      },
+      {
+        "category": "default_component_of",
+        "full_product_name": {
+          "name": "kernel-modules-0:5.14.0-1.el9.aarch64 as a component of Red Hat Enterprise Linux 9",
+          "product_id": "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.aarch64"
+        },
+        "product_reference": "kernel-modules-0:5.14.0-1.el9.aarch64",
+        "relates_to_product_reference": "red_hat_enterprise_linux_9"
+      },
+      {
+        "category": "default_component_of",
+        "full_product_name": {
+          "name": "kernel-0:5.14.0-1.el9.ppc64le as a component of Red Hat Enterprise Linux 9",
+          "product_id": "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.ppc64le"
+        },
+        "product_reference": "kernel-0:5.14.0-1.el9.ppc64le",
+        "relates_to_product_reference": "red_hat_enterprise_linux_9"
+      },
+      {
+        "category": "default_component_of",
+        "full_product_name": {
+          "name": "kernel-core-0:5.14.0-1.el9.ppc64le as a component of Red Hat Enterprise Linux 9",
+          "product_id": "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.ppc64le"
+        },
+        "product_reference": "kernel-core-0:5.14.0-1.el9.ppc64le",
+        "relates_to_product_reference": "red_hat_enterprise_linux_9"
+      },
+      {
+        "category": "default_component_of",
+        "full_product_name": {
+          "name": "kernel-modules-0:5.14.0-1.el9.ppc64le as a component of Red Hat Enterprise Linux 9",
+          "product_id": "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.ppc64le"
+        },
+        "product_reference": "kernel-modules-0:5.14.0-1.el9.ppc64le",
+        "relates_to_product_reference": "red_hat_enterprise_linux_9"
+      },
+      {
+        "category": "default_component_of",
+        "full_product_name": {
+          "name": "kernel-0:5.14.0-1.el9.s390x as a component of Red Hat Enterprise Linux 9",
+          "product_id": "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.s390x"
+        },
+        "product_reference": "kernel-0:5.14.0-1.el9.s390x",
+        "relates_to_product_reference": "red_hat_enterprise_linux_9"
+      },
+      {
+        "category": "default_component_of",
+        "full_product_name": {
+          "name": "kernel-core-0:5.14.0-1.el9.s390x as a component of Red Hat Enterprise Linux 9",
+          "product_id": "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.s390x"
+        },
+        "product_reference": "kernel-core-0:5.14.0-1.el9.s390x",
+        "relates_to_product_reference": "red_hat_enterprise_linux_9"
+      },
+      {
+        "category": "default_component_of",
+        "full_product_name": {
+          "name": "kernel-modules-0:5.14.0-1.el9.s390x as a component of Red Hat Enterprise Linux 9",
+          "product_id": "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.s390x"
+        },
+        "product_reference": "kernel-modules-0:5.14.0-1.el9.s390x",
+        "relates_to_product_reference": "red_hat_enterprise_linux_9"
+      }
+    ]
+  },
+  "vulnerabilities": [
+    {
+      "cve": "CVE-2024-0002",
+      "cwe": {
+        "id": "CWE-79",
+        "name": "Cross-site Scripting"
+      },
+      "discovery_date": "2024-01-03T00:00:00+00:00",
+      "flags": [
+        {
+          "label": "vulnerable_code_not_present",
+          "product_ids": [
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.ppc64le",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.ppc64le",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.ppc64le",
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.s390x",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.s390x",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.s390x"
+          ]
+        }
+      ],
+      "notes": [
+        {
+          "category": "description",
+          "text": "Test vulnerability from delta update.",
+          "title": "Vulnerability description"
+        }
+      ],
+      "product_status": {
+        "fixed": [
+          "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.x86_64",
+          "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.x86_64",
+          "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.x86_64",
+          "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.aarch64",
+          "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.aarch64",
+          "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.aarch64"
+        ],
+        "known_not_affected": [
+          "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.ppc64le",
+          "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.ppc64le",
+          "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.ppc64le",
+          "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.s390x",
+          "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.s390x",
+          "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.s390x"
+        ]
+      },
+      "scores": [
+        {
+          "cvss_v3": {
+            "version": "3.1",
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+            "baseScore": 9.8,
+            "baseSeverity": "CRITICAL"
+          },
+          "products": [
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.x86_64",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.x86_64",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.x86_64",
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.aarch64",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.aarch64",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.aarch64",
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.ppc64le",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.ppc64le",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.ppc64le",
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.s390x",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.s390x",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.s390x"
+          ]
+        }
+      ],
+      "references": [
+        {
+          "category": "self",
+          "summary": "Canonical URL",
+          "url": "https://access.redhat.com/security/cve/CVE-2024-0002"
+        }
+      ],
+      "release_date": "2024-01-03T00:00:00+00:00",
+      "title": "CVE-2024-0002",
+      "threats": [
+        {
+          "category": "impact",
+          "details": "Important",
+          "product_ids": [
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.x86_64",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.x86_64",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.x86_64",
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.aarch64",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.aarch64",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.aarch64",
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.ppc64le",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.ppc64le",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.ppc64le",
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.s390x",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.s390x",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.s390x"
+          ]
+        }
+      ],
+      "remediations": [
+        {
+          "category": "vendor_fix",
+          "details": "For details on how to apply this update, refer to the advisory.",
+          "url": "https://access.redhat.com/errata/RHSA-2024:0001",
+          "product_ids": [
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.x86_64",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.x86_64",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.x86_64"
+          ]
+        },
+        {
+          "category": "vendor_fix",
+          "details": "For details on how to apply this update, refer to the advisory.",
+          "url": "https://access.redhat.com/errata/RHSA-2024:0002",
+          "product_ids": [
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.aarch64",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.aarch64",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.aarch64"
+          ]
+        }
+      ]
+    }
+  ]
+}

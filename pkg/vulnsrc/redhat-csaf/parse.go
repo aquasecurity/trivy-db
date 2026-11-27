@@ -86,7 +86,7 @@ func (p *Parser) parseCSAF(dir string) error {
 	rootDir := filepath.Join(dir, csafDir)
 	eb := oops.Tags("parse_csaf_vex").With("root", rootDir)
 
-	// Collect all JSON files for the progress bar
+	// Collect all CSAF VEX documents (JSON files and split document directories) for the progress bar
 	filePaths, err := p.collectFilePaths(rootDir)
 	if err != nil {
 		return eb.Wrap(err)
@@ -106,15 +106,9 @@ func (p *Parser) parseCSAF(dir string) error {
 
 func (p *Parser) parseCSAFFile(filePath string) error {
 	eb := oops.Code("walk_error").With("path", filePath)
-	f, err := os.Open(filePath)
+	raw, err := decodeDocument(filePath)
 	if err != nil {
-		return eb.Wrapf(err, "file open error")
-	}
-	defer f.Close()
-
-	var raw csaf.Advisory
-	if err := json.NewDecoder(f).Decode(&raw); err != nil {
-		return eb.Wrapf(err, "JSON decode error")
+		return eb.Wrap(err)
 	}
 	adv := NewCSAFAdvisory(raw)
 
@@ -124,13 +118,39 @@ func (p *Parser) parseCSAFFile(filePath string) error {
 	return nil
 }
 
+// decodeDocument decodes a CSAF VEX document stored either as a JSON file or as a split document directory (see splitDocumentFile).
+// collectFilePaths returns only JSON files and split document directories, so a path without the .json extension is a split document.
+func decodeDocument(filePath string) (csaf.Advisory, error) {
+	if filepath.Ext(filePath) != ".json" {
+		return decodeSplitDocument(filePath)
+	}
+
+	var adv csaf.Advisory
+	if err := utils.UnmarshalJSONFile(&adv, filePath); err != nil {
+		return csaf.Advisory{}, err
+	}
+	return adv, nil
+}
+
 func (p *Parser) collectFilePaths(rootDir string) ([]string, error) {
 	var filePaths []string
 	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
 		eb := oops.Code("walk_error").With("path", path)
 		if err != nil {
 			return eb.Wrapf(err, "walk error")
-		} else if info.IsDir() || filepath.Ext(info.Name()) != ".json" {
+		}
+		if info.IsDir() {
+			// A split document is collected as a whole, and its parts are not collected as separate documents.
+			split, err := isSplitDocument(path)
+			if err != nil {
+				return eb.Wrapf(err, "stat error")
+			} else if split {
+				filePaths = append(filePaths, path)
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if filepath.Ext(info.Name()) != ".json" {
 			return nil
 		}
 		filePaths = append(filePaths, path)
