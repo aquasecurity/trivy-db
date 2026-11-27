@@ -125,15 +125,9 @@ func decodeDocument(filePath string) (csaf.Advisory, error) {
 		return decodeSplitDocument(filePath)
 	}
 
-	f, err := os.Open(filePath)
-	if err != nil {
-		return csaf.Advisory{}, oops.Wrapf(err, "file open error")
-	}
-	defer f.Close()
-
 	var adv csaf.Advisory
-	if err := json.NewDecoder(f).Decode(&adv); err != nil {
-		return csaf.Advisory{}, oops.Wrapf(err, "JSON decode error")
+	if err := utils.UnmarshalJSONFile(&adv, filePath); err != nil {
+		return csaf.Advisory{}, err
 	}
 	return adv, nil
 }

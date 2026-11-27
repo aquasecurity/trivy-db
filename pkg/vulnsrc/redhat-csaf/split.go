@@ -204,15 +204,12 @@ func decodeEntryParts[S ~[]*E, E any](files func(pattern string) ([]string, erro
 // They are merged into one by concatenating their product lists if everything else in them is equal.
 // Only this boundary is merged: entries within one part are never copies of each other.
 // Two different adjacent entries that differ only in their product lists are merged as well if they meet at a boundary, which does not change their meaning.
+// The entries read so far are owned by the decoder, so the product list of the last one is extended in place.
 func mergeByProducts[S ~[]*E, E any](dst, src S, products func(*E) **csaf.Products) S {
 	if len(dst) == 0 || len(src) == 0 || !sameExceptProducts(dst[len(dst)-1], src[0], products) {
 		return append(dst, src...)
 	}
-	last := dst[len(dst)-1]
-	mergedProducts := append(append(csaf.Products(nil), lo.FromPtr(*products(last))...), lo.FromPtr(*products(src[0]))...)
-	merged := *last
-	*products(&merged) = &mergedProducts
-	dst[len(dst)-1] = &merged
+	appendProducts(products(dst[len(dst)-1]), *products(src[0]))
 	return append(dst, src[1:]...)
 }
 
@@ -252,13 +249,13 @@ func partFiles(dir string, entries []os.DirEntry, pattern string) ([]string, err
 // Only this boundary is merged: branches within one part are never copies of each other.
 // Two different adjacent branches with the same category and name that both have child branches are merged as well if they meet at a boundary.
 // The parser looks products up by product ID across all branches, so this does not change the result.
+// The branches read so far are owned by the decoder, so the last one is extended in place.
 func mergeBranches(dst, src csaf.Branches) csaf.Branches {
 	if len(dst) == 0 || len(src) == 0 || !sameBranch(dst[len(dst)-1], src[0]) {
 		return append(dst, src...)
 	}
-	merged := *dst[len(dst)-1]
-	merged.Branches = mergeBranches(append(csaf.Branches(nil), merged.Branches...), src[0].Branches)
-	dst[len(dst)-1] = &merged
+	last := dst[len(dst)-1]
+	last.Branches = mergeBranches(last.Branches, src[0].Branches)
 	return append(dst, src[1:]...)
 }
 
