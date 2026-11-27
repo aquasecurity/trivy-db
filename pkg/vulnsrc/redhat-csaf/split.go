@@ -88,7 +88,10 @@ func decodeSplitDocument(dir string) (csaf.Advisory, error) {
 		if adv.ProductTree == nil {
 			adv.ProductTree = &csaf.ProductTree{}
 		}
-		adv.ProductTree.Branches = branches
+		// vuln-list-update moves both lists out of document.json, but a list without parts is kept as it is in document.json rather than dropped.
+		if len(branches) > 0 {
+			adv.ProductTree.Branches = branches
+		}
 		if len(relationships) > 0 {
 			adv.ProductTree.RelationShips = &relationships
 		}

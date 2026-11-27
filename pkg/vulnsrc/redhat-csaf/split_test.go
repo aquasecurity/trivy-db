@@ -45,6 +45,25 @@ func TestDecodeSplitDocument(t *testing.T) {
 			want:  "advisory.json",
 		},
 		{
+			// The vulnerabilities are numbered by their position in document.json, so the parts of the third one are vulnerabilities-0003-*, and the null one stays null.
+			name:  "several vulnerabilities",
+			parts: "several-vulnerabilities",
+			want:  "several-vulnerabilities.json",
+		},
+		{
+			// Hand-made from 4-branches: vuln-list-update puts a copy of a split entry in a part on its own, so entries next to a copy in the same part are never exercised by its output.
+			// Here the first remediation is split across the first two parts, and the second one across the last two, so each merged copy is preceded or followed by another entry in the same part.
+			name:  "entry copies next to other entries",
+			parts: "entry-copies-with-siblings",
+			want:  "advisory.json",
+		},
+		{
+			// Hand-made from 4-branches: vuln-list-update moves branches out of document.json, but branches already in document.json must not be dropped when there are only relationship parts.
+			name:  "branches in document.json",
+			parts: "branches-in-document",
+			want:  "advisory.json",
+		},
+		{
 			// The vendor branch has a single product family branch, so both branches are copied into every part and merged back recursively.
 			name:  "branch with a single child branch",
 			parts: "single-child",
