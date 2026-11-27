@@ -363,7 +363,12 @@
         {
           "label": "vulnerable_code_not_present",
           "product_ids": [
-            "red_hat_enterprise_linux_9"
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.ppc64le",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.ppc64le",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.ppc64le",
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.s390x",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.s390x",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.s390x"
           ]
         }
       ],
@@ -375,14 +380,44 @@
         }
       ],
       "product_status": {
+        "fixed": [
+          "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.x86_64",
+          "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.x86_64",
+          "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.x86_64",
+          "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.aarch64",
+          "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.aarch64",
+          "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.aarch64"
+        ],
         "known_not_affected": [
-          "red_hat_enterprise_linux_9"
+          "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.ppc64le",
+          "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.ppc64le",
+          "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.ppc64le",
+          "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.s390x",
+          "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.s390x",
+          "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.s390x"
         ]
       },
       "scores": [
         {
+          "cvss_v3": {
+            "version": "3.1",
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+            "baseScore": 9.8,
+            "baseSeverity": "CRITICAL"
+          },
           "products": [
-            "red_hat_enterprise_linux_9"
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.x86_64",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.x86_64",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.x86_64",
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.aarch64",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.aarch64",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.aarch64",
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.ppc64le",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.ppc64le",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.ppc64le",
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.s390x",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.s390x",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.s390x"
           ]
         }
       ],
@@ -394,7 +429,49 @@
         }
       ],
       "release_date": "2024-01-03T00:00:00+00:00",
-      "title": "CVE-2024-0002"
+      "title": "CVE-2024-0002",
+      "threats": [
+        {
+          "category": "impact",
+          "details": "Important",
+          "product_ids": [
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.x86_64",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.x86_64",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.x86_64",
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.aarch64",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.aarch64",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.aarch64",
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.ppc64le",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.ppc64le",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.ppc64le",
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.s390x",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.s390x",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.s390x"
+          ]
+        }
+      ],
+      "remediations": [
+        {
+          "category": "vendor_fix",
+          "details": "For details on how to apply this update, refer to the advisory.",
+          "url": "https://access.redhat.com/errata/RHSA-2024:0001",
+          "product_ids": [
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.x86_64",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.x86_64",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.x86_64"
+          ]
+        },
+        {
+          "category": "vendor_fix",
+          "details": "For details on how to apply this update, refer to the advisory.",
+          "url": "https://access.redhat.com/errata/RHSA-2024:0002",
+          "product_ids": [
+            "red_hat_enterprise_linux_9:kernel-0:5.14.0-1.el9.aarch64",
+            "red_hat_enterprise_linux_9:kernel-core-0:5.14.0-1.el9.aarch64",
+            "red_hat_enterprise_linux_9:kernel-modules-0:5.14.0-1.el9.aarch64"
+          ]
+        }
+      ]
     }
   ]
 }

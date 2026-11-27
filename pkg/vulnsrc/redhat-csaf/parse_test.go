@@ -69,8 +69,8 @@ func TestParser_Parse(t *testing.T) {
 			},
 		},
 		{
-			// cve-2024-10041 from testdata/happy, split by the vuln-list-update algorithm with smaller limits for branches and relationships than for document.json.
-			// Its document.json is the largest part, so with a single limit, branches and relationships would stay in one file each.
+			// cve-2024-10041 from testdata/happy, split by the vuln-list-update algorithm with smaller limits for branches, relationships and the product arrays of the vulnerability than for document.json.
+			// Its document.json is the largest part, so with a single limit, every other part would stay in one file, and the remediations used by the parser would not be split.
 			// The parts are merged back, so the advisories are the same as for this CVE in the happy path.
 			name: "split document",
 			dir:  filepath.Join("testdata", "split-document"),

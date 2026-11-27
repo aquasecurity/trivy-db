@@ -1,3 +1,6 @@
+-- branches-0001.json --
+[{"category": "vendor",
+-- document.json --
 {
   "document": {
     "aggregate_severity": {
